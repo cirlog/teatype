@@ -4,13 +4,9 @@ import teaType.util.StreamBuffer;
 
 public class Time {
 	private long start, stop, time;
-	final double MIL = Math.pow(10, -6);
-	final double SEC = Math.pow(10, -9);
-	final double MIN = Math.pow(10, -11);
+	final double MIL = Math.pow(10, -6), SEC = Math.pow(10, -9), MIN = Math.pow(10, -11);
 
-	public Time() {
-		start = stop = time = 0;
-	}
+	public Time() { start = stop = time = 0; }
 
 	public final void start() {
 		start = System.nanoTime();
@@ -21,9 +17,7 @@ public class Time {
 		time = stop - start;
 	}
 
-	public final String retrieve() {
-		return time + "";
-	}
+	public final String retrieve() { return time + ""; }
 
 	public final void print(boolean milli, boolean sec, boolean min) {
 		StreamBuffer.fixConsole();
