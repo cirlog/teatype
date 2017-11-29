@@ -7,7 +7,7 @@ public class Time_Test {
 		Time t = new Time();
 		
 		t.start();
-		Thread.sleep((int) (Math.random()*1000));
+		Thread.sleep((int) (Math.random()*100));
 		t.stop();
 		t.print(true, true, true);
 	}
