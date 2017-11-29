@@ -5,17 +5,17 @@ import java.util.LinkedList;
 import teaType.data.KeyValuePair;
 
 public class Hashtable {
-	protected LinkedList<KeyValuePair>[] array;
-	protected int size;
+	private LinkedList<KeyValuePair>[] list;
+	private int size;
 	
 	@SuppressWarnings("unchecked")
 	public Hashtable(int size) {
 		this.size = size;
-		array = new LinkedList[size];
+		list = new LinkedList[size];
 	}	
 
-	private int hashFunction(Object key) {
-		return key.hashCode() % array.length;
+	final int hashFunction(Object key) {
+		return key.hashCode() % list.length;
 	}
 
 	public Object put(Object key, Object val) {
@@ -23,21 +23,21 @@ public class Hashtable {
 		int index = hashFunction(key);
 		int i = 0;
 		if(isEmpty(index)) {
-			array[index] = new LinkedList<>();
-			array[index].add(kvp);
+			list[index] = new LinkedList<>();
+			list[index].add(kvp);
 			return null;
 		}
 
-		for(@SuppressWarnings("unused") Object o : array) {
-			if(key.equals(array[index].get(i).getKey())) {
-				Object oldVal = array[index].get(i).getValue();
-				array[index].get(i).changeValue(val);
+		for(@SuppressWarnings("unused") Object o : list) {
+			if(key.equals(list[index].get(i).getKey())) {
+				Object oldVal = list[index].get(i).getValue();
+				list[index].get(i).changeValue(val);
 				return oldVal;
 			}
 			i++;
 		}
 		
-		array[index].add(kvp);
+		list[index].add(kvp);
 		return null;
 	}
 
@@ -47,9 +47,9 @@ public class Hashtable {
 			return null;
 		}
 
-		for(int i = 0; i < array[index].size(); i++) {
-			if(key.equals(array[index].get(i).key)) {
-				return array[index].get(i).value;
+		for(int i = 0; i < list[index].size(); i++) {
+			if(key.equals(list[index].get(i).key)) {
+				return list[index].get(i).value;
 			}
 		}
 		return null;
@@ -58,21 +58,21 @@ public class Hashtable {
 	public Object remove(Object key) {
 		int index = hashFunction(key);
 		try {
-			for(int i = 0; i < array[index].size(); i++) {
-				if(key.equals(array[index].get(i).key)) {
-					Object temp = array[index].get(i).value;
-					array[index].remove(i);
+			for(int i = 0; i < list[index].size(); i++) {
+				if(key.equals(list[index].get(i).key)) {
+					Object temp = list[index].get(i).value;
+					list[index].remove(i);
 					return temp;
 				}
 			}
-		} catch (java.lang.ArrayIndexOutOfBoundsException exc) {
+		} catch(ArrayIndexOutOfBoundsException exc) {
 			return null;
 		}
 		return null;
 	}
 
 	private boolean isEmpty(int index) {
-		if(array[index] == null){
+		if(list[index] == null){
 			return true;
 		}
 		return false;
@@ -84,27 +84,18 @@ public class Hashtable {
 }
 
 class KeyValuePair {
-	protected Object key;
-	protected Object value;
+	protected Object key, value;
 
-	protected KeyValuePair(Object k, Object v) {
+	public KeyValuePair(Object k, Object v) {
 		key = k;
 		value = v;
 	}
 
-	protected Object getKey() {
-		return key;
-	}
+	final Object getKey() { return key; }
 
-	protected Object getValue() {
-		return value;
-	}
+	final Object getValue() { return value; }
 
-	protected void changeValue(Object v) {
-		value = v;
-	}
+	final void changeValue(Object v) { value = v; }
 
-	public String toString() {
-		return value.toString();
-	}
+	public String toString() { return value.toString(); }
 }
