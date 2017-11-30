@@ -36,4 +36,7 @@ public class Time {
 			System.out.printf("%.2f", (double) (time*MIN));
 		}
 	}
+	
+	public final void run(int ms) {
+	}
 }
