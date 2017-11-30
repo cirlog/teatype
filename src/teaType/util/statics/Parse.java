@@ -30,4 +30,5 @@ public class Parse {
 	}
 	
 	public static int toInteger(double d) { return (int) (d); }
+	
 }
