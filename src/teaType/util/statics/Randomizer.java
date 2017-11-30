@@ -3,8 +3,7 @@ package teaType.util.statics;
 import teaType.util.Array;
 
 public class Randomizer extends Random {
-	private static final long serialVersionUID = 1L;
-	private static final long PHI = 0x9E3779B97F4A7C15L;
+	private static final long serialVersionUID = 1L, PHI = 0x9E3779B97F4A7C15L;
 	private long x;
 
 	public static double random() {
