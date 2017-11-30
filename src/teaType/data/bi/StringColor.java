@@ -11,19 +11,11 @@ public class StringColor {
 		setColor(c);
 	}
 
-	public void setString(String s) {
-		this.s = s;
-	}
+	public void setString(String s) { this.s = s; }
 	
-	public void setColor(Color c) {
-		this.c = c;
-	}
+	public void setColor(Color c) { this.c = c; }
 	
-	public String getString() {
-		return s;
-	}
+	public String getString() { return s; }
 
-	public Color getColor() {
-		return c;
-	}
+	public Color getColor() { return c; }
 }

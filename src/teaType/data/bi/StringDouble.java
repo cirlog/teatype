@@ -9,19 +9,11 @@ public class StringDouble {
 		setDouble(d);
 	}
 	
-	public void setString(String s) {
-		this.s = s;
-	}
+	public void setString(String s) { this.s = s; }
 	
-	public void setDouble(double d) {
-		this.d = d;
-	}
+	public void setDouble(double d) { this.d = d; }
 	
-	public String getString() {
-		return s;
-	}
+	public String getString() { return s; }
 	
-	public double getDouble() {
-		return d;
-	}
+	public double getDouble() { return d; }
 }

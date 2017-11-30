@@ -9,19 +9,11 @@ public class StringInteger {
 		setInteger(i);
 	}
 	
-	public void setString(String s) {
-		this.s = s;
-	}
+	public void setString(String s) { this.s = s; }
 	
-	public void setInteger(int i) {
-		this.i = i;
-	}
+	public void setInteger(int i) { this.i = i; }
 
-	public String getString() {
-		return s;
-	}
+	public String getString() { return s; }
 
-	public int getInteger() {
-		return i;
-	}
+	public int getInteger() { return i; }
 }

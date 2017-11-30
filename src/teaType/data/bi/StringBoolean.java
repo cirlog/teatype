@@ -9,19 +9,11 @@ public class StringBoolean {
 		setBoolean(b);
 	}
 
-	public void setString(String s) {
-		this.s = s;
-	}
+	public void setString(String s) { this.s = s; }
 	
-	public void setBoolean(boolean b) {
-		this.b = b;
-	}
+	public void setBoolean(boolean b) { this.b = b; }
 	
-	public String getString() {
-		return s;
-	}
+	public String getString() { return s; }
 	
-	public boolean getBoolean() {
-		return b;
-	}
+	public boolean getBoolean() { return b; }
 }

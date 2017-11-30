@@ -9,19 +9,11 @@ public class BooleanDouble {
 		setDouble(d);
 	}
 
-	public void setBoolean(boolean b) {
-		this.b = b;
-	}
+	public void setBoolean(boolean b) { this.b = b; }
 
-	public void setDouble(double d) {
-		this.d = d;
-	}
+	public void setDouble(double d) { this.d = d; }
 
-	public boolean getBoolean() {
-		return b;
-	}
+	public boolean getBoolean() { return b; }
 	
-	public double getDouble() {
-		return d;
-	}
+	public double getDouble() { return d; }
 }
