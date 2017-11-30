@@ -1,21 +1,18 @@
 package teaType.data;
 
 public class Queue {
+	private int add, take;
 	private int[] array;
-	private int add;
-	private int take;
 	
 	public Queue() {
 		array = new int[100];
-		add = 0;
-		take = 0;
+		add = take = 0;
 		fillEmpty();
 	}
 	
 	public Queue(int size) {
 		array = new int[size];
-		add = 0;
-		take = 0;
+		add = take = 0;
 		fillEmpty();
 	}
 	

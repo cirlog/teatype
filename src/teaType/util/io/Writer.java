@@ -16,9 +16,6 @@ public class Writer {
 	private FileWriter fw;
 	private String path;
 
-	public Writer() {
-	}
-
 	public Writer(String path) {
 		this.path = path;
 	}

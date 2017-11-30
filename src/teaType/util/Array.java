@@ -1,5 +1,6 @@
 package teaType.util;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -9,6 +10,40 @@ import java.util.Arrays;
  */
 
 public class Array {
+	final static PrintWriter out = new PrintWriter(System.out, true);
+
+	public static final void print(String[] arr, boolean linebreak, boolean whitespace) {
+		for(String s : arr) {
+			if(linebreak) {
+				out.println(s);
+			} else {
+				if(whitespace) {
+					out.print(s + " ");	
+				} else {
+					out.print(s);
+				}
+			}
+		}
+		out.flush();
+		out.println();
+	}
+
+	public static final void print(int[] arr, boolean linebreak, boolean whitespace) {
+		for(int i : arr) {
+			if(linebreak) {
+				out.println(i);
+			} else {
+				if(whitespace) {
+					out.print(i + " ");	
+				} else {
+					out.print(i);
+				}
+			}
+		}
+		out.flush();
+		out.println();
+	}
+	
 	/* TEMPORARY SOLUTION FOR ALLROUND-METHOD */
 	public static int[] add(int[] arr, int i) {
 		int[] temp = new int[arr.length+1];
@@ -32,6 +67,7 @@ public class Array {
 	/* -------------------------------------- */
 	
 	public static <T> T[] add(T[] arr, T t) {
+		@SuppressWarnings("unchecked")
 		T[] temp = (T[]) java.lang.reflect.Array.newInstance(arr.getClass().getComponentType(), arr.length+1);
 		for(int i = 0; i < arr.length; i++) {
 			temp[i] = arr[i];

@@ -19,7 +19,7 @@ public class Reader {
 		count = 0;
 	}
 
-	public int[] fileToIntArray(String selectedFile) {
+	public int[] integerArray(String selectedFile) {
 		try{
 			File file = new File(selectedFile);
 			Scanner input = new Scanner (file);
@@ -52,7 +52,7 @@ public class Reader {
 		return null;	
 	}
 
-	public String[] fileToString(String path) {
+	public String[] stringArray(String path) {
 		try{
 			File file = new File(path);
 			in = new Scanner(file);
@@ -147,24 +147,15 @@ public class Reader {
 		return A;
 	}
 	 */
-
-	public int getLength() {
-		return list.size();
-	}
-
-	public ArrayList<String> getList() {
-		return list;
-	}
-
-	public String getFile() {
-		return path;
-	}
-
+	
 	public void emptyCache() {
 		listCache = null;
 		fileCache = null;
 	}
 
-	public void print() {
-	}
+	public int getLength() { return list.size(); }
+
+	public ArrayList<String> getList() { return list; }
+
+	public String getFile() { return path; }
 }
