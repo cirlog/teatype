@@ -6,9 +6,13 @@ public class Parse {
 	static String userInput;
 	static Scanner in;
 
-	public static String parseUserInput() {
+	public static String parseUserInput(boolean line) {
 		in = new Scanner(System.in);
-		return userInput = in.next();
+		if(line) {
+			return userInput = in.nextLine();
+		} else {
+			return userInput = in.next();
+		}
 	}
 
 	public static String toString(int i) { return String.valueOf(i); }
