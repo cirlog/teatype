@@ -88,6 +88,7 @@ public class Array {
 		return temp;
 	}
 	
+	/* Adapted from Apache Commons Lang 3-3.5 */
 	public static <T> T[] clone(final T[] array) {
 		if (array == null) {
 			return null;
@@ -95,6 +96,7 @@ public class Array {
 		return array.clone();
 	}
 	
+	/* Adapted from Apache Commons Lang 3-3.5 */
 	@SafeVarargs
 	public static <T> T[] fuse(T[] mainArr, T... joinArr) {
 		if(mainArr == null) {
