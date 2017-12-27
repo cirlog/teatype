@@ -5,19 +5,40 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import java.util.ArrayList;
-import java.util.List;
 
+/* Adapted from https://stackoverflow.com/questions/1883321/java-system-out-println-and-system-err-println-out-of-order */
+
+/**
+ * The class {@code StreamBuffer}
+ * 
+ * @since JDK 1.91 ~ <i>2017</i>
+ * @author Burak Günaydin <b>{@code (arsonite)}</b>
+ * @see teaType.data.bi.BiPrimitive
+ * @see teaType.data.bi.BiDouble
+ * @see teaType.data.bi.BiInteger
+ * @see teaType.data.bi.BiObject
+ */
 public class StreamBuffer {
-	private static List<OutputStream> streams = null;
-	private static OutputStream lastStream = null;
+	static ArrayList<OutputStream> arr;
+	static OutputStream lastStream;
 
-	private static class FixedStream extends OutputStream {
+	public static void fixConsole() {
+		if (arr!=null) {
+			return;
+		}
+		arr = new ArrayList<OutputStream>();
+		System.setErr(new PrintStream(new FixedStream(System.err)));
+		System.setOut(new PrintStream(new FixedStream(System.out)));
+	}
 
+	static class FixedStream extends OutputStream {
 		private final OutputStream target;
 
 		public FixedStream(OutputStream originalStream) {
+			arr = null;
+			lastStream = null;
 			target = originalStream;
-			streams.add(this);
+			arr.add(this);
 		}
 
 		public void write(int b) throws IOException {
@@ -57,14 +78,5 @@ public class StreamBuffer {
 		public void flush() throws IOException {
 			target.flush();
 		}
-	}
-
-	public static void fixConsole() {
-		if (streams!=null) {
-			return;
-		}
-		streams = new ArrayList<OutputStream>();
-		System.setErr(new PrintStream(new FixedStream(System.err)));
-		System.setOut(new PrintStream(new FixedStream(System.out)));
 	}
 }
