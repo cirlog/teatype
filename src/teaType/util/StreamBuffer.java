@@ -6,7 +6,7 @@ import java.io.PrintStream;
 
 import teaType.data.SynchronizedList;
 
-/* Adapted from https://stackoverflow.com/questions/1883321/java-system-out-println-and-system-err-println-out-of-order */
+/* Adapted from https://stackoverflow.com/questions/1883321/java-system-out-println-&-system-err-println-out-of-order */
 
 /**
  * The class {@code StreamBuffer}
@@ -23,7 +23,7 @@ public class StreamBuffer {
 	static OutputStream lastStream;
 
 	public static void fixConsole() {
-		if (arr!=null) {
+		if(arr!=null) {
 			return;
 		}
 		arr = new SynchronizedList<OutputStream>();
@@ -42,38 +42,40 @@ public class StreamBuffer {
 		}
 
 		public void write(int b) throws IOException {
-			if (lastStream != this) {
+			if(lastStream != this) {
 				swap();
 			}
 			target.write(b);
 		}
 
 		public void write(byte[] b) throws IOException {
-			if (lastStream != this) {
+			if(lastStream != this) {
 				swap();
 			}
 			target.write(b);
 		}
 
 		public void write(byte[] b, int off, int len) throws IOException {
-			if (lastStream!=this) swap();
-			target.write(b, off, len);
+			if(lastStream!=this) {
+				swap();
+				target.write(b, off, len);	
+			}
 		}
 
 		private void swap() throws IOException {
-			if (lastStream!=null) {
+			if(lastStream!=null) {
 				lastStream.flush();
 				try {
 					Thread.sleep(50); // Change this integer-value to adjust the print-delay
 				} catch (InterruptedException e) {
-
+					e.printStackTrace();
 				}
 			}
 			lastStream = this;
 		}
 
 		public void close() throws IOException { target.close(); }
-		
+
 		public void flush() throws IOException { target.flush(); }
 	}
 }

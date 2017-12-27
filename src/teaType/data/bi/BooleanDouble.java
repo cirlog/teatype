@@ -2,9 +2,9 @@ package teaType.data.bi;
 
 /**
  * The class {@code BooleanDouble} is a very simple dual-primitive data-type.<br>
- * It's main and (only) intended use is the storing of two independent
+ * It's main & (only) intended use is the storing of two independent
  * values.<br>
- * One {@code boolean} and one {@code double} value.
+ * One {@code boolean} & one {@code double} value.
  * 
  * @since JDK 1.91 ~ <i>2017</i>
  * @author Burak Günaydin <b>{@code (arsonite)}</b>
@@ -15,14 +15,22 @@ package teaType.data.bi;
  * @see teaType.data.bi.StringInteger
  */
 public class BooleanDouble implements BiPrimitive {
-	private boolean b;
+	
+	/**
+	 * 
+	 */
 	final boolean fb;
-	private double d;
 	final double fd;
+	
+	/**
+	 * 
+	 */
+	private boolean b;
+	private double d;
 
 	public BooleanDouble(boolean b, double d) {
-		setBoolean(b);
-		setDouble(d);
+		fb = this.b = b;
+		fd = this.d = d;
 	}
 
 	public void setBoolean(boolean b) { this.b = b; }

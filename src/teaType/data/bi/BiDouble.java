@@ -2,7 +2,7 @@ package teaType.data.bi;
 
 /**
  * The class {@code BiDouble} is a very simple dual-primitive data-type.<br>
- * It's main and (only) intended use is the storing of two independent
+ * It's main & (only) intended use is the storing of two independent
  * {@code double} values.
  * 
  * @since JDK 1.91 ~ <i>2017</i>

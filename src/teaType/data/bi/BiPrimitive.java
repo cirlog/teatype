@@ -14,7 +14,7 @@ package teaType.data.bi;
 public abstract interface BiPrimitive {
 	
 	/**
-	 * Clears the variables of any values and either declares
+	 * Clears the variables of any values & either declares
 	 * them <i>null</i> or <i>0</i>.
 	 */
 	public void clear();

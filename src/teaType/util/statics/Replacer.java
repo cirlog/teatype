@@ -17,7 +17,7 @@ public class Replacer {
 	}
 
 	public static void replaceWithStrings(File file) throws IOException {
-		// TODO: Better and more efficient code
+		// TODO: Better & more efficient code
 		in = new Scanner(file);
 		ArrayList<String> l = new ArrayList<String>();
 		while(in.hasNextLine()) {
