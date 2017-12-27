@@ -1,12 +1,11 @@
 package teaType._debug.libraryTests;
 
-import teaType.util.Array
-;
-import teaType.util.statics.Randomizer;
+import teaType.util.Array;
+import teaType.util.rigid.Random;
 
 public class Sort_Test {
 	public static void main(String[] args) {
-		int[] arr = Randomizer.generateInteger(20, 1000, false, false, false);
+		int[] arr = Random.generateInteger(20, 1000, false, false, false);
 		Array.quicksort(arr, true);
 		Array.print(arr, true, true);
 	}

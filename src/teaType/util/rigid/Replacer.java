@@ -1,4 +1,4 @@
-package teaType.util.statics;
+package teaType.util.rigid;
 
 import java.io.File;
 import java.io.IOException;

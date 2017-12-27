@@ -4,8 +4,8 @@ import teaType.util.Array;
 
 public class Array_Tests {
 	public static void main(String[] args) {
-		arrayMath();
-		//arrayJoin();
+		//arrayMath();
+		arrayJoin();
 	}
 	
 	private final static void arrayMath() {

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 
-import teaType.util.statics.Randomizer;
+import teaType.util.rigid.Random;
 
 public class Randomizer_Test {
 	private static long[] time;
@@ -17,13 +17,13 @@ public class Randomizer_Test {
 		
 		time = new long[3];
 		for(int i = 0; i < 100; i++) {
-			out.println(new Randomizer().nextInt(2));
+			out.println(new Random().nextInt(2));
 		}
 		//speedTest_printInteger(out);
 	}
 
 	private final static void speedTest_printInteger(PrintWriter out) {
-		int[] temp = Randomizer.generateInteger(100000, 0, true, true, false);
+		int[] temp = Random.generateInteger(100000, 0, true, true, false);
 		int[] arr = new int[temp.length];
 		LinkedList<Integer> linkList = new LinkedList<Integer>();
 		ArrayList<Integer> arrList = new ArrayList<Integer>();

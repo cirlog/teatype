@@ -2,7 +2,7 @@ package teaType._debug.libraryTests;
 
 import java.io.UnsupportedEncodingException;
 
-import teaType.util.statics.UnicodeTable;
+import teaType.util.rigid.UnicodeTable;
 
 public class Unicode_Test {
 	public static void main(String[] args) {

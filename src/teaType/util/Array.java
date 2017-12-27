@@ -101,23 +101,29 @@ public class Array {
 	public static <T> T[] fuse(T[] mainArr, T... joinArr) {
 		if(mainArr == null) {
 			return clone(joinArr);
-		} else if (joinArr == null) {
+		} else if(joinArr == null) {
 			return clone(mainArr);
 		}
-		Class<?> arrType1 = mainArr.getClass().getComponentType();
+		Class<?> type = mainArr.getClass().getComponentType();
 		@SuppressWarnings("unchecked")
-		T[] joinedArray = (T[]) java.lang.reflect.Array.newInstance(arrType1, mainArr.length + joinArr.length);
-		System.arraycopy(mainArr, 0, joinedArray, 0, mainArr.length);
+		T[] arr = (T[]) java.lang.reflect.Array.newInstance(type, mainArr.length + joinArr.length);
+		System.arraycopy(mainArr, 0, arr, 0, mainArr.length);
 		try {
-			System.arraycopy(joinArr, 0, joinedArray, mainArr.length, joinArr.length);
+			System.arraycopy(joinArr, 0, arr, mainArr.length, joinArr.length);
 		} catch (ArrayStoreException e) {
 			e.printStackTrace();
 		}
-		return joinedArray;
+		return arr;
 	}
 	
 	public final static ArrayList<String> toArrayList(String[] arr) {
 		ArrayList<String> temp = new ArrayList<String>();
+		return temp;
+	}
+	
+
+	public final static <T> ArrayList<T> toArrayList(T[] arr) {
+		ArrayList<T> temp = new ArrayList<T>();
 		return temp;
 	}
 	
