@@ -56,9 +56,16 @@ public class BiObject implements BiPrimitive {
 
 	@Override
 	public void clear() {
+		
+	}
+
+	@Override
+	public void reset() {
+
 	}
 
 	@Override
 	public void random(int bound) {
+		
 	}
 }

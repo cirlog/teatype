@@ -20,6 +20,12 @@ public abstract interface BiPrimitive {
 	public void clear();
 	
 	/**
+	 * Resets the {@code non-final} variable to the first declared
+	 * {@code final} value.
+	 */
+	public void reset();
+	
+	/**
 	 * Randomizes values of the given {@code BiPrimitive}.<br>
 	 * Length of values is limited by <i>bound</i>.
 	 * 

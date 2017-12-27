@@ -14,10 +14,10 @@ package teaType.data.bi;
  */
 public class BiDouble implements BiPrimitive {
 	
-	/**
-	 * 
-	 */
+	/** First given value is always the {@code final} one **/
 	final double f1, f2;
+
+	/** {@code Non-final} double-value **/
 	private double d1, d2;
 
 	/**
@@ -30,14 +30,14 @@ public class BiDouble implements BiPrimitive {
 		f1 = this.d1 = d1;
 		f2 = this.d2 = d2;
 	}
-	
+
 	/**
 	 * Typical setter-method to modify the first value.
 	 * 
 	 * @param d1
 	 */
 	public void setFirstDouble(double d1) { this.d1 = d1; }
-	
+
 	/**
 	 * Typical setter-method to modify the first value.
 	 * 
@@ -46,24 +46,44 @@ public class BiDouble implements BiPrimitive {
 	public void setSecondDouble(double d2) { this.d2 = d2; }
 
 	/**
-	 * Typical getter-method to get the first value.
+	 * Typical getter-method to get the first value.<br>
+	 * If the value was changed, the last {@code non-final} value
+	 * is returned.
 	 * 
-	 * @return
+	 * @return First double-value
 	 */
-	public double getFirstDouble() { return d1; }
-	
+	public double getFirstDouble() {
+		if(f1 != d1) {
+			return d1;	
+		}
+		return f1;
+	}
+
 	/**
-	 * Typical getter-method to get the first value.
+	 * Typical getter-method to get the second value.
 	 * 
+	 * If the value was changed, the last {@code non-final} value
+	 * is returned.
 	 * @return
 	 */
-	public double getSecondDouble() { return d2; }
+	public double getSecondDouble() {
+		if(f2 != d2) {
+			return d2;	
+		}
+		return f2;
+	}
 
 	@Override
-	public void clear() {
+	public void clear() { d1 = d2 = 0; }
+	
+	@Override
+	public void reset() {
+		d1 = f1;
+		d2 = f2;
 	}
 
 	@Override
 	public void random(int bound) {
+		
 	}
 }

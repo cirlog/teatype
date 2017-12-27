@@ -13,7 +13,7 @@ package teaType.data.bi;
  * @see teaType.data.bi.BiString
  */
 public class BiInteger implements BiPrimitive {
-	
+
 	/**
 	 * 
 	 */
@@ -29,14 +29,14 @@ public class BiInteger implements BiPrimitive {
 		setFirstInteger(i1);
 		setSecondInteger(i2);
 	}
-	
+
 	/**
 	 * 
 	 * 
 	 * @param i1
 	 */
 	public void setFirstInteger(int i1) { this.i1 = i1; }
-	
+
 	/**
 	 * 
 	 * 
@@ -50,7 +50,7 @@ public class BiInteger implements BiPrimitive {
 	 * @return
 	 */
 	public int getFirstInteger() { return i1; }
-	
+
 	/**
 	 * 
 	 * 
@@ -60,9 +60,16 @@ public class BiInteger implements BiPrimitive {
 
 	@Override
 	public void clear() {
+
+	}
+
+	@Override
+	public void reset() {
+
 	}
 
 	@Override
 	public void random(int bound) {
+
 	}
 }
