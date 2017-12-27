@@ -12,7 +12,7 @@ package teaType.data.bi;
  * @see teaType.data.bi.BiInteger
  * @see teaType.data.bi.BiObject
  */
-public class BiString {
+public class BiString implements BiPrimitive {
 	private String s1, s2;
 
 	/**
@@ -53,4 +53,12 @@ public class BiString {
 	 * @return
 	 */
 	public String getSecondString() { return s2; }
+
+	@Override
+	public void clear() {
+	}
+
+	@Override
+	public void random(int bound) {
+	}
 }

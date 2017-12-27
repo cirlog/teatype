@@ -6,7 +6,7 @@ package teaType.data.bi;
  * @since 
  * @author Burak Günaydin<br><i>aka</i> <b>{@code arsonite}</b>
  */
-public class BooleanDouble {
+public class BooleanDouble implements BiPrimitive {
 	private boolean b;
 	private double d;
 
@@ -20,4 +20,12 @@ public class BooleanDouble {
 
 	public boolean getBoolean() { return b; }
 	public double getDouble() { return d; }
+
+	@Override
+	public void clear() {
+	}
+
+	@Override
+	public void random(int bound) {
+	}
 }
