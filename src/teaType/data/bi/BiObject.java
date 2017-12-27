@@ -53,4 +53,12 @@ public class BiObject implements BiPrimitive {
 	 * @return
 	 */
 	public Object getSecondObject() { return o2; }
+
+	@Override
+	public void clear() {
+	}
+
+	@Override
+	public void random(int bound) {
+	}
 }

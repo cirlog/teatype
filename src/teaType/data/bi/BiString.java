@@ -1,7 +1,5 @@
 package teaType.data.bi;
 
-import java.util.Random;
-
 /**
  * The class {@code BiString} is a very simple dual-primitive data-type.<br>
  * It's main and (only) intended use is the storing of two independent
@@ -20,8 +18,8 @@ public class BiString {
 	/**
 	 * 
 	 * 
-	 * @param s1
-	 * @param s2
+	 * @param s1 The first string part of the BiString
+	 * @param s2 The second string part of the BiString
 	 */
 	public BiString(String s1, String s2) {
 		setFirstString(s1);

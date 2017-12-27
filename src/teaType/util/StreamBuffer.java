@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import java.util.ArrayList;
+import teaType.data.SynchronizedList;
 
 /* Adapted from https://stackoverflow.com/questions/1883321/java-system-out-println-and-system-err-println-out-of-order */
 
@@ -19,14 +19,14 @@ import java.util.ArrayList;
  * @see teaType.data.bi.BiObject
  */
 public class StreamBuffer {
-	static ArrayList<OutputStream> arr;
+	static SynchronizedList<OutputStream> arr;
 	static OutputStream lastStream;
 
 	public static void fixConsole() {
 		if (arr!=null) {
 			return;
 		}
-		arr = new ArrayList<OutputStream>();
+		arr = new SynchronizedList<OutputStream>();
 		System.setErr(new PrintStream(new FixedStream(System.err)));
 		System.setOut(new PrintStream(new FixedStream(System.out)));
 	}
@@ -64,7 +64,7 @@ public class StreamBuffer {
 			if (lastStream!=null) {
 				lastStream.flush();
 				try {
-					Thread.sleep(50); // Change this value to adjust the print-delay
+					Thread.sleep(50); // Change this integer-value to adjust the print-delay
 				} catch (InterruptedException e) {
 
 				}
@@ -72,11 +72,8 @@ public class StreamBuffer {
 			lastStream = this;
 		}
 
-		public void close() throws IOException {
-			target.close();
-		}
-		public void flush() throws IOException {
-			target.flush();
-		}
+		public void close() throws IOException { target.close(); }
+		
+		public void flush() throws IOException { target.flush(); }
 	}
 }
