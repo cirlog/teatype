@@ -1,5 +1,7 @@
 package teaType.data.bi;
 
+import teaType.util.rigid.Random;
+
 /**
  * The class {@code BiDouble} is a very simple dual-primitive data-type.<br>
  * It's main & (only) intended use is the storing of two independent
@@ -17,11 +19,12 @@ public class BiDouble implements BiPrimitive {
 	/** First given value is always the {@code final} one **/
 	final double f1, f2;
 
-	/** {@code Non-final} double-value **/
+	/** Copied {@code non-final} double-value **/
 	private double d1, d2;
 
 	/**
-	 * Simple constructor 
+	 * Simple constructor assigning both the
+	 * {@code final} & {@code non-final} the same value
 	 * 
 	 * @param d1
 	 * @param d2
@@ -32,14 +35,16 @@ public class BiDouble implements BiPrimitive {
 	}
 
 	/**
-	 * Typical setter-method to modify the first value.
+	 * Typical setter-method to modify the first
+	 * {@code non-final} value.
 	 * 
 	 * @param d1
 	 */
 	public void setFirstDouble(double d1) { this.d1 = d1; }
 
 	/**
-	 * Typical setter-method to modify the first value.
+	 * Typical setter-method to modify the second
+	 * {@code non-final} value.
 	 * 
 	 * @param d2
 	 */
@@ -47,6 +52,7 @@ public class BiDouble implements BiPrimitive {
 
 	/**
 	 * Typical getter-method to get the first value.<br>
+	 * 
 	 * If the value was changed, the last {@code non-final} value
 	 * is returned.
 	 * 
@@ -60,7 +66,7 @@ public class BiDouble implements BiPrimitive {
 	}
 
 	/**
-	 * Typical getter-method to get the second value.
+	 * Typical getter-method to receive the second value.
 	 * 
 	 * If the value was changed, the last {@code non-final} value
 	 * is returned.
@@ -84,6 +90,8 @@ public class BiDouble implements BiPrimitive {
 
 	@Override
 	public void random(int bound) {
-		
+		Random r = new Random();
+		d1 = r.nextInt(bound);
+		d2 = r.nextInt(bound);
 	}
 }

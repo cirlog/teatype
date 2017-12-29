@@ -20,15 +20,18 @@ public class Random extends java.util.Random {
 
 	private long x;
 
-	private static Random generator;
-	static { generator = new Random(); }
+	/**
+	 * A {@code Random}-
+	 */
+	private static Random gen;
+	static { gen = new Random(); }
 
 	/** Produces a pseudo random number from the interval [0,1].<br>
 	 * A direct replacement for Math.random().
 	 *
 	 * @return A pseudo random number from the interval [0,1]
 	 */
-	public static double random() { return generator.nextDouble(); }
+	public static double random() { return gen.nextDouble(); }
 
 	public Random() { this(System.nanoTime()); }
 

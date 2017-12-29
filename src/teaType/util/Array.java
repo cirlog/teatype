@@ -98,18 +98,18 @@ public class Array {
 	
 	/* Adapted from Apache Commons Lang 3-3.5 */
 	@SafeVarargs
-	public static <T> T[] fuse(T[] mainArr, T... joinArr) {
-		if(mainArr == null) {
-			return clone(joinArr);
-		} else if(joinArr == null) {
-			return clone(mainArr);
+	public static <T> T[] fuse(T[] main, T... join) {
+		if(main == null) {
+			return clone(join);
+		} else if(join == null) {
+			return clone(main);
 		}
-		Class<?> type = mainArr.getClass().getComponentType();
+		Class<?> type = main.getClass().getComponentType();
 		@SuppressWarnings("unchecked")
-		T[] arr = (T[]) java.lang.reflect.Array.newInstance(type, mainArr.length + joinArr.length);
-		System.arraycopy(mainArr, 0, arr, 0, mainArr.length);
+		T[] arr = (T[]) java.lang.reflect.Array.newInstance(type, main.length + join.length);
+		System.arraycopy(main, 0, arr, 0, main.length);
 		try {
-			System.arraycopy(joinArr, 0, arr, mainArr.length, joinArr.length);
+			System.arraycopy(join, 0, arr, main.length, join.length);
 		} catch (ArrayStoreException e) {
 			e.printStackTrace();
 		}
@@ -118,22 +118,64 @@ public class Array {
 	
 	public final static ArrayList<String> toArrayList(String[] arr) {
 		ArrayList<String> temp = new ArrayList<String>();
-		return temp;
-	}
-	
-
-	public final static <T> ArrayList<T> toArrayList(T[] arr) {
-		ArrayList<T> temp = new ArrayList<T>();
-		return temp;
-	}
-	
-	public final static String[] fromArrayList(ArrayList<String> arrList) {
-		String[] temp = new String[arrList.size()];
-		for (int i = 0; i < arrList.size(); i++) {
-			temp[i] = arrList.get(i);
+		for(int i = 0; i < arr.length; i++) {
+			temp.add(arr[i]);
 		}
 		return temp;
 	}
+	
+	public final static ArrayList<Integer> toArrayList(int[] arr) {
+		ArrayList<Integer> temp = new ArrayList<Integer>();
+		for(int i = 0; i < arr.length; i++) {
+			temp.add(arr[i]);
+		}
+		return temp;
+	}
+	
+	public final static ArrayList<Double> toArrayList(double[] arr) {
+		ArrayList<Double> temp = new ArrayList<Double>();
+		for(int i = 0; i < arr.length; i++) {
+			temp.add(arr[i]);
+		}
+		return temp;
+	}
+	
+	public final static <T> ArrayList<T> toArrayList(T[] arr) {
+		Class<?> type = arr.getClass().getComponentType();
+		@SuppressWarnings("unchecked")
+		T[] foo = (T[]) java.lang.reflect.Array.newInstance(type, arr.length);
+		ArrayList<T> temp = new ArrayList<T>();
+		for(int i = 0; i < arr.length; i++) {
+			temp.add(foo[i]);
+		}
+		return temp;
+	}
+
+	public final static String[] fromArrayList(ArrayList<String> list) {
+		String[] temp = new String[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			temp[i] = list.get(i);
+		}
+		return temp;
+	}
+	
+	/*
+	public final static int[] fromArrayList(ArrayList<Integer> list) {
+		int[] temp = new int[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			temp[i] = list.get(i);
+		}
+		return temp;
+	}
+	
+	public final static double[] fromArrayList(ArrayList<Double> list) {
+		double[] temp = new double[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			temp[i] = list.get(i);
+		}
+		return temp;
+	}
+	*/
 	
 	private final static void sortDescending(int[] arr) {
 		int[] temp = new int[arr.length];

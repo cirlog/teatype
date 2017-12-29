@@ -1,14 +1,32 @@
 package teaType._debug.libraryTests;
 
+import java.util.ArrayList;
+
 import teaType.util.Array;
+import teaType.util.rigid.Random;
 
 public class Array_Tests {
 	public static void main(String[] args) {
 		//arrayMath();
-		arrayJoin();
+		//arrayJoin();
+		arrayConverter();
 	}
 	
-	private final static void arrayMath() {
+	final static void arrayConverter() {
+		int[] iArr = Random.generateInteger(100, 0, true, false, false);
+		System.out.println("Integer-Array: ");
+		for(int i : iArr) {
+			System.out.print(i + " ");
+		}
+		
+		ArrayList<Integer> iList = Array.toArrayList(iArr);
+		System.out.println("Integer-ArrayList: ");
+		for(int i : iList) {
+			System.out.print(i + " ");
+		}
+	}
+
+	final static void arrayMath() {
 		int[] arr = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 		for(int i : arr) {
 			System.out.print(i + " ");
@@ -25,7 +43,7 @@ public class Array_Tests {
 		}
 	}
 
-	private final static void arrayJoin() {
+	final static void arrayJoin() {
 		String[] s1 = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
 		String[] s2 = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 		
