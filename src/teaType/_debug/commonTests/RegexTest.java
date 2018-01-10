@@ -13,10 +13,25 @@ public class RegexTest {
 		//int port = Integer.parseInt(98 + host.replaceAll("[^\\d]+", ""));
 		//out.println(port);
 		
-		String s = "GET /?A=Name&B=Number&C=Starte+Suche HTTP/1.1\n";
-		String name = s.replaceAll("GET /\\?A=", "").replaceAll("&B.*", "");
-		String number = s.replaceAll("GET /\\?A=.*&B=", "").replaceAll("&[CD].*", "");
-		String action = s.replaceAll("GET /\\?A=.+&[CD]+?=", "").replaceAll("\\+", "").replaceAll(" HTTP/1.1", "");
-		out.printf("%s%n%s%n%s%n%s%n", s, name, number, action);
+//		String s = "GET /?A=Name&B=Number&C=Starte+Suche HTTP/1.1\n";
+//		String name = s.replaceAll("GET /\\?A=", "").replaceAll("&B.*", "");
+//		String number = s.replaceAll("GET /\\?A=.*&B=", "").replaceAll("&[CD].*", "");
+//		String action = s.replaceAll("GET /\\?A=.+&[CD]+?=", "").replaceAll("\\+", "").replaceAll(" HTTP/1.1", "");
+//		out.printf("%s%n%s%n%s%n%s%n", s, name, number, action);
+		
+		Utility u = new Utility();
+		String name1 = "Büßtermann";
+		String name2 = "Stör";
+		String name3 = "Uwe";
+		
+		name1 = u.replaceVowel(name1);
+		System.out.println(name1 + "\n");
+		
+		name1 = u.replaceVowel(name2);
+		System.out.println(name2 + "\n");
+		
+		name1 = u.replaceVowel(name3);
+		System.out.println(name3);
+		
 	}
 }
