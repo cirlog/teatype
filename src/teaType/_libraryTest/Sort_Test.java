@@ -1,4 +1,4 @@
-package teaType._debug.libraryTests;
+package teaType._libraryTest;
 
 import teaType.util.Array;
 import teaType.util.rigid.Random;

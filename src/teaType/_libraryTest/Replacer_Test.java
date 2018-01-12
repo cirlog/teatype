@@ -1,4 +1,4 @@
-package teaType._debug.libraryTests;
+package teaType._libraryTest;
 
 import java.io.File;
 import java.io.IOException;
