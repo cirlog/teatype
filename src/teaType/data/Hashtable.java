@@ -71,7 +71,7 @@ public class Hashtable {
 		return null;
 	}
 
-	private boolean isEmpty(int index) {
+	final boolean isEmpty(int index) {
 		if(list[index] == null){
 			return true;
 		}
