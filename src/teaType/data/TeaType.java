@@ -9,7 +9,7 @@ import java.util.ListIterator;
 import teaType.util.rigid.Print;
 
 /**
- * The data-structure {@code TeaList} is my thread-safe implementation of the data-structure ArrayList.
+ * The data-structure {@code TeaType} is my thread-safe implementation of the data-structure ArrayList.
  * 
  * @since JDK 1.91 ~ <i>2018</i>
  * @author Burak Günaydin <b>{@code (arsonite)}</b>
@@ -19,7 +19,7 @@ import teaType.util.rigid.Print;
 
 public class TeaType<T> implements List<T> {
 	private boolean lock, dupli;
-	final ArrayList<T> arr;
+	private ArrayList<T> arr;
 
 	public TeaType() {
 		arr = new ArrayList<T>();
@@ -49,13 +49,27 @@ public class TeaType<T> implements List<T> {
 			if(!lock) {
 				add(e);
 				return true;
-			} else {
-				return false;
 			}
+			return false;
 		}
 	}
 
-	public final T pop() { return arr.remove(arr.size()); }
+	public final T pop() throws Exception {
+		synchronized(this.getClass()) {
+			if(size() > 0) {
+				return arr.remove(arr.size()-1);
+			}
+			throw new Exception("List is empty.");
+		}
+	}
+
+	public final T shift() {
+		return null;
+	}
+
+	public final T unshift() {
+		return null;
+	}
 
 	/**
 	 * Placeholder
@@ -64,17 +78,20 @@ public class TeaType<T> implements List<T> {
 	 */
 	public final boolean add(T e) {
 		synchronized(this.getClass()) {
-			if(dupli) {
+			if(!lock) {
+				if(dupli) {
+					arr.add(e);
+					return true;
+				}
+				for(T t : arr) {
+					if(e.equals(t)) {
+						return false;
+					}
+				}
 				arr.add(e);
 				return true;
 			}
-			for(T t : arr) {
-				if(e.equals(t)) {
-					return false;
-				}
-			}
-			arr.add(e);
-			return true;
+			return false;
 		}
 	}
 
@@ -136,17 +153,39 @@ public class TeaType<T> implements List<T> {
 	}
 
 	public final void print() {
-		String s = "Contents of list:";
-		System.out.println(s);
-		Print.lines(s);
-		for(int i = 0; i < arr.size(); i++) {
-			System.out.printf("Class: %s | Content: \'%s\' | Index: %d%n",
-					arr.get(i).getClass().getSimpleName(), arr.get(i).toString(), i);
+		if(size() > 0) {
+			String s = "Contents of list (size of " + size() + "):";
+			System.out.println(s);
+			Print.lines(s);
+			for(int i = 0; i < arr.size(); i++) {
+				System.out.printf("Class: %s | Content: \'%s\' | Index: %d%n",
+						arr.get(i).getClass().getSimpleName(), arr.get(i).toString(), i);
+			}
+			System.out.println();
+			return;
 		}
-		System.out.println();
+		System.out.println("List is empty.");
 	}
 
-	public final void clear() { arr.clear(); }
+	public final void clear() {
+		synchronized(this.getClass()) {
+			arr.clear();
+		}
+	}
+
+	public final void trim() {
+		synchronized(this.getClass()) {
+			ArrayList<T> temp = new ArrayList<T>();
+			int c = 0;
+			for(int i = 0; i < arr.size(); i++) {
+				if(arr.get(i) != null) {
+					temp.add(c, arr.get(i));
+					c++;
+				}
+			}
+			arr = temp;
+		}
+	}
 
 	public final boolean contains(Object o) {
 		return false;
@@ -190,7 +229,9 @@ public class TeaType<T> implements List<T> {
 	}
 
 	public final T remove(int index) {
-		return null;
+		synchronized(this.getClass()) {
+			return arr.remove(index);
+		}
 	}
 
 	public final int indexOf(Object o) {
