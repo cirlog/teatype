@@ -20,9 +20,21 @@ import teaType.util.rigid.Print;
 public class TeaType<T> implements List<T> {
 	private boolean lock, dupli;
 	private ArrayList<T> arr;
+	private ArrayList<ArrayList<T>> list;
 
 	public TeaType() {
 		arr = new ArrayList<T>();
+		reset();
+	}
+	
+	public TeaType(int len) {
+		arr = new ArrayList<T>(len);
+		reset();
+	}
+	
+	final void reset() {
+		list = new ArrayList<ArrayList<T>>();
+		list.add(0, arr);
 		lock = false;
 		dupli = true;
 	}
