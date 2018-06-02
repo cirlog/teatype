@@ -10,12 +10,11 @@ public class Print {
 		}
 		System.out.println();
 	}
-	
+
 	public static void unicodeTable(int bound, boolean displayHex) throws UnsupportedEncodingException {
 		PrintStream out = new PrintStream(System.out, true, "UTF-8");
 		String hex;
-		
-		for (int i = 33; i < bound; i++) {
+		for(int i = 33; i < bound; i++) {
 			hex = Integer.toHexString(i);
 			if(displayHex) {
 				out.println(hex + " = " + (char) i);

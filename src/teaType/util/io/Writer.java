@@ -10,6 +10,8 @@ import java.io.PrintWriter;
 
 import java.util.ArrayList;
 
+import teaType.data.TeaType;
+
 import teaType.util.StreamBuffer;
 
 public class Writer {
@@ -18,6 +20,40 @@ public class Writer {
 
 	public Writer(String path) {
 		this.path = path;
+	}
+	
+	public void teaType(TeaType<String> tt, boolean create, boolean append, boolean linebreak, boolean extraspace) {
+		StreamBuffer.fixConsole();
+		PrintWriter pw = null;
+		try {
+			File file = new File(path);
+			if(create && !file.exists()) {
+				file.createNewFile();
+			} else if(create && file.exists()) {
+				file.delete();
+				file.createNewFile();
+			}
+			OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(file, append), "UTF-8");
+			pw = new PrintWriter(new BufferedWriter(osw), true);
+			for(int i = 0; i < tt.size(); i++) {
+				pw.write(tt.get(i));	
+				System.err.print("Writing... ");
+				System.out.println(tt.get(i));
+				if(linebreak && i < tt.size()-1) {
+					pw.write("\n");
+				}
+			}
+			if(extraspace) {
+				pw.write("\n");
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			pw.flush();
+			pw.close();
+			System.out.print("\nDone! ");
+			System.err.print("Process yielded no errors.");
+		}
 	}
 
 	public void arraylist(ArrayList<String> list, boolean create, boolean append, boolean linebreak, boolean extraspace) {

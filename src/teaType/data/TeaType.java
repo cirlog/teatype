@@ -9,7 +9,10 @@ import java.util.ListIterator;
 import teaType.util.rigid.Print;
 
 /**
- * The data-structure {@code TeaType} is my thread-safe implementation of the data-structure ArrayList.
+ * The data-structure {@code TeaType} is my thread-safe
+ * implementation of the data-structure ArrayList.<br><br>
+ * 
+ * It includes features of the stack and the queue like
  * 
  * @since JDK 1.91 ~ <i>2018</i>
  * @author Burak Günaydin <b>{@code (arsonite)}</b>
@@ -20,7 +23,6 @@ import teaType.util.rigid.Print;
 public class TeaType<T> implements List<T> {
 	private boolean lock, dupli;
 	private ArrayList<T> arr;
-	private ArrayList<ArrayList<T>> list;
 
 	public TeaType() {
 		arr = new ArrayList<T>();
@@ -33,8 +35,6 @@ public class TeaType<T> implements List<T> {
 	}
 	
 	final void reset() {
-		list = new ArrayList<ArrayList<T>>();
-		list.add(0, arr);
 		lock = false;
 		dupli = true;
 	}
@@ -75,14 +75,6 @@ public class TeaType<T> implements List<T> {
 		}
 	}
 
-	public final T shift() {
-		return null;
-	}
-
-	public final T unshift() {
-		return null;
-	}
-
 	/**
 	 * Placeholder
 	 * 
@@ -107,9 +99,7 @@ public class TeaType<T> implements List<T> {
 		}
 	}
 
-	/**
-	 * @deprecated use {@link #add(T e)} instead.  
-	 */
+	/** @deprecated use {@link #add(T e)} instead */
 	public final void add(int i, T e) {
 		synchronized(this.getClass()) {
 			arr.add(i, e);

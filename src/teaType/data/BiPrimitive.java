@@ -5,12 +5,8 @@ package teaType.data;
  * It's main & (only) intended use is the storing of two independent
  * {@code Object} values.
  * 
- * @since JDK 1.91 ~ <i>2017</i>
+ * @since JDK 1.91 ~ <i>2018</i>
  * @author Burak Günaydin <b>{@code (arsonite)}</b>
- * @see teaType.data.bi.BiPrimitive
- * @see teaType.data.bi.BiDouble
- * @see teaType.data.bi.BiInteger
- * @see teaType.data.bi.BiString
  */
 public class BiPrimitive {
 
@@ -20,8 +16,11 @@ public class BiPrimitive {
 	/** Copied {@code non-final Object}-value **/
 	private Object o1, o2;
 
+	/** Stores the class of each primitive {@code final} value */
+	final Class<?> fc1, fc2;
+
 	/** Stores the class of each primitive value */
-	final Class<?> c1, c2;
+	private Class<?> c1, c2;
 
 	/**
 	 * Simple constructor assigning both the
@@ -33,8 +32,8 @@ public class BiPrimitive {
 	public BiPrimitive(Object o1, Object o2) {
 		f1 = this.o1 = o1;
 		f2 = this.o2 = o2;
-		c1 = o1.getClass();
-		c2 = o2.getClass();
+		fc1 = c1 = o1.getClass();
+		fc2 = c2 = o2.getClass();
 	}
 
 	/**
@@ -43,7 +42,10 @@ public class BiPrimitive {
 	 * 
 	 * @param d1 The first {@code Object}-value
 	 */
-	public final void setFirstPrimitive(Object o1) { this.o1 = o1; }
+	public final void setFirst(Object o1) {
+		this.o1 = o1;
+		c1 = o1.getClass();
+	}
 
 	/**
 	 * Typical setter-method to modify the second
@@ -51,7 +53,10 @@ public class BiPrimitive {
 	 * 
 	 * @param d2 The second {@code Object}-value
 	 */
-	public final void setSecondPrimitive(Object o2) { this.o2 = o2; }
+	public final void setSecond(Object o2) {
+		this.o2 = o2;
+		c2 = o2.getClass();
+	}
 
 	/**
 	 * Typical getter-method to receive the first {@code Object} value.<br>
@@ -61,7 +66,9 @@ public class BiPrimitive {
 	 * 
 	 * @return The first {@code Object} value
 	 */
-	public final Object getFirstPrimitive() { return o1; }
+	public final Object getFirst() {
+		return o1;
+	}
 
 	/**
 	 * Typical getter-method to receive the second {@code Object} value.<br>
@@ -71,47 +78,48 @@ public class BiPrimitive {
 	 * 
 	 * @return The second {@code Object} value
 	 */
-	public final Object getSecondPrimitive() { return o2; }
-
-	public final void print() {
-
+	public final Object getSecond() {
+		return o2;
 	}
+
+	/**
+	 * Prints the attributes of current {@code BiPrimitive} object.<br>
+	 * Utilizes the {@link #toString()} method.
+	 */
+	public final void print() { System.out.println(this.toString() + "\n"); }
 
 	/**
 	 * Clears the variables of any values & either declares
 	 * them <i>null</i> or <i>0</i>.
+	 * @see {@link #empty()}
 	 */
 	public void clear() {
-		Class<?> s, i, I, d, D, f, F, sh, Sh, b, B, bo, Bo;
-		s = String.class;
-		i = int.class;
-		I = Integer.class;
-		d = double.class;
-		D = Double.class;
-		f = float.class;
-		F = Float.class;
-		sh = short.class;
-		Sh = Short.class;
-		b = byte.class;
-		B = Byte.class;
-		bo = boolean.class;
-		Bo = Boolean.class;
-		if(c1 == s) { o1 = ""; }
-		else if(c2 == s) { o2 = ""; }
-		else if(c1 == i || c2 == I) { o1 = 0; }
-		else if(c2 == i || c2 == I) { o2 = 0; }
-		else if(c1 == d || c1 == D) { o1 = 0.0; }
-		else if(c2 == d || c2 == D) { o2 = 0.0; }
-		else if(c1 == f || c1 == F) { o1 = 0.0; }
-		else if(c2 == f || c2 == F) { o2 = 0.0; }
-		else if(c1 == sh || c1 == Sh) { o1 = 0; }
-		else if(c2 == sh || c2 == Sh) { o2 = 0; }
-		else if(c1 != s &&
-				c1 != i && c1 != I
-				) { o1 = null; }
-		else if(c2 != s &&
-				c2 != i
-				) { o2 = null; }
+		try {
+			o1 = o2 = null;
+		} catch(Exception e) {
+			if(c1 == boolean.class) {
+				o1 = false;
+				o2 = 0;
+			} else if(c2 == boolean.class) {
+				o1 = false;
+				o2 = "";
+			} else {
+				o1 = o2 = 0;
+			}
+		}
+	}
+
+	/**
+	 * Not only clears the variables of any value,
+	 * but empties the values and its class declaration
+	 * altogether.<br>
+	 * Utilizes {@link #clear()}.
+	 * 
+	 * @see {@link #clear()}
+	 */
+	public void empty() {
+		clear();
+		c1 = c2 = null;
 	}
 
 	/**
@@ -145,6 +153,21 @@ public class BiPrimitive {
 	}
 
 	public final String toString() {
-		return "";
+		StringBuilder sb = new StringBuilder();
+		sb.append("BiPrimitive" + "\n-----------\n");
+		if(c1 != null && fc1 != null) {
+			sb.append("First (");
+			if(o1 == f1) {
+				sb.append(fc1.getSimpleName());
+			} else {
+				sb.append("(changed) " + c1.getSimpleName());
+			}
+			if(o1 != null && fc1 != null) {
+				sb.append(") Primitive: " + o1.toString());
+			}
+		} else {
+			sb.append("First Primitive is null");
+		}
+		return sb.toString();
 	}
 }

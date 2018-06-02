@@ -44,7 +44,7 @@ public class Array {
 		out.flush();
 		out.println();
 	}
-	
+
 	/* TEMPORARY SOLUTION FOR ALLROUND-METHOD */
 	public static int[] add(int[] arr, int i) {
 		int[] temp = new int[arr.length+1];
@@ -54,7 +54,7 @@ public class Array {
 		temp[arr.length] = i;
 		return temp;
 	}
-	
+
 	public static int[] remove(int[] arr, int index) {
 		int[] temp = new int[arr.length-1];
 		for(int i = 0; i < arr.length; i++) {
@@ -66,7 +66,7 @@ public class Array {
 		return temp;
 	}
 	/* -------------------------------------- */
-	
+
 	public static <T> T[] add(T[] arr, T t) {
 		@SuppressWarnings("unchecked")
 		T[] temp = (T[]) java.lang.reflect.Array.newInstance(arr.getClass().getComponentType(), arr.length+1);
@@ -76,7 +76,7 @@ public class Array {
 		temp[arr.length] = t;
 		return temp;
 	}
-	
+
 	public static <T> T[] remove(T[] arr, int index) {
 		@SuppressWarnings("unchecked")
 		T[] temp = (T[]) java.lang.reflect.Array.newInstance(arr.getClass().getComponentType(), arr.length-1);
@@ -88,7 +88,7 @@ public class Array {
 		}
 		return temp;
 	}
-	
+
 	/* Adapted from Apache Commons Lang 3-3.5 */
 	public static <T> T[] clone(final T[] array) {
 		if (array == null) {
@@ -96,7 +96,7 @@ public class Array {
 		}
 		return array.clone();
 	}
-	
+
 	/* Adapted from Apache Commons Lang 3-3.5 */
 	@SafeVarargs
 	public static <T> T[] fuse(T[] main, T... join) {
@@ -116,7 +116,7 @@ public class Array {
 		}
 		return arr;
 	}
-	
+
 	public final static ArrayList<String> toArrayList(String[] arr) {
 		ArrayList<String> temp = new ArrayList<String>();
 		for(int i = 0; i < arr.length; i++) {
@@ -124,7 +124,7 @@ public class Array {
 		}
 		return temp;
 	}
-	
+
 	public final static ArrayList<Integer> toArrayList(int[] arr) {
 		ArrayList<Integer> temp = new ArrayList<Integer>();
 		for(int i = 0; i < arr.length; i++) {
@@ -132,7 +132,7 @@ public class Array {
 		}
 		return temp;
 	}
-	
+
 	public final static ArrayList<Double> toArrayList(double[] arr) {
 		ArrayList<Double> temp = new ArrayList<Double>();
 		for(int i = 0; i < arr.length; i++) {
@@ -140,7 +140,7 @@ public class Array {
 		}
 		return temp;
 	}
-	
+
 	public final static <T> ArrayList<T> toArrayList(T[] arr) {
 		Class<?> type = arr.getClass().getComponentType();
 		@SuppressWarnings("unchecked")
@@ -159,7 +159,7 @@ public class Array {
 		}
 		return temp;
 	}
-	
+
 	/*
 	public final static int[] fromArrayList(ArrayList<Integer> list) {
 		int[] temp = new int[list.size()];
@@ -168,7 +168,7 @@ public class Array {
 		}
 		return temp;
 	}
-	
+
 	public final static double[] fromArrayList(ArrayList<Double> list) {
 		double[] temp = new double[list.size()];
 		for (int i = 0; i < list.size(); i++) {
@@ -176,17 +176,24 @@ public class Array {
 		}
 		return temp;
 	}
-	*/
+	 */
 	
-	private final static void sortDescending(int[] arr) {
+	public final static void sort(String[] arr, boolean asc) {
+		String[] temp = new String[arr.length];
+		for(int i = 0; i < temp.length; i++) {
+			temp[i] = null;
+		}
+		arr = temp;
+	}
+
+	final static void sortDescending(int[] arr) {
 		int[] temp = new int[arr.length];
 		for(int i = 0; i < temp.length; i++) {
 			temp[i] = arr[arr.length-i-1];
 		}
 		arr = temp;
-		temp = null;
 	}
-	
+
 	public static void quicksort(int[] arr, boolean asc) {
 		qS(arr, 0, arr.length-1);
 		if(!asc) {
@@ -217,7 +224,7 @@ public class Array {
 		}
 	}
 
-	private final static void swap(int[] arr, int left, int right) {
+	final static void swap(int[] arr, int left, int right) {
 		int temp = arr[left];
 		arr[left] = arr[right];
 		arr[right] = temp;
@@ -237,7 +244,7 @@ public class Array {
 		}
 	}
 
-	private final static void mS(int l, int r, int[] arr, int[] temp) {
+	final static void mS(int l, int r, int[] arr, int[] temp) {
 		if(l < r) {
 			int m = l + (r - l) / 2;
 			mS(l, m, arr, temp);
@@ -246,7 +253,7 @@ public class Array {
 		}
 	}
 
-	private final static void m(int l, int m, int r, int[] arr, int[] temp) {
+	final static void m(int l, int m, int r, int[] arr, int[] temp) {
 		int iOfA1 = 0;
 		int iOfA2 = l;
 		int index = l;
