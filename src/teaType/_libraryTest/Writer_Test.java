@@ -12,6 +12,6 @@ public class Writer_Test {
 		list.add("#84124#");
 		list.add("-Sword of the Sun-");
 		list.add(";;");
-		w.arraylist(list, true, true, true, false);
+		w.arraylist(list, true, true, true, false, true);
 	}
 }

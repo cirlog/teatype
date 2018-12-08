@@ -56,8 +56,7 @@ public class Writer {
 		}
 	}
 
-	public void arraylist(ArrayList<String> list, boolean create, boolean append, boolean linebreak, boolean extraspace) {
-		StreamBuffer.fixConsole();
+	public void arraylist(ArrayList<String> list, boolean create, boolean append, boolean linebreak, boolean extraspace, boolean verbose) {
 		PrintWriter pw = null;
 		try {
 			File file = new File(path);
@@ -71,8 +70,11 @@ public class Writer {
 			pw = new PrintWriter(new BufferedWriter(osw), true);
 			for(int i = 0; i < list.size(); i++) {
 				pw.write(list.get(i));	
-				System.err.print("Writing... ");
-				System.out.println(list.get(i));
+				if(verbose) {
+					StreamBuffer.fixConsole();
+					System.err.print("Writing... ");
+					System.out.println(list.get(i));
+				}
 				if(linebreak && i < list.size()-1) {
 					pw.write("\n");
 				}
