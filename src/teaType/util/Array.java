@@ -1,20 +1,15 @@
-package teaType.util;
+package teatype.util;
 
 import java.io.PrintWriter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-
-/**
- * 
- * @author Burak Günaydin
- */
 
 public class Array {
 	final static PrintWriter out = new PrintWriter(System.out, true);
 
-	public static final void print(String[] arr, boolean linebreak, boolean whitespace) {
-		for(String s : arr) {
+	public static final void print(Object[] arr, boolean linebreak, boolean whitespace) {
+		for(int i = 0; i < arr.length; i++) {
+			String s = "" + arr[i];
 			if(linebreak) {
 				out.println(s);
 			} else {
@@ -29,25 +24,8 @@ public class Array {
 		out.println();
 	}
 
-	public static final void print(int[] arr, boolean linebreak, boolean whitespace) {
-		for(int i : arr) {
-			if(linebreak) {
-				out.println(i);
-			} else {
-				if(whitespace) {
-					out.print(i + " ");	
-				} else {
-					out.print(i);
-				}
-			}
-		}
-		out.flush();
-		out.println();
-	}
-
-	/* TEMPORARY SOLUTION FOR ALLROUND-METHOD */
-	public static int[] add(int[] arr, int i) {
-		int[] temp = new int[arr.length+1];
+	public static Object[] add(Object[] arr, int i) {
+		Object[] temp = new Object[arr.length+1];
 		for(int c = 0; c < arr.length; c++) {
 			temp[c] = arr[c];
 		}
