@@ -13,7 +13,7 @@
 # From package imports
 from teatype.cli import BaseCLI
 
-class CheckIfRunning(BaseCLI):
+class Focus(BaseCLI):
     def __init__(self):
         super().__init__(
             auto_init=False,
@@ -23,21 +23,32 @@ class CheckIfRunning(BaseCLI):
     
     def meta(self):
         return {
-            'name': 'check-if-running',
-            'shorthand': 'cr',
-            'help': 'Check if a process is running',
+            'name': 'start',
+            'shorthand': 'st',
+            'help': 'Focus a process',
             'flags': [
                 {
-                    'short': 'h',
-                    'long': 'hide-output',
-                    'help': 'Hide verbose output of script',
+                    'short': 'e',
+                    'long': 'env',
+                    'help': 'Environment to consider',
+                    'options': ['dev', 'prod'],
+                    'required': True
+                },
+                {
+                    'short': 'm',
+                    'long': 'mode',
+                    'help': 'Mode to consider',
+                    'options': ['live', 'test'],
                     'required': False
                 }
             ],
         }
 
     def execute(self):
-        pass
+        self.init()
+        self.parse_args()
+        self.validate_args()
+        self.execute()
 
 if __name__ == '__main__':
-    CheckIfRunning()
+    Focus()

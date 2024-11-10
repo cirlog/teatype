@@ -1,29 +1,29 @@
 # Copyright (C) 2024-2025 Burak Günaydin
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, version 3 of the License.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <https://www.gnu.org/licenses/>.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 
 # System imports
-import subprocess
+import os
 import sys
 
 # From system imports
 from abc import ABC, abstractmethod
 from typing import List
 
+# From package imports
+from pathlib import Path
+from teatype.data.dict import update_dict
+
 # From own imports
-from .Argument import Argument
-from .Command import Command
-from .Flag import Flag
+from .args import Argument, Command, Flag
 
 # TODO: Replace with package constant
 TAB='    '
@@ -46,25 +46,72 @@ class BaseCLI(ABC):
         parsing_errors (list): A list of parsing errors encountered during validation.
     """
     def __init__(self,
-                 auto_preinit: bool = True,
-                 auto_parse: bool = True,
-                 auto_validate: bool = True,
-                 auto_execute: bool = True):
+                 auto_init:bool=True,
+                 auto_parse:bool=True,
+                 auto_validate:bool=True,
+                 auto_execute:bool=True,
+                 env_path:str='.../.env'):
         """
         Initializes the BaseCLI instance.
 
         Args:
-            auto_preinit (bool): Whether to automatically call the pre_init method.
+            auto_init (bool): Whether to automatically initialize the CLI.
             auto_parse (bool): Whether to automatically parse command-line arguments.
             auto_validate (bool): Whether to automatically validate parsed arguments.
             auto_execute (bool): Whether to automatically execute the CLI command.
         """
+        # Load the environment variables from the specified .env file
+        env_file = Path(env_path) # Create a Path object for the environment file path
+        if env_file.exists(): # Check if the .env file exists at the given path
+            with env_file.open() as f: # Open the .env file for reading
+                for line in f: # Iterate over each line in the .env file
+                    # Strip whitespace and ignore empty lines or lines starting with '#'
+                    if line.strip() and not line.startswith('#'):
+                        # Split the line into key and value at the first '=' character
+                        key, value = line.strip().split('=', 1)
+                        os.environ[key] = value # Set the environment variable in the OS environment
         
-        if auto_preinit:
-            if hasattr(self, 'pre_init') and callable(getattr(self, 'pre_init')):
-                self.pre_init()
-                
+        if auto_init:
+            self.init()
+        
+        if auto_parse:
+            # Parse the command-line arguments and flags
+            self.parse_args()
+
+            if auto_validate:
+                self.validate_args()
+        
+        if auto_execute:
+            # Hook for pre-execution logic
+            if hasattr(self, 'pre_execute') and callable(getattr(self, 'pre_execute')):
+                self.pre_execute()
+            
+            self.execute()
+            
+    def init(self):
+        """
+        Initializes the CLI with meta information.
+
+        This method sets up the CLI by initializing its name, shorthand, help description,
+        arguments, commands, and flags based on the provided meta information. It also
+        performs pre-initialization logic if defined in the child class.
+
+        Args:
+            meta (dict, optional): A dictionary containing meta information for the CLI.
+                                   If not provided, the meta method will be called to obtain it.
+        """
+        # Hook for pre-initialization logic
+        if hasattr(self, 'pre_init') and callable(getattr(self, 'pre_init')):
+            self.pre_init()
+            
         meta = self.meta()
+        
+        # Hook for modifying meta information
+        if hasattr(self, 'modified_meta') and callable(getattr(self, 'modified_meta')):
+            modfied_meta = self.modified_meta()
+            meta = update_dict(meta, modfied_meta)
+            # from pprint import pprint
+            # pprint(meta)
 
         # Initialize the name of the CLI
         self.name = meta['name'] if 'name' in meta else None
@@ -100,19 +147,6 @@ class BaseCLI(ABC):
         self.flags = []
         for flag in flags:
             self.flags.append(Flag(**flag))
-        
-        if auto_parse:
-            if hasattr(self, 'pre_parse') and callable(getattr(self, 'pre_parse')):
-                self.pre_parse()
-                
-            # Parse the command-line arguments and flags
-            self.parse_args()
-
-            if auto_validate:
-                self.validate_args()
-        
-        if auto_execute:
-            self.execute()
 
     # TODO: Make positioning of arguments optional
     # TODO: Make flag assignment work with "="
@@ -127,6 +161,9 @@ class BaseCLI(ABC):
             tuple: A tuple containing the command name (str), a list of positional arguments (list),
                    and a dictionary of flags (dict).
         """
+        # Hook for pre-parsing logic
+        if hasattr(self, 'pre_parse') and callable(getattr(self, 'pre_parse')):
+            self.pre_parse()
         
         # If there are fewer than 2 arguments, return None for command_name and empty lists/dicts for args and kwargs
         if len(sys.argv) < 1:
@@ -489,6 +526,15 @@ class BaseCLI(ABC):
             'arguments': self.arguments,
             'flags': self.flags,
         }
+
+    def get_argument(self, name:str):
+        """
+        Returns the argument value with the given name.
+        """
+        for argument in self.arguments:
+            if argument.name == name:
+                return argument.value
+        return None
         
     def get_command(self):
         """
@@ -505,15 +551,6 @@ class BaseCLI(ABC):
         for command in self.commands:
             if command.value:
                 return command.value
-        return None
-
-    def get_argument(self, name:str):
-        """
-        Returns the argument value with the given name.
-        """
-        for argument in self.arguments:
-            if argument.name == name:
-                return argument.value
         return None
         
     def get_flag(self, name:str):
@@ -539,50 +576,34 @@ class BaseCLI(ABC):
         """
         pass
     
-    def shell(self,
-              command:str,
-              sudo:bool=False,
-              cwd:bool=False,
-              env:dict=None,
-              timeout:float=None) -> int:
+    def pre_execute(self):
         """
-        Executes a shell command using the subprocess module.
+        Optional method to be overridden in child classes for pre-execution logic.
+        Not making it abstract, to prevent the need to implement it in every child class.
+        """
+        pass
+    
+    def modified_meta(self) -> dict[
+        'name':str,
+        'shorthand':str,
+        'help':str,
+        'arguments':List[Argument],
+        'commands':List[Command],
+        'flags':List[Flag]]:
+        """
+        Override this method in the child classes to modify meta information.
 
-        This method runs a shell command in a subprocess and returns the exit code of the command.
-        It provides options to run the command with sudo, set the current working directory,
-        pass environment variables, and specify a timeout for the command execution.
-
-        Args:
-            command (str): The shell command to be executed.
-            sudo (bool): Whether to run the command with sudo privileges. Default is False.
-            cwd (bool): Whether to set the current working directory for the command. Default is False.
-            env (dict): A dictionary of environment variables to be passed to the command. Default is None.
-            timeout (float): The timeout in seconds for the command execution. Default is None.
+        This method is used to allow dynamic modification of the meta information
+        such as name, shorthand, help, arguments, commands, and flags. The child class
+        implementing this method must provide the modified meta information.
 
         Returns:
-            int: The exit code of the completed process.
+            dict: A dictionary containing the modified meta information with keys:
+                  'name', 'shorthand', 'help', 'arguments', 'commands', and 'flags'.
         """
-        
-        # If sudo is True, prepend 'sudo' to the command
-        if sudo:
-            # Asking for sudo permissions before script executes any further and surpresses usage information
-            subprocess.run('sudo 2>/dev/null', shell=True)
-            command = f'sudo {command}'
-            
-        # Run the command in a subprocess
-        # shell=True allows the command to be executed through the shell
-        # cwd is set to None by default, but can be specified if cwd is True
-        # env is set to None by default, but can be specified with env
-        # timeout is set to None by default, but can be specified with timeout
-        # Not using a command list array, since I am using shell=True
-        completed_process = subprocess.run(command, 
-                                           shell=True, 
-                                           cwd=None if not cwd else cwd, 
-                                           env=None if not env else env, 
-                                           timeout=timeout)
-        
-        # Return the exit code of the completed process
-        return completed_process.returncode
+        # This method must be implemented in the child class
+        # The child class should return a dictionary with the modified meta information
+        pass
     
     @abstractmethod
     def meta(self) -> dict[

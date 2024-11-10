@@ -10,9 +10,6 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# "*"" applies the settings to all files in the repository.
-# "text=auto" instructs Git to automatically handle text files by normalizing their line endings to LF when
-# committing and converting them back to the native line endings for the user's platform when checking out.
-# This ensures consistent line endings across different platforms.
-# "eol=lf" specifies that line endings should be normalized to LF.
-* text=auto eol=lf
+from .Argument import Argument
+from .Command import Command
+from .Flag import Flag
