@@ -165,6 +165,7 @@ def _format(message:any,
     if verbose:
         frame = inspect.currentframe().f_back # Get the caller's frame
         filename = os.path.basename(frame.f_code.co_filename) # Extract the filename from the caller's frame
+        # TODO: Shows the wrong line number, shows line number of logging.py, not class calling it
         lineno = frame.f_lineno # Extract the line number from the caller's frame
         # TODO: Add handling for different types of messages
         formatted_message = f'{message} - [{filename}, PRINTLN: {lineno}]' # Format the message with caller info

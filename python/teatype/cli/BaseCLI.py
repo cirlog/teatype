@@ -20,15 +20,15 @@ from typing import List
 
 # From package imports
 from pathlib import Path
+from teatype.cli import Argument, Command, Flag
 from teatype.data.dict import update_dict
-
-# From own imports
-from .args import Argument, Command, Flag
+from teatype.logging import err
 
 # TODO: Replace with package constant
 TAB='    '
 
-# TODO: Implement as package class
+# TODO: Document all return types
+# TODO: Make the class functionality less obscure, more options, maybe return to constructors?
 class BaseCLI(ABC):
     """
     Base class for command-line interfaces.
@@ -46,19 +46,31 @@ class BaseCLI(ABC):
         parsing_errors (list): A list of parsing errors encountered during validation.
     """
     def __init__(self,
-                 auto_init:bool=True,
-                 auto_parse:bool=True,
-                 auto_validate:bool=True,
-                 auto_execute:bool=True,
-                 env_path:str='.../.env'):
+                 auto_init: bool = True,
+                 auto_parse: bool = True,
+                 auto_validate: bool = True,
+                 auto_execute: bool = True,
+                 auto_activate_venv: bool = True,
+                 env_path: str = '.../.env',
+                 proxy_mode: bool = False):
         """
-        Initializes the BaseCLI instance.
+        Initializes the BaseCLI instance with configuration options.
 
         Args:
-            auto_init (bool): Whether to automatically initialize the CLI.
-            auto_parse (bool): Whether to automatically parse command-line arguments.
-            auto_validate (bool): Whether to automatically validate parsed arguments.
-            auto_execute (bool): Whether to automatically execute the CLI command.
+            auto_init (bool, optional): If set to True, the CLI will automatically initialize upon instantiation.
+                                         Defaults to True.
+            auto_parse (bool, optional): If set to True, the CLI will automatically parse command-line arguments upon initialization.
+                                          Defaults to True.
+            auto_validate (bool, optional): If set to True, the CLI will automatically validate parsed arguments after parsing.
+                                             Defaults to True.
+            auto_execute (bool, optional): If set to True, the CLI will automatically execute the main functionality after validation.
+                                            Defaults to True.
+            auto_activate_venv (bool, optional): If set to True, the CLI will automatically activate the virtual environment specified by `env_path`.
+                                                 Defaults to True.
+            env_path (str, optional): The file path to the `.env` file from which environment variables will be loaded.
+                                       Defaults to '.../.env'.
+            proxy_mode (bool, optional): If set to True, the CLI will operate in proxy mode, altering its behavior to function as a proxy.
+                                          Defaults to False.
         """
         # Load the environment variables from the specified .env file
         env_file = Path(env_path) # Create a Path object for the environment file path
@@ -110,8 +122,6 @@ class BaseCLI(ABC):
         if hasattr(self, 'modified_meta') and callable(getattr(self, 'modified_meta')):
             modfied_meta = self.modified_meta()
             meta = update_dict(meta, modfied_meta)
-            # from pprint import pprint
-            # pprint(meta)
 
         # Initialize the name of the CLI
         self.name = meta['name'] if 'name' in meta else None
@@ -484,6 +494,7 @@ class BaseCLI(ABC):
                 for flag in self.flags:
                     # Format the flag line with indentation
                     flag_line = f'{TAB}{flag.short}, {flag.long}'
+                    # TODO: Check wrong flag options
                     if flag.options:
                         flag_line += f' <{flag.long.replace("-", "")}>'
                     # Add the formatted flag line to the indented formatted string with a newline
@@ -553,7 +564,7 @@ class BaseCLI(ABC):
                 return command.value
         return None
         
-    def get_flag(self, name:str):
+    def get_flag(self, name:str) -> any:
         """
         Returns the flag value with the given name.
         """
@@ -562,48 +573,15 @@ class BaseCLI(ABC):
                 return flag.value
         return None
     
-    def pre_init(self):
+    def set_flag(self, name:str, value:any) -> bool:
         """
-        Optional method to be overridden in child classes for pre-execution logic.
-        Not making it abstract, to prevent the need to implement it in every child class.
+        Sets the flag value with the given name.
         """
-        pass
-    
-    def pre_parse(self):
-        """
-        Optional method to be overridden in child classes for pre-parsing logic.
-        Not making it abstract, to prevent the need to implement it in every child class.
-        """
-        pass
-    
-    def pre_execute(self):
-        """
-        Optional method to be overridden in child classes for pre-execution logic.
-        Not making it abstract, to prevent the need to implement it in every child class.
-        """
-        pass
-    
-    def modified_meta(self) -> dict[
-        'name':str,
-        'shorthand':str,
-        'help':str,
-        'arguments':List[Argument],
-        'commands':List[Command],
-        'flags':List[Flag]]:
-        """
-        Override this method in the child classes to modify meta information.
-
-        This method is used to allow dynamic modification of the meta information
-        such as name, shorthand, help, arguments, commands, and flags. The child class
-        implementing this method must provide the modified meta information.
-
-        Returns:
-            dict: A dictionary containing the modified meta information with keys:
-                  'name', 'shorthand', 'help', 'arguments', 'commands', and 'flags'.
-        """
-        # This method must be implemented in the child class
-        # The child class should return a dictionary with the modified meta information
-        pass
+        for flag in self.flags:
+            if flag.short == f'-{name}' or flag.long == f'--{name}':
+                flag.value = value
+                return True
+        return False
     
     @abstractmethod
     def meta(self) -> dict[
@@ -628,3 +606,39 @@ class BaseCLI(ABC):
         Override this method in the child classes to implement functionality.
         """
         raise NotImplementedError("Each script MUST implement the 'execute' method.")
+    
+    """
+    # TODO: Make default return type and then catch that instead of relying on developer to remember implementing function
+    Optional method to be overridden in child classes for pre-execution logic.
+    Not making it abstract, to prevent the need to implement it in every child class.
+    
+        def pre_init(self) -> void
+    
+    Optional method to be overridden in child classes for pre-parsing logic.
+    Not making it abstract, to prevent the need to implement it in every child class.
+    
+        def pre_parse(self) -> void
+    
+    Optional method to be overridden in child classes for pre-execution logic.
+    Not making it abstract, to prevent the need to implement it in every child class.
+    
+        def pre_execute(self) -> void
+    
+    Override this method in the child classes to modify meta information.
+
+    This method is used to allow dynamic modification of the meta information
+    such as name, shorthand, help, arguments, commands, and flags. The child class
+    implementing this method must provide the modified meta information.
+
+    Returns:
+        dict: A dictionary containing the modified meta information with keys:
+                'name', 'shorthand', 'help', 'arguments', 'commands', and 'flags'.
+    
+        def modified_meta(self) -> dict[
+            'name':str,
+            'shorthand':str,
+            'help':str,
+            'arguments':List[Argument],
+            'commands':List[Command],
+            'flags':List[Flag]]
+    """

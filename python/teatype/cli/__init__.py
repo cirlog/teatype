@@ -15,6 +15,5 @@ from .args.Command import Command
 from .args import Flag
 from .BaseCLI import BaseCLI
 from .CheckIfRunning import CheckIfRunning
-from .Focus import Focus
 from .Start import Start
 from .Stop import Stop
