@@ -21,16 +21,23 @@ import shutil
 # As-system imports
 import xml.etree.ElementTree as ET
 
+# As-package imports
+import numpy as np
+
 # From system imports
 from pathlib import PosixPath
-from typing import List
+from typing import Dict, List
 
 # From local imports
 from teatype.logging import err, warn
 
+# From-as system imports
+from builtins import list as list_type
+
 # From-as local imports
 from teatype.io import path as path_functions
 
+# TODO: Implement with context handling
 class _File:
     def __init__(self, path:str, content:any=None, trimmed:bool=False, nested_depth:int=None):
         """
@@ -312,8 +319,8 @@ def exists(path:PosixPath|str, return_file:bool=False, trim_file:bool=False) -> 
     return file_exists
     
 def list(directory:str,
-         walk:bool=True,
-         depth:int=1,
+         walk:bool=False,
+         depth:int=None,
          ignore_folders:List[str]=None,
          only_include:List[str]=None, # TODO: Seperate include_extensions and include_regex
          trim_files:bool=True,
@@ -334,7 +341,7 @@ def list(directory:str,
     """
     try:
         # Check if a depth greater than 1 is specified without enabling recursive walking
-        if depth > 1 and walk == False:
+        if depth is not None and walk == False:
             warn('Cannot specify depth without walking through subdirectories. Ignoring depth parameter.')
         
         # Initialize an empty list to store the results of files and directories
@@ -358,19 +365,15 @@ def list(directory:str,
                     walk_directory(entry.path, current_depth + 1)
                 else:
                     if only_include:
-                        # Skip ffiles that do not have the specified extensions
+                        # Skip files that do not have the specified extensions
                         if not entry.name.endswith(tuple(only_include)):
                             continue
                     # Append directory details to the results list
                     results.append(_File(entry.path, trimmed=trim_files, nested_depth=current_depth))
-        if walk:
-            # If recursive walking is enabled, start walking from the root directory
-            walk_directory(directory, 1)
-        else:
-            # If recursive walking is disabled, list only the immediate entries in the root directory
-            for entry in os.scandir(directory):
-                # Append directory details to the results list
-                results.append(_File(entry.path, trimmed=trim_files))
+                    
+        if not walk:
+            depth = 1
+        walk_directory(directory, 1)
         
         if stringify:
             results = [str(result) for result in results]
@@ -504,7 +507,6 @@ def read(file:_File|PosixPath|str,
                                         child_dict[child.tag] = child_converted
                                 result['children'] = child_dict
                             return result
-                        
                         content = xmlToDict(raw_xml_root)['children']
                     elif file_extension == '.ini' or file_extension == '.cfg' or force_format == 'ini' or force_format == 'cfg':
                         # Initialize ConfigParser and read INI configuration
@@ -565,7 +567,7 @@ def read(file:_File|PosixPath|str,
             err(f'Error reading file "{path_string}": {exc}')
         raise exc
 
-def write(path:str, data:any, force_format:str=None, prettify:bool=False, create_parents:bool=False) -> bool:
+def write(path:str, data:any, force_format:str=None, prettify:bool=False, create_parents:bool=True) -> bool:
     """
     Write data to a file at the specified path.
 
@@ -580,7 +582,7 @@ def write(path:str, data:any, force_format:str=None, prettify:bool=False, create
         data (any): The data to write to the file.
         force_format (str, optional): The format to force when writing data. Defaults to None.
         prettify (bool, optional): Whether to prettify the output. Defaults to False.
-        create_parents (bool, optional): Whether to create parent directories if they do not exist. Defaults to False.
+        create_parents (bool, optional): Whether to create parent directories if they do not exist. Defaults to True.
         
     Returns:
         bool: True if the operation was successful, False otherwise.
@@ -591,6 +593,28 @@ def write(path:str, data:any, force_format:str=None, prettify:bool=False, create
             # Create parent directories if they do not exist
             parent_path = ''.join(subpath + '/' for subpath in path.split('/')[:-1])
             path_functions.create(parent_path)
+            
+        # JSON_DUMP_ENCODERS = {
+        #     np.ndarray: lambda x: x.tolist(),
+        # }
+    
+        class _JSON_DUMP_ENCODERS(json.JSONEncoder):
+            """
+            Custom JSON encoder for NumPy data types.
+            
+            This encoder is used to convert NumPy data types to standard Python data types
+            when serializing to JSON format.
+            """
+            def default(self, value):
+                if isinstance(value, dict):
+                    # Recursively convert NumPy arrays in dictionaries to lists
+                    return {key: self.default(val) for key, val in value.items()}
+                elif isinstance(value, list_type):
+                    # Recursively convert NumPy arrays in lists to lists
+                    return [self.default(item) for item in value]
+                elif isinstance(value, np.ndarray):
+                    return value.tolist()
+                return super().default(value)
         
         # Open the file in write mode
         with open(path, 'w') as f:
@@ -602,7 +626,7 @@ def write(path:str, data:any, force_format:str=None, prettify:bool=False, create
                 if prettify:
                     indent = 4
                 # Write JSON data to the file
-                json.dump(data, f, indent=indent)
+                json.dump(data, f, indent=indent, default=_JSON_DUMP_ENCODERS().default)
             elif path.endswith('.ini') or force_format == 'ini':
                 # Initialize ConfigParser and update with new data
                 config = configparser.ConfigParser()
@@ -614,11 +638,13 @@ def write(path:str, data:any, force_format:str=None, prettify:bool=False, create
                 writer = csv.writer(f)
                 # Write multiple rows to the CSV file
                 writer.writerows(data)
+            elif force_format == 'bytes':
+                f.write(data.decode('utf-8'))
             else:
                 # Write plain text data to the file
                 f.write(data)
         return True
     except Exception as exc:
         # Log an error message if an exception occurs
-        err(f'Error writing to file {path}: {exc}')
+        err(f'Error writing to file {path}: {exc}', traceback=True)
         raise exc

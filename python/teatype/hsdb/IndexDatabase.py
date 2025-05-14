@@ -16,52 +16,79 @@ import threading
 # From system imports
 from typing import List
 
+# From package imports
+from pympler import asizeof
+from teatype.hsdb.indices import RelationalIndex
+
+class _MemoryFootprint:
+    def __init__(self, index_db:'IndexDatabase'):
+        self.size_in_bytes = asizeof.asizeof(index_db)
+        self.size_in_kilo_bytes = round(self.size_in_bytes / 1024, 2)
+        self.size_in_mega_bytes = round(self.size_in_kilo_bytes / 1024, 2)
+        
+    def __repr__(self):
+        return f'Index db memory footprint: {self.size_in_bytes} bytes, ' \
+               f'{self.size_in_kilo_bytes} KB, '\
+               f'{self.size_in_mega_bytes} MB'
+        
+    def __str__(self):
+        return self.__repr__()
+        
 class IndexDatabase:
-    _compute_index:dict # For all compute values for easy modification
-    _compute_index_lock:threading.Lock
+    # _cache_register:dict # For all dynamic query cache values
+    # _compute_index:dict # For all compute values for easy modification
     _db:dict # For all raw data
     _db_lock:threading.Lock
-    _indexed_fields:dict # For all indexed fields for faster query lookups
-    _indexed_fields_lock:threading.Lock
-    _model_index:dict # For all model references for faster model query lookups
-    _model_index_lock:threading.Lock
+    # _indexed_fields:dict # For all indexed fields for faster query lookups
+    # _model_index:dict # For all model references for faster model query lookups
     _relational_index:dict # For all relations between models parsed dynamically from the model definitions
-    _relational_index_lock:threading.Lock
     models:List[type] # For all models
     
-    def __init__(self, models:List[type]):
+    def __init__(self,
+                 models:List[type]):
         self.models = models
-        
-        self._compute_index = dict()
-        self._compute_index_lock = threading.Lock()
         
         self._db = dict()
         self._db_lock = threading.Lock()
         
-        self._indexed_fields = dict()
-        self._indexed_fields_lock = threading.Lock()
+        # self._cache_register = dict()
+        # self._compute_index = dict()
+        # self._indexed_fields = dict()
+        # self._model_index = dict()
+        self._relational_index = RelationalIndex()
         
-        self._model_index = dict()
-        self._model_index_lock = threading.Lock()
+    ##############
+    # Properties #
+    ##############
         
-        self._relational_index = dict()
-        self._relational_index_lock = threading.Lock()
+    @property
+    def memory_footprint(self) -> '_MemoryFootprint':
+        return _MemoryFootprint(self)
+        
+    ##################
+    # ORM Operations #
+    ##################
                 
-    def create_entry(self, model:type, data:dict, overwrite_path:str=None) -> object|None:
+    def create_entry(self, model:type, data:dict, parse:bool=False) -> object|None:
         try:
             with self._db_lock:
+                if parse:
+                    data = {
+                        **data.get('base_data'),
+                        **data.get('data')
+                    }
                 # TODO: Validation
                 model_instance = model(**data)
                 model_name = model_instance.model_name
                 with self._model_index_lock:
                     if model_name not in self._model_index:
                         self._model_index[model_name] = {}
-                        
+                
                 model_id = model_instance.id
                 if model_id in self._db:
                     return None
                 
-                # Model.create(overwrite_path, model_instance)
+                # Model.create(root_path, model_instance)
                 # TODO: Quick and dirty hack, need to refactor this with proper attributes
                 # need for algorithm to be implemented with the model callhandlers
                 match model_name:
@@ -148,6 +175,3 @@ class IndexDatabase:
             if serialize:
                 return entry.serialize()
             return entry
-        
-    def query(self) -> None:
-        pass

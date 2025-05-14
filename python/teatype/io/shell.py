@@ -171,6 +171,11 @@ def shell(command:str,
             # Iterate over each edge case handler function in the list
             # and execute it with the current stderr, command, and output
             edge_case(stderr, command, output)
+    except KeyboardInterrupt:
+        class _KeyboardInterruptOutput:
+            returncode:int=0
+            stdout:str='KeyboardInterrupt'
+        return _KeyboardInterruptOutput()
     except Exception:
         # If an exception is raised, return the exit code 1 as a failsafe
         # Sometimes the command may fail due to a non-zero exit code, but still return

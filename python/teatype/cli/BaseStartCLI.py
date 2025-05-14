@@ -249,7 +249,10 @@ class BaseStartCLI(BaseCLI):
             stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
             self.start_command += f' > {stdout_path} 2>&1 &'
         
-        env.load(silent_fail=silent_mode) # Load the environment variables
+        if file.exists('./.env'):
+            env.load() # Load the environment variables
+        else:
+            warn('No ".env" file found. Limited functionality available.', verbose=False)
         
         def signal_handler(signum, _):
             """

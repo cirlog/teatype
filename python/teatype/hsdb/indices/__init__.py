@@ -10,5 +10,5 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .Deadpoint import Deadpoint, deadpoint
-from .routing import register_middleware, register_routes
+from .BaseIndex import BaseIndex
+from .RelationalIndex import RelationalIndex

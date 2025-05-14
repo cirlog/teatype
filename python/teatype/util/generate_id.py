@@ -14,7 +14,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-def id(truncate:int=None) -> str:
+def generate_id(truncate:int=None) -> str:
     """
     Creates a 60-character pseudo-random UUID using a custom algorithm that incorporates the current timestamp.
     This method avoids revealing the machine's MAC address, unlike the standard UUID1.

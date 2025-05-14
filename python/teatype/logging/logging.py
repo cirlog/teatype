@@ -24,6 +24,9 @@ import traceback as traceback_exc
 from datetime import datetime
 from pprint import pformat
 
+# From package imports
+from teatype.enum import EscapeColor
+
 # TODO: Maybe use class closure like with the old stopwatch, to set global variables once somewhere, for consistency
 #       in the file saving, like the path to the log directory, etc.
 #       This way, the log directory can be created once and used throughout all files.
@@ -250,11 +253,16 @@ def hint(message:str,
     # Add a blank line after the message if pad_after is specified and greater than 0
     if pad_after:
         println(pad_after) # Print a blank line to add padding below the message
-    
+
+# TODO: Instead of using pad before and after use (0, 1) for before and after, respectively
+#       This way, the function can be called with a single argument to specify padding
+#       and the default value can be set to 0 for no padding
+#       Also, allow this: (0,) and (,0) to specify padding before and after, respectively
 def log(message:any,
         pad_after:int=None,
         pad_before:int=None,
         prettify:bool=False,
+        tab:int=0,
         verbose:bool=False) -> None:
     """
     Logs a message with optional formatting, padding, and prettification.
@@ -301,6 +309,8 @@ def log(message:any,
         # Join the processed lines back into a single string separated by newline characters
         log_message = '\n'.join(truncated_lines)
 
+    if tab > 0:
+        log_message = f'{"    " * tab}{log_message}'
     # Log the final message at the INFO level using the global logger
     logger.info(log_message) # Log the message as is
 
@@ -322,6 +332,23 @@ def println(amount:int=1) -> None:
         
     for _ in range(amount):
         print()
+        
+def success(message:str='',
+            pad_after:int=None,
+            pad_before:int=None,
+            use_prefix:bool=True,
+            verbose:bool=False) -> None:
+    """
+    Logs a success message.
+    """
+    success_message = _format(message,
+                              pad_before=pad_before,
+                              use_prefix=False,
+                              verbose=verbose)
+    logger.info(f'{EscapeColor.GREEN}{success_message}{EscapeColor.RESET}') # Log the success message
+    # Add a blank line after the message if pad_after is specified and greater than 0
+    if pad_after:
+        println(pad_after) # Print a blank line to add padding below the message
 
 def warn(message:str='',
          pad_after:int=None,
@@ -344,7 +371,7 @@ def warn(message:str='',
                            prefix='WARN',
                            use_prefix=use_prefix,
                            pad_before=pad_before,
-                           verbose=verbose)
+                           verbose=False)
     logger.warning(warn_message) # Log the warning message
     
     # Add a blank line after the message if pad_after is specified and greater than 0

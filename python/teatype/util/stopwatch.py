@@ -1,6 +1,22 @@
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
 # System imports
 import time
 
+# From system imports
+from typing import Union
+
+# From package imports
 from teatype.enum import EscapeColor
 from teatype.logging import err, log
 
@@ -18,7 +34,8 @@ STATE = {
     'last_label': None # Label of the last active stopwatch
 }
 
-def stopwatch(label: str = None):
+# TODO: Deshittify the stopwatch function, allow specifying label for start and stop to allow nesting
+def stopwatch(label:str=None, pad:Union[int,int]=(0,0), tab:int=0):
     """
     Using function closure to measure execution time between calls.
     If called with a label, it starts the timer and stores the label.
@@ -41,8 +58,9 @@ def stopwatch(label: str = None):
 
     # Check for an active stopwatch
     if STATE['active'] and label:
-        err(f'Code runtime error: Stopwatch "{STATE["last_label"]}" is still active. Close it before starting a new one.', traceback=True)
-        raise RuntimeError(f'Stopwatch "{STATE["last_label"]}" is still active. Close it before starting a new one.')
+        error_message = f'Stopwatch "{STATE["last_label"]}" is still active. Close it before starting a new one.'
+        err(f'Code runtime error: {error_message}', traceback=True)
+        raise RuntimeError(f'{error_message}')
 
     if label:
         # Start a timer for the given label
@@ -52,7 +70,10 @@ def stopwatch(label: str = None):
         if GLOBAL_STOPWATCH_CONFIG.PRINT_START:
             # Optionally get current time and log the start of the stopwatch
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            log(f'Started stopwatch for "{label}" at {current_time}.')
+            start_message = f'Started stopwatch for "{label}" at {current_time}.'
+            if tab > 0:
+                start_message = f'{"    " * tab}{start_message}'
+            log(start_message)
     else:
         # Ensure there is a previous label to calculate elapsed time
         last_label = STATE['last_label']
@@ -82,9 +103,12 @@ def stopwatch(label: str = None):
             else:
                 # Default to seconds if time conversion is disabled
                 elapsed = f'{elapsed:.4f} seconds'
-                
+            
+            elapsed_mesage = f'{EscapeColor.BLUE}Stopwatch {EscapeColor.LIGHT_CYAN}[{last_label}]{EscapeColor.LIGHT_GREEN}: {elapsed}.'
             # Log the elapsed time with appropriate color formatting
-            log(f'{EscapeColor.BLUE}Stopwatch {EscapeColor.LIGHT_CYAN}[{last_label}]{EscapeColor.LIGHT_GREEN}: {elapsed}.')
+            if tab > 0:
+                elapsed_mesage = f'{"    " * tab}{elapsed_mesage}'
+            log(elapsed_mesage)
             STATE['active'] = False
         else:
             # Log an error if there is no active stopwatch to measure

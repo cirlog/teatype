@@ -37,7 +37,7 @@ def get(key:str=None, default:str=None) -> str | dict:
     # If 'key' is not provided, return the entire environment variables dictionary.
     return os.environ.get(key, default) if (key or default) else os.environ
 
-def load(env_path:str=None, silent_fail:bool=False) -> bool:
+def load(env_path:str=None) -> bool:
     """
     Load environment variables from a .env file into the environment.
 
@@ -47,18 +47,16 @@ def load(env_path:str=None, silent_fail:bool=False) -> bool:
     """
     try:
         # Load environment variables from .env file if it exists
-        env_vars = file.read(env_path if env_path else '.env', force_format='env', silent_fail=silent_fail)
+        env_vars = file.read(env_path if env_path else '.env', force_format='env')
         os.environ.update(env_vars)
         return True
     except FileNotFoundError:
-        if not silent_fail:
-            # Log an error message if the .env file is not found
-            err('No .env file found in the current directory.')
+        # Log an error message if the .env file is not found
+        err('No .env file found in the current directory.')
         return False
     except Exception as e:
-        if not silent_fail:
-            # Log an error message if an exception occurs
-            err(f'An error occurred while loading the .env file: {e}')
+        # Log an error message if an exception occurs
+        err(f'An error occurred while loading the .env file: {e}')
         return False
     
 def set(key:str, value:str) -> None:

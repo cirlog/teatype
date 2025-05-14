@@ -22,13 +22,17 @@ from typing import List, Type
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.hsdb import HybridStorage
+from teatype.util import kebabify
 from teatype.web.django_support.responses import NotAllowed, ServerError, Success
 
+_COLLECTION_METHODS=['GET', 'POST']
+_DATA_REQUIRED_METHODS=['POST', 'PUT', 'PATCH']
+_RESOURCE_METHODS=['GET', 'PUT', 'PATCH', 'DELETE']
+
 # TODO: Create a seperate base class without hsdb support
+# TODO: Check if request method is implemented without auto_view
 class HSDBDjangoView(APIView):
     __metaclass__:ABCMeta=ABCMeta
-    __COLLECTION_METHODS=['GET', 'POST']
-    __DATA_REQUIRED_METHODS=['POST', 'PUT', 'PATCH']
     api_parents:List[str]=[]
     auto_view=True
     data_key:str=None # TODO: Automate data key as well and allow overwriting
@@ -41,8 +45,8 @@ class HSDBDjangoView(APIView):
     @property
     def allowed_methods(self) -> List[str]:
         if self.is_collection:
-            return [method.lower() for method in dir(self) if method in ['get', 'post']]
-        return [method.lower() for method in dir(self) if method in ['get', 'put', 'delete', 'patch']]
+            return [method for method in dir(self) if method in _COLLECTION_METHODS]
+        return [method for method in dir(self) if method in _RESOURCE_METHODS]
 
     def _auto_method(self, request, kwargs):
         try:
@@ -52,8 +56,7 @@ class HSDBDjangoView(APIView):
             if self.hsdb_model is None:
                 raise ValueError('Can\' use auto mode without specifying a hsdb_model in view')
             
-            if request.method in self.__DATA_REQUIRED_METHODS:
-                print(request.method)
+            if request.method in _DATA_REQUIRED_METHODS:
                 if not request.data:
                     return NotAllowed(f'Data is required for {request.method} requests')
                 
@@ -91,20 +94,15 @@ class HSDBDjangoView(APIView):
             traceback.print_exc()
             return ServerError(exc)
     
-    # TODO: Turn into util function
-    def _parse_name(self, seperator:str='-'):
-        raw_name = type(self).__name__
-        return re.sub(r'(?<!^)(?=[A-Z])', seperator, raw_name).lower()
-
     # TODO: Figure out how to make these work as properties
     def api_id(self) -> str:
-        parsed_name = self._parse_name()
+        parsed_name = kebabify(type(self).__name__)
         return f'{parsed_name}_id'
     
     def api_name(self) -> str:
         if self.overwrite_api_name:
             return self.overwrite_api_name
-        return self._parse_name()
+        return kebabify(type(self).__name__)
     
     def api_plural_name(self) -> str:
         api_name = self.api_name()
@@ -118,7 +116,7 @@ class HSDBDjangoView(APIView):
         if self.overwrite_api_path:
             return self.overwrite_api_path
         
-        parsed_name = self._parse_name()
+        parsed_name = kebabify(type(self).__name__)
         if self.is_collection:
             return f'/{parsed_name}'
         return f'/{self.api_plural_name()}/<str:{self.api_id()}>'
@@ -129,7 +127,7 @@ class HSDBDjangoView(APIView):
         the CRUD methods (GET, PUT, PATCH, DELETE).
         """
         request_method = request.method
-        if self.is_collection and request_method not in self.__COLLECTION_METHODS:
+        if self.is_collection and request_method not in _COLLECTION_METHODS:
             return NotAllowed(f'You can\'t use {request_method} requests on collections.')
 
         if request_method not in self.allowed_methods:
