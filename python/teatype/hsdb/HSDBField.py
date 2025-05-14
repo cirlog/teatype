@@ -17,7 +17,7 @@ from typing import Generic, List, Type, TypeVar
 _AVAILABLE_FIELDS = [
     'cls',
     'editable',
-    # 'instance',
+    'instance',
     'indexed',
     'key',
     'required',
@@ -78,7 +78,7 @@ class HSDBField(ABC, Generic[T]):
     
     @property
     def instance(self):
-        return self.__instance
+        return self
 
     @property
     def key(self):
@@ -91,7 +91,7 @@ class HSDBField(ABC, Generic[T]):
     ######################
     # Descriptor Methods #
     ######################
-
+    
     def __set__(self, instance, value):
         # Set the value and cache it
         # TODO: Fix validation

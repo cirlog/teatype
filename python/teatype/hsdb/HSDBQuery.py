@@ -43,12 +43,14 @@ class HSDBQuery:
     _verbose:bool
     already_executed:bool
     model:type # HSDBModel class, avoiding import loop
+    subset:List[str] # Subset of ids, typically from an index
     
     def __init__(self, model:type):
         # model is used later to help interpret attribute types and relations
         self.model = model
         
         self.already_executed = False
+        self.subset = None
         
         self._conditions = [] # list of (attribute_path, operator, value)
         self._current_attribute = None
@@ -173,6 +175,9 @@ class HSDBQuery:
                     # First filter using conditions.
                     queryset = []
                     for entry_id, entry in self._hsdb_reference.index_database._db.items():
+                        if self.subset and entry_id not in self.subset:
+                            continue
+                        
                         if entry.model != self.model:
                             continue
                         if all(__condition_matches(entry, condition) for condition in self._conditions):

@@ -87,7 +87,6 @@ class RelationalIndex(BaseIndex):
                     self.primary_index[relation_name][primary_key] = secondary_key
                     self.reverse_index[reverse_relation_name][secondary_key] = primary_key
                 else:
-                    
                     self.primary_index[relation_name][primary_key] = secondary_key
                     if secondary_key not in self.reverse_index[reverse_relation_name]:
                         self.reverse_index[reverse_relation_name][secondary_key] = []

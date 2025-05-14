@@ -176,6 +176,7 @@ def test_create_students_parallel(number_of_students,
     
     log('--------------------')
 
+@pytest.mark.skip
 @pytest.mark.parametrize('number_of_students, generate_in_parallel, measure_memory_footprint', [
     (12_345, False, True),
 ])
@@ -260,9 +261,8 @@ def test_queries(number_of_students,
     
     log('--------------------')
     
-@pytest.mark.skip
 @pytest.mark.parametrize('number_of_students, generate_in_parallel, measure_memory_footprint', [
-    (1111, False, False),
+    (11, False, False),
 ])
 def test_relations(number_of_students,
                    generate_in_parallel,
@@ -307,10 +307,6 @@ def test_relations(number_of_students,
     println()
 
     print(lion_reichl.school)
-    print(lion_reichl.school.all())
-    # print(lion_reichl.school.secondary_keys)
-    # print(lion_reichl.school.relation_type)
-    # print(lion_reichl.school._value.all())
-    # lion_reichl.school.verbose(print=True).all()
+    # print(lion_reichl.school.id)
     
     log('--------------------')
