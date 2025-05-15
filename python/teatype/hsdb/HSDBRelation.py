@@ -164,7 +164,6 @@ class HSDBRelation(HSDBField, Generic[T]):
                     reverse_lookup=False
                 )
                 field._value = field._hsdb_reference.index_database.fetch_entry(fetch_value)
-                # print(field._hsdb_reference.index_database._db)
 
         @property
         def __query_closure(self):
