@@ -226,7 +226,7 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
             # Skip non-HSDBAttribute fields
             try:
                 if attribute_name in self._fields:
-                    serialized[attribute_name] = getattr(self, attribute_name)
+                    serialized[attribute_name] = getattr(self, attribute_name)._value
             except Exception as exc:
                 continue
         return serialized

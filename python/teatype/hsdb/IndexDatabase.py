@@ -11,6 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # System imports
+import json
 import threading
 
 # From system imports
@@ -18,7 +19,10 @@ from typing import List
 
 # From package imports
 from pympler import asizeof
-from teatype.hsdb.indices import RelationalIndex
+from teatype.enum import EscapeColor
+from teatype.hsdb import HSDBAttribute
+from teatype.hsdb.indices import Index, RelationalIndex
+from teatype.logging import println
 
 class _MemoryFootprint:
     def __init__(self, index_db:'IndexDatabase'):
@@ -37,8 +41,7 @@ class _MemoryFootprint:
 class IndexDatabase:
     # _cache_register:dict # For all dynamic query cache values
     # _compute_index:dict # For all compute values for easy modification
-    _db:dict # For all raw data
-    _db_lock:threading.Lock
+    _db:Index # For all raw data
     # _indexed_fields:dict # For all indexed fields for faster query lookups
     # _model_index:dict # For all model references for faster model query lookups
     _relational_index:dict # For all relations between models parsed dynamically from the model definitions
@@ -48,8 +51,9 @@ class IndexDatabase:
                  models:List[type]):
         self.models = models
         
-        self._db = dict()
-        self._db_lock = threading.Lock()
+        self._db = Index(cache_entries=False, 
+                         primary_index_key='id',
+                         max_size=None)
         
         # self._cache_register = dict()
         # self._compute_index = dict()
@@ -64,6 +68,14 @@ class IndexDatabase:
     @property
     def memory_footprint(self) -> '_MemoryFootprint':
         return _MemoryFootprint(self)
+    
+    @property
+    def size(self) -> int:
+        """
+        Get the size of the database.
+        """
+        with self._db_lock:
+            return len(self._db.keys())
         
     ##################
     # ORM Operations #
@@ -156,8 +168,22 @@ class IndexDatabase:
             traceback.print_exc()
             return None
         
+    def fetch_all(self, serialize:bool=False) -> List[object]:
+        """
+        Fetch all entries from the database.
+        """
+        entries = []
+        with self._db_lock:
+            for entry_id in self._db:
+                entry = self._db[entry_id]
+                if serialize:
+                    entries.append(entry.serialize())
+                    continue
+                entries.append(entry)
+        return entries
+        
     # TODO: Query optimization with indices
-    def get_entries(self, model:type, serialize:bool=False) -> List[object]:
+    def fetch_model_entries(self, model:type, serialize:bool=False) -> List[object]:
         entries = []
         with self._db_lock:
             for entry_id in self._db:
@@ -169,9 +195,56 @@ class IndexDatabase:
                     entries.append(entry)
         return entries
     
-    def get_entry(self, model_id:str, serialize:bool=False) -> object|None:
+    def fetch_entry(self, id:HSDBAttribute, serialize:bool=False) -> object|None:
         with self._db_lock:
-            entry = self._db.get(model_id)
+            entry = self._db.get(id)
             if serialize:
                 return entry.serialize()
             return entry
+        
+    def print(self, limit:int=10) -> None:
+        """
+        Print the database.
+        """
+        counter = 0
+        println()
+        print('########################')
+        print('Index database raw data:')
+        print('------------------------')
+        with self._db_lock:
+            for entry_id in self._db:
+                entry = self._db[entry_id]
+                json_entry = json.dumps(entry.model.serialize(entry), indent=4)
+                print(f'{EscapeColor.GREEN}{entry_id._value} {EscapeColor.GRAY}[{entry_id.key}]{EscapeColor.RESET}:')
+                string_entry = str(json_entry).replace('{', '').replace('}', '').replace('"', '').replace(',', '').strip()
+                string_entries = string_entry.split('\n')
+                
+                for sub_string_entry in string_entries:
+                    sub_string_entries = sub_string_entry.strip().split(':')
+                    if sub_string_entries[0] == 'id':
+                        continue
+                    print(f'    {EscapeColor.BLUE}{sub_string_entries[0]}: {EscapeColor.LIGHT_CYAN}{sub_string_entries[1]}{EscapeColor.RESET}')
+                println()
+                
+                if limit > 0:
+                    counter += 1
+                    if counter == limit:
+                        break
+        
+        if self.size > limit:
+            print(f'... {self.size - limit} more entries')
+        print('########################')
+        println()
+    
+    def update_directly(self, id_data_pair:dict) -> object|None:
+        """
+        Update an entry directly in the database.
+        Only for internal and testing use, skips all validation and parsing.
+        """
+        with self._db_lock:
+            for entry_id in id_data_pair:
+                entry = self._db.get(entry_id.value)
+                if entry is not None:
+                    continue
+                
+                self._db.update[entry_id.value] = id_data_pair[entry_id]

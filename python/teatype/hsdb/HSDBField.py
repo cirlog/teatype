@@ -21,7 +21,8 @@ _AVAILABLE_FIELDS = [
     'indexed',
     'key',
     'required',
-    'type'
+    'type',
+    'value'
 ]
 # Type alias for attribute types
 T = TypeVar('T')
@@ -109,7 +110,8 @@ class HSDBField(ABC, Generic[T]):
 
     @key.setter
     def key(self, new_key:str):
-        self._validate_key(new_key)
+        if not isinstance(new_key, str) or not new_key:
+            raise ValueError('key must be a string')
         self._key = new_key
 
     @value.setter

@@ -146,7 +146,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             # For each file, check if an entry already exists; if not, create it
             for index_file in parsed_index_files[index_key]:
                 id = index_file.get('base_data').get('id') # Identify the unique ID
-                if self.get_entry(id):
+                if self.fetch_entry(id):
                     continue # Skip creation if it already exists in the database
                 
                 # Create a new entry for the index file, do not write if parse is enough
@@ -185,18 +185,18 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
         except:
             return None # Return None if any exception occurs
 
-    def get_entry(self, model_id:str, serialize:bool=False) -> dict:
+    def fetch_entry(self, model_id:str, serialize:bool=False) -> dict:
         """
         Retrieve an entry from the index database by its ID, 
         optionally returning a serialized version.
         """
-        return self.index_database.get_entry(model_id, serialize)
+        return self.index_database.fetch_entry(model_id, serialize)
 
-    def get_entries(self, model:object, serialize:bool=False) -> List[dict]:
+    def fetch_model_entries(self, model:object, serialize:bool=False) -> List[dict]:
         """
         Return all entries for a given model, optionally serialized.
         """
-        return self.index_database.get_entries(model, serialize)
+        return self.index_database.fetch_model_entries(model, serialize)
 
     def modify_entry(self) -> bool:
         """

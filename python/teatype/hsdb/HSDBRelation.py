@@ -29,7 +29,7 @@ _AVAILABLE_FIELDS = [
     'reverse_lookup',
     'secondary_model',
 ]
-_SUPPORTED_TYPES = [HSDBField, List[HSDBField]]
+_SUPPORTED_TYPES = [str, List[str]]
 # Type alias for attribute types
 T = TypeVar('T')
 
@@ -160,11 +160,11 @@ class HSDBRelation(HSDBField, Generic[T]):
             if field.relation_type == 'many-to-one':
                 fetch_value = field._hsdb_reference.index_database._relational_index.fetch(
                     relation_name=field.relation_name,
-                    target_id=caller.id._value,
+                    target_id=caller.id,
                     reverse_lookup=False
                 )
-                field._value = field._hsdb_reference.index_database.get_entry(fetch_value)
-                print(field._hsdb_reference.index_database._db)
+                field._value = field._hsdb_reference.index_database.fetch_entry(fetch_value)
+                # print(field._hsdb_reference.index_database._db)
 
         @property
         def __query_closure(self):

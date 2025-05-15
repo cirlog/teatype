@@ -14,7 +14,8 @@
 from typing import List
 
 # From package imports
-from teatype.hsdb.indices import BaseIndex
+from teatype.hsdb import HSDBField
+from teatype.hsdb.indices import Index
 
 """
 Following structure for different relation types:
@@ -54,7 +55,7 @@ Following structure for different relation types:
 Info:
     relation_name consists of <primary_model>_<relation_type>_<secondary_model>
 """
-class RelationalIndex(BaseIndex):
+class RelationalIndex(Index):
     reverse_index:dict
     
     def __init__(self,
@@ -110,7 +111,7 @@ class RelationalIndex(BaseIndex):
             else:
                 target_index[relation_name].clear()
         
-    def fetch(self, relation_name:str, target_id:str, reverse_lookup:bool=False) -> dict|None:
+    def fetch(self, relation_name:str, target_id:HSDBField, reverse_lookup:bool=False) -> dict|None:
         """
         Fetch an entry from the index by its ID.
         """
@@ -136,7 +137,7 @@ class RelationalIndex(BaseIndex):
                 return target_index
             return target_index[relation_name]
     
-    def remove(self, relation_name:str, target_id:str, reverse_lookup:bool=False) -> dict|None:
+    def remove(self, relation_name:str, target_id:HSDBField, reverse_lookup:bool=False) -> dict|None:
         """
         Delete an entry from the index by its ID.
         """

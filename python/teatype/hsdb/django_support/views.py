@@ -69,10 +69,10 @@ class HSDBDjangoView(APIView):
             match request.method:
                 case 'GET':
                     if self.is_collection:
-                        query_response = hybrid_storage.get_entries(self.hsdb_model, serialize=True)
+                        query_response = hybrid_storage.fetch_model_entries(self.hsdb_model, serialize=True)
                     else:
                         id = kwargs.get(self.api_id())
-                        query_response = hybrid_storage.get_entry(id, serialize=True)
+                        query_response = hybrid_storage.fetch_entry(id, serialize=True)
                 case 'POST':
                     query_response = hybrid_storage.create_entry(self.hsdb_model, data)
                     if query_response is None:
