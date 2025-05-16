@@ -12,38 +12,37 @@
 
 # From package imports
 from teatype.io import env, file, path
+from teatype.hsdb_legacy import RawFileStructure
 
 class RawFileHandler:
-    root_data_path:str
+    _raw_file_structure:RawFileStructure
     
-    def __init__(self, root_data_path):
-        if root_data_path:
-            self.root_data_path = root_data_path
-        else:
-            # root_data_path = env.get('CIRLOG_DATA_PATH')
-            root_data_path = '/var/lib/cirlog'
-            self.root_data_path = f'{root_data_path}/raw'
-            
-            # path.create(backups_path)
-            # path.create(migration_backups_path)
-            # path.create(migration_backup_path)
+    def __init__(self, root_path:str=None):
+        self._raw_file_structure = RawFileStructure(root_path)
         
-        path.create(self.root_data_path)
+    @property
+    def fs(self):
+        return self._raw_file_structure.get_fs()
         
     # TODO: If new attributes surface (migrations), apply them to old files (backup before)
-    def create_entry(self, model_instance:object, overwrite_path:str) -> str:
+    def create_entry(self,
+                     model_instance:object,
+                     overwrite_path:str,
+                     compress:bool=False,
+                     include_relational_data:bool=False) -> str:
         try:
-            absolute_file_path = path.join(self.root_data_path, model_instance.file_path)
-            if path.exists(absolute_file_path):
+            absolute_path = path.join(self.fs.hsdb.index.path, model_instance.path)
+            if path.exists(absolute_path):
                 return 'File already exists'
-        
+
+            Model = model_instance.model
             # TODO: If model folder does not exist, create it and put model_meta.json into it
             # TODO: Create variable in path.create for exists ok
-            file.write(absolute_file_path,
-                       model_instance.serialize(),
+            file.write(absolute_path,
+                       Model.serialize(model_instance),
                        force_format='json',
-                       prettify=True,
+                       prettify=not compress,
                        create_parents=True)
-            return absolute_file_path
+            return absolute_path
         except Exception as exc:
             raise Exception(f'Could not create raw file entry: {exc}')
