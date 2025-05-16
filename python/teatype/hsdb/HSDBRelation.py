@@ -155,35 +155,43 @@ class HSDBRelation(HSDBField, Generic[T]):
         def __init__(self, value:any, field:str, caller:object) -> None:
             super().__init__(value, field, _AVAILABLE_FIELDS)
             
-            self.caller = caller
-            
             if field.relation_type == 'many-to-one':
-                fetch_value = field._hsdb_reference.index_database._relational_index.fetch(
+                fetch_id = field._hsdb_reference.index_database._relational_index.fetch(
                     relation_name=field.relation_name,
                     target_id=caller.id,
                     reverse_lookup=False
                 )
-                field._value = field._hsdb_reference.index_database.fetch_entry(fetch_value)
-
-        @property
-        def __query_closure(self):
-            if self.relation_type == 'many-to-one':
-                query = HSDBQuery(self.secondary_model)
-                # subset = { key:query._index_db_reference[key] for key in query._index_db_reference if key in self.secondary_keys }
-                # query.subset = subset
-                return query
+                fetch_value = field._hsdb_reference.index_database._db.fetch(fetch_id)
             
-        ###############################################################
-        # TODO: Temporary until I can realiably pass  query functions to wrapper #
-        ###############################################################
+            self._value = fetch_value
+            
+        #########################################################################
+        # TODO: Temporary until I can realiably pass query functions to wrapper #
+        #########################################################################
         
+        # def __query_closure(self):
+        #     # TODO: Replace with relational_index lookup
+        #     if field.relation_type == 'many-to-one':
+        #         fetch_value = field._hsdb_reference.index_database._relational_index.fetch(
+        #             relation_name=field.relation_name,
+        #             target_id=caller.id,
+        #             reverse_lookup=False
+        #         )
+        #         return HSDBQuery().get(fetch_value)
+        #     elif field.relation_type == 'one-to-many':
+        #         query = HSDBQuery(self.secondary_model)
+        #         # subset = { key:query._index_db_reference[key] for key in query._index_db_reference if key in self.secondary_keys }
+        #         # query.subset = subset
+        #         return query
+        #     return None
+            
         def all(self) -> HSDBQuery:
             """
             Returns all entries in the relation.
             """
             return self._value.all()
         
-        ###############################################################
+        #########################################################################
     
     class _RelationFactory(ABC, Generic[T]):
         editable:bool

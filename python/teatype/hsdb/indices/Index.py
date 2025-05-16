@@ -13,24 +13,9 @@
 # From system imports
 import threading
 
-# From system imports
-from typing import TypeVar
-
 # From package imports
-from teatype.hsdb.HSDBField import HSDBField as HSDBFieldClass
-
-HSDBField = TypeVar(HSDBFieldClass)
-
-def _transmute_id(entry_id:HSDBField|str) -> str:
-    """
-    Transmute the ID to a format that is compatible with the index.
-    """
-    entry_id_type = type(entry_id)
-    if entry_id_type is not str and entry_id_type is HSDBField and entry_id_type is not HSDBFieldClass._ValueWrapper:
-        raise TypeError(f'Entry ID must be a string or a HSDBField (subclass), not {entry_id_type}.')
-    if isinstance(entry_id, HSDBFieldClass) or isinstance(entry_id, HSDBFieldClass._ValueWrapper):
-        entry_id = entry_id.value
-    return entry_id
+from teatype.hsdb.HSDBField import HSDBField
+from teatype.hsdb.util import transmute_id
 
 class Index:
     primary_index:dict
@@ -51,7 +36,7 @@ class Index:
     ##################
     
     def __contains__(self, entry_id:HSDBField|str) -> bool:
-        entry_id = _transmute_id(entry_id)
+        entry_id = transmute_id(entry_id)
         with self.transaction_lock:
             return entry_id in self.primary_index
 
@@ -66,7 +51,7 @@ class Index:
         return new_index
 
     def __delitem__(self, entry_id:HSDBField|str) -> None:
-        entry_id = _transmute_id(entry_id)
+        entry_id = transmute_id(entry_id)
         with self.transaction_lock:
             self.remove(entry_id)
 
@@ -143,7 +128,7 @@ class Index:
         """
         Add an entry to the index.
         """
-        entry_id = _transmute_id(entry_id)
+        entry_id = transmute_id(entry_id)
         with self.transaction_lock:
             if entry_id in self.primary_index:
                 raise KeyError(f'Entry with ID {entry_id} already exists in the index.')
@@ -159,7 +144,7 @@ class Index:
         """
         Fetch an entry from the index by its ID.
         """
-        entry_id = _transmute_id(entry_id)
+        entry_id = transmute_id(entry_id)
         with self.transaction_lock:
             if entry_id not in self.primary_index:
                 raise KeyError(f'Entry with ID {entry_id} does not exist in the index.')
@@ -176,7 +161,7 @@ class Index:
         """
         Delete an entry from the index by its ID.
         """
-        entry_id = _transmute_id(entry_id)
+        entry_id = transmute_id(entry_id)
         with self.transaction_lock:
             if self.fetch(entry_id):
                 del self.primary_index[entry_id]
@@ -190,9 +175,9 @@ class Index:
         with self.transaction_lock:
             for entry_id in entry_data:
                 entry = entry_data[entry_id]
-                entry_id = _transmute_id(entry_id)
+                transmuted_id = transmute_id(entry_id)
                 
-                if entry_id in self.primary_index:
-                    raise KeyError(f'Entry with ID {entry_id} does not exist in the index.')
+                if transmuted_id in self.primary_index:
+                    raise KeyError(f'Entry with ID {transmuted_id} does not exist in the index.')
                 
-                self.primary_index.update({entry_id: entry})
+                self.primary_index.update({transmuted_id: entry})

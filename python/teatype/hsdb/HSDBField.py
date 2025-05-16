@@ -186,3 +186,6 @@ class HSDBField(ABC, Generic[T]):
                 del self.cache_values
                 self._metadata_loaded = True
             return self._cached_metadata
+        
+        def __getattribute__(self, name):
+            return super().__getattribute__(name)

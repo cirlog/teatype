@@ -17,7 +17,7 @@ import sys
 from typing import Generic, Type, TypeVar
 
 # From package imports
-from teatype.hsdb import HSDBField
+from teatype.hsdb.HSDBField import HSDBField
 from teatype.util import dt
 
 # Supported attribute types

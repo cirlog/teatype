@@ -16,6 +16,7 @@ from typing import List
 # From package imports
 from teatype.hsdb import HSDBField
 from teatype.hsdb.indices import Index
+from teatype.hsdb.util import transmute_id
 
 """
 Following structure for different relation types:
@@ -82,8 +83,8 @@ class RelationalIndex(Index):
                 if reverse_relation_name not in self.reverse_index:
                     self.reverse_index[reverse_relation_name] = {}
                     
-                primary_key = primary_keys[0]
-                secondary_key = secondary_keys[0]
+                primary_key = transmute_id(primary_keys[0])
+                secondary_key = transmute_id(secondary_keys[0])
                 if relation_type == 'one-to-one':
                     self.primary_index[relation_name][primary_key] = secondary_key
                     self.reverse_index[reverse_relation_name][secondary_key] = primary_key
@@ -93,8 +94,8 @@ class RelationalIndex(Index):
                         self.reverse_index[reverse_relation_name][secondary_key] = []
                     self.reverse_index[reverse_relation_name][secondary_key].append(primary_key)
             else:
-                self.primary_index[relation_name]['primary_keys'] = [primary_keys]
-                self.primary_index[relation_name]['secondary_keys'] = secondary_keys
+                self.primary_index[relation_name]['primary_keys'] = [transmute_id(primary_key) for primary_key in primary_keys]
+                self.primary_index[relation_name]['secondary_keys'] = [transmute_id(secondary_key) for secondary_key in secondary_keys]
         
     def clear(self, relation_name:str=None, reverse_lookup:bool=False) -> None:
         """
@@ -115,6 +116,7 @@ class RelationalIndex(Index):
         """
         Fetch an entry from the index by its ID.
         """
+        target_id = transmute_id(target_id)
         if reverse_lookup:
             target_index = self.reverse_index[relation_name]
         else:
@@ -141,6 +143,7 @@ class RelationalIndex(Index):
         """
         Delete an entry from the index by its ID.
         """
+        target_id = transmute_id(target_id)
         if reverse_lookup:
             target_index = self.reverse_index[relation_name]
         else:

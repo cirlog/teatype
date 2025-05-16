@@ -288,14 +288,16 @@ def test_relations(number_of_students,
     # Create a query chain that does not execute immediately.
     log('Test queries:')
     println()
-
-    tu_berlin = SchoolModel.query.where('name').equals('Technische Universität München').verbose().first()
+    
+    # tu_muenchen = SchoolModel.query.where('name').equals('Technische Universität München').verbose().first()
+    tu_muenchen = SchoolModel.query.where('name').equals('Technische Universität München').verbose().first()
+    # tu_muenchen = SchoolModel.query.verbose().get(id=tu_muenchen.id)
     lion_reichl = StudentModel({
         'age': 30,
         'gender': 'male',
         'height': 181,
         'name': 'Lion Reichl',
-        'school': tu_berlin.id
+        'school': tu_muenchen.id
     })
     hybrid_storage.index_database.update_directly({lion_reichl.id: lion_reichl})
     
@@ -305,6 +307,5 @@ def test_relations(number_of_students,
     println()
 
     print(lion_reichl.school)
-    # print(lion_reichl.school.id)
     
     log('--------------------')
