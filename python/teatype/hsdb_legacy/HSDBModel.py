@@ -17,12 +17,11 @@ import re
 # From system imports
 from abc import ABC, abstractmethod
 
-# From package imports
-from teatype.hsdb_legacy import HSDBAttribute
-from teatype.io import env
+# From-as system imports
+from datetime import datetime as dt
 
 # From-as package imports
-from teatype import dt, generate_id
+from teatype import generate_id
 
 # TODO: Add validation method inside model
 # TODO: Add attribute supports
@@ -73,6 +72,7 @@ class HSDBModel(ABC):
         
         # TODO: Remove model name for redunancy when using a model index
         self.model_name = type(self).__name__ 
+        self.model = self.__class__
         # TODO: Turn into util function
         self.parsed_name = _parse_name(self.model_name).replace('-model', '')
         self.parsed_plural_name = self.parsed_name + 's' if not self.parsed_name.endswith('s') else self.parsed_name + 'es'

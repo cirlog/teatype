@@ -31,7 +31,8 @@ class RawFileHandler:
                      compress:bool=False,
                      include_relational_data:bool=False) -> str:
         try:
-            absolute_path = path.join(self.fs.hsdb.index.path, model_instance.path)
+            # absolute_path = path.join(self.fs.index.path, model_instance.path)
+            absolute_path = path.join(self.fs.rawfiles.path, model_instance.file_path)
             if path.exists(absolute_path):
                 return 'File already exists'
 

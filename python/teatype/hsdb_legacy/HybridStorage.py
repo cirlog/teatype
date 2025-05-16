@@ -14,200 +14,126 @@
 import threading
 
 # From system imports
-from multiprocessing import Queue
 from typing import List
 
 # From package imports
-from teatype.enum import EscapeColor
+from multiprocessing import Queue
 from teatype.hsdb_legacy import IndexDatabase, RawFileHandler
-from teatype.hsdb.util import parse_fixtures, parse_index_files
 from teatype.io import env
-from teatype.logging import err, hint, log, println, success, warn
+from teatype.logging import log
 from teatype.util import SingletonMeta
 
 # TODO: Implement Coroutine and Operation (Atomic)
 # TODO: Implement threaded Coroutine scheduler
 # TODO: Implement threaded Operations controller
 class HybridStorage(threading.Thread, metaclass=SingletonMeta):
-    """
-    HybridStorage manages both an IndexDatabase and a RawFileHandler, 
-    combining them to synchronize model entries with file storage in a 
-    threaded environment. The SingletonMeta ensures only one instance exists.
-    """
     coroutines:List
     coroutines_queue:Queue
     fixtures:dict
     index_database:IndexDatabase
-    migrations:dict
     operations_queue:Queue
     raw_file_handler:RawFileHandler
 
-    # TODO: Put this outside of class context so the first import HybridStorage initializes it
-    def __init__(self, models:List[type]=[], root_path:str=None, cold_mode:bool=False) -> None:
-        """
-        Initialize the HybridStorage thread, ensuring singleton behavior 
-        and setting up internal structures for model and file handling.
+    def __init__(self, init:bool=False, models:List[type]=None, overwrite_root_data_path:str=None):
+        if not init:
+            return
         
-        Args:
-            models (List[type], optional): A list of models to be used with the IndexDatabase. Defaults to None.
-            root_path (str, optional): The root path for the file storage. Defaults to None.
-            cold_mode (bool, optional): Whether to disable writing to disk. Defaults to False.
-        """
-        # Only initialize once, prevent reinitialization
+        # Only initialize once
         if not getattr(self, '_initialized', False):
-            threading.Thread.__init__(self)  # Initialize the Thread superclass
+            # Prevent re-initialization
+            self.coroutines = []
+            self.index_database = IndexDatabase(models=models)
 
             # Set the root data path
-            if root_path is None:
-                root_path = env.get('HSDB_ROOT_PATH')  # Retrieves path from environment
+            if overwrite_root_data_path:
+                root_data_path = overwrite_root_data_path
+            else:
+                root_data_path = env.get('HSDB_ROOT_PATH')
 
-            self.coroutines = [] # List to keep track of coroutines
-            self.coroutines_queue = Queue() # Queue for coroutine scheduling
-            self.fixtures = dict # Will store fixture-related data
-            self.migrations = dict # Placeholder for storing migration info
-            self.operations_queue = Queue() # Queue for operations processing
-
-            self.index_database = IndexDatabase(models=models) # Create or link an IndexDatabase with given models
-            
-            if not cold_mode:
-                self.raw_file_handler = RawFileHandler(root_path=root_path) # Initialize file handler for raw data operations
+            self.raw_file_handler = RawFileHandler(root_path=root_data_path)
 
             self._initialized = True # Mark as initialized
-            self.__instance = self # Set the instance for Singleton
+            self.__instance = self # Set the instance
             
-            if not cold_mode:
-                success(f'HybridStorage finished initialization') # sucess the initialization
-            else:
-                success(f'HybridStorage initialized in {EscapeColor.CYAN}cold mode{EscapeColor.RESET}')
+            log('HybridStorage finished initialization')
     
     @staticmethod
-    def instance() -> 'HybridStorage':
-        """
-        Return or create the HybridStorage singleton instance.
-        """
-        print('instance()')
+    def instance():
         if not hasattr(HybridStorage, '__instance'):
-            print('instance()')
-            HybridStorage.__instance = HybridStorage() # Create a default instance if none exists
-        print('instance()')
+            HybridStorage.__instance = HybridStorage(init=True)
         return HybridStorage.__instance
+        
+    def fill(self):
+        pass
     
-    # def fill(self):
-    #     pass
-    #
     # def register_model(self, model:object):
     #     self.index_database.models.append(model)
             
-    def install_fixtures(self, fixtures_path:str=None) -> None:
-        """
-        Load and install fixtures from a specified path into the index database.
-        """
-        # TODO: Get default path if fixtures_path is None
-        fixtures:List[dict] = parse_fixtures(fixtures_path=fixtures_path) # Parse fixtures from file(s)
+    def install_fixtures(self, fixtures:List[dict]):
         for fixture in fixtures:
-            model_name = fixture.get('model')  # Extract model name from fixture
+            model_name = fixture.get('model')
+            
             matched_model = next((cls for cls in self.index_database.models if cls.__name__ == model_name), None)
             if matched_model is None:
-                raise ValueError(f'Model {model_name} not found in models') # Ensure the matching model is present
-
-            # Loop through each entry in fixture
+                raise ValueError(f'Model {model_name} not found in models')
+            
             for entry in fixture.get('fixtures'):
-                data = entry.get('data') # Retrieve the data portion of the fixture
-                # Check which localized name to use
-                if 'de_DE' in data.get('name'):
-                    name = data['name']['de_DE']
-                elif 'en_EN' in data.get('name'):
-                    name = data['name']['en_EN']
+                id = entry.get('id')
+                data = entry.get('data')
+                if data.get('de_DE'):
+                    name = data['de_DE']['name']
+                elif data.get('en_EN'):
+                    name = data['en_EN']['name']
                 else:
                     name = data.get('name')
-                data.update({'name': name}) # Update the data dict to unify 'name'
+                data.update({'name': name})
                 try:
-                    del data['name']['de_DE']
-                    del data['name']['en_EN']
-                    # del data['model_data']
+                    del data['de_DE']
+                    del data['en_EN']
+                    del data['model_meta']
                 except:
-                    pass # It's okay if these keys don't exist
-
-                # Create a new entry in the index database, parse it if needed and write it
-                self.create_entry(matched_model, entry, parse=True, write=True)
+                    pass
+                    
+                self.create_entry(matched_model, {'id': id, **data})
                 
-    def install_index_files(self) -> None:
-        """
-        Read index files, parse them, and create entries for them in the database if not already present.
-        """
-        parsed_index_files:List[dict] = parse_index_files(hybrid_storage_instance=self) # Parse index files
-        for index_key in parsed_index_files:
-            # Retrieve the model_name from the data
-            model_name = parsed_index_files[index_key][0].get('model_data').get('model_name')
+    def install_raw_data(self, parsed_raw_data:List[dict]):
+        for raw_data in parsed_raw_data:
+            model_name = raw_data.get('model_data').get('model_name')
             matched_model = next((cls for cls in self.index_database.models if cls.__name__ == model_name), None)
             if matched_model is None:
-                raise ValueError(f'Model {model_name} not found in models') # Ensure the model is present
-
-            # For each file, check if an entry already exists; if not, create it
-            for index_file in parsed_index_files[index_key]:
-                id = index_file.get('base_data').get('id') # Identify the unique ID
-                if self.fetch_entry(id):
-                    continue # Skip creation if it already exists in the database
+                raise ValueError(f'Model {model_name} not found in models')
+            
+            id = raw_data.get('id')
+            data = raw_data.get('data')
+            
+            if self.get_entry(id):
+                continue
                 
-                # Create a new entry for the index file, do not write if parse is enough
-                self.create_entry(matched_model, index_file, parse=True, write=False)
+            self.create_entry(matched_model, {'id': id, **data})
 
-    def create_entry(self,
-                     model:object,
-                     data:dict,
-                     parse:bool=False,
-                     write:bool=True,
-                     overwrite_path:str=None) -> dict|None:
-        """
-        Create a new entry for a given model, optionally parsing the 
-        entry data and writing it to the file system.
-        """
+    def create_entry(self, model:object, data:dict, overwrite_path:str=None) -> dict|None:
         try:
-            # TODO: Implement implemented trap cleanup handlers in models
-            # The index database is asked to create an entry from data
-            model_instance = self.index_database.create_entry(model, data, parse)
-            if model_instance is None:  # If for some reason creation fails
+            model_instance = self.index_database.create_entry(model, data, overwrite_path)
+            if model_instance is None:
                 return None
             
-            # If cold mode is enabled, automatically disable writing to disk
-            if self.cold_mode:
-                write = False
-                
-            if write: # If writing to disk is enabled
-                try:
-                    file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
-                    # if not file.exists(file_path):
-                    #     model_instance.delete()
-                except:
-                    # model_instance.delete()
-                    pass
-            return model_instance.serialize() # Return the serialized model instance
-        except:
-            return None # Return None if any exception occurs
+            file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
+            # TODO: If file save fails, delete entry from db
+            # TODO: Implement implemented trap cleanup handlers in models
+            return model_instance.serialize()
+        except Exception as exc:
+            import traceback
+            traceback.print_exc()
+            return None
 
-    def fetch_entry(self, model_id:str, serialize:bool=False) -> dict:
-        """
-        Retrieve an entry from the index database by its ID, 
-        optionally returning a serialized version.
-        """
-        return self.index_database.fetch_entry(model_id, serialize)
+    def get_entry(self, model_id:str, serialize:bool=False) -> dict:
+        return self.index_database.get_entry(model_id, serialize)
 
-    def fetch_model_entries(self, model:object, serialize:bool=False) -> List[dict]:
-        """
-        Return all entries for a given model, optionally serialized.
-        """
-        return self.index_database.fetch_model_entries(model, serialize)
+    def get_entries(self, model:object, serialize:bool=False) -> List[dict]:
+        return self.index_database.get_entries(model, serialize)
 
     def modify_entry(self) -> bool:
-        """
-        Placeholder for entry modifications, returning True for now.
-        """
-        # TODO: Make backup of data before modifications
-        #       Delete backup when write was succesful
         return True
 
     def delete_entry(self) -> bool:
-        """
-        Placeholder for entry deletions, returning True for now.
-        """
         return True

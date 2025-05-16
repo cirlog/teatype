@@ -18,30 +18,28 @@ from teatype.io import path
 
 _DEFAULT_ROOT_PATH = '/var/lib/hsdb'
 _FS = {
-    'hsdb': {
-        'backups': {
-            'index': {},
-            'migration': {},
-            'rawfiles': {}
-        },
-        'dumps': {
-            'migrations': {}
-        },
-        'exports': {},
+    'backups': {
         'index': {},
-        'logs': {
-            'migrations': {}
-        },
-        'meta': {},
-        'models': {
-            'adapters': {},
-        },
-        'rawfiles': {},
-        'redundancy': {},
-        'rejectpile': {
-            'index': {},
-            'rawfiles': {}
-        }
+        'migration': {},
+        'rawfiles': {}
+    },
+    'dumps': {
+        'migrations': {}
+    },
+    'exports': {},
+    'index': {},
+    'logs': {
+        'migrations': {}
+    },
+    'meta': {},
+    'models': {
+        'adapters': {},
+    },
+    'rawfiles': {},
+    'redundancy': {},
+    'rejectpile': {
+        'index': {},
+        'rawfiles': {}
     }
 }
 
