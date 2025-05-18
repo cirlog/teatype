@@ -92,7 +92,6 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                 try:
                     del data['name']['de_DE']
                     del data['name']['en_EN']
-                    # del data['model_data']
                 except:
                     pass # It's okay if these keys don't exist
                     
