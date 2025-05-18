@@ -92,7 +92,7 @@ class HSDBModel(ABC):
         
         # TODO: Make this dynamic
         self.app_name = 'raw'
-        self.migration_id = 0
+        self.migration_id = 1
             
     # TODO: Figure out how to do this
     #     self._establishRelations()
