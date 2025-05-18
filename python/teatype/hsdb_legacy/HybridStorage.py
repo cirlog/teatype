@@ -77,22 +77,24 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             if matched_model is None:
                 raise ValueError(f'Model {model_name} not found in models')
             
+            # Loop through each entry in fixture
             for entry in fixture.get('fixtures'):
                 id = entry.get('id')
-                data = entry.get('data')
-                if data.get('de_DE'):
-                    name = data['de_DE']['name']
-                elif data.get('en_EN'):
-                    name = data['en_EN']['name']
+                data = entry.get('data') # Retrieve the data portion of the fixture
+                # Check which localized name to use
+                if 'de_DE' in data.get('name'):
+                    name = data['name']['de_DE']
+                elif 'en_EN' in data.get('name'):
+                    name = data['name']['en_EN']
                 else:
                     name = data.get('name')
-                data.update({'name': name})
+                data.update({'name': name}) # Update the data dict to unify 'name'
                 try:
-                    del data['de_DE']
-                    del data['en_EN']
-                    del data['model_meta']
+                    del data['name']['de_DE']
+                    del data['name']['en_EN']
+                    # del data['model_data']
                 except:
-                    pass
+                    pass # It's okay if these keys don't exist
                     
                 self.create_entry(matched_model, {'id': id, **data})
                 
