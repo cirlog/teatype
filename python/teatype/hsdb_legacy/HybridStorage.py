@@ -12,6 +12,7 @@
 
 # System imports
 import threading
+import traceback
 
 # From system imports
 from typing import List
@@ -80,6 +81,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             # Loop through each entry in fixture
             for entry in fixture.get('fixtures'):
                 id = entry.get('id')
+                base_data = entry.get('base_data') # Retrieve the base data portion of the fixture
                 data = entry.get('data') # Retrieve the data portion of the fixture
                 # Check which localized name to use
                 if 'de_DE' in data.get('name'):
@@ -94,8 +96,9 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                     del data['name']['en_EN']
                 except:
                     pass # It's okay if these keys don't exist
-                    
-                self.create_entry(matched_model, {'id': id, **data})
+                
+                full_data = {**base_data, **data} # Merge base_data into data
+                self.create_entry(matched_model, {'id': id, **full_data})
                 
     def install_raw_data(self, parsed_raw_data:List[dict]):
         for raw_data in parsed_raw_data:
@@ -105,12 +108,14 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                 raise ValueError(f'Model {model_name} not found in models')
             
             id = raw_data.get('id')
+            base_data = raw_data.get('base_data')
             data = raw_data.get('data')
+            full_data = {**base_data, **data} # Merge base_data into data
             
             if self.get_entry(id):
                 continue
                 
-            self.create_entry(matched_model, {'id': id, **data})
+            self.create_entry(matched_model, {'id': id, **full_data})
 
     def create_entry(self, model:object, data:dict, overwrite_path:str=None) -> dict|None:
         try:
@@ -130,8 +135,13 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
     def get_entry(self, model_id:str, serialize:bool=False) -> dict:
         return self.index_database.get_entry(model_id, serialize)
 
-    def get_entries(self, model:object, serialize:bool=False) -> List[dict]:
-        return self.index_database.get_entries(model, serialize)
+    def get_entries(self, model:object, serialize:bool=False, sort_by:str='updated_at') -> List[dict]:
+        entries = self.index_database.get_entries(model, serialize)
+        if sort_by == 'updated_at':
+            entries.sort(key=lambda x: x['base_data']['updated_at'], reverse=True)
+        else:
+            entries.sort(key=lambda x: x[sort_by], reverse=True)
+        return entries
 
     def modify_entry(self) -> bool:
         return True
