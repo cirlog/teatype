@@ -57,7 +57,13 @@ class HSDBModel(ABC):
                  name:str=None,
                  created_at:str=None,
                  updated_at:str=None,
-                 overwrite_file_path:str=None):
+                 overwrite_file_path:str=None,
+                 
+                 migration_id:int=1,
+                 migration_app_name:str='raw',
+                 migrated_at:str=None,
+                 
+                 **kwargs):
         # TODO: Turn into util function
         def _parse_name(raw_name:str, seperator:str='-', plural:bool=False):
             return re.sub(r'(?<!^)(?=[A-Z])', seperator, raw_name).lower()
@@ -92,7 +98,14 @@ class HSDBModel(ABC):
         
         # TODO: Make this dynamic
         self.app_name = 'raw'
-        self.migration_id = 1
+        
+        self.migration_id = migration_id
+        
+        if migration_app_name:
+            self.migration_app_name = migration_app_name
+            
+        if migrated_at:
+            self.migrated_at = dt.fromisoformat(migrated_at)
             
     # TODO: Figure out how to do this
     #     self._establishRelations()
@@ -117,7 +130,14 @@ class HSDBModel(ABC):
             'app_name': self.app_name,
             'migration_id': self.migration_id,
             # 'migration_precursor': self.migration_precursor,
-        }   
+        }
+        if hasattr(self, 'migrated_at'):
+            migration_data['migrated_at'] = str(self.migrated_at)
+        if hasattr(self, 'migration_name'):
+            migration_data['migration_name'] = self.migration_name
+        if hasattr(self, 'migration_app_name'):
+            migration_data['migration_app_name'] = self.migration_app_name
+            
         model_data = {
             'app_name': self.app_name,
             'model_name': self.model_name,

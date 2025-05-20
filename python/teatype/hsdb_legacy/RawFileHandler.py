@@ -47,3 +47,22 @@ class RawFileHandler:
             return absolute_path
         except Exception as exc:
             raise Exception(f'Could not create raw file entry: {exc}')
+        
+    # TODO: If new attributes surface (migrations), apply them to old files (backup before)
+    def update_entry(self,
+                     model_instance:object,
+                     overwrite_path:str,
+                     compress:bool=False,
+                     include_relational_data:bool=False) -> str:
+        try:
+            absolute_path = path.join(self.fs.index.path, model_instance.file_path)
+
+            Model = model_instance.model
+            file.write(absolute_path,
+                       Model.serialize(model_instance),
+                       force_format='json',
+                       prettify=not compress,
+                       create_parents=True)
+            return absolute_path
+        except Exception as exc:
+            raise Exception(f'Could not update raw file entry: {exc}')

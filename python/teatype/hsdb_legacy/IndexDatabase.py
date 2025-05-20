@@ -16,6 +16,9 @@ import threading
 # From system imports
 from typing import List
 
+# From package imports
+from teatype import generate_id
+
 class IndexDatabase:
     _compute_index:dict # For all compute values for easy modification
     _compute_index_lock:threading.Lock
@@ -50,14 +53,8 @@ class IndexDatabase:
     def create_entry(self, model:type, data:dict, overwrite_path:str=None) -> object|None:
         try:
             with self._db_lock:
-                # TODO: Validation
-                model_instance = model(**data)
-                model_name = model_instance.model_name
-                with self._model_index_lock:
-                    if model_name not in self._model_index:
-                        self._model_index[model_name] = {}
-                        
-                model_id = model_instance.id
+                model_name = model.__name__
+                model_id = data.get('id', generate_id())
                 if model_id in self._db:
                     return None
                 
@@ -95,7 +92,6 @@ class IndexDatabase:
                         )
                         if existing_match:
                             return None
-                    # case 'LabelModel':
                     #     pass
                     case 'ManufacturerModel':
                         existing_match = next(
@@ -121,6 +117,24 @@ class IndexDatabase:
                         )
                         if existing_match:
                             return None
+                        
+                # TODO: Validation
+                data['id'] = model_id
+                model_instance = model(**data)
+                with self._model_index_lock:
+                    if model_name not in self._model_index:
+                        self._model_index[model_name] = {}
+                        
+                if 'name' in data:
+                    with self._indexed_fields_lock:
+                        indexed_field_name = model_name + '_name'
+                        if indexed_field_name not in self._indexed_fields:
+                            self._indexed_fields[indexed_field_name] = {}
+                        
+                        id = data.get('id')
+                        name = data.get('name')
+                        if name not in self._indexed_fields[indexed_field_name]:
+                            self._indexed_fields[indexed_field_name][name] = id
                         
                 self._db[model_id] = model_instance
                 return model_instance
@@ -151,3 +165,11 @@ class IndexDatabase:
         
     def query(self) -> None:
         pass
+        
+    def update_entry(self, id:str, model_instance:object) -> bool:
+        try:
+            self._db[id] = model_instance
+            return True
+        except Exception as exc:
+            print(exc)
+            return False

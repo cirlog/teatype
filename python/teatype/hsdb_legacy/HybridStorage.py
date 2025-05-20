@@ -17,6 +17,9 @@ import traceback
 # From system imports
 from typing import List
 
+# From-as system imports
+from datetime import datetime as dt
+
 # From package imports
 from multiprocessing import Queue
 from teatype.hsdb_legacy import IndexDatabase, RawFileHandler
@@ -98,7 +101,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                     pass # It's okay if these keys don't exist
                 
                 full_data = {**base_data, **data} # Merge base_data into data
-                self.create_entry(matched_model, {'id': id, **full_data})
+                self.feed_entry(matched_model, {'id': id, **full_data})
                 
     def install_raw_data(self, parsed_raw_data:List[dict]):
         for raw_data in parsed_raw_data:
@@ -110,12 +113,25 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             id = raw_data.get('id')
             base_data = raw_data.get('base_data')
             data = raw_data.get('data')
-            full_data = {**base_data, **data} # Merge base_data into data
+            migration_data = raw_data.get('migration_data') # Retrieve the migration data portion of the fixture
+            full_data = {**base_data, **data, **migration_data} # Merge base_data into data
             
             if self.get_entry(id):
                 continue
                 
-            self.create_entry(matched_model, {'id': id, **full_data})
+            self.feed_entry(matched_model, {'id': id, **full_data})
+            
+    def feed_entry(self, model:object, data:dict, overwrite_path:str=None) -> dict|None:
+        try:
+            model_instance = self.index_database.create_entry(model, data, overwrite_path)
+            if model_instance is None:
+                return None
+            file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
+            return model_instance.serialize()
+        except Exception as exc:
+            import traceback
+            traceback.print_exc()
+            return None
 
     def create_entry(self, model:object, data:dict, overwrite_path:str=None) -> dict|None:
         try:
@@ -123,6 +139,34 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             if model_instance is None:
                 return None
             
+            if model_instance.model_name == 'InstrumentModel':
+                try:
+                    instrument_type_name = model_instance.instrument_type
+                    instrument_type_id = self.index_database._indexed_fields['InstrumentTypeModel_name'][instrument_type_name]
+                    self.index_database._db[instrument_type_id].updated_at = dt.now()
+                    
+                    self.raw_file_handler.update_entry(self.index_database._db[instrument_type_id], overwrite_path)
+                except Exception as exc:
+                    traceback.print_exc()
+                    
+                try:
+                    manufacturer_name = model_instance.manufacturer
+                    manufacturer_id = self.index_database._indexed_fields['ManufacturerModel_name'][manufacturer_name]
+                    self.index_database._db[manufacturer_id].updated_at = dt.now()
+                    
+                    self.raw_file_handler.update_entry(self.index_database._db[manufacturer_id], overwrite_path)
+                except Exception as exc:
+                    traceback.print_exc()
+                    
+                try:
+                    surgery_type_name = model_instance.surgery_type
+                    surgery_type_id = self.index_database._indexed_fields['SurgeryTypeModel_name'][surgery_type_name]
+                    self.index_database._db[surgery_type_id].updated_at = dt.now()
+                    
+                    self.raw_file_handler.update_entry(self.index_database._db[surgery_type_id], overwrite_path)
+                except Exception as exc:
+                    traceback.print_exc()
+                    
             file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
             # TODO: If file save fails, delete entry from db
             # TODO: Implement implemented trap cleanup handlers in models
@@ -138,6 +182,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
     def get_entries(self, model:object, serialize:bool=False, sort_by:str='updated_at') -> List[dict]:
         entries = self.index_database.get_entries(model, serialize)
         if sort_by == 'updated_at':
+            print('Sorting by updated_at')
             entries.sort(key=lambda x: x['base_data']['updated_at'], reverse=True)
         else:
             entries.sort(key=lambda x: x[sort_by], reverse=True)
