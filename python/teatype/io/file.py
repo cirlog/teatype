@@ -270,16 +270,16 @@ def delete(path:str, silent_fail:bool=True) -> bool:
     """
     try:
         # Check if the path exists and determine if it's a file
-        file_exists, is_file = exists(path)
+        file_exists = exists(path)
         if file_exists:
-            if is_file:
-                # If it's a file, log a warning indicating that a directory will be deleted
-                err(f'"{path}" is a directory. Deleting the directory and its contents.')
-                # Recursively remove the directory and all its contents
-                shutil.rmtree(path)
-            else:
-                # If it's not a file (i.e., it's a regular file), remove it
-                os.remove(path)
+            if is_file(path):
+                if is_file:
+                    os.remove(path)
+                else:
+                    # If it's not a file, log a warning indicating that a directory will be deleted
+                    err(f'"{path}" is a directory. Deleting the directory and its contents.')
+                    # Recursively remove the directory and all its contents
+                    shutil.rmtree(path)
         return True
     except Exception as exc:
         if not silent_fail:
@@ -317,6 +317,25 @@ def exists(path:PosixPath|str, return_file:bool=False, trim_file:bool=False) -> 
         return _File(path_string, trimmed=trim_file) if file_exists else None
     # Otherwise, return a boolean indicating whether the path exists
     return file_exists
+
+def is_file(path:PosixPath|str) -> bool:
+    """
+    Check if the specified path is a file.
+
+    Parameters:
+        path (str): The path to the file.
+
+    Returns:
+        bool: True if the path is a file, False otherwise.
+    """
+    # Check if the provided path is a PosixPath object
+    if isinstance(path, PosixPath):
+        # Convert PosixPath to string for compatibility with os.path functions
+        path_string = str(path)
+    else:
+        # Use the path as-is if it's already a string
+        path_string = path
+    return os.path.isfile(path_string)
     
 def list(directory:str,
          walk:bool=False,

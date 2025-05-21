@@ -24,6 +24,7 @@ from .file import append as append_file
 from .file import copy as copy_file
 from .file import delete as delete_file
 from .file import exists as file_exists
+from .file import is_file
 from .file import list as list_files
 from .file import move as move_file
 from .file import read as read_file
