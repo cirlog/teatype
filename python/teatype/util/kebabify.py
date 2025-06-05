@@ -30,3 +30,7 @@ def kebabify(raw_name:str,
     if plural:
         parsed_name = parsed_name + 's' if not parsed_name.endswith('s') else parsed_name + 'es'
     return parsed_name
+
+def unkebabify(kebab_name:str) -> str:
+    parts = kebab_name.split('-')
+    return ''.join(part.capitalize() for part in parts if part)
