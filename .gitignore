@@ -170,4 +170,22 @@ dist-ssr
 */dist/
 *egg-info
 */bundle/
-*/build/
+*/build/# Environment file generated from template
+*venv
+.env
+
+# Temporary directory
+~temp/*
+~temp
+
+# Distribution files
+*build/*
+build
+*bundle/*
+bundle
+*dist/*
+dist
+
+# Logging
+*logs/*
+logs
