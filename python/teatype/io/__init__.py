@@ -12,7 +12,7 @@
 
 # From local imports
 from .prompt import prompt
-from .shell import enable_sudo, shell
+from .shell import clear, enable_sudo, shell
 from .TemporaryDirectory import TemporaryDirectory
 
 # From-as local imports
