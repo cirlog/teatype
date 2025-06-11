@@ -10,12 +10,20 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .args.Argument import Argument
-from .args.Command import Command
-from .args.Flag import Flag
-from .BaseCLI import BaseCLI
-from .BaseIsRunningCLI import BaseIsRunningCLI
-from .BaseInstallCLI import BaseInstallCLI
-from .BaseStartCLI import BaseStartCLI
-from .BaseStopCLI import BaseStopCLI
-from .BaseTUI import BaseTUI
+# From system imports
+from abc import abstractmethod
+
+# From package imports
+from teatype.cli import BaseCLI
+
+class BaseTUI(BaseCLI):
+    def execute(self):
+        self.run()
+        
+    @abstractmethod
+    def run(self):
+        """
+        This method should be implemented by subclasses to define the specific
+        functionality of the TUI.
+        """
+        raise NotImplementedError('Subclasses must implement the run method.')
