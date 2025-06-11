@@ -57,7 +57,7 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     # app_name     = HSDBAttribute(str,  editable=False) # TODO: Maybe make this as a computed python property?
     created_at   = HSDBAttribute(dt,   computed=True)
     id           = HSDBAttribute(str,  computed=True, unique=True)
-    is_cached    = HSDBAttribute(bool, computed=True, default=True) # Describes whether the model entries are permanently cached in memory
+    is_cached    = HSDBAttribute(bool, default=True) # Describes whether the model entries are permanently cached in memory
     # is_fixture   = HSDBAttribute(bool, computed=True) # TODO: Maybe make this as a computed python property?
     # migration_id = HSDBAttribute(int,  computed=True) # TODO: Maybe make this as a computed python property?
     # synced_at    = HSDBAttribute(dt,   computed=True)
