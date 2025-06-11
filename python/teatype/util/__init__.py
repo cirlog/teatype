@@ -11,6 +11,10 @@
 # all copies or substantial portions of the Software.
 
 from .dt import dt
+from .fastjson import compress as compress_json
+from .fastjson import decompress as decompress_json
+from .fastjson import dump as dump_json
+from .fastjson import load as load_json
 from .generate_id import generate_id
 from .kebabify import kebabify, unkebabify
 from .implemented_trap import implemented_trap
