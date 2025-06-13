@@ -40,68 +40,72 @@ def clear(use_ansi:bool=False) -> None:
         subprocess.run('clear', shell=True)
 
 def enable_sudo(max_fail_count: int = 3) -> None:
-    """
-    Prompts for sudo password up to max_fail_count times, masking input with asterisks.
-    If sudo timestamp is already valid, skips prompting.
-    """
-    # If sudo timestamp is still valid, no password is necessary
-    no_pass = subprocess.run(
-        'sudo -n true', shell=True,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    ).returncode == 0
-
-    if no_pass:
-        println()
-        hint('No sudo password required; privileges already granted.', use_prefix=False)
-        return
-
-    def _getpass_masked(prompt: str) -> str:
-        sys.stdout.write(prompt)
-        sys.stdout.flush()
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        passwd = ''
-        try:
-            tty.setraw(fd)
-            while True:
-                ch = sys.stdin.read(1)
-                if ch in ('\r', '\n'):
-                    sys.stdout.write('\n')
-                    break
-                if ch == '\x7f': # Backspace
-                    if passwd:
-                        passwd = passwd[:-1]
-                        sys.stdout.write('\b \b')
-                else:
-                    passwd += ch
-                    sys.stdout.write('*')
-                sys.stdout.flush()
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return passwd
-
-    for attempt in range(1, max_fail_count + 1):
-        log(f'{EscapeColor.LIGHT_GREEN}Elevated privileges required. Please enter your password:')
-        password = _getpass_masked('Password: ')
-        # Validate password without leftover output
-        cmd = f'echo {shlex.quote(password)} | sudo -S -v >/dev/null 2>&1'
-        ret = subprocess.run(cmd, shell=True).returncode
-        if ret == 0:
-            log(f'{EscapeColor.LIGHT_GREEN}Privileges elevated successfully.')
-            return
-        else:
-            remaining = max_fail_count - attempt
-            log(
-                f'{EscapeColor.RED}Invalid password. '
-                f'{remaining} attempt{"s" if remaining != 1 else ""} remaining.',
-                pad_before=1, pad_after=1
-            )
-
-    log(f'{EscapeColor.RED}Maximum password attempts exceeded. Aborting.', pad_before=1, pad_after=1)
     try:
-        sys.exit(1)
-    except:
-        pass
+        """
+        Prompts for sudo password up to max_fail_count times, masking input with asterisks.
+        If sudo timestamp is already valid, skips prompting.
+        """
+        # If sudo timestamp is still valid, no password is necessary
+        no_pass = subprocess.run(
+            'sudo -n true', shell=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ).returncode == 0
+
+        if no_pass:
+            println()
+            hint('No sudo password required; privileges already granted.', use_prefix=False)
+            return
+
+        def _getpass_masked(prompt: str) -> str:
+            sys.stdout.write(prompt)
+            sys.stdout.flush()
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            passwd = ''
+            try:
+                tty.setraw(fd)
+                while True:
+                    ch = sys.stdin.read(1)
+                    if ch in ('\r', '\n'):
+                        sys.stdout.write('\n')
+                        break
+                    if ch == '\x7f': # Backspace
+                        if passwd:
+                            passwd = passwd[:-1]
+                            sys.stdout.write('\b \b')
+                    else:
+                        passwd += ch
+                        sys.stdout.write('*')
+                    sys.stdout.flush()
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            return passwd
+
+        for attempt in range(1, max_fail_count + 1):
+            log(f'{EscapeColor.LIGHT_GREEN}Elevated privileges required. Please enter your password:')
+            password = _getpass_masked('Password: ')
+            # Validate password without leftover output
+            cmd = f'echo {shlex.quote(password)} | sudo -S -v >/dev/null 2>&1'
+            ret = subprocess.run(cmd, shell=True).returncode
+            if ret == 0:
+                log(f'{EscapeColor.LIGHT_GREEN}Privileges elevated successfully.')
+                return
+            else:
+                remaining = max_fail_count - attempt
+                log(
+                    f'{EscapeColor.RED}Invalid password. '
+                    f'{remaining} attempt{"s" if remaining != 1 else ""} remaining.',
+                    pad_before=1, pad_after=1
+                )
+
+        log(f'{EscapeColor.RED}Maximum password attempts exceeded. Aborting.', pad_before=1, pad_after=1)
+        try:
+            sys.exit(1)
+        except:
+            pass
+    except Exception as exc:
+        err(f'Error enabling sudo: {exc}', pad_before=1, pad_after=1)
+        
 
 def shell(command:str,
           sudo:bool=False,
