@@ -226,7 +226,8 @@ def append(path:str, data:any, force_format:str=None) -> bool:
 def copy(source:str,
          destination:str,
          create_parent_directories:bool=True,
-         overwrite:bool=True) -> bool:
+         overwrite:bool=True,
+         sudo:bool=False) -> bool:
     """
     Copy a file from the source path to the destination path.
 
@@ -250,7 +251,12 @@ def copy(source:str,
                 # Log an error message if the destination file already exists
                 err(f'File "{destination}" already exists. Call with "overwrite=True" to replace it.')
                 return False
-            
+        
+        if sudo:
+            # If sudo is required, use the 'sudo' command to copy the file
+            # This requires the user to have appropriate permissions
+            os.system(f'sudo cp "{source}" "{destination}"')
+            return True
         shutil.copy(source, destination)
         return True
     except Exception as exc:
@@ -258,7 +264,7 @@ def copy(source:str,
         err(f'Error copying file from {source} to {destination}: {exc}')
         return False
 
-def delete(path:str, silent_fail:bool=True) -> bool:
+def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
     """
     Delete a file (or directory) at the specified path.
 
@@ -274,12 +280,22 @@ def delete(path:str, silent_fail:bool=True) -> bool:
         if file_exists:
             if is_file(path):
                 if is_file:
-                    os.remove(path)
+                    if sudo:
+                        # If sudo is required, use the 'sudo' command to delete the file
+                        # This requires the user to have appropriate permissions
+                        os.system(f'sudo rm "{path}"')
+                    else:
+                        os.remove(path)
                 else:
-                    # If it's not a file, log a warning indicating that a directory will be deleted
-                    err(f'"{path}" is a directory. Deleting the directory and its contents.')
-                    # Recursively remove the directory and all its contents
-                    shutil.rmtree(path)
+                    if sudo:
+                        # If sudo is required, use the 'sudo' command to delete the directory
+                        # This requires the user to have appropriate permissions
+                        os.system(f'sudo rm -r "{path}"')
+                    else:
+                        # If it's not a file, log a warning indicating that a directory will be deleted
+                        err(f'"{path}" is a directory. Deleting the directory and its contents.')
+                        # Recursively remove the directory and all its contents
+                        shutil.rmtree(path)
         return True
     except Exception as exc:
         if not silent_fail:
