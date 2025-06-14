@@ -32,6 +32,7 @@ from .file import write as write_file
 from .path import caller as caller_folder
 from .path import caller_parent as caller_parent_folder
 from .path import create as create_folder
+from .path import delete as delete_folder
 from .path import exists as folder_exists
 from .path import home as home_folder
 from .path import join as join_paths

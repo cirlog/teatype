@@ -106,15 +106,13 @@ def enable_sudo(max_fail_count: int = 3) -> None:
     except Exception as exc:
         err(f'Error enabling sudo: {exc}. Trying to grant privileges automatically.', pad_before=1, pad_after=1)
         try:
-            cmd = f'echo {shlex.quote(password)} | sudo -S -v >/dev/null 2>&1'
+            cmd = f'sudo -S -v >/dev/null 2>&1'
+            ret = subprocess.run(cmd, shell=True).returncode
             if ret == 0:
                 log(f'{EscapeColor.LIGHT_GREEN}Privileges elevated successfully.')
                 return
             else:
-                log(
-                    f'Automatic sudo elevation failed.',
-                    pad_before=1, pad_after=1
-                )
+                log(f'Automatic sudo elevation failed.', pad_before=1, pad_after=1)
         except Exception as exc:
             err(f'Error enabling sudo: {exc}', pad_before=1, pad_after=1)
 
