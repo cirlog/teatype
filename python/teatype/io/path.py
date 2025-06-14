@@ -140,8 +140,6 @@ def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
                 # This requires the user to have appropriate permissions
                 os.system(f'sudo rm -r "{path}"')
             else:
-                # If it's not a file, log a warning indicating that a directory will be deleted
-                err(f'"{path}" is a directory. Deleting the directory and its contents.')
                 # Recursively remove the directory and all its contents
                 shutil.rmtree(path)
         return True
