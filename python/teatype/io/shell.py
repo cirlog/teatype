@@ -55,6 +55,8 @@ def enable_sudo(max_fail_count: int = 3) -> None:
             println()
             hint('No sudo password required; privileges already granted.', use_prefix=False)
             return
+        
+        println()
 
         def _getpass_masked(prompt: str) -> str:
             sys.stdout.write(prompt)
@@ -66,10 +68,13 @@ def enable_sudo(max_fail_count: int = 3) -> None:
                 tty.setraw(fd)
                 while True:
                     ch = sys.stdin.read(1)
+                    if ch == '\x03':  # Ctrl+C
+                        sys.stdout.write('\n')
+                        raise KeyboardInterrupt
                     if ch in ('\r', '\n'):
                         sys.stdout.write('\n')
                         break
-                    if ch == '\x7f': # Backspace
+                    if ch == '\x7f':  # Backspace
                         if passwd:
                             passwd = passwd[:-1]
                             sys.stdout.write('\b \b')
@@ -88,21 +93,20 @@ def enable_sudo(max_fail_count: int = 3) -> None:
             cmd = f'echo {shlex.quote(password)} | sudo -S -v >/dev/null 2>&1'
             ret = subprocess.run(cmd, shell=True).returncode
             if ret == 0:
+                println()
                 log(f'{EscapeColor.LIGHT_GREEN}Privileges elevated successfully.')
                 return
             else:
                 remaining = max_fail_count - attempt
-                log(
-                    f'{EscapeColor.RED}Invalid password. '
+                err(
+                    'Invalid password. '
                     f'{remaining} attempt{"s" if remaining != 1 else ""} remaining.',
-                    pad_before=1, pad_after=1
+                    pad_before=1, pad_after=1, verbose=False, use_prefix=False
                 )
 
-        log(f'{EscapeColor.RED}Maximum password attempts exceeded. Aborting.', pad_before=1, pad_after=1)
-        try:
-            sys.exit(1)
-        except:
-            pass
+        err('Maximum password attempts exceeded. Aborting.', pad_before=1, pad_after=1, exit=True, verbose=False, use_prefix=False)
+    except KeyboardInterrupt:
+        err('Sudo elevation cancelled by user.', pad_before=1, pad_after=1, exit=True, verbose=False, use_prefix=False)
     except Exception as exc:
         err(f'Error enabling sudo: {exc}. Trying to grant privileges automatically.', pad_before=1, pad_after=1)
         try:
