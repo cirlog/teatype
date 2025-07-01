@@ -68,13 +68,13 @@ def enable_sudo(max_fail_count: int = 3) -> None:
                 tty.setraw(fd)
                 while True:
                     ch = sys.stdin.read(1)
-                    if ch == '\x03':  # Ctrl+C
+                    if ch == '\x03': # Ctrl+C
                         sys.stdout.write('\n')
                         raise KeyboardInterrupt
                     if ch in ('\r', '\n'):
                         sys.stdout.write('\n')
                         break
-                    if ch == '\x7f':  # Backspace
+                    if ch == '\x7f': # Backspace
                         if passwd:
                             passwd = passwd[:-1]
                             sys.stdout.write('\b \b')
