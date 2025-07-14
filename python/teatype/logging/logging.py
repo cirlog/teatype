@@ -312,7 +312,7 @@ def log(message:any,
     if tab > 0:
         log_message = f'{"    " * tab}{log_message}'
     # Log the final message at the INFO level using the global logger
-    logger.info(log_message) # Log the message as is
+    logger.info(f'{log_message}{EscapeColor.RESET}') # Log the message as is and reset the color
 
     # Add a blank line after the message if pad_after is specified and greater than 0
     if pad_after:

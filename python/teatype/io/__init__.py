@@ -38,6 +38,7 @@ from .path import home as home_folder
 from .path import join as join_paths
 from .path import parent as parent_folder
 from .path import workdir as workdir_folder
+from .print import tree as print_tree
 from .probe import ip as probe_ip
 from .probe import package as probe_package
 from .probe import port as probe_port
