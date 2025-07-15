@@ -40,6 +40,7 @@ class GLOBAL_CLI_CONFIG:
     TAB = ' ' * 4
     USE_HELP_MESSAGE_ON_FAIL = True
 
+# TODO: Allow setting a default value for flags
 # TODO: Write hooks with proper sysntax to make hooks more obvious
 # TODO: Use class member variables with appending on base class, instead of this weird meta stuff
 # TODO: Implement default values to flags etc.
