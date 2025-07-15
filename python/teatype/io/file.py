@@ -16,6 +16,7 @@ import configparser
 import csv
 import json
 import os
+import re
 import shutil
 
 # As-system imports
@@ -544,7 +545,7 @@ def read(file:_File|PosixPath|str,
                     elif file_extension == '.jsonc' or force_format == 'jsonc':
                         dirty_content = f.read()
                         # Remove comments denoted by '//' to ensure valid JSON
-                        clean_content = ''.join(line for line in dirty_content.splitlines() if not line.strip().startswith('//'))
+                        clean_content = re.sub(r'//.*$', '', dirty_content, flags=re.MULTILINE)
                         content = json.loads(clean_content)
                     elif file_extension == '.json' or force_format == 'json':
                         # Load and return JSON data from the file
