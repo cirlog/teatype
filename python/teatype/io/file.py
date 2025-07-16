@@ -545,7 +545,12 @@ def read(file:_File|PosixPath|str,
                     elif file_extension == '.jsonc' or force_format == 'jsonc':
                         dirty_content = f.read()
                         # Remove comments denoted by '//' to ensure valid JSON
-                        clean_content = re.sub(r'//.*$', '', dirty_content, flags=re.MULTILINE)
+                        clean_content = re.sub(
+                            r'(?<!:)//[^\n]*(?=\n|$)',
+                            '',
+                            dirty_content,
+                            flags=re.MULTILINE
+                        )
                         content = json.loads(clean_content)
                     elif file_extension == '.json' or force_format == 'json':
                         # Load and return JSON data from the file
