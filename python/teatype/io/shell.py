@@ -210,7 +210,6 @@ def shell(command:str,
         if return_stdout:
             # Retrieve the standard output from the subprocess
             stdout = output.stdout
-            stdout = stdout.strip() if isinstance(stdout, str) else stdout.decode('utf-8').strip()
             if not format_stdout:
                 return stdout 
             # Count the number of newline characters in the stdout
