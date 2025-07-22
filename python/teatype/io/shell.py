@@ -121,7 +121,7 @@ def enable_sudo(max_fail_count: int = 3) -> None:
             err(f'Error enabling sudo: {exc}', pad_before=1, pad_after=1)
 
 def shell(command:str,
-          cwd:bool=False,
+          cwd:str=False,
           env:dict=None,
           mute:bool=False,
           return_output:bool=False,
