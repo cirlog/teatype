@@ -99,7 +99,7 @@ def change(path:str, stringify:bool=True) -> str:
     os.chdir(path) # Change the current working directory
     return str(Path.cwd()) if stringify else Path.cwd() # Return the new working directory as string or Path object
 
-def create(*args, create_parents:bool=True, exists_ok:bool=True, stringify:bool=True) -> str:
+def create(*args, create_parents:bool=True, exists_ok:bool=True, stringify:bool=True, sudo:bool=False) -> str:
     """
     Create a new folder and its parent directories if they do not exist.
     Ignore if the folder already exists.
@@ -113,8 +113,35 @@ def create(*args, create_parents:bool=True, exists_ok:bool=True, stringify:bool=
         str: The new path as a string if stringify is True.
     """
     new_path = Path(*args) # Join the path components
-    new_path.mkdir(parents=create_parents, exist_ok=exists_ok) # Create the new folder and its parents if they do not exist
+    if sudo:
+        # If sudo is required, use the 'sudo' command to create the directory
+        # This requires the user to have appropriate permissions
+        os.system(f'sudo mkdir -p "{new_path}"')
+    else:
+        new_path.mkdir(parents=create_parents, exist_ok=exists_ok) # Create the new folder and its parents if they do not exist
     return str(new_path) if stringify else new_path # Return the new path as string or Path object
+
+def copy(source:str, destination:str, sudo:bool=False) -> bool:
+    """
+    Copy directory to a new location.
+
+    Args:
+        path (str): The path to the directory to copy.
+        sudo (bool): If True, uses 'sudo' directory.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    try:
+        if sudo:
+            # If sudo is required, use the 'sudo' command
+            os.system(f'sudo cp -r "{source}" "{destination}"')
+        else:
+            shutil.copy(source, f"{destination}") # Copy the directory
+        return True
+    except Exception as exc:
+        err(f'Error copying folder "{source}": {exc}')
+        return False
 
 def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
     """

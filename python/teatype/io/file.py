@@ -414,7 +414,7 @@ def list(directory:str,
         # Re-raise the exception to allow further handling upstream
         raise exc
 
-def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=True) -> bool:
+def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=True, sudo:bool=False) -> bool:
     """
     Move a file from the source path to the destination path.
 
@@ -443,8 +443,13 @@ def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=T
             # Create parent directories if they do not exist
             parent_path = ''.join(subpath + '/' for subpath in destination.split('/')[:-1])
             path_functions.create(parent_path)
-            
-        shutil.move(source, destination)
+        
+        if sudo:
+            # If sudo is required, use the 'sudo' command to move the file
+            # This requires the user to have appropriate permissions
+            os.system(f'sudo mv "{source}" "{destination}"')
+        else:
+            shutil.move(source, destination)
         return True
     except Exception as exc:
         # Log an error message if an exception occurs
