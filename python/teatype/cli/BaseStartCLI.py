@@ -61,12 +61,6 @@ class BaseStartCLI(BaseCLI):
             'help': 'Start a process',
             'flags': [
                 {
-                    'short': 'a',
-                    'long': 'auto',
-                    'help': 'Start module with default configuration',
-                    'required': False
-                },
-                {
                     'short': 'd',
                     'long': 'detached',
                     'help': 'Start process in detached mode',
