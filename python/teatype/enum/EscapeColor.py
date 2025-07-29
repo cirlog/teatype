@@ -14,6 +14,24 @@
 from enum import Enum
 from typing import Literal
 
+_ColorType = Literal['black',
+                     'blue',
+                     'cyan',
+                     'gray',
+                     'green',
+                     'magenta',
+                     'red',
+                     'white',
+                     'yellow',
+                     'light_black',
+                     'light_blue',
+                     'light_cyan',
+                     'light_green',
+                     'light_magenta',
+                     'light_red',
+                     'light_white',
+                     'light_yellow']
+
 class EscapeColor(Enum):
     BLACK = '\033[30m'
     BLUE = '\033[34m'
@@ -33,25 +51,6 @@ class EscapeColor(Enum):
     LIGHT_RED = '\033[91m'
     LIGHT_WHITE = '\033[97m'
     LIGHT_YELLOW = '\033[93m'
-
-    ColorType = Literal['black',
-                        'blue',
-                        'cyan',
-                        'gray',
-                        'green',
-                        'magenta',
-                        'red',
-                        'reset',
-                        'white',
-                        'yellow',
-                        'light_black',
-                        'light_blue',
-                        'light_cyan',
-                        'light_green',
-                        'light_magenta',
-                        'light_red',
-                        'light_white',
-                        'light_yellow']
     
     def __str__(self):
         """
@@ -71,42 +70,69 @@ class EscapeColor(Enum):
     ##############
     
     @staticmethod
-    def COLORS():
+    def COLORS(exclude_black:bool=False, exclude_gray:bool=False) -> list[str]:
         """
         Returns a list of all color codes from the EscapeColor enum.
 
         This method is useful for iterating over all colors in terminal output.
         """
-        return [color for color in EscapeColor if not color.name.startswith('LIGHT_')]
+        colors = [color for color in EscapeColor if not color.name.startswith('LIGHT_') and color.name != 'RESET']
+        if exclude_black:
+            colors = [color for color in colors if color.name != 'BLACK']
+        if exclude_gray:
+            colors = [color for color in colors if color.name != 'GRAY']
+        colors.sort(key=lambda c: c.name)  # Sort colors by name for consistent ordering
+        return colors
     
     @staticmethod
-    def LIGHT_COLORS():
+    def LIGHT_COLORS(exclude_black:bool=False) -> list[str]:
         """
         Returns a list of light color codes from the EscapeColor enum.
 
         This method is useful for iterating over light colors in terminal output.
         """
-        return [color for color in EscapeColor if 'LIGHT_' in color.name]
+        light_colors = [color for color in EscapeColor if 'LIGHT_' in color.name and color.name != 'RESET']
+        if exclude_black:
+            light_colors = [color for color in light_colors if color.name != 'LIGHT_BLACK']
+        light_colors.sort(key=lambda c: c.name)  # Sort light colors by name for consistent ordering
+        return light_colors
     
-    @staticmethod
-    def N() -> int:
+    def N(exclude_black:bool=False, exclude_gray:bool=False) -> int:
         """
         Returns the number of colors defined in the EscapeColor enum.
 
         This property can be used to determine how many colors are available for use.
         """
-        return len(EscapeColor.COLORS())
+        return len(EscapeColor.COLORS(exclude_black, exclude_gray))
     
     @staticmethod
-    def N_LIGHT() -> int:
+    def N_LIGHT(exclude_black:bool=False) -> int:
         """
         Returns the number of light colors defined in the EscapeColor enum.
 
         This property can be used to determine how many light colors are available for use.
         """
-        return len(EscapeColor.LIGHT_COLORS())
+        return len(EscapeColor.LIGHT_COLORS(exclude_black))
+    
+    @staticmethod
+    def lighten(color:'EscapeColor') -> str:
+        """
+        Returns the light version of a given color.
 
-def colorwrap(string:str, color:EscapeColor.ColorType) -> str:
+        Args:
+            color (ColorType): The color to lighten.
+
+        Returns:
+            str: The light version of the specified color.
+        """
+        if color.name.upper() not in [c.name for c in EscapeColor.COLORS()]:
+            raise ValueError(f'Invalid color: {color}. Must be one of {list(EscapeColor.COLORS())}.')
+        light_color_name = f'LIGHT_{color.name.upper()}'
+        if light_color_name not in EscapeColor.__members__:
+            raise ValueError(f'No light version available for color: {color}.')
+        return EscapeColor[light_color_name].value
+
+def colorwrap(string:str, color:_ColorType) -> str:
     """
     Wraps a string with the specified color escape code.
 
