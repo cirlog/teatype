@@ -39,7 +39,7 @@ class BaseStartCLI(BaseCLI):
                  auto_execute:bool=True):
         # TODO: Put this into BaseCLI instead, but with call_stack=2
         # Skipping 1 step in the call stack to get the script path implementing this class
-        self.parent_path = path.caller_parent(reverse_depth=2, skip_call_stacks=1)
+        self.parent_path = path.caller_parent(reverse_depth=2, skip_call_stacks=-1)
         
         # Construct the path to the module configuration file
         config_path = path.join(self.parent_path, 'config', 'module.cfg')
@@ -94,7 +94,7 @@ class BaseStartCLI(BaseCLI):
         """
         scripts = {}
         # Get the parent directory of the current script
-        scripts_directory = path.caller_parent(skip_call_stacks=4)
+        scripts_directory = path.caller_parent(skip_call_stacks=-1)
         target_script = 'stop'
         # Create a temporary directory within the scripts directory for renaming and importing modules
         with TempDir(directory_path=scripts_directory) as temp_dir:
@@ -246,7 +246,7 @@ class BaseStartCLI(BaseCLI):
         if file.exists('./.env'):
             env.load() # Load the environment variables
         else:
-            warn('No ".env" file found. Limited functionality available.', verbose=False)
+            warn('No ".env" file found. Limited functionality available.')
         
         def signal_handler(signum, _):
             """
