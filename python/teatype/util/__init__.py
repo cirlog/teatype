@@ -10,4 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .util import *
+from .dt import dt
+from .generate_id import generate_id
+from .kebabify import kebabify
+from .implemented_trap import implemented_trap
+from .SingletonMeta import SingletonMeta
+from .staticproperty import staticproperty
+from .stopwatch import GLOBAL_STOPWATCH_CONFIG, stopwatch

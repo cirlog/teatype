@@ -19,8 +19,9 @@ import sys
 import time
 
 # From package imports
-from teatype.cli import BaseCLI, CheckIfRunning
-from teatype.logging import err, hint, log, nl, warn
+from teatype.cli import BaseCLI, BaseIsRunningCLI
+from teatype.io import path
+from teatype.logging import err, hint, log, println, warn
 
 # From-as system imports
 from importlib import util as iutil
@@ -28,14 +29,14 @@ from importlib import util as iutil
 # From-as package imports
 from teatype.io import TemporaryDirectory as TempDir
 
-class Stop(BaseCLI):
+# TODO: Redis adapter to remove entries from a redis db?
+class BaseStopCLI(BaseCLI):
     def meta(self):
         return {
             'name': 'stop',
             'shorthand': 'sp',
             'help': 'Stop a process',
             'flags': [
-                # TODO: Implement hide-output flag
                 {
                     'short': 'f',
                     'long': 'force-signal',
@@ -44,19 +45,19 @@ class Stop(BaseCLI):
                     'required': False
                 },
                 {
-                    'short': 'h',
-                    'long': 'hide-output',
+                    'short': 's',
+                    'long': 'silent',
                     'help': 'Hide verbose output of script',
                     'required': False
                 },
                 {
-                    'short': 's',
+                    'short': 'sl',
                     'long': 'sleep',
                     'help': 'Sleep time between process checks',
-                    'options': [0.25, 0.5, 1, 2, 3],
+                    'options': float,
                     'required': False
                 }
-            ],
+            ]
         }
     
     # TODO: Decouple this class from CheckIfRunning into BaseCLI to prevent DRY
@@ -65,40 +66,38 @@ class Stop(BaseCLI):
         Discover and import all Python scripts in the `scripts/` directory, skipping __init__.py and non-Python files.
         """
         scripts = {}
-
-        # Determine the absolute path of the current script file based on the module name
-        current_file = os.path.abspath(self.__class__.__module__.replace('.', '/') + '.py')
         # Get the parent directory of the current script
-        current_directory = os.path.dirname(current_file)
-        # Define the path to the scripts directory
-        script_directory = os.path.join(current_directory, 'scripts')
-        
+        scripts_directory = path.caller_parent(skip_call_stacks=3)
+        if hasattr(self, 'scripts_directory'):
+            scripts_directory = self.scripts_directory
         # Create a temporary directory within the scripts directory for renaming and importing modules
-        with TempDir(directory_path=script_directory) as temp_dir:
+        with TempDir(directory_path=scripts_directory) as temp_dir:
             try:
                 # Iterate over all files in the scripts directory
-                for filename in os.listdir(script_directory):
+                for filename in os.listdir(scripts_directory):
                     # Skip the __init__.py file and any __pycache__ directories
                     if filename != '__init__.py' and filename != '__pycache__':
                         # Check if the current filename is a directory; if so, skip it
-                        if os.path.isdir(os.path.join(script_directory, filename)):
+                        if os.path.isdir(os.path.join(scripts_directory, filename)):
                             continue
                         
                         # Convert filename from kebab-case to snake_case for consistent module naming
                         formatted_module_name = filename.replace('-', '_').replace('.py', '')
                         formatted_filename = formatted_module_name + '.py'
+                        if formatted_module_name != 'is_running':
+                            continue
 
                         # Define full paths for the original and temporary files
-                        original_filepath = os.path.join(script_directory, filename)
+                        original_filepath = os.path.join(scripts_directory, filename)
                         temp_filepath = os.path.join(temp_dir, formatted_filename)
 
                         try:
                             try:
                                 # Copy the original file to the temporary directory with the new snake_case name
                                 shutil.copy2(original_filepath, temp_filepath)
-                            except Exception as e:
+                            except Exception as exc:
                                 # Log an error if the file copy fails
-                                err("An error occurred during file copy:", e)
+                                err(f'An error occurred during file copy: {exc}')
 
                             # Create a module spec from the temporary file location
                             spec = iutil.spec_from_file_location(formatted_module_name, temp_filepath)
@@ -106,7 +105,7 @@ class Stop(BaseCLI):
                             module = iutil.module_from_spec(spec)
                             # Execute the module to load its contents
                             spec.loader.exec_module(module)
-
+                            
                             # Convert the snake_case module name to CamelCase for class identification
                             camel_case_name = ''.join(word.capitalize() for word in formatted_module_name.split('_'))
 
@@ -114,22 +113,23 @@ class Stop(BaseCLI):
                             script_class = getattr(module, camel_case_name, None)
 
                             # Ensure the retrieved class exists, is a class type, and is a subclass of CheckIfRunning
-                            if script_class and inspect.isclass(script_class) and issubclass(script_class, CheckIfRunning):
+                            if script_class and inspect.isclass(script_class) and issubclass(script_class, BaseIsRunningCLI):
                                 # Instantiate the class without automatic validation or execution
-                                self.check_if_running = script_class(auto_validate=False,
+                                self.is_running = script_class(auto_validate=False,
                                                                      auto_execute=False)
-                                # Set the '--hide-output' flag to suppress verbose output
-                                self.check_if_running.set_flag('hide-output', True)
+                                # Set the '--silent' flag to suppress verbose output
+                                self.is_running.set_flag('silent', True)
                                 # Validate the arguments provided to the script
-                                # self.check_if_running.validate_args()
+                                # self.is_running.validate()
                                 # Perform any necessary pre-execution setup
-                                self.check_if_running.pre_execute()
+                                self.is_running.pre_execute()
                                 # Execute the script and retrieve the list of process PIDs
-                                self.process_pids = self.check_if_running.execute()
+                                self.process_pids = self.is_running.execute()
 
-                        except Exception as e:
-                            # Log an error if loading the script fails
-                            err(f'Error loading script "{filename}": {e}')
+                        except Exception as exc:
+                            if formatted_module_name == 'is_running':
+                                # Log an error if loading the script fails
+                                err(f'Error loading script "{filename}": {exc}')
 
             finally:
                 # Ensure the temporary directory is removed from sys.path after import
@@ -153,7 +153,10 @@ class Stop(BaseCLI):
             # Sending signal 0 does not kill the process but checks its existence
             os.kill(pid, 0)
             return True
-        except OSError:
+        except OSError as ose:
+            # Permission error, request sudo access
+            if ose.errno == 1:
+                err('OS denied permission access for process. Please run the script with sudo.', pad_after=1, exit=True, verbose=False)
             return False
 
     def attempt_stop(self, pid, signal_type, max_attempts, signal_name):
@@ -173,16 +176,16 @@ class Stop(BaseCLI):
         while self.is_process_running(pid):
             if attempts >= max_attempts:
                 # Warn if maximum attempts have been reached without success
-                warn(f"Failed to stop process (PID: {pid}) after {max_attempts} attempts with {signal_name}.")
+                warn(f'Failed to stop process (PID: {pid}) after {max_attempts} attempts with {signal_name}.')
                 return False
             # Log the attempt to stop the process
-            log(f"Attempt {attempts + 1} to stop process (PID: {pid}) with {signal_name}...")
+            log(f'Attempt {attempts + 1} to stop process (PID: {pid}) with {signal_name}...')
             try:
                 # Send the specified signal to the process
                 os.kill(pid, signal_type)
             except OSError as e:
                 # Log an error if sending the signal fails
-                err(f"Error sending signal {signal_name} to PID {pid}: {e}")
+                err(f'Error sending signal {signal_name} to PID {pid}: {e}')
                 return False
             attempts += 1
             # Wait for a short period before the next attempt
@@ -191,7 +194,7 @@ class Stop(BaseCLI):
                 sleep = self.get_flag('sleep')
             time.sleep(sleep)
         # Log success if the process has been stopped
-        log(f"Process (PID: {pid}) stopped using {signal_name}.")
+        log(f'Process (PID: {pid}) stopped using {signal_name}.')
         return True
 
     def stop_process(self, pid):
@@ -239,8 +242,8 @@ class Stop(BaseCLI):
         Recursively attempt to kill all processes in the process_pids list until no processes remain.
         """
 
-        # Execute the check_if_running to update the list of process PIDs
-        self.process_pids = self.check_if_running.execute()
+        # Execute the is_running to update the list of process PIDs
+        self.process_pids = self.is_running.execute()
         if len(self.process_pids) == 0:
             # Inform the user if there are no more processes to stop
             log('No more processes alive.')
@@ -258,7 +261,7 @@ class Stop(BaseCLI):
             else:
                 # Log if the process is not running
                 log(f'Process (PID: "{process_pids}") is not running.')
-            nl()
+            println()
                 
         if len(self.process_pids) > 0:
             # Recursively call itself to handle any remaining processes
@@ -272,11 +275,11 @@ class Stop(BaseCLI):
         self.load_script()
         
         if len(self.process_pids) == 0:
-            nl()
+            println()
             # Inform the user if there are no processes to stop
             log('No processes to stop.')
         else:
-            nl()
+            println()
             force_signal = self.get_flag('force-signal')
             if force_signal:
                 hint(f'Forcing signal: {force_signal}')
@@ -284,11 +287,11 @@ class Stop(BaseCLI):
             if sleep:
                 hint(f'Only sleeping {sleep}s seconds between attempts')
             if force_signal or sleep:
-                nl()
+                println()
             # Begin the recursive kill process
             self.recursive_kill()
         
-        nl()
+        println()
 
 if __name__ == '__main__':
-    Stop()
+    BaseStopCLI()

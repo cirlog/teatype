@@ -15,7 +15,6 @@ import os
 import shutil
 import uuid
 
-# TODO: Implement as package class
 class TemporaryDirectory:
     """
     A context manager for creating and automatically cleaning up a temporary folder.

@@ -15,18 +15,18 @@ import psutil
 
 # From package imports
 from teatype.cli import BaseCLI
-from teatype.logging import err, log, nl
+from teatype.logging import err, log, println
 
-class CheckIfRunning(BaseCLI):
+class BaseIsRunningCLI(BaseCLI):
     def meta(self):
         return {
-            'name': 'check-if-running',
+            'name': 'check-running',
             'shorthand': 'cr',
             'help': 'Check if a process is running',
             'flags': [
                 {
-                    'short': 'h',
-                    'long': 'hide-output',
+                    'short': 's',
+                    'long': 'silent',
                     'help': 'Hide verbose output of script',
                     'required': False
                 }
@@ -34,41 +34,48 @@ class CheckIfRunning(BaseCLI):
         }
 
     def execute(self):
-        verbose = not self.get_flag('hide-output')
+        silent = self.get_flag('silent')
         
-        if verbose:
-            nl()
+        if not silent:
+            println()
             
         if not hasattr(self, 'process_names'):
             err('No "self.process_names" provided in source code. Please provide a process name in the pre_execute function.',
                 exit=True)
-            nl()
+            println()
         
         process_pids = []
         for process_name in self.process_names:
             found = False
             for process in psutil.process_iter(['pid', 'name', 'cmdline']):
                 try:
+                    if process.info['cmdline'] is None:
+                        continue
+                    
                     # Check if process_name appears in the full command line
                     if process_name in ' '.join(process.info['cmdline']):
                         process_pid = process.info['pid']
                         process_pids.append(process_pid)
-                        if verbose:
+                        if not silent:
                             log(f'Process "{process_name}" is running with PID "{process_pid}"')
                         found = True
-                        break
                 except (psutil.NoSuchProcess, psutil.AccessDenied, KeyError):
                     # Skip processes that we can't access or have disappeared
                     continue
+                except:
+                    print(process.info['cmdline'])
+                    err(f'An error occurred while checking if process "{process_name}" is running',
+                        exit=True,
+                        traceback=True)
             
             if not found:
-                if verbose:
+                if not silent:
                     log(f'Process "{process_name}" is not running')
                     
-        if verbose:
-            nl()
+        if not silent:
+            println()
         
         return process_pids
 
 if __name__ == '__main__':
-    CheckIfRunning()
+    BaseIsRunningCLI()

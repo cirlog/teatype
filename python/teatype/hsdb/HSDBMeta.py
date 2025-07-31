@@ -10,4 +10,22 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .util import *
+# From system imports
+from abc import ABCMeta
+
+# From package imports
+from teatype.hsdb import HSDBAttribute
+
+class HSDBMeta(ABCMeta):
+    """
+    Metaclass to collect HSDBAttributes from the class definition.
+    """
+    def __new__(cls, name, bases, dct):
+        fields = {}
+        for attr_name, attr_value in dct.items():
+            if isinstance(attr_value, HSDBAttribute):
+                attr_value.name = attr_name
+                fields[attr_name] = attr_value
+
+        dct['_fields'] = fields
+        return super().__new__(cls, name, bases, dct)

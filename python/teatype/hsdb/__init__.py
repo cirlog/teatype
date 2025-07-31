@@ -10,4 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .util import *
+# WARNING: Do not change the order of the imports, it will break the code
+from .RawFileStructure import RawFileStructure
+from .RawFileHandler import RawFileHandler
+from .IndexDatabase import IndexDatabase
+from .HybridStorage import HybridStorage
+
+from .HSDBQuery import HSDBQuery
+from .HSDBField import HSDBField
+from .HSDBAttribute import HSDBAttribute
+from .HSDBRelation import HSDBRelation
+from .HSDBMigration import HSDBMigration
+from .HSDBMeta import HSDBMeta
+from .HSDBModel import HSDBModel

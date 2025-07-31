@@ -10,4 +10,23 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .util import *
+# System imports
+import threading
+
+# From system imports
+from abc import ABCMeta
+
+class SingletonMeta(ABCMeta):
+    """
+    A thread-safe implementation of Singleton with metaclass.
+    Ensures the singleton pattern is followed in each worker.
+    """
+    _instances = {}
+    _lock = threading.Lock()
+
+    def __call__(cls, *args, **kwargs):
+        with cls._lock: # Ensure only one instance is created even in multithreading.
+            if cls not in cls._instances:
+                instance = super().__call__(*args, **kwargs)
+                cls._instances[cls] = instance
+        return cls._instances[cls]

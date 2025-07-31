@@ -13,24 +13,24 @@
 # From system imports
 from typing import List
 
-# TODO: Implement as package class
-# TODO: Ommit commands in favor of flags with values (e.g. --name "John Doe" or maybe even "=" assignement e.g. --name="John Doe")
 class Command:
     """
     Represents a command-line command.
 
     Attributes:
         name (str): The name of the command.
+        shorthand (str): The shorthand of the command.
         help (str): A brief description of the command.
-        help_extension (List[str], optional): Additional help information for the command.
-        value (Any): The value of the command, initially set to None.
+        required (bool): Whether the command is required or not.
     """
     def __init__(self,
                 name:str,
                 shorthand:str,
-                help:str|List[str]):
+                help:str|List[str],
+                required:bool=True):
         self.name = name
         self.shorthand = shorthand
         self.help = help
+        self.required = required
         
         self.value = None

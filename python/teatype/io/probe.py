@@ -10,4 +10,32 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .util import *
+# System imports
+import importlib
+
+# From package imports
+from teatype.logging import err
+
+def ip(ip: str) -> bool:
+    pass
+
+def port(port: int) -> bool:
+    pass
+
+def package() -> None:
+    pass
+
+def package(package_name:str, silent:bool=True) -> bool:
+    try:
+        importlib.import_module(package_name)
+        return True
+    except:
+        if not silent:
+            err(f'Probe failed: Package {package_name} not found')
+        return False
+
+def process(process: str) -> bool:
+    pass
+
+def url(url: str) -> bool:
+    pass
