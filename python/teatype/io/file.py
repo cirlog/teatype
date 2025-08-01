@@ -226,7 +226,8 @@ def append(path:str, data:any, force_format:str=None) -> bool:
 def copy(source:str,
          destination:str,
          create_parent_directories:bool=True,
-         overwrite:bool=True) -> bool:
+         overwrite:bool=True,
+         sudo:bool=False) -> bool:
     """
     Copy a file from the source path to the destination path.
 
@@ -250,7 +251,12 @@ def copy(source:str,
                 # Log an error message if the destination file already exists
                 err(f'File "{destination}" already exists. Call with "overwrite=True" to replace it.')
                 return False
-            
+        
+        if sudo:
+            # If sudo is required, use the 'sudo' command to copy the file
+            # This requires the user to have appropriate permissions
+            os.system(f'sudo cp "{source}" "{destination}"')
+            return True
         shutil.copy(source, destination)
         return True
     except Exception as exc:
@@ -258,7 +264,7 @@ def copy(source:str,
         err(f'Error copying file from {source} to {destination}: {exc}')
         return False
 
-def delete(path:str, silent_fail:bool=True) -> bool:
+def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
     """
     Delete a file (or directory) at the specified path.
 
@@ -270,16 +276,19 @@ def delete(path:str, silent_fail:bool=True) -> bool:
     """
     try:
         # Check if the path exists and determine if it's a file
-        file_exists, is_file = exists(path)
+        file_exists = exists(path)
         if file_exists:
-            if is_file:
-                # If it's a file, log a warning indicating that a directory will be deleted
-                err(f'"{path}" is a directory. Deleting the directory and its contents.')
-                # Recursively remove the directory and all its contents
-                shutil.rmtree(path)
-            else:
-                # If it's not a file (i.e., it's a regular file), remove it
-                os.remove(path)
+            if is_file(path):
+                if is_file:
+                    if sudo:
+                        # If sudo is required, use the 'sudo' command to delete the file
+                        # This requires the user to have appropriate permissions
+                        os.system(f'sudo rm "{path}"')
+                    else:
+                        os.remove(path)
+                else:
+                    err(f'"{path}" is a directory. Deleting the directory and its contents.')
+                    return False
         return True
     except Exception as exc:
         if not silent_fail:
@@ -317,6 +326,25 @@ def exists(path:PosixPath|str, return_file:bool=False, trim_file:bool=False) -> 
         return _File(path_string, trimmed=trim_file) if file_exists else None
     # Otherwise, return a boolean indicating whether the path exists
     return file_exists
+
+def is_file(path:PosixPath|str) -> bool:
+    """
+    Check if the specified path is a file.
+
+    Parameters:
+        path (str): The path to the file.
+
+    Returns:
+        bool: True if the path is a file, False otherwise.
+    """
+    # Check if the provided path is a PosixPath object
+    if isinstance(path, PosixPath):
+        # Convert PosixPath to string for compatibility with os.path functions
+        path_string = str(path)
+    else:
+        # Use the path as-is if it's already a string
+        path_string = path
+    return os.path.isfile(path_string)
     
 def list(directory:str,
          walk:bool=False,

@@ -17,11 +17,12 @@ from typing import Generic, List, Type, TypeVar
 _AVAILABLE_FIELDS = [
     'cls',
     'editable',
-    # 'instance',
+    'instance',
     'indexed',
     'key',
     'required',
-    'type'
+    'type',
+    'value'
 ]
 # Type alias for attribute types
 T = TypeVar('T')
@@ -78,7 +79,7 @@ class HSDBField(ABC, Generic[T]):
     
     @property
     def instance(self):
-        return self.__instance
+        return self
 
     @property
     def key(self):
@@ -91,7 +92,7 @@ class HSDBField(ABC, Generic[T]):
     ######################
     # Descriptor Methods #
     ######################
-
+    
     def __set__(self, instance, value):
         # Set the value and cache it
         # TODO: Fix validation
@@ -109,7 +110,8 @@ class HSDBField(ABC, Generic[T]):
 
     @key.setter
     def key(self, new_key:str):
-        self._validate_key(new_key)
+        if not isinstance(new_key, str) or not new_key:
+            raise ValueError('key must be a string')
         self._key = new_key
 
     @value.setter
@@ -184,3 +186,6 @@ class HSDBField(ABC, Generic[T]):
                 del self.cache_values
                 self._metadata_loaded = True
             return self._cached_metadata
+        
+        def __getattribute__(self, name):
+            return super().__getattribute__(name)

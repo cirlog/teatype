@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -10,15 +12,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .dt import dt
-# TODO: Deactivated until auto updating all components is possible
-# from .fastjson import compress as compress_json
-# from .fastjson import decompress as decompress_json
-# from .fastjson import dump as dump_json
-# from .fastjson import load as load_json
-from .generate_id import generate_id
-from .kebabify import kebabify, unkebabify
-from .implemented_trap import implemented_trap
-from .SingletonMeta import SingletonMeta
-from .staticproperty import staticproperty
-from .stopwatch import GLOBAL_STOPWATCH_CONFIG, stopwatch
+set -e # Exit immediately if a command exits with a non-zero status
+parent_directory=$(dirname "$(dirname "$(readlink -f "$0")")")
+cd "$parent_directory"
+
+python3.11 -m pip install --upgrade pip
+python3.11 -m venv teatype-venv
+. teatype-venv/bin/activate
+python3.11 -m pip install -r $parent_directory/python/requirements/package.txt
+python3.11 -m pip install -r $parent_directory/python/requirements/test.txt

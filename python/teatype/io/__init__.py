@@ -12,7 +12,7 @@
 
 # From local imports
 from .prompt import prompt
-from .shell import enable_sudo, shell
+from .shell import clear, enable_sudo, shell
 from .TemporaryDirectory import TemporaryDirectory
 
 # From-as local imports
@@ -24,6 +24,7 @@ from .file import append as append_file
 from .file import copy as copy_file
 from .file import delete as delete_file
 from .file import exists as file_exists
+from .file import is_file
 from .file import list as list_files
 from .file import move as move_file
 from .file import read as read_file
@@ -31,6 +32,7 @@ from .file import write as write_file
 from .path import caller as caller_folder
 from .path import caller_parent as caller_parent_folder
 from .path import create as create_folder
+from .path import delete as delete_folder
 from .path import exists as folder_exists
 from .path import home as home_folder
 from .path import join as join_paths

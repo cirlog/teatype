@@ -18,6 +18,9 @@ from typing import Generic, List, Type, TypeVar
 from teatype.hsdb import HSDBField, HSDBQuery, HybridStorage
 from teatype.util import generate_id, kebabify
 
+_AVAILABLE_FUNCTIONS = [
+    'all',
+]
 _AVAILABLE_FIELDS = [
     'primary_model',
     'relation_key',
@@ -71,9 +74,9 @@ class HSDBRelation(HSDBField, Generic[T]):
         #     return instance
     
     def __init__(self,
-                 primary_keys:List[str],
+                 primary_keys:List[HSDBField],
                  primary_model:type,
-                 secondary_keys:List[str],
+                 secondary_keys:List[HSDBField],
                  secondary_model:type,
                  relation_type:type,
                  type:T,
@@ -101,43 +104,34 @@ class HSDBRelation(HSDBField, Generic[T]):
             if relation_type == 'many-to-one' or relation_type == 'many-to-many':
                 reverse_lookup_key = f'{reverse_lookup_key}s'
             self.reverse_lookup = reverse_lookup_key
-    
-        def _query_closure(self, target_model:'type'):
-            query = HSDBQuery(target_model)
-            subset = { key:query._index_db_reference[key] for key in query._index_db_reference if key in self.secondary_keys }
-            query._index_db_reference = subset
-            query.model = self.secondary_model
-            # query._index_db_reference = {{entry.id:entry for entry in self.secondary_model.query.all()}}
-            return query
         
         self.relation_id = generate_id()
         self._hsdb_reference = HybridStorage()
-        self._value = _query_closure
         
         self.addKeyPairs(primary_keys, secondary_keys)
     
     def __get__(self, instance, owner):
         if self._wrapper is None:
-            self._wrapper = self._RelationWrapper(self._value, self)
+            self._wrapper = self._RelationWrapper(self._value, self, instance)
         return self._wrapper
     
     @staticmethod
     def _stitch_relation_name(primary_model, secondary_model, relation_type):
         return f'{primary_model.__name__}_{relation_type}_{secondary_model.__name__}'
             
-    def _validate_key(self, key:str) -> None:
-        if not isinstance(key, str) or not key:
-            raise ValueError('key must be a non-empty string')
+    def _validate_key(self, key:HSDBField) -> None:
+        if not isinstance(key, HSDBField) or not key:
+            raise ValueError('key must be a HSDBField')
             
-    def _validate_keys(self, keys:List[str]) -> None:
+    def _validate_keys(self, keys:List[HSDBField]) -> None:
         if not isinstance(keys, list) or not keys:
-            raise ValueError('keys must be a non-empty list')
+            raise ValueError('keys must be a HSDBField list')
         for key in keys:
             self._validate_key(key)
             
     def addKeyPairs(self,
-                    primary_keys:List[str],
-                    secondary_keys:List[str]) -> None:
+                    primary_keys:List[HSDBField],
+                    secondary_keys:List[HSDBField]) -> None:
         """
         Add primary and secondary keys to the relation.
         """
@@ -156,8 +150,48 @@ class HSDBRelation(HSDBField, Generic[T]):
     ####################
 
     class _RelationWrapper(HSDBField._ValueWrapper):
-        def __init__(self, value:any, field:str):
+        caller:object
+        
+        def __init__(self, value:any, field:str, caller:object) -> None:
             super().__init__(value, field, _AVAILABLE_FIELDS)
+            
+            if field.relation_type == 'many-to-one':
+                fetch_id = field._hsdb_reference.index_database._relational_index.fetch(
+                    relation_name=field.relation_name,
+                    target_id=caller.id,
+                    reverse_lookup=False
+                )
+                fetch_value = field._hsdb_reference.index_database._db.fetch(fetch_id)
+            
+            self._value = fetch_value
+            
+        #########################################################################
+        # TODO: Temporary until I can realiably pass query functions to wrapper #
+        #########################################################################
+        
+        # def __query_closure(self):
+        #     # TODO: Replace with relational_index lookup
+        #     if field.relation_type == 'many-to-one':
+        #         fetch_value = field._hsdb_reference.index_database._relational_index.fetch(
+        #             relation_name=field.relation_name,
+        #             target_id=caller.id,
+        #             reverse_lookup=False
+        #         )
+        #         return HSDBQuery().get(fetch_value)
+        #     elif field.relation_type == 'one-to-many':
+        #         query = HSDBQuery(self.secondary_model)
+        #         # subset = { key:query._index_db_reference[key] for key in query._index_db_reference if key in self.secondary_keys }
+        #         # query.subset = subset
+        #         return query
+        #     return None
+            
+        def all(self) -> HSDBQuery:
+            """
+            Returns all entries in the relation.
+            """
+            return self._value.all()
+        
+        #########################################################################
     
     class _RelationFactory(ABC, Generic[T]):
         editable:bool
@@ -184,9 +218,9 @@ class HSDBRelation(HSDBField, Generic[T]):
             self.relation_type = kebabify(self.__class__.__name__)
             
         def lazy_init(self,
-                      primary_keys:List[str],
+                      primary_keys:List[HSDBField],
                       primary_model:'type',
-                      secondary_keys:List[str]) -> 'HSDBRelation':
+                      secondary_keys:List[HSDBField]) -> 'HSDBRelation':
             self.apply_ruleset(primary_keys, secondary_keys)
             return HSDBRelation(primary_keys=primary_keys,
                                 primary_model=primary_model,
@@ -199,24 +233,21 @@ class HSDBRelation(HSDBField, Generic[T]):
                                 reverse_lookup=self.reverse_lookup,
                                 type=self.type)
             
-        #########
-        # Hooks #
-        #########
             
-        def apply_ruleset(self, primary_keys:List[str], secondary_keys:List[str]) -> None:
+        def apply_ruleset(self, primary_keys:List[HSDBField], secondary_keys:List[HSDBField]) -> None:
             return
     
     class OneToOne(_RelationFactory):
         type=str
         
-        def apply_ruleset(self, primary_keys:List[str], secondary_keys:List[str]) -> None:
+        def apply_ruleset(self, primary_keys:List[HSDBField], secondary_keys:List[HSDBField]) -> None:
             if len(primary_keys) > 1 or len(secondary_keys) > 1:
                 raise ValueError('One-To-One relation can only have one entry')
 
     class ManyToOne(_RelationFactory):
         type=str
         
-        def apply_ruleset(self, primary_keys:List[str], secondary_keys:List[str]) -> None:
+        def apply_ruleset(self, primary_keys:List[HSDBField], secondary_keys:List[HSDBField]) -> None:
             if len(primary_keys) > 1:
                 raise ValueError('Many-To-One relation can only have one primary key entry')
 

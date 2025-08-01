@@ -10,15 +10,20 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .dt import dt
-# TODO: Deactivated until auto updating all components is possible
-# from .fastjson import compress as compress_json
-# from .fastjson import decompress as decompress_json
-# from .fastjson import dump as dump_json
-# from .fastjson import load as load_json
-from .generate_id import generate_id
-from .kebabify import kebabify, unkebabify
-from .implemented_trap import implemented_trap
-from .SingletonMeta import SingletonMeta
-from .staticproperty import staticproperty
-from .stopwatch import GLOBAL_STOPWATCH_CONFIG, stopwatch
+# From system imports
+from abc import abstractmethod
+
+# From package imports
+from teatype.cli import BaseCLI
+
+class BaseTUI(BaseCLI):
+    def execute(self):
+        self.run()
+        
+    @abstractmethod
+    def run(self):
+        """
+        This method should be implemented by subclasses to define the specific
+        functionality of the TUI.
+        """
+        raise NotImplementedError('Subclasses must implement the run method.')

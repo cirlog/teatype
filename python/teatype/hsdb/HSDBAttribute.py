@@ -17,12 +17,13 @@ import sys
 from typing import Generic, Type, TypeVar
 
 # From package imports
-from teatype.hsdb import HSDBField
+from teatype.hsdb.HSDBField import HSDBField
 from teatype.util import dt
 
 # Supported attribute types
 _AVAILABLE_FIELDS = [
     'computed',
+    'default',
     'description',
     'max_size',
     'required',
@@ -37,6 +38,7 @@ T = TypeVar('T')
 # TODO: Implement support for dicts and lists (potentially dangerous though)
 class HSDBAttribute(HSDBField):
     computed:bool         # Whether the attribute is computed, more of a flavour attribute, laxily enforced
+    default:Type[T]       # Default value for the attribute, if any
     description:str       # Description of the attribute
     max_size:int          # Maximum size of the attribute value (only relevant for strings)
     searchable:bool       # Whether the attribute is searchable
@@ -46,6 +48,7 @@ class HSDBAttribute(HSDBField):
     def __init__(self,
                  type:Type[T],
                  computed:bool=False,
+                 default:Type[T]=None,
                  description:str=None,
                  editable:bool=True,
                  indexed:bool=False,
@@ -69,12 +72,17 @@ class HSDBAttribute(HSDBField):
             raise ValueError('max_size must be a positive integer')
         
         self.computed = computed
+        self.default = default
         self.description = description
         self.editable = False if computed else editable
         self.max_size = max_size
         self.required = True if computed else required
         self.searchable = searchable
         self.unique = unique
+        
+        if default is not None:
+            self._validate_value(default)
+            self._value = default
 
     def __get__(self, instance, owner):
         if self._wrapper is None: # Lazy loading of the wrapper

@@ -128,139 +128,137 @@ def random_schools():
 def hybrid_storage(random_schools):
     hybrid_storage = HybridStorage(cold_mode=True)
     for school in random_schools:
-        hybrid_storage.index_database._db.update({school.id: school})
+        hybrid_storage.index_database.update_directly({school.id: school})
     return hybrid_storage
 
 ##########
 # PyTest #
 ##########
 
-@pytest.mark.skip
-@pytest.mark.parametrize('number_of_students', [1, 11, 111, 1_111, 11_111, 111_111])
-def test_create_students_parallel(number_of_students,
-                                  random_first_names,
-                                  random_sur_names,
-                                  random_schools,
-                                  hybrid_storage):
-    """
-    Test student creation in parallel and database update.
-    """
-    log('--------------------')
+# @pytest.mark.parametrize('number_of_students', [1, 11, 111, 1_111, 11_111, 111_111])
+# def test_create_students_parallel(number_of_students,
+#                                   random_first_names,
+#                                   random_sur_names,
+#                                   random_schools,
+#                                   hybrid_storage):
+#     """
+#     Test student creation in parallel and database update.
+#     """
+#     log('--------------------')
     
-    db = hybrid_storage.index_database._db
-    if number_of_students == 1:
-        stopwatch('Creating student')
-        student = create_student(0, random_first_names, random_sur_names, random_schools)
-        students = {student[0]: student[1]}
-        stopwatch()
-    else:
-        stopwatch('Creating students in parallel')
-        students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
-        stopwatch()
-    println()
+#     db = hybrid_storage.index_database._db
+#     if number_of_students == 1:
+#         stopwatch('Creating student')
+#         student = create_student(0, random_first_names, random_sur_names, random_schools)
+#         students = {student[0]: student[1]}
+#         stopwatch()
+#     else:
+#         stopwatch('Creating students in parallel')
+#         students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
+#         stopwatch()
+#     println()
 
-    assert isinstance(students, dict)
-    assert len(students.keys()) == number_of_students
-    # Ensure all students are instances of StudentModel
-    for student in students.values():
-        assert isinstance(student, StudentModel)
+#     assert isinstance(students, dict)
+#     assert len(students.keys()) == number_of_students
+#     # Ensure all students are instances of StudentModel
+#     for student in students.values():
+#         assert isinstance(student, StudentModel)
 
-    stopwatch('Index DB update')
-    # Simulate and verify database update
-    db.update(students)
-    stopwatch()
+#     stopwatch('Index DB update')
+#     # Simulate and verify database update
+#     db.update(students)
+#     stopwatch()
     
-    total_database_entries = len(db.keys())
-    println()
-    log(f'Total generated students: {total_database_entries}')
+#     total_database_entries = len(db.keys())
+#     println()
+#     log(f'Total generated students: {total_database_entries}')
     
-    log('--------------------')
+#     log('--------------------')
 
-@pytest.mark.parametrize('number_of_students, generate_in_parallel, measure_memory_footprint', [
-    (12_345, False, True),
-])
-def test_queries(number_of_students,
-                 generate_in_parallel,
-                 measure_memory_footprint,
-                 random_first_names,
-                 random_sur_names,
-                 random_schools,
-                 hybrid_storage):
-    log('--------------------')
+# @pytest.mark.parametrize('number_of_students, generate_in_parallel, measure_memory_footprint', [
+#     (12_345, False, True),
+# ])
+# def test_queries(number_of_students,
+#                  generate_in_parallel,
+#                  measure_memory_footprint,
+#                  random_first_names,
+#                  random_sur_names,
+#                  random_schools,
+#                  hybrid_storage):
+#     log('--------------------')
 
-    stopwatch('Seeding DB data')
-    db = hybrid_storage.index_database._db
-    if generate_in_parallel:
-        students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
-    else:
-        students = create_students_sequentially(number_of_students, random_first_names, random_sur_names, random_schools)
-    db.update(students)
-    total_database_entries = len(db.keys())
-    stopwatch()
-    log(f'Total data: {total_database_entries}')
-    if measure_memory_footprint:
-        stopwatch('Measuring memory footprint')
-        log(hybrid_storage.index_database.memory_footprint)
-        stopwatch()
-    println()
+#     stopwatch('Seeding DB data')
+#     db = hybrid_storage.index_database._db
+#     if generate_in_parallel:
+#         students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
+#     else:
+#         students = create_students_sequentially(number_of_students, random_first_names, random_sur_names, random_schools)
+#     db.update(students)
+#     total_database_entries = len(db.keys())
+#     stopwatch()
+#     log(f'Total data: {total_database_entries}')
+#     if measure_memory_footprint:
+#         stopwatch('Measuring memory footprint')
+#         log(hybrid_storage.index_database.memory_footprint)
+#         stopwatch()
+#     println()
     
-    # Create a query chain that does not execute immediately.
-    log('Test queries:')
-    println()
+#     # Create a query chain that does not execute immediately.
+#     log('Test queries:')
+#     println()
     
-    SchoolModel.query.verbose().all()
+#     SchoolModel.query.verbose().all()
                       
-    StudentModel.query.verbose().all()
+#     StudentModel.query.verbose().all()
     
-    # Alternative: Using aliases
-    StudentModel.query.w('height').gt(180).verbose().collect()
+#     # Alternative: Using aliases
+#     StudentModel.query.w('height').gt(180).verbose().collect()
     
-    StudentModel.query.where('height').less_than(150) \
-                      .where('age').less_than(16) \
-                      .sort_by('name') \
-                      .filter_by('name') \
-                      .verbose() \
-                      .collect()
+#     StudentModel.query.where('height').less_than(150) \
+#                       .where('age').less_than(16) \
+#                       .sort_by('name') \
+#                       .filter_by('name') \
+#                       .verbose() \
+#                       .collect()
     
-    StudentModel.query.where('height').less_than(150) \
-                      .where('age').less_than(16) \
-                      .verbose() \
-                      .paginate(0, 10)
+#     StudentModel.query.where('height').less_than(150) \
+#                       .where('age').less_than(16) \
+#                       .verbose() \
+#                       .paginate(0, 10)
     
-    StudentModel.query.where('height').less_than(150) \
-                      .where('age').greater_than_or_equals(16) \
-                      .verbose() \
-                      .paginate(1, 10)
+#     StudentModel.query.where('height').less_than(150) \
+#                       .where('age').greater_than_or_equals(16) \
+#                       .verbose() \
+#                       .paginate(1, 10)
     
-    StudentModel.query.where('height').less_than(150) \
-                      .where('age').less_than(16) \
-                      .verbose() \
-                      .paginate(0, 30)
+#     StudentModel.query.where('height').less_than(150) \
+#                       .where('age').less_than(16) \
+#                       .verbose() \
+#                       .paginate(0, 30)
     
-    StudentModel.query.where('height').less_than(150) \
-                      .where('age').less_than(16) \
-                      .verbose() \
-                      .first()
+#     StudentModel.query.where('height').less_than(150) \
+#                       .where('age').less_than(16) \
+#                       .verbose() \
+#                       .first()
     
-    StudentModel.query.where('height').less_than(150) \
-                      .where('age').less_than(16) \
-                      .verbose() \
-                      .last()
+#     StudentModel.query.where('height').less_than(150) \
+#                       .where('age').less_than(16) \
+#                       .verbose() \
+#                       .last()
                       
-    student = StudentModel({
-        'age': 21,
-        'gender': 'male',
-        'height': 181,
-        'name': 'Mark Grayson',
-        'school': random_schools[0]
-    })
-    db.update({student.id: student})
-    student_id = student.id
-    StudentModel.query.verbose().get(id=student_id)
+#     student = StudentModel({
+#         'age': 21,
+#         'gender': 'male',
+#         'height': 181,
+#         'name': 'Mark Grayson',
+#         'school': random_schools[0]
+#     })
+#     db.update({student.id: student})
+#     student_id = student.id
+#     StudentModel.query.verbose().get(id=student_id)
     
-    log('--------------------')
+#     log('--------------------')
     
-@pytest.mark.skip
 @pytest.mark.parametrize('number_of_students, generate_in_parallel, measure_memory_footprint', [
     (1111, False, False),
 ])
@@ -274,15 +272,13 @@ def test_relations(number_of_students,
     log('--------------------')
 
     stopwatch('Seeding DB data')
-    db = hybrid_storage.index_database._db
     if generate_in_parallel:
         students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
     else:
         students = create_students_sequentially(number_of_students, random_first_names, random_sur_names, random_schools)
-    db.update(students)
-    total_database_entries = len(db.keys())
+    hybrid_storage.index_database.update_directly(students)
     stopwatch()
-    log(f'Total data: {total_database_entries}')
+    log(f'Total data: {hybrid_storage.index_database.size}')
     if measure_memory_footprint:
         stopwatch('Measuring memory footprint')
         log(hybrid_storage.index_database.memory_footprint)
@@ -292,25 +288,24 @@ def test_relations(number_of_students,
     # Create a query chain that does not execute immediately.
     log('Test queries:')
     println()
-
-    tu_berlin = SchoolModel.query.where('name').equals('Technische Universität München').verbose().first()
+    
+    # tu_muenchen = SchoolModel.query.where('name').equals('Technische Universität München').verbose().first()
+    tu_muenchen = SchoolModel.query.where('name').equals('Technische Universität München').verbose().first()
+    # tu_muenchen = SchoolModel.query.verbose().get(id=tu_muenchen.id)
     lion_reichl = StudentModel({
         'age': 30,
         'gender': 'male',
         'height': 181,
         'name': 'Lion Reichl',
-        'school': tu_berlin.id
+        'school': tu_muenchen.id
     })
-    db.update({lion_reichl.id: lion_reichl})
+    hybrid_storage.index_database.update_directly({lion_reichl.id: lion_reichl})
+    
+    # hybrid_storage.index_database.print(limit=10)
     
     log('Test relations:')
     println()
 
     print(lion_reichl.school)
-    print(lion_reichl.school.all())
-    # print(lion_reichl.school.secondary_keys)
-    # print(lion_reichl.school.relation_type)
-    # print(lion_reichl.school._value.all())
-    # lion_reichl.school.verbose(print=True).all()
     
     log('--------------------')

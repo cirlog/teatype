@@ -12,5 +12,6 @@
 
 from .parse_fixtures import parse_fixtures
 from .parse_index_files import parse_index_files
+from .transmute_id import transmute_id
 
-__all__ = ['parse_fixtures', 'parse_index_files']
+__all__ = ['parse_fixtures', 'parse_index_files', 'transmute_id']

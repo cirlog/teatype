@@ -4,15 +4,14 @@
 <br />
 <div align="center">
   <a href="https://github.com/arsonite/teatype">
-    <img src="files/teatype-logo.png" alt="teatype icon" width="80" height="80">
+    <img src="https://avatars.githubusercontent.com/u/177637833?s=200&v=4" alt="teatype icon" width="80" height="80">
   </a>
 
-<h3 align="center">teatype</h3>
+<h3 align="center">teatype</i></h3>
 
   <p align="center">
-    Package that includes all the useful custom utilities I need for (most) of my projects
+    Useful utility classes & more <i>(there isn't more)</i>. TypeScript and Python support.
     <br />
-    ·
     <a href="https://github.com/arsonite/teatype/issues">Report Bug</a>
     ·
     <a href="https://github.com/arsonite/teatype/issues">Request Feature</a>
@@ -31,6 +30,7 @@
 
 ### Built With
 
+-   [![Python][Python]][Python-url]
 -   [![TypeScript][TypeScript]][TypeScript-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -56,7 +56,7 @@ Don't forget to give the project a star! Thanks again!
 
 ## License
 
-Distributed under GPL-3 license. See `LICENSE` for more information.
+Distributed under MIT license. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -72,5 +72,7 @@ Project Link: [https://github.com/arsonite/teatype](https://github.com/arsonite/
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
 [product-screenshot]: images/screenshot.png
+[Python]: https://img.shields.io/badge/Python-20232A?style=for-the-badge&logo=python&logoColor=3178C6
+[python-url]: https://www.python.org/
 [TypeScript]: https://img.shields.io/badge/TypeScript-20232A?style=for-the-badge&logo=typescript&logoColor=3178C6
 [TypeScript-url]: https://www.typescriptlang.org/

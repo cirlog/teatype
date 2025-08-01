@@ -13,9 +13,13 @@
 # System imports
 import inspect
 import os
+import shutil
 
 # From system imports
 from pathlib import Path
+
+# From package imports
+from teatype.logging import err
 
 def caller(skip_call_stacks:int=None, stringify:bool=True) -> str:
     """
@@ -112,6 +116,39 @@ def create(*args, create_parents:bool=True, exists_ok:bool=True, stringify:bool=
     new_path.mkdir(parents=create_parents, exist_ok=exists_ok) # Create the new folder and its parents if they do not exist
     return str(new_path) if stringify else new_path # Return the new path as string or Path object
 
+def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
+    """
+    Delete a file (or directory) at the specified path.
+
+    Parameters:
+        path (str): The path to the file.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    try:
+        # Check if the path exists and determine if it's a file
+        path_exists = exists(path)
+        if path_exists:
+            # if not is_file(path):
+            #     if is_file:
+            #         err(f'"{path}" is a file. Cannot delete a file path.')
+            #         return False
+            #     else:
+            if sudo:
+                # If sudo is required, use the 'sudo' command to delete the directory
+                # This requires the user to have appropriate permissions
+                os.system(f'sudo rm -r "{path}"')
+            else:
+                # Recursively remove the directory and all its contents
+                shutil.rmtree(path)
+        return True
+    except Exception as exc:
+        if not silent_fail:
+            # Log an error message if an exception occurs
+            err(f'Error deleting file "{path}": {exc}')
+        return False
+    
 def exists(path:str) -> bool:
     """
     Check if the given path exists.

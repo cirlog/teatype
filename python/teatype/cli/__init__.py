@@ -18,3 +18,4 @@ from .BaseIsRunningCLI import BaseIsRunningCLI
 from .BaseInstallCLI import BaseInstallCLI
 from .BaseStartCLI import BaseStartCLI
 from .BaseStopCLI import BaseStopCLI
+from .BaseTUI import BaseTUI

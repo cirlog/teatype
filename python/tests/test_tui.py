@@ -10,10 +10,18 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .args.Argument import Argument
-from .args.Command import Command
-from .args import Flag
-from .BaseCLI import BaseCLI
-from .CheckIfRunning import CheckIfRunning
-from .Start import Start
-from .Stop import Stop
+# From package imports
+from teatype.cli import BaseTUI
+
+##########
+# PyTest #
+##########
+
+def test_tui():
+    class _TestTUI(BaseTUI):
+        def run(self):
+            return {
+                'name': 'device-info',
+                'shorthand': 'di',
+                'help': 'Runs the test shell'
+            }

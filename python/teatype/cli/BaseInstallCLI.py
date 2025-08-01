@@ -19,6 +19,10 @@ from teatype.cli import BaseCLI
 #       into the install flag file.
 # TODO: Write optional flag to disable adding dist to .gitignore
 class BaseInstallCLI(BaseCLI):
+    #########
+    # Hooks #
+    #########
+    
     def meta(self):
         return {
             'name': 'install',

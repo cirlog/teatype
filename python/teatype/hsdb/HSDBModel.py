@@ -44,8 +44,8 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     
     # Public class variables
     model:type['HSDBModel']
-    path:str
     model_name:str
+    path:str
     resource_name:str
     resource_name_plural:str
     # migrated_at:dt
@@ -57,11 +57,11 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     # app_name     = HSDBAttribute(str,  editable=False) # TODO: Maybe make this as a computed python property?
     created_at   = HSDBAttribute(dt,   computed=True)
     id           = HSDBAttribute(str,  computed=True, unique=True)
+    is_cached    = HSDBAttribute(bool, default=True) # Describes whether the model entries are permanently cached in memory
     # is_fixture   = HSDBAttribute(bool, computed=True) # TODO: Maybe make this as a computed python property?
     # migration_id = HSDBAttribute(int,  computed=True) # TODO: Maybe make this as a computed python property?
     # synced_at    = HSDBAttribute(dt,   computed=True)
     updated_at   = HSDBAttribute(dt,   computed=True)
-    # was_synced   = HSDBAttribute(bool, computed=True)
     
     def __init__(self,
                  data:dict,
@@ -183,12 +183,12 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                 instance_attribute.key = attribute.name
                 instance_attribute.value = value
             elif isinstance(attribute, HSDBRelation._RelationFactory):
-                if attribute.type == List[str]:
-                    instance_value = [v._value if isinstance(v._value, str) else v._value for v in value]
+                if attribute.type == list:
+                    instance_value = [v.instance if isinstance(v.instance, object) else v.instance for v in value]
                 else:
-                    instance_value = [value._value] if isinstance(value._value, str) else value._value
+                    instance_value = [value.instance] if isinstance(value.instance, object) else value.instance
                 instance_attribute = attribute.lazy_init(
-                    [self.id._value] if isinstance(self.id._value, str) else self.id._value,
+                    [self.id.instance] if isinstance(self.id.instance, object) else self.id.instance,
                     self.model,
                     instance_value
                 )
@@ -226,7 +226,7 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
             # Skip non-HSDBAttribute fields
             try:
                 if attribute_name in self._fields:
-                    serialized[attribute_name] = getattr(self, attribute_name)
+                    serialized[attribute_name] = getattr(self, attribute_name)._value
             except Exception as exc:
                 continue
         return serialized
