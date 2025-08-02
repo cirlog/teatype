@@ -20,7 +20,7 @@ from typing import List
 from teatype.enum import EscapeColor
 from teatype.logging import err, log, warn
 
-def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, colorize:bool=True) -> any:
+def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, return_int:bool=True, colorize:bool=True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
 
@@ -81,7 +81,7 @@ def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, color
         # Return the validated user input
         return prompt_answer == options[0] if return_bool else prompt_answer
     except KeyboardInterrupt:
-        warn('User interrupted the input prompt.', pad_before=2, pad_after=1, use_prefix=False, verbose=False)
+        warn('User interrupted the input prompt.', pad_before=2, pad_after=1, use_prefix=False)
         sys.exit(1)
     except SystemExit as se:
         sys.exit(se.code)

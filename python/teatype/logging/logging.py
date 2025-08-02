@@ -23,9 +23,13 @@ import traceback as traceback_exc
 # From system imports
 from datetime import datetime
 from pprint import pformat
+from typing import Literal
 
 # From package imports
 from teatype.enum import EscapeColor
+
+SymbolPosition = Literal['start', 'center', 'end', None]
+SymbolPositions = ['start', 'center', 'end', None]
 
 # TODO: Maybe use class closure like with the old stopwatch, to set global variables once somewhere, for consistency
 #       in the file saving, like the path to the log directory, etc.
@@ -102,8 +106,11 @@ class _ColoredFormatter(logging.Formatter):
         return f'{color}{message}{self.RESET_CODE}'
 
 def _format(message:any,
+            include_symbol:bool=False,
             pad_before:int=None,
             prefix:str=None,
+            symbol:str|None=None,
+            symbol_position:SymbolPosition='start',
             use_prefix:bool=True,
             verbose:bool=False) -> any:
     """
@@ -120,6 +127,12 @@ def _format(message:any,
     Returns:
         any: The formatted message string.
     """
+    if include_symbol:
+        if symbol is None:
+            raise ValueError('Symbol must be provided if include_symbol is True.')
+        if symbol_position not in SymbolPositions or symbol_position is None:
+            raise ValueError(f'Symbol position must be one of {SymbolPositions}.')
+        
     formatted_message = message  # Initialize the formatted message as an empty string
     
     # Add a blank line before the message if pad_before is specified and greater than 0
@@ -147,15 +160,26 @@ def _format(message:any,
         formatted_message = f'{message} - [{filename}, PRINTLN: {lineno}]' # Format the message with caller info
         
     if prefix and use_prefix:
-        formatted_message = f'{prefix} - {formatted_message}'
+        if include_symbol and symbol_position == 'center':
+            formatted_message = f'{prefix} - {symbol} {formatted_message}'
+        else:
+            formatted_message = f'{prefix} - {formatted_message}'
+    
+    if include_symbol:
+        if symbol_position == 'start':
+            formatted_message = f'{symbol} {formatted_message}'
+        elif symbol_position == 'end':
+            formatted_message = f'{formatted_message} {symbol}'
     
     return formatted_message
 
 def err(message:str,
         exit=False,
+        include_symbol:bool=False,
         pad_before:int=None,
         pad_after:int=None,
         raise_exception:Exception|bool=False,
+        symbol_position:SymbolPosition='start',
         use_prefix:bool=True,
         traceback:bool=False,
         verbose:bool=True) -> None:
@@ -189,8 +213,11 @@ def err(message:str,
         prefix = None
         use_prefix = False
     error_message = _format(message=message,
+                            include_symbol=include_symbol,
                             pad_before=pad_before,
                             prefix=prefix,
+                            symbol='❌', # \u274C
+                            symbol_position=symbol_position,
                             use_prefix=use_prefix,
                             verbose=verbose)
     
@@ -225,10 +252,11 @@ def err(message:str,
         sys.exit(1)
 
 def hint(message:str,
+         include_symbol:bool=False,
          pad_before:int=None,
          pad_after:int=None,
-         use_prefix:bool=True,
-         verbose:bool=False) -> int:
+         symbol_position:SymbolPosition='start',
+         use_prefix:bool=True) -> int:
     """
     Provide a hint message with optional padding and verbosity.
     
@@ -242,10 +270,13 @@ def hint(message:str,
     """
     # Format the message with optional padding and verbosity
     hint_message = _format(message,
-                           prefix='HINT',
-                           use_prefix=use_prefix,
+                           include_symbol=include_symbol,
                            pad_before=pad_before,
-                           verbose=verbose)
+                           prefix='HINT',
+                           symbol='ℹ️', # \u2139
+                           symbol_position=symbol_position,
+                           use_prefix=use_prefix,
+                           verbose=False)
     
     # Log the final message at the INFO level using the global logger
     logger.debug(hint_message) # Log the message as is
@@ -312,7 +343,7 @@ def log(message:any,
     if tab > 0:
         log_message = f'{"    " * tab}{log_message}'
     # Log the final message at the INFO level using the global logger
-    logger.info(log_message) # Log the message as is
+    logger.info(f'{log_message}{EscapeColor.RESET}') # Log the message as is and reset the color
 
     # Add a blank line after the message if pad_after is specified and greater than 0
     if pad_after:
@@ -334,27 +365,31 @@ def println(amount:int=1) -> None:
         print()
         
 def success(message:str='',
+            include_symbol:bool=False,
             pad_after:int=None,
             pad_before:int=None,
-            use_prefix:bool=True,
-            verbose:bool=False) -> None:
+            symbol_position:SymbolPosition='start') -> None:
     """
     Logs a success message.
     """
     success_message = _format(message,
+                              include_symbol=include_symbol,
                               pad_before=pad_before,
+                              symbol='✅', # \u2705
+                              symbol_position=symbol_position,
                               use_prefix=False,
-                              verbose=verbose)
+                              verbose=False)
     logger.info(f'{EscapeColor.GREEN}{success_message}{EscapeColor.RESET}') # Log the success message
     # Add a blank line after the message if pad_after is specified and greater than 0
     if pad_after:
         println(pad_after) # Print a blank line to add padding below the message
 
 def warn(message:str='',
+         include_symbol:bool=False,
          pad_after:int=None,
          pad_before:int=None,
-         use_prefix:bool=True,
-         verbose:bool=False) -> None:
+         symbol_position:SymbolPosition='start',
+         use_prefix:bool=True) -> None:
     """
     Logs a warning message.
 
@@ -368,9 +403,11 @@ def warn(message:str='',
         int: Returns 0 after logging the warning.
     """
     warn_message = _format(message,
-                           prefix='WARN',
-                           use_prefix=use_prefix,
+                           include_symbol=include_symbol,
                            pad_before=pad_before,
+                           prefix='WARN',
+                           symbol='⚠️ ', # \u26A0
+                           use_prefix=use_prefix,
                            verbose=False)
     logger.warning(warn_message) # Log the warning message
     

@@ -121,12 +121,14 @@ def enable_sudo(max_fail_count: int = 3) -> None:
             err(f'Error enabling sudo: {exc}', pad_before=1, pad_after=1)
 
 def shell(command:str,
-          sudo:bool=False,
-          cwd:bool=False,
+          cwd:str=False,
           env:dict=None,
-          timeout:float=None,
           mute:bool=False,
-          return_stdout:bool=False) -> any:
+          return_output:bool=False,
+          return_stdout:bool=False,
+          format_stdout:bool=True,
+          sudo:bool=False,
+          timeout:float=None,) -> any:
     """
     Executes a shell command using the subprocess module.
 
@@ -171,7 +173,7 @@ def shell(command:str,
         # env is set to None by default, but can be specified with env
         # timeout is set to None by default, but can be specified with timeout
         # Not using a command list array, since I am using shell=True
-        output = subprocess.run(command, 
+        output = subprocess.run(command, # Split the command into a list of arguments
                                 shell=True, # Execute the command through the shell
                                 cwd=None if not cwd else cwd,
                                 env=env if not env else current_env.get(),
@@ -191,28 +193,38 @@ def shell(command:str,
             returncode:int=0
             stdout:str='KeyboardInterrupt'
         return _KeyboardInterruptOutput()
-    except Exception:
+    except Exception as exc:
         # If an exception is raised, return the exit code 1 as a failsafe
         # Sometimes the command may fail due to a non-zero exit code, but still return
         # an exit code of 0. In such cases, the exception will be caught and the exit code will be set to 1.
-        output.returncode = 1
-        
-    if return_stdout:
-        # Retrieve the standard output from the subprocess
-        stdout = output.stdout
-        # Count the number of newline characters in the stdout
-        newline_count = stdout.count('\n')
-        if newline_count > 1:
-            # If multiple lines are present, split the stdout into a list of lines
-            stdout = stdout.split('\n')[:-1] # Remove the last empty line
+        if return_stdout:
+            str(exc)
         else:
-            # If only one line, remove the newline character from stdout
-            stdout = stdout.replace('\n', '')
-        # Return the processed stdout to the caller
-        return stdout
+            output.returncode = 1
+    
+    if return_output:
+        # If return_output is True, return the original response object
+        # This allows the caller to access the original response object and its attributes
+        return output
+    else:
+        if return_stdout:
+            # Retrieve the standard output from the subprocess
+            stdout = output.stdout
+            if not format_stdout:
+                return stdout 
+            # Count the number of newline characters in the stdout
+            newline_count = stdout.count('\n')
+            if newline_count > 1:
+                # If multiple lines are present, split the stdout into a list of lines
+                stdout = stdout.split('\n')[:-1] # Remove the last empty line
+            else:
+                # If only one line, remove the newline character from stdout
+                stdout = stdout.replace('\n', '')
+            # Return the processed stdout to the caller
+            return stdout
         
-    # Return the exit code of the completed process
-    return output.returncode
+        # Return the exit code of the completed process
+        return output.returncode
 
 # TODO: Disabled for now, since it will break the shell
 # refresh = shell('exec bash')

@@ -31,6 +31,7 @@ from .file import read as read_file
 from .file import write as write_file
 from .path import caller as caller_folder
 from .path import caller_parent as caller_parent_folder
+from .path import copy as copy_folder
 from .path import create as create_folder
 from .path import delete as delete_folder
 from .path import exists as folder_exists
@@ -38,6 +39,7 @@ from .path import home as home_folder
 from .path import join as join_paths
 from .path import parent as parent_folder
 from .path import workdir as workdir_folder
+from .print import tree as print_tree
 from .probe import ip as probe_ip
 from .probe import package as probe_package
 from .probe import port as probe_port

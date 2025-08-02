@@ -10,4 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .EscapeColor import colorwrap, EscapeColor
+# From system imports
+from typing import List
+
+class HSDBRelation:
+    primary_keys:List[str]
+    secondary_keys:List[str]
+    relation_type:str
+    
+    def __init__(self, primary_keys:List[str], secondary_keys:List[str], relation_type:str):
+        self.primary_keys = primary_keys
+        self.secondary_keys = secondary_keys
+        self.relation_type = relation_type

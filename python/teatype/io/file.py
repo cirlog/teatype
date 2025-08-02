@@ -16,6 +16,7 @@ import configparser
 import csv
 import json
 import os
+import re
 import shutil
 
 # As-system imports
@@ -413,7 +414,7 @@ def list(directory:str,
         # Re-raise the exception to allow further handling upstream
         raise exc
 
-def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=True) -> bool:
+def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=True, sudo:bool=False) -> bool:
     """
     Move a file from the source path to the destination path.
 
@@ -442,8 +443,13 @@ def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=T
             # Create parent directories if they do not exist
             parent_path = ''.join(subpath + '/' for subpath in destination.split('/')[:-1])
             path_functions.create(parent_path)
-            
-        shutil.move(source, destination)
+        
+        if sudo:
+            # If sudo is required, use the 'sudo' command to move the file
+            # This requires the user to have appropriate permissions
+            os.system(f'sudo mv "{source}" "{destination}"')
+        else:
+            shutil.move(source, destination)
         return True
     except Exception as exc:
         # Log an error message if an exception occurs
@@ -544,7 +550,12 @@ def read(file:_File|PosixPath|str,
                     elif file_extension == '.jsonc' or force_format == 'jsonc':
                         dirty_content = f.read()
                         # Remove comments denoted by '//' to ensure valid JSON
-                        clean_content = ''.join(line for line in dirty_content.splitlines() if not line.strip().startswith('//'))
+                        clean_content = re.sub(
+                            r'(?<!:)//[^\n]*(?=\n|$)',
+                            '',
+                            dirty_content,
+                            flags=re.MULTILINE
+                        )
                         content = json.loads(clean_content)
                     elif file_extension == '.json' or force_format == 'json':
                         # Load and return JSON data from the file

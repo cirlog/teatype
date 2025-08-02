@@ -16,13 +16,13 @@ import sys
 
 # From system imports
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import List
 
 # From package imports
+from pathlib import Path
 from teatype.cli import Argument, Command, Flag
-from teatype.io.dict import update_dict
-from teatype.logging import err
+from teatype.data.dict import update_dict
+from teatype.logging import err, hint
 
 class GLOBAL_CLI_CONFIG:
     """
@@ -40,7 +40,10 @@ class GLOBAL_CLI_CONFIG:
     TAB = ' ' * 4
     USE_HELP_MESSAGE_ON_FAIL = True
 
-# TODO: Make options and option seperate and option as a type descriptor only
+# TODO: Allow setting a default value for flags
+# TODO: Write hooks with proper sysntax to make hooks more obvious
+# TODO: Use class member variables with appending on base class, instead of this weird meta stuff
+# TODO: Implement default values to flags etc.
 # TODO: Make relations and depedencies between flags algorithmic
 #       depends_on: 'flag_name' -> 'flag_name' must be set before this flag can be set
 # TODO: Use log instead of print and println instead of pad_before and pad_after
