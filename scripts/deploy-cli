@@ -1,0 +1,240 @@
+#!/bin/bash
+
+# Copyright (c) 2024-2025 enamentis GmbH. All rights reserved.
+#
+# This software module is the proprietary property of enamentis GmbH.
+# Unauthorized copying, modification, distribution, or use of this software
+# is strictly prohibited unless explicitly authorized in writing.
+# 
+# THIS SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+# 
+# For more details, check the LICENSE file in the root directory of this repository.
+
+# TODO: Put everything into python script with functions for way better modularity and readibility and maintenance, jesus
+# TODO: Decouple into function
+# Function to handle SIGINT (Ctrl+C) and set the interrupted flag
+handle_interrupt() {
+    echo
+    echo
+    warn "Caught SIGINT interrupt-signal. Cleaning up script artifacts ..."
+
+    # Define the environment removal command
+    local env_removal="rm -f $parent_directory/.env"
+    # Display the trap implementation message with color formatting
+    echo -e "\033[95mImplemented trap: $env_removal \033[0m"
+    # Execute the environment removal command quietly, handle failure with a warning
+    eval "$env_removal" > /dev/null 2>&1 || warn "Failed to clean up script artifact: $env_removal. Continuing ..."
+
+    local venv_name
+    if [ -z "$CIRLOG_CLI_VENV_NAME" ]; then
+        venv_name="$DEFAULT_CIRLOG_CLI_VENV_NAME"
+    else
+        venv_name="$CIRLOG_CLI_VENV_NAME"
+    fi
+    venv_removal="rm -rf $parent_directory/$venv_name"
+    # Display the trap implementation message with color formatting
+    echo -e "\033[95mImplemented trap: $venv_removal \033[0m"
+    # Execute the environment removal command quietly, handle failure with a warning
+    eval "$venv_removal" > /dev/null 2>&1 || warn "Failed to clean up script artifact: $venv_removal. Continuing ..."
+
+    echo
+    exit 1
+}
+
+# TODO: Decouple into function
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# TODO: Decouple into function
+# Set sudo permissions for entire script before further execution and surpress the output
+sudo -v >/dev/null 2>&1
+
+# TODO: Decouple into function
+# Parse the script's grandparent directory
+parent_directory=$(dirname "$(dirname "$(readlink -f "$0")")")
+
+# Source the bash functions file to use its functions in this script
+. "$parent_directory/util/bash-functions.sh"
+
+# Implemented trap error handling
+trap handle_interrupt SIGINT
+
+echo
+# Check if no arguments are provided
+if [ $# -eq 0 ]; then
+    hint "This script can be run in automatic mode by providing the --skip-choices flag."
+fi
+
+# TODO: Decouple into function
+# Handle command-line arguments
+skipping_choices=false # Initialize the skipping_choices flag to false by default
+# Iterate over all provided command-line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --skip-choices) # If the argument is --skip-choices
+            skipping_choices=true # Set the skipping_choices flag to true for automatic mode
+            ;;
+        *)
+            echo "Unknown option: $1" # Notify the user of an unrecognized option
+            echo "Usage: $0 [--skip-choices]" # Provide usage instructions again
+            echo
+            exit 1 # Exit the script with a status code indicating an error
+            ;;
+    esac
+    shift # Move to the next argument for processing
+done
+
+# TODO: Implement automatic mode
+if [ "$skipping_choices" = true ]; then
+    error "Automatic mode is not yet implemented. Please run the script without the '--skip-choices' flag."
+    exit 1
+fi
+
+# Execute the env variable injection script and source the new env variables
+. "$parent_directory/deploy-scripts/2-create-default-env" 
+
+# Install Python
+echo -e "\033[92mDo you want to install python?\033[0m"
+read -p "(Y/n): " install_python
+if [ "$install_python" == "Y" ]; then
+    eval $parent_directory/deploy-scripts/0-install-python
+elif [ "$install_python" == "n" ]; then
+    echo "Skipping Python installation ..."
+else
+    error "Invalid input. Please enter 'Y' or 'n'."
+fi
+
+if $(uname -r | grep -q "WSL"); then
+    echo "Detected WSL instance. Setting flag in .env"
+    write_env_variable "$parent_directory/.env" "USING_WSL" "true"
+    # Check for WSL_DISTRO_NAME environment variable
+    if [ -n "$WSL_DISTRO_NAME" ]; then
+        echo "Detected WSL profile: "$WSL_DISTRO_NAME". Writing to .env"
+        write_env_variable "$parent_directory/.env" "WSL_TARGET_PROFILE" "$WSL_DISTRO_NAME"
+    fi
+else
+    echo "Not running inside WSL. Setting flag in .env"
+    write_env_variable "$parent_directory/.env" "USING_WSL" "false"
+fi
+
+echo
+# Execute the script to create the Cir.Logs groups
+eval "$parent_directory/deploy-scripts/3-create-cirlogs-groups" 
+
+echo
+# Execute the script to create the source directory
+eval "$parent_directory/deploy-scripts/4-create-source-directory"
+eval "$parent_directory/deploy-scripts/5-create-data-directory"
+
+eval "$parent_directory/deploy-scripts/8-change-hostname"
+
+echo "Installing Cir.Log firmware linux dependencies ..."
+. "$parent_directory/deploy-scripts/21-install-jq" # | echo "jq installation failed, maybe its already installed?"
+sleep 1
+. "$parent_directory/deploy-scripts/22-install-ntpdate" # | echo "ntpdate installation failed, maybe its already installed?"
+sleep 1
+. "$parent_directory/deploy-scripts/23-install-opencv-dependencies" # | echo "opencv installation failed, maybe its already installed?"
+sleep 1
+. "$parent_directory/deploy-scripts/24-install-plantuml-dependencies" # | echo "plantuml installation failed, maybe its already installed?"
+sleep 1
+. "$parent_directory/deploy-scripts/25-install-vim" # | echo "vim installation failed, maybe its already installed?"
+sleep 1
+# FIXME: Not working because of stupid f**cking jetson-stats, skip this shit
+# . "$parent_directory/deploy-scripts/26-install-monitoring-tools" # | echo "monitoring installation failed, maybe its already installed?"
+. "$parent_directory/deploy-scripts/27-install-netplan" # | echo "netplan installation failed, maybe its already installed?"
+sleep 1
+. "$parent_directory/deploy-scripts/28-install-chromium" # | echo "chromium installation failed, maybe its already installed?"
+sleep 1
+. "$parent_directory/deploy-scripts/29-install-github-cli" # | echo "github-cli installation failed, maybe its already installed?"
+echo "Cir.Log firmware linux dependencies installed successfully."
+
+# Source the .env file again to ensure all environment variables are correctly loaded
+. "$parent_directory/.env"
+
+cirlog_cli_workspace_path="$CIRLOG_WORKSPACE_PATH/$CIRLOG_CLI_WORKSPACE_PATH"
+write_env_variable "$parent_directory/.env" "CIRLOG_CLI_WORKSPACE_PATH" "$cirlog_cli_workspace_path"
+write_env_variable "$parent_directory/.env" "CIRLOG_CLI_VENV_PATH" "$cirlog_cli_workspace_path/$CIRLOG_CLI_VENV_NAME"
+
+# TODO: HIGH PRIORITY (!) Add this to system environment variables as well
+# TODO: HIGH PRIORITY (!) Also add all the other cirlog environment variables to the system environment variables for firmware to work properly
+# Ensure /usr/local/bin is in the PATH environment variable
+if [[ ":$PATH:" != *":/usr/local/bin:"* ]]; then
+    echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+    echo "Added /usr/local/bin to PATH in ~/.bashrc"
+fi
+
+if [ -z "$CIRLOG_CLI_VENV_PATH" ] || [ -z "$CIRLOG_CLI_WORKSPACE_PATH" ]; then
+    echo "Error: Required environment variables are not set."
+    exit 1
+fi
+# Input file containing the template
+input_file="$parent_directory/proxy-script.template"
+# Output file after replacing the variables
+output_file="$CIRLOG_CLI_PATH/$CIRLOG_CLI_NAME"
+sudo rm -f "$output_file"
+# Read the input file and replace placeholders
+while IFS= read -r line || [[ -n "$line" ]]; do
+    resolved_line=$(echo "$line" \
+        | sed -e "s|{{CIRLOG_CLI_VENV_PATH}}|$CIRLOG_CLI_VENV_PATH|g" \
+              -e "s|{{CIRLOG_CLI_WORKSPACE_PATH}}|$CIRLOG_CLI_WORKSPACE_PATH|g")
+    echo "$resolved_line" | sudo tee -a "$output_file" > /dev/null
+done < "$input_file"
+# Make the output file executable
+sudo chmod a+x "$output_file"
+echo "Processed script saved to $output_file"
+# Deploy the proxy executable by copying the template to the specified CLI path
+# sudo cp "$parent_directory/proxy-script.template"
+
+# Parsing the script's grandparent directory again, as the current directory has changed
+parent_directory=$(dirname "$(dirname "$(readlink -f "$0")")")
+if [ "$parent_directory" = "$cirlog_cli_workspace_path" ]; then
+    echo
+    warn "The CLI source directory is already at the specified path. Skipping moving to the parent directory."
+else
+    # Move the parent directory to the specified source path and navigate to the CLI source directory
+    echo "Moving the parent directory to the specified source path ..."
+    sudo mv "$parent_directory" "$CIRLOG_WORKSPACE_PATH"
+fi
+
+# Parsing the script's grandparent directory again
+parent_directory=$(dirname "$(dirname "$(readlink -f "$0")")")
+
+# TODO: Decouple into function
+# Get the baseline Python version from the deploy.ini file
+deploy_config_path="$parent_directory/config/deploy.ini" 
+# Check if the deploy.ini file exists
+if [ ! -f "$deploy_config_path" ]; then
+    error "The '$deploy_config_path' file does not exist. Did you accidentally delete it?"
+fi
+# Extract the Python version from the deploy.ini file
+baseline_python_version=$(grep '^baseline_python_version' "$deploy_config_path" | cut -d'=' -f2) 
+
+# Create and activate the Python virtual environment using the specified version
+# Remove the virtual environment if it already exists, to prevent "bad interpreter error"
+sudo rm -rf "$CIRLOG_CLI_VENV_NAME"
+python$baseline_python_version -m venv $CIRLOG_CLI_VENV_NAME
+. $CIRLOG_CLI_VENV_NAME/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
+
+# Install required Python packages from the requirements.txt file
+python$baseline_python_version -m pip install pip --upgrade
+python$baseline_python_version -m pip install -r requirements.txt
+
+# TODO: Make optional if installing live or production version
+# Install the teatype-live package
+echo
+eval "$parent_directory/deploy-scripts/98-install-cirlog-toolkit-live"
+echo
+eval "$parent_directory/deploy-scripts/99-install-teatype-live"
+
+# Deactivate the virtual environment
+deactivate
+
+echo
+echo "The Cir.Log CLI has been successfully installed."
+echo
+
+exec bash # Restart the shell to ensure the correct environment is loaded
