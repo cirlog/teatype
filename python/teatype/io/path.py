@@ -14,6 +14,7 @@
 import inspect
 import os
 import shutil
+import sys
 
 # From system imports
 from pathlib import Path
@@ -201,6 +202,33 @@ def home(stringify:bool=True) -> str:
     """
     user_path = Path.home() # Get the user's home directory as a Path object
     return str(user_path) if stringify else user_path # Return as string or Path object
+
+def inject_sys(reverse_depth:int=1) -> str:
+    """
+    # WARNING: This is a workaround to import modules from the parent directory
+    Inject the parent directory of the caller's script into the system path.
+
+    This function retrieves the parent directory of the script that invoked it
+    and adds it to the system path, allowing for module imports from that directory.
+
+    Args:
+        reverse_depth (int): The number of levels to traverse up the directory tree.
+                             Defaults to 1.
+
+    Returns:
+        str: The injected path as a string.
+    """
+    # Get the path of the calling file
+    caller_frame = inspect.stack()[1]
+    caller_file = caller_frame.filename
+
+    # Compute the directory to inject
+    caller_dir = os.path.dirname(os.path.abspath(caller_file))
+    target_dir = os.path.abspath(os.path.join(caller_dir, *['..'] * reverse_depth))
+
+    # Add to sys.path
+    sys.path.insert(0, target_dir)
+    return target_dir
 
 def join(*args, stringify:bool=True) -> str:
     """
