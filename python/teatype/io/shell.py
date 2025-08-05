@@ -11,6 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # System imports
+import os
 import shlex
 import subprocess
 import sys
@@ -122,11 +123,13 @@ def enable_sudo(max_fail_count: int = 3) -> None:
 
 def shell(command:str,
           cwd:str=False,
+          combine_stdout_and_stderr:bool=False,
+          detached:bool=False,
           env:dict=None,
+          format_stdout:bool=True,
           mute:bool=False,
           return_output:bool=False,
           return_stdout:bool=False,
-          format_stdout:bool=True,
           sudo:bool=False,
           timeout:float=None,) -> any:
     """
@@ -157,9 +160,21 @@ def shell(command:str,
                 pad_before=1,
                 pad_after=1 
             ),
-            setattr(output, "returncode", 1) # Modify the output object's returncode attribute to 1 to indicate an error
+            setattr(output, 'returncode', 1) # Modify the output object's returncode attribute to 1 to indicate an error
         ) if 'exit code: 1' in stderr else None, # Apply this lambda only if the specific error is detected
     ]
+    
+    if combine_stdout_and_stderr:
+        # If combine_stdout_and_stderr is True, redirect stderr to stdout
+        command += ' 2>&1'
+    
+    if detached:
+        # If detached is True, run the command in a new process group
+        # This allows the command to run independently of the parent process
+        command += ' &'
+        
+    # if detached and 'sudo' in command:
+    #     command = command.replace('sudo ', 'sudo -S ')  # Use -n to avoid prompting for password in detached mode
     
     # If sudo is True, prepend 'sudo' to the command
     if sudo:
@@ -177,6 +192,7 @@ def shell(command:str,
                                 shell=True, # Execute the command through the shell
                                 cwd=None if not cwd else cwd,
                                 env=env if not env else current_env.get(),
+                                # preexec_fn=os.setsid if detached else None,
                                 text=return_stdout,
                                 timeout=timeout,
                                 stdout=subprocess.PIPE if mute or return_stdout else None,

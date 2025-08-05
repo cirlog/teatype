@@ -246,7 +246,7 @@ class BaseStartCLI(BaseCLI):
             path.create('./logs') # Create a logs directory if it does not exist
             # Append shell redirection to merge stderr with stdout
             stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
-            self.start_command += f' > {stdout_path} 2>&1 &'
+            self.start_command = f'{self.start_command} > {stdout_path}'
         
         if file.exists('./.env'):
             env.load() # Load the environment variables
@@ -307,7 +307,7 @@ class BaseStartCLI(BaseCLI):
         signal.signal(signal.SIGQUIT, signal_handler)
         signal.signal(signal.SIGUSR1, signal_handler)
         signal.signal(signal.SIGUSR2, signal_handler)
-        
+    
         if not silent_mode:
             # Notify user that auto activation is attempted
             hint('"auto_activate_venv" automatically set to "True". Trying to activate a possibly present virtual environment ...',
@@ -331,13 +331,13 @@ class BaseStartCLI(BaseCLI):
             if not silent_mode:
                 # Warn the user if no virtual environment is found, indicating limited functionality
                 warn('No virtual environment found. Script functionality may be limited.', pad_after=1)
-            shell(self.start_command)
+            shell(self.start_command, combine_stdout_and_stderr=True, detached=True if detached == True else False)
         else:
             try:
                 # Attempt to activate the found virtual environment
                 if not silent_mode:
                     log('Virtual environment activated.') # Log successful activation
-                shell(f'. {venv_path}/bin/activate && {self.start_command}')
+                shell(f'. {venv_path}/bin/activate && {self.start_command}', combine_stdout_and_stderr=True, detached=True if detached == True else False)
             except Exception as e:
                 if not silent_mode:
                     # Log an error if activation fails, providing the exception details
