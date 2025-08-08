@@ -123,7 +123,8 @@ def _request(crud_method:str,
     match crud_method:
         case _CRUD_METHOD.DELETE.value:
             # Perform a DELETE request
-            response = call.delete(url, data=data, params=params, headers=headers, timeout=timeout)
+            # WARNING FIXME: SUPER DO NOT DO THIS IN PRODUCTION CODE, ADD SSL VERIFICATION FUNCTION VARIABLE, FOR NOW, DEFAULT
+            response = call.delete(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
         case _CRUD_METHOD.GET.value:
             if data:
                 # Maybe construct a response instead?
@@ -133,16 +134,16 @@ def _request(crud_method:str,
             if force_json:
                 # If force_json is True, set the headers to accept JSON
                 headers['Accept'] = 'application/json'
-            response = call.get(url, params=params, headers=headers, timeout=timeout)
+            response = call.get(url, params=params, headers=headers, timeout=timeout, verify=False)
         case _CRUD_METHOD.PATCH.value:
             # Perform a PATCH request
-            response = call.patch(url, data=data, params=params, headers=headers, timeout=timeout)
+            response = call.patch(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
         case _CRUD_METHOD.POST.value:
             # Perform a POST request
-            response = call.post(url, data=data, params=params, headers=headers, timeout=timeout)
+            response = call.post(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
         case _CRUD_METHOD.PUT.value:
             # Perform a PUT request
-            response = call.put(url, data=data, params=params, headers=headers, timeout=timeout)
+            response = call.put(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
         case _:
             err(f'Invalid CRUD method: {crud_method}') # Log an error for invalid CRUD methods
             return None
