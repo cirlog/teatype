@@ -31,6 +31,7 @@ from .file import read as read_file
 from .file import write as write_file
 from .path import caller as caller_folder
 from .path import caller_parent as caller_parent_folder
+from .path import cd as change_directory
 from .path import copy as copy_folder
 from .path import create as create_folder
 from .path import delete as delete_folder
