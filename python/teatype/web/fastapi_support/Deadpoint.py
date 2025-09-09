@@ -125,15 +125,18 @@ def deadpoint(response:Dict[str,any]=None, status:int=None):
                 
                 # Check if testmode is enabled in the query parameters
                 if testmode:
+                    print(response)
                     if response is None:
                         # Delegate the request to the singleton instance of the endpoint simulator
-                        response.content = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
+                        response['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
                     else:
-                        response.content = response
+                        response['content'] = response
                     # Set the response status code
-                    response.status_code = status
+                    response['status_code'] = status
                     # Modify the response body
-                    response.headers['Content-Type'] = 'application/json'
+                    if 'headers' not in response:
+                        response['headers'] = {}
+                    response['headers']['Content-Type'] = 'application/json'
                     return response
                 # If not testmode, proceed with the actual callable
                 # Ensure to pass all necessary arguments (request, response)
