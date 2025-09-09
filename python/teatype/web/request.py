@@ -39,53 +39,69 @@ class _CRUD_METHOD(Enum):
 class _Response:
     """
     Conversion class to represent an HTTP response object.
+    Allows both attribute-style and dict-style access to JSON payload.
     """
-    data:any
-    headers:dict
-    status:int
-    
     def __init__(self,
-                 status_code:int,
-                 content:any,
-                 headers:dict,
-                 parse_json:bool=True):
-        """
-        Initialize the HTTP response object.
-
-        Args:
-            status_code (int): The HTTP status code.
-            content (any): The response content.
-        """
+                 status_code: int,
+                 content: any,
+                 headers: dict,
+                 parse_json: bool = True):
         self.status = status_code
-        self.data = json_util.loads(content) if parse_json else content
+        raw = json_util.loads(content) if parse_json else content
+        if isinstance(raw, dict):
+            self.data = _Response._AttrDict(raw)
+        else:
+            self.data = raw
         self.headers = headers
+
+    class _AttrDict(dict):
+        """
+        A dict subclass that exposes keys as attributes.
+        Falls back to normal dict.get() when needed.
+        """
+        def __getattr__(self, name):
+            try:
+                return self[name]
+            except KeyError:
+                raise AttributeError(f"No such attribute: {name}")
+
+        def __setattr__(self, name, value):
+            self[name] = value
+
+        def __delattr__(self, name):
+            try:
+                del self[name]
+            except KeyError:
+                raise AttributeError(f"No such attribute: {name}")
     
-def _request(crud_method:str,
-             url:str|List[str],
+def _request(async_client:aiohttp.ClientSession,
+             crud_method:str,
              data:any,
-             headers:dict,
-             params:dict,
              force_json:bool,
+             headers:dict,
              measure_time:bool,
-             parse_json_response:bool,
+             parse_json:bool,
+             params:dict,
              timeout:float,
-             verbose:bool,
-             _async:aiohttp.ClientSession) -> requests.Response|aiohttp.ClientResponse|None:
+             url:str|List[str],
+             verbose:bool=False,
+             verify_ssl:bool=True) -> requests.Response|aiohttp.ClientResponse|None:
     """
     Internal helper function to perform HTTP requests based on CRUD methods.
 
     Args:
+        async_client (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests.
         crud_method (str): The CRUD method (DELETE, GET, PATCH, POST, PUT).
+        data (any, optional): The data to include in the request body.
+        force_json (bool, optional): Whether to force the request to use JSON format.
+        headers (dict, optional): Headers to include in the request.
+        measure_time (str, optional): Label to measure the time taken for the request.
+        params (dict, optional): Query parameters to include in the request URL.
+        parse_json (bool, optional): Whether to parse the response as JSON.
+        timeout (float, optional): Timeout for the request in seconds.
         url (str): The URL to send the request to.
-        data (any, optional): The data to include in the request body. Defaults to None.
-        headers (dict, optional): Headers to include in the request. Defaults to an empty dictionary.
-        params (dict, optional): Query parameters to include in the request URL. Defaults to None.
-        force_json (bool, optional): Whether to force the request to use JSON format. Defaults to False.
-        measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
-        timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
+        verify_ssl (bool, optional): Whether to verify SSL certificates. Defaults to True.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
@@ -109,6 +125,8 @@ def _request(crud_method:str,
         # Set the request data to an empty dictionary if not provided
         stopwatch(request_label)
         
+    if data is not None and isinstance(data, dict):
+        force_json = True
     if force_json:
         # If force_json is True, set the headers to accept JSON
         headers['Accept'] = 'application/json'
@@ -118,38 +136,35 @@ def _request(crud_method:str,
             data = json_util.dumps(data)
 
     # Determine whether to use synchronous requests or the provided async session
-    call = requests if not _async else _async
+    call = requests if not async_client else async_client
     # Match the CRUD method to perform the corresponding HTTP request
     match crud_method:
         case _CRUD_METHOD.DELETE.value:
             # Perform a DELETE request
             # WARNING FIXME: SUPER DO NOT DO THIS IN PRODUCTION CODE, ADD SSL VERIFICATION FUNCTION VARIABLE, FOR NOW, DEFAULT
-            response = call.delete(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
+            response = call.delete(url, data=data, params=params, headers=headers, timeout=timeout, verify=verify_ssl)
         case _CRUD_METHOD.GET.value:
             if data:
                 # Maybe construct a response instead?
                 err('GET requests do not support request data')
                 return None
             # Perform a GET request
-            if force_json:
-                # If force_json is True, set the headers to accept JSON
-                headers['Accept'] = 'application/json'
-            response = call.get(url, params=params, headers=headers, timeout=timeout, verify=False)
+            response = call.get(url, params=params, headers=headers, timeout=timeout, verify=verify_ssl)
         case _CRUD_METHOD.PATCH.value:
             # Perform a PATCH request
-            response = call.patch(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
+            response = call.patch(url, data=data, params=params, headers=headers, timeout=timeout, verify=verify_ssl)
         case _CRUD_METHOD.POST.value:
             # Perform a POST request
-            response = call.post(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
+            response = call.post(url, data=data, params=params, headers=headers, timeout=timeout, verify=verify_ssl)
         case _CRUD_METHOD.PUT.value:
             # Perform a PUT request
-            response = call.put(url, data=data, params=params, headers=headers, timeout=timeout, verify=False)
+            response = call.put(url, data=data, params=params, headers=headers, timeout=timeout, verify=verify_ssl)
         case _:
             err(f'Invalid CRUD method: {crud_method}') # Log an error for invalid CRUD methods
             return None
 
     if verbose:
-        if not _async:
+        if not async_client:
             # Log the type of request and the target URL for debugging purposes
             log(f'Synchronous request: {request_label}')
         else:
@@ -163,7 +178,7 @@ def _request(crud_method:str,
     _response = _Response(response.status_code,
                           response.content,
                           response.headers,
-                          parse_json_response)
+                          parse_json)
     # If verbose logging is enabled, log the result of the request
     if verbose:
         if _response.status >= 400:
@@ -179,9 +194,10 @@ def sync_request(crud_method:str,
                  params:dict=None,
                  force_json:bool=False,
                  measure_time:bool=False,
-                 parse_json_response:bool=True,
+                 parse_json:bool=True,
                  timeout:float=10.0,
-                 verbose:bool=False) -> requests.Response:
+                 verbose:bool=False,
+                 verify_ssl:bool=True) -> requests.Response:
     """
     Perform a synchronous HTTP request based on the specified CRUD method.
     This exists as a wrapper function to call the internal _request function and it allows
@@ -194,34 +210,34 @@ def sync_request(crud_method:str,
         params (dict, optional): Query parameters to include in the request URL. Defaults to None.
         force_json (bool, optional): Whether to force the request to use JSON format. Defaults to False.
         measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
+        parse_json (bool, optional): Whether to parse the response as JSON. Defaults to False.
         timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     # Call the internal _request function with the provided parameters to perform the synchronous request
-    return _request(crud_method=crud_method,
+    return _request(async_client=None,
+                    crud_method=crud_method,
                     url=url,
                     data=data,
                     headers=headers,
                     params=params,
                     force_json=force_json,
                     measure_time=measure_time,
-                    parse_json_response=parse_json_response,
+                    parse_json=parse_json,
                     timeout=timeout,
-                    verbose=verbose,
-                    _async=False)
+                    verbose=verbose)
 
 def get(url:str,
         headers:dict={},
         params:dict=None,
         measure_time:bool=False,
-        parse_json_response:bool=True,
+        parse_json:bool=True,
         timeout:float=10.0,
-        verbose:bool=False) -> requests.Response:
+        verbose:bool=False,
+        verify_ssl:bool=True) -> requests.Response:
     """
     Perform a synchronous GET request.
     
@@ -230,10 +246,9 @@ def get(url:str,
         headers (dict, optional): Headers to include in the request. Defaults to an empty dictionary.
         params (dict, optional): Query parameters to include in the request URL. Defaults to None.
         measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
+        parse_json (bool, optional): Whether to parse the response as JSON. Defaults to False.
         timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
@@ -245,7 +260,7 @@ def get(url:str,
                         params=params,
                         force_json=False,
                         measure_time=measure_time,
-                        parse_json_response=parse_json_response,
+                        parse_json=parse_json,
                         timeout=timeout,
                         verbose=verbose)
 
@@ -255,9 +270,10 @@ def post(url:str,
          params:dict=None,
          force_json:bool=False,
          measure_time:bool=False,
-         parse_json_response:bool=True,
+         parse_json:bool=True,
          timeout:float=10.0,
-         verbose:bool=False) -> requests.Response:
+         verbose:bool=False,
+         verify_ssl:bool=True) -> requests.Response:
     """
     Perform a synchronous POST request.
     
@@ -267,10 +283,9 @@ def post(url:str,
         params (dict, optional): Query parameters to include in the request URL. Defaults to None.
         force_json (bool, optional): Whether to force the request to use JSON format. Defaults to False.
         measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
+        parse_json (bool, optional): Whether to parse the response as JSON. Defaults to False.
         timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
@@ -282,7 +297,7 @@ def post(url:str,
                         params=params,
                         force_json=force_json,
                         measure_time=measure_time,
-                        parse_json_response=parse_json_response,
+                        parse_json=parse_json,
                         timeout=timeout,
                         verbose=verbose)
 
@@ -292,9 +307,10 @@ def put(url:str,
         params:dict=None,
         force_json:bool=False,
         measure_time:bool=False,
-        parse_json_response:bool=True,
+        parse_json:bool=True,
         timeout:float=10.0,
-        verbose:bool=False) -> requests.Response:
+        verbose:bool=False,
+        verify_ssl:bool=True) -> requests.Response:
     """
     Perform a synchronous PUT request.
     
@@ -304,10 +320,9 @@ def put(url:str,
         params (dict, optional): Query parameters to include in the request URL. Defaults to None.
         force_json (bool, optional): Whether to force the request to use JSON format. Defaults to False.
         measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
+        parse_json (bool, optional): Whether to parse the response as JSON. Defaults to False.
         timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
@@ -319,7 +334,7 @@ def put(url:str,
                         params=params,
                         force_json=force_json,
                         measure_time=measure_time,
-                        parse_json_response=parse_json_response,
+                        parse_json=parse_json,
                         timeout=timeout,
                         verbose=verbose)
     
@@ -329,9 +344,10 @@ def patch(url:str,
           params:dict=None,
           force_json:bool=False,
           measure_time:bool=False,
-          parse_json_response:bool=True,
+          parse_json:bool=True,
           timeout:float=10.0,
-          verbose:bool=False) -> requests.Response:
+          verbose:bool=False,
+          verify_ssl:bool=True) -> requests.Response:
     """
     Perform a synchronous PATCH request.
     
@@ -341,10 +357,9 @@ def patch(url:str,
         params (dict, optional): Query parameters to include in the request URL. Defaults to None.
         force_json (bool, optional): Whether to force the request to use JSON format. Defaults to False.
         measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
+        parse_json (bool, optional): Whether to parse the response as JSON. Defaults to False.
         timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
@@ -356,7 +371,7 @@ def patch(url:str,
                         params=params,
                         force_json=force_json,
                         measure_time=measure_time,
-                        parse_json_response=parse_json_response,
+                        parse_json=parse_json,
                         timeout=timeout,
                         verbose=verbose)
 
@@ -366,9 +381,10 @@ def delete(url:str,
            params:dict=None,
            force_json:bool=False,
            measure_time:bool=False,
-           parse_json_response:bool=True,
+           parse_json:bool=True,
            timeout:float=10.0,
-           verbose:bool=False) -> requests.Response:
+           verbose:bool=False,
+           verify_ssl:bool=True) -> requests.Response:
     """
     Perform a synchronous DELETE request.
     
@@ -378,10 +394,9 @@ def delete(url:str,
         params (dict, optional): Query parameters to include in the request URL. Defaults to None.
         force_json (bool, optional): Whether to force the request to use JSON format. Defaults to False.
         measure_time (str, optional): Label to measure the time taken for the request. Defaults to None.
-        parse_json_response (bool, optional): Whether to parse the response as JSON. Defaults to False.
+        parse_json (bool, optional): Whether to parse the response as JSON. Defaults to False.
         timeout (float, optional): Timeout for the request in seconds. Defaults to 10.0.
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
-        _async (aiohttp.ClientSession, optional): Async HTTP session for asynchronous requests. Defaults to None.
 
     Returns:
         requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
@@ -393,46 +408,60 @@ def delete(url:str,
                         params=params,
                         force_json=force_json,
                         measure_time=measure_time,
-                        parse_json_response=parse_json_response,
+                        parse_json=parse_json,
                         timeout=timeout,
                         verbose=verbose)
 
-async def async_request(crud_method:str,
-                        url:str,
+async def async_request(url:str,
+                        crud_method:str,
                         data:any=None,
-                        params:dict=None,
-                        measure_time:bool=False,
-                        json:bool=True,
-                        verbose:bool=False,
+                        force_json:bool=True,
                         headers:dict={},
-                        timeout:float=10.0) -> aiohttp.ClientResponse:
+                        measure_time:bool=False,
+                        params:dict=None,
+                        timeout:float=10.0,
+                        verbose:bool=False,
+                        verify_ssl:bool=True) -> aiohttp.ClientResponse:
     """
     Perform an asynchronous HTTP request based on the specified CRUD method.
     """
-    # Create an asynchronous HTTP session
     async with aiohttp.ClientSession() as session:
-        # Call the internal _request function with the provided parameters and session to perform the async request
-        async with _request(crud_method,
-                            url,
-                            data,
-                            params,
-                            measure_time,
-                            json,
-                            verbose,
-                            headers,
-                            # session,
-                            timeout) as response:
-            return response # Return the HTTP response object
+        async with _request(
+            async_client=session,
+            crud_method=crud_method,
+            data=data,
+            force_json=force_json,
+            headers=headers,
+            measure_time=measure_time,
+            params=params,
+            timeout=timeout,
+            url=url,
+            verbose=verbose,
+            verify_ssl=verify_ssl
+        ) as response:
+            return response
 
 def async_get(url:str,
+              # Convenient placements
               params:dict=None,
-              measure_time:bool=False,
-              json:bool=True,
-              verbose:bool=False,
               headers:dict={},
-              timeout:float=10.0) -> aiohttp.ClientResponse:
+              # Ordered placements
+              force_json:bool=True,
+              measure_time:bool=False,
+              timeout:float=10.0,
+              verbose:bool=False,
+              verify_ssl:bool=True) -> aiohttp.ClientResponse:
     """
     Perform an asynchronous GET request.
     """
-    # Call the internal _request function with the provided parameters to perform the asynchronous GET request
-    return _request(_CRUD_METHOD.GET.value, url, None, params, measure_time, json, verbose, headers, timeout, _async=aiohttp.ClientSession())
+    # Call the internal _async_request function with the provided parameters to perform the asynchronous GET request
+    return async_request(crud_method=_CRUD_METHOD.GET.value,
+                         url=url,
+                         data=None,
+                         params=params,
+                         force_json=force_json,
+                         measure_time=measure_time,
+                         verbose=verbose,
+                         headers=headers,
+                         timeout=timeout,
+                         verify_ssl=verify_ssl)
