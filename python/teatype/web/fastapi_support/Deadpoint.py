@@ -106,6 +106,7 @@ class Deadpoint:
         # Default response if nothing matches
         return {'message': f'Default response for {path}'}
 
+# TODO: Unify with my web request function to avoid conflicts with requests package or make request compatible with requests
 def deadpoint(response:Dict[str,any]=None, status:int=None):
     """ 
     A decorator that checks for 'testmode' query param and delegates 
@@ -114,10 +115,10 @@ def deadpoint(response:Dict[str,any]=None, status:int=None):
     def decorator(callable:Callable):
         @wraps(callable)
         def wrapper(caller:object,
-                          initial_request:Request,
-                          initial_response:Response,
-                          *args,
-                          **kwargs):
+                    initial_request:Request,
+                    initial_response:Response,
+                    *args,
+                    **kwargs):
             try:
                 # Access the 'testmode' query parameter directly from the request, so that it can
                 # be omitted in the call signature of the route handler
@@ -125,7 +126,6 @@ def deadpoint(response:Dict[str,any]=None, status:int=None):
                 
                 # Check if testmode is enabled in the query parameters
                 if testmode:
-                    print(response)
                     if response is None:
                         # Delegate the request to the singleton instance of the endpoint simulator
                         response['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
