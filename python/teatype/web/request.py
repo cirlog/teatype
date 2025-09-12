@@ -85,7 +85,7 @@ def _request(async_client:aiohttp.ClientSession,
              timeout:float,
              url:str|List[str],
              verbose:bool=False,
-             verify_ssl:bool=True) -> requests.Response|aiohttp.ClientResponse|None:
+             verify_ssl:bool=False) -> requests.Response|aiohttp.ClientResponse|None:
     """
     Internal helper function to perform HTTP requests based on CRUD methods.
 
