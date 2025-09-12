@@ -20,6 +20,7 @@ from typing import List
 from teatype.enum import EscapeColor
 from teatype.logging import err, log, warn
 
+# TODO: if options are supplied, return selected option, not bool
 def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, return_int:bool=True, colorize:bool=True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
