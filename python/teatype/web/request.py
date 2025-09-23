@@ -11,8 +11,9 @@
 # all copies or substantial portions of the Software.
 
 # Package imports
-import requests
 import aiohttp
+import requests
+import urllib3
 
 # As system imports
 import json as json_util
@@ -20,6 +21,7 @@ import json as json_util
 # From system imports
 from enum import Enum
 from typing import List
+
 
 # From package imports
 from teatype.logging import err, log, warn
@@ -134,6 +136,12 @@ def _request(async_client:aiohttp.ClientSession,
         # Convert data to JSON format if provided
         if data is not None:
             data = json_util.dumps(data)
+            
+    if not verify_ssl:
+        urllib3.disable_warnings()
+    
+    url = url.strip() # Clean up the URL by stripping whitespace
+    url = url.replace('0.0.0.0', 'localhost')
 
     # Determine whether to use synchronous requests or the provided async session
     call = requests if not async_client else async_client
