@@ -66,7 +66,9 @@ class HSDBField(ABC, Generic[T]):
         self.name = None
         
     def __set_name__(self, owner, name):
-        """Automatically assigns the field name when the class is created."""
+        """
+        Automatically assigns the field name when the class is created.
+        """
         self.name = name
         
     ##############

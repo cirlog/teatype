@@ -28,9 +28,9 @@ class dt(datetime.datetime):
     def now(cls,
             continent:str=None,
             city:str=None,
-            format:str='%Y-%m-%dT%H:%M:%SZ%Z',
-            return_string:bool=True,
-            tz:str='UTC',) -> str:
+            format:str='%Y-%m-%dT%H:%M:%S.%f%zZ',
+            return_string: bool = True,
+            tz:str='UTC') -> str:
         # If tz not provided, try to build it from continent/city
         if not tz and continent and city:
             tz = f'{continent}/{city}'
@@ -48,6 +48,18 @@ class dt(datetime.datetime):
         if not return_string:
             return current_time
         return current_time.strftime(format)
+    
+    @classmethod
+    def fromisoformat(cls, date_string:str, include_tz:bool=False) -> datetime.datetime:
+        if 'Z' in date_string:
+            if include_tz:
+                if _GLOBAL_TZ:
+                    date_string = date_string.replace('Z', _GLOBAL_TZ)
+                else:
+                    date_string = date_string.replace('Z', 'UTC')
+            else:
+                date_string = date_string.split('Z')[0]
+        return super().fromisoformat(date_string)
 
     @classmethod
     def parse(cls, 
