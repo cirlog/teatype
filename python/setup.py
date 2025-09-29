@@ -13,7 +13,9 @@
 # System imports
 import os
 import requests
-import sys
+
+# From system imports
+from typing import List
 
 # From package imports
 from setuptools import setup, find_packages
@@ -22,7 +24,11 @@ from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist as _sdist
 
 # From local imports
-from teatype import __version__
+# from teatype import __version__
+
+PARENT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+with open('version.txt') as f:
+    __VERSION__ = f.read().strip()
 
 # Custom `sdist` command to include/exclude files from source distribution
 class sdist(_sdist):
@@ -35,6 +41,15 @@ class sdist(_sdist):
             if os.path.exists(filepath):
                 os.remove(filepath)
                 
+def gather_requirements(variants:List[str]):
+    for file in os.listdir('requirements'):
+        if file.endswith('.txt'):
+            with open(os.path.join('requirements', file)) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        yield line
+                
 def ask_for_version():
     """
     Asks the user for a new version or auto-increments the latest version.
@@ -42,7 +57,7 @@ def ask_for_version():
     Returns:
         str: The determined version string.
     """
-    return __version__
+    return __VERSION__
     with open("requirements.txt") as f:
         # Read all lines from 'requirements.txt' and split them into a list
         install_requires = f.read().splitlines()
@@ -107,18 +122,13 @@ def ask_for_version():
         version = new_version  # Set the determined version
 
 # Detect variants via env var or command line arg
-install_requires = []
-parent_directory = os.path.dirname(os.path.abspath(__file__))
-# file.read()
-variants = ['base'] # default
+variants = ['base', 'test'] # default
 # if '--gpu' in sys.argv:
 #     variant = 'gpu'
 #     sys.argv.remove('--gpu')
-    
 # if '--fastapi' in sys.argv:
 #     variant = 'fastapi'
 #     sys.argv.remove('--fastapi')
-    
 # if '--django' in sys.argv:
 #     variant = 'django'
 #     sys.argv.remove('--django')
@@ -130,10 +140,11 @@ variants = ['base'] # default
 # # Conditional dependencies
 # if variant == 'gpu':
 #     install_requires.append('llama-cpp-python')
+INSTALL_REQUIRES = list(gather_requirements(variants))
 
 # Package name adjustment
-package_name = 'teatype-gpu' if 'gpu' in variants else 'teatype'
-version = ask_for_version()
+PACKAGE_NAME = 'teatype-gpu' if 'gpu' in variants else 'teatype'
+VERSION = ask_for_version()
 
 setup(
     author='arsonite',
@@ -149,10 +160,10 @@ setup(
         'sdist': sdist
     },
     description='A package for tea',
-    install_requires=install_requires,
-    name=package_name,
+    install_requires=INSTALL_REQUIRES,
+    name=PACKAGE_NAME,
     packages=find_packages(),
     python_requires='>=3.11',
     url='https://github.com/arsonite/teatype',
-    version=version,
+    version=VERSION,
 )
