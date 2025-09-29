@@ -15,10 +15,12 @@
 # System imports
 import curses
 import random
+import string
 import time
 
 # From system imports
 from collections import deque
+from typing import List, Tuple
 
 # Package imports
 import psutil
@@ -27,95 +29,390 @@ import psutil
 from teatype.cli import BaseCLI
 from teatype.logging import err, hint, log, println
 
+LOG_MAX = 200 # TODO: Make configurable
+    
 class BusyBee(BaseCLI):
     def meta(self):
         return {
             'name': 'busy-bee',
             'shorthand': 'bb',
-            'help': 'For when time is honey, but you need to be busy',
-            'flags': [
-                {
-                    'short': 'hm',
-                    'long': 'hackerman-mode',
-                    'help': 'Converts all busy-bee scripts into a single dashboard',
-                    'required': False
-                }
-            ]
+            'help': 'For when time is honey, but you need to be busy'
         }
         
-    def hackerman_mode(self, stdscr:curses.window):
+    class _FakeDownloader:
+        """
+        Simulate downloading files sequentially with progress bars.
+
+        Each file is downloaded fully (progress 0..100) before next file begins.
+        The downloader keeps a count of completed files.
+        """
+        def __init__(self):
+            self.current_file = None # (name, size_kb, progress)
+            self.completed = 0
+            self.queue = deque()
+            # Pre-fill a queue with random file names/sizes
+            for _ in range(6):
+                self.queue.append(self._make_file())
+
+        def _make_file(self) -> Tuple[str, int, int]:
+            name = f'file_{random.randint(1000,9999)}_{random.choice(["log","bin","dat","iso","img"])}'
+            size_kb = random.randint(50, 5000)  # sizes between ~50KB and 5MB
+            return (name, size_kb, 0)
+
+        def tick(self):
+            """
+            Advance download progress. If current finishes, pop next file.
+            """
+            if self.current_file is None and self.queue:
+                self.current_file = self.queue.popleft()
+
+            if self.current_file:
+                name, size_kb, prog = self.current_file
+                # simulate variable download speed: KB per tick
+                speed_kb = random.randint(4, max(8, size_kb // random.randint(40, 400)))
+                # translate speed to progress percent faster for smaller files
+                increment = speed_kb / max(1, size_kb) * 100
+                prog += increment
+                if prog >= 100:
+                    self.completed += 1
+                    # finished - small chance to enqueue new files so it keeps going
+                    if random.random() < 0.7:
+                        self.queue.append(self._make_file())
+                    self.current_file = None
+                else:
+                    self.current_file = (name, size_kb, prog)
+
+        def status(self):
+            """
+            Return a snapshot (list) of upto 3 recent/queued files with progress info.
+            """
+            items = []
+            if self.current_file:
+                items.append(self.current_file)
+            # show up to 2 queued placeholders
+            for i in range(min(2, len(self.queue))):
+                items.append((self.queue[i][0], self.queue[i][1], 0))
+            return items
+
+    def make_random_word(self, min_len:int=3, max_len:int=12) -> str:
+        """
+        Generate a pronounceable-ish random word with variable length.
+
+        Uses alternating consonant/vowel clusters and occasionally inserts
+        consonant blends to increase variety and usefulness as inspiration.
+        """
+        consonants = 'bcdfghjklmnpqrstvwxyz'
+        vowels = 'aeiou'
+        blends = ['str', 'tr', 'pl', 'gr', 'cr', 'sl', 'bl', 'dr', 'ch', 'sh']
+
+        length = random.randint(min_len, max_len)
+        word = []
+        use_blend_next = random.random() < 0.12
+        is_cons = random.random() < 0.6
+
+        while len(''.join(word)) < length:
+            if use_blend_next and random.random() < 0.5:
+                blend = random.choice(blends)
+                # only append if it doesn't exceed desired length by too much
+                if len(''.join(word)) + len(blend) <= length + 1:
+                    word.append(blend)
+                use_blend_next = False
+                is_cons = False
+                continue
+
+            if is_cons:
+                word.append(random.choice(consonants))
+            else:
+                word.append(random.choice(vowels))
+            # toggle, with a bias towards consonants to create more realistic words
+            is_cons = random.random() < 0.6
+
+        candidate = ''.join(word)[:length]
+        # random chance to capitalize or add a short suffix for creativity
+        if random.random() < 0.15:
+            candidate = candidate.capitalize()
+        if random.random() < 0.08:
+            candidate += random.choice(['ify', 'ly', 'able', 'ware'])
+        return candidate
+
+    def human_readable_bytes(self, nbytes: int) -> str:
+        """
+        Return human-readable string for bytes.
+        """
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if abs(nbytes) < 1024.0:
+                return f'{nbytes:3.1f}{unit}'
+            nbytes /= 1024.0
+        return f'{nbytes:.1f}PB'
+
+    
+    def draw_progress_bar(self, win, y, x, width, percent):
+        """
+        Draw a simple text progress bar in window "win" at (y,x) with given width and percent.
+        """
+        # ensure space for brackets and percentage
+        inner = max(1, width - 8)
+        filled = int(inner * max(0.0, min(100.0, percent)) / 100.0)
+        bar = "[" + ("#" * filled).ljust(inner, "-") + "]"
+        pct_text = f" {percent:5.1f}%"
+        try:
+            win.addstr(y, x, bar + pct_text)
+        except curses.error:
+            pass
+
+    def safe_addstr(self, win, y, x, text, attr=0):
+        """
+        Wraps addstr to avoid crashes when window is too small.
+        """
+        try:
+            win.addstr(y, x, text[: max(0, win.getmaxyx()[1] - x - 1)], attr)
+        except curses.error:
+            pass
+
+
+    def draw_section_spacer(self, win, y, width):
+        """
+        Draw a spacer (single blank line) for readability.
+        """
+        try:
+            win.addstr(y, 0, "".ljust(width))
+        except curses.error:
+            pass
+
+    def hackerman(self, stdscr:'curses._CursesWindow'):
         curses.curs_set(0)
         stdscr.nodelay(True)
-        
-        words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india"]
-        chars = ['@','#','$','%','&','*','+','=','-']
-        actions = ["ACCESS GRANTED", "ACCESS DENIED", "CONNECTION ESTABLISHED", "DOWNLOADING DATA", "UPLOADING DATA"]
+        curses.start_color()
+        curses.use_default_colors()
+
+        # color pairs: index -> (fg, bg)
+        curses.init_pair(1, curses.COLOR_GREEN, -1)
+        curses.init_pair(2, curses.COLOR_YELLOW, -1)
+        curses.init_pair(3, curses.COLOR_RED, -1)
+        curses.init_pair(4, curses.COLOR_CYAN, -1)
+        curses.init_pair(5, curses.COLOR_MAGENTA, -1)
+        curses.init_pair(6, curses.COLOR_WHITE, -1)
+
+        downloader = self._FakeDownloader()
+
+        # logs & streams
+        hacker_log = deque(maxlen=LOG_MAX)
+        ascii_log = deque(maxlen=LOG_MAX)
+        words_log = deque(maxlen=60)
+
         prev_net = psutil.net_io_counters()
-        
-        max_y, max_x = stdscr.getmaxyx()
-        
+        last_tick = time.time()
+
+        # initial filler for logs
+        for _ in range(6):
+            ascii_log.append("".join(random.choices(list("@#$%&*+=-"), k=40)))
+            words_log.append(self.make_random_word(3, 9))
+
         while True:
+            # handle resize
+            max_y, max_x = stdscr.getmaxyx()
+            stdscr.erase()
+
+            # split layout vertically: left 60% for monitors & logs, right 40% for downloads & ascii
+            split_x = max(20, int(max_x * 0.58))
+
+            # left column dimensions
+            left_w = split_x
+            right_w = max_x - split_x - 1
+
+            # Top area heights dynamic
+            top_height = max(10, int(max_y * 0.25))
+            middle_height = max(8, int(max_y * 0.25))
+            bottom_height = max(10, max_y - top_height - middle_height - 6)  # leave room for spacers
+
+            # -----------------
+            # LEFT TOP: Random words (inspirations) and spacer
+            # -----------------
+            self.safe_addstr(stdscr, 0, 0, "Random Words (inspiration):", curses.color_pair(4) | curses.A_BOLD)
+            # generate 6 new words per tick but rotate so they appear fresh
+            for i in range(6):
+                if random.random() < 0.6:
+                    words_log.appendleft(self.make_random_word(3, 14))
+            # display words in a compact grid
+            cols = max(1, left_w // 20)
+            for idx, w in enumerate(list(words_log)[: (top_height - 2) * cols]):
+                row = 1 + idx // cols
+                col = (idx % cols) * (left_w // cols)
+                self.safe_addstr(stdscr, row, col, w, curses.color_pair(6))
+
+            # spacer
+            self.draw_section_spacer(stdscr, top_height, left_w)
+
+            # -----------------
+            # LEFT MIDDLE: System Resource Monitor (big)
+            # -----------------
+            base_y = top_height + 1
+            self.safe_addstr(stdscr, base_y, 0, "System Resources:", curses.color_pair(4) | curses.A_BOLD)
+
+            # CPU and per-core
+            cpu = psutil.cpu_percent(interval=0.0)
+            mem = psutil.virtual_memory()
+            cpu_color = 1 if cpu < 50 else 2 if cpu < 80 else 3
+            mem_color = 1 if mem.percent < 50 else 2 if mem.percent < 80 else 3
+            self.safe_addstr(stdscr, base_y + 1, 0, f"Total CPU: {cpu:5.1f}%", curses.color_pair(cpu_color))
+            self.draw_progress_bar(stdscr, base_y + 1, 18, left_w - 20, cpu)
+            self.safe_addstr(stdscr, base_y + 2, 0, f"RAM: {mem.percent:5.1f}% ({self.human_readable_bytes(mem.used)}/{self.human_readable_bytes(mem.total)})", curses.color_pair(mem_color))
+            self.draw_progress_bar(stdscr, base_y + 2, 18, left_w - 20, mem.percent)
+
+            # CPU per-core small bars underneath (if space)
             try:
-                stdscr.erase()
-                
-                # Top-left: Random Words
-                for i in range(3):
-                    stdscr.addstr(i, 0, " ".join(random.sample(words, 3)))
-                
-                # Top-right: Random Numbers / Fake Download
-                stdscr.addstr(0, max_x//2, f"Number: {random.randint(1000,9999)}")
-                stdscr.addstr(1, max_x//2, f"Download file_{random.randint(1,999)}.bin {random.randint(0,100)}%")
-                
-                # Middle-left: Hacker log
-                for i in range(3):
-                    stdscr.addstr(4+i, 0, f"{time.strftime('%H:%M:%S')} - {random.choice(actions)} - session {random.randint(1000,9999)}")
-                
-                # Middle-right: ASCII scroll
-                for i in range(3):
-                    stdscr.addstr(4+i, max_x//2, "".join(random.choices(chars, k=40)))
-                
-                # Bottom-left: System stats
-                cpu = psutil.cpu_percent(interval=0.1)
-                mem = psutil.virtual_memory()
-                stdscr.addstr(8, 0, f"CPU: {cpu:5.1f}% | RAM: {mem.percent:5.1f}% ({mem.used//1024**2}MB/{mem.total//1024**2}MB)")
-                
-                # Disk usage
-                disk_info = psutil.disk_partitions()
-                for i, part in enumerate(disk_info[:2]):  # show max 2 partitions
+                cores = psutil.cpu_percent(percpu=True)
+                show_cores = min(len(cores), max(1, (left_w // 10)))
+                for i, val in enumerate(cores[:show_cores]):
+                    y = base_y + 4 + i
+                    self.safe_addstr(stdscr, y, 0, f"core{i:02d}: {val:5.1f}%")
+                    self.draw_progress_bar(stdscr, y, 16, left_w - 18, val)
+            except Exception:
+                pass
+
+            # spacer
+            self.draw_section_spacer(stdscr, base_y + 6 + len(cores[:show_cores]) if 'cores' in locals() else base_y + 6, left_w)
+
+            # -----------------
+            # LEFT BOTTOM: Disk usage (bigger) and Top Processes (bigger)
+            # -----------------
+            disk_y = base_y + 7 + len(cores[:show_cores])
+            self.safe_addstr(stdscr, disk_y, 0, "Disk Usage:", curses.color_pair(4) | curses.A_BOLD)
+
+            parts = psutil.disk_partitions(all=False)
+            # display up to 6 partitions in expanded form
+            for i, part in enumerate(parts[:6]):
+                try:
                     usage = psutil.disk_usage(part.mountpoint)
-                    stdscr.addstr(9+i, 0, f"{part.device} - {usage.percent}% used ({usage.used//1024**3}GB/{usage.total//1024**3}GB)")
-                
-                # Network activity
-                net = psutil.net_io_counters()
-                stdscr.addstr(11, 0, f"Sent: {(net.bytes_sent-prev_net.bytes_sent)//1024} KB/s | Recv: {(net.bytes_recv-prev_net.bytes_recv)//1024} KB/s")
-                prev_net = net
-                
-                # Bottom-right: Top processes
-                procs = sorted(psutil.process_iter(['pid','name','cpu_percent']), key=lambda p: p.info['cpu_percent'], reverse=True)[:3]
+                    y = disk_y + 1 + i * 2
+                    usage_color = 1 if usage.percent < 70 else 2 if usage.percent < 90 else 3
+                    self.safe_addstr(stdscr, y, 0, f"{part.device} on {part.mountpoint} ({part.fstype})")
+                    self.safe_addstr(stdscr, y, left_w - 30, f"{usage.percent:5.1f}%", curses.color_pair(usage_color))
+                    self.draw_progress_bar(stdscr, y + 1, 0, left_w - 2, usage.percent)
+                except Exception as e:
+                    self.safe_addstr(stdscr, disk_y + 1 + i * 2, 0, f"Could not read {part.device}: {e}", curses.color_pair(3))
+
+            # spacer
+            spacer_y = disk_y + 1 + len(parts[:6]) * 2
+            self.draw_section_spacer(stdscr, spacer_y, left_w)
+
+            # Top processes (expanded): show top N by CPU or memory depending on space
+            proc_start = spacer_y + 1
+            self.safe_addstr(stdscr, proc_start, 0, "Top Processes:", curses.color_pair(4) | curses.A_BOLD)
+            # choose top 8 or as many fit
+            top_n = min(8, max(3, (left_w // 20)))
+            try:
+                procs = sorted(psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']),
+                            key=lambda p: (p.info.get('cpu_percent', 0) or 0), reverse=True)[:top_n]
                 for i, p in enumerate(procs):
-                    stdscr.addstr(8+i, max_x//2, f"{p.info['pid']:5} {p.info['name'][:20]:20} CPU: {p.info['cpu_percent']:5.1f}%")
-                
-                # Hex memory dump (fake random)
-                data = [random.randint(0, 255) for _ in range(16)]
-                stdscr.addstr(12, max_x//2, " ".join(f"{b:02X}" for b in data))
-                
-                stdscr.refresh()
-                time.sleep(0.2)
-            except KeyboardInterrupt:
-                stdscr.nodelay(False)
-                stdscr.clear()
-                stdscr.addstr(0, 0, "Hackerman mode exited. Press any key to continue...")
-    
+                    y = proc_start + 1 + i
+                    name = (p.info.get('name') or 'unknown')[:24]
+                    cpu_p = p.info.get('cpu_percent') or 0.0
+                    mem_p = p.info.get('memory_percent') or 0.0
+                    self.safe_addstr(stdscr, y, 0, f"{p.info.get('pid',0):5} {name:24} CPU:{cpu_p:5.1f}% MEM:{mem_p:5.1f}%")
+            except Exception:
+                pass
+
+            # -----------------
+            # RIGHT: Fake downloads, ASCII stream, Hex dump
+            # -----------------
+            self.safe_addstr(stdscr, 0, split_x + 2, "Fake Downloads:", curses.color_pair(4) | curses.A_BOLD)
+            # tick downloader
+            downloader.tick()
+            status_items = downloader.status()
+
+            # show up to 3 items with progress bars
+            for i in range(3):
+                y = 1 + i * 3
+                if i < len(status_items):
+                    name, size_kb, prog = status_items[i]
+                    self.safe_addstr(stdscr, y, split_x + 2, f"{name} ({self.human_readable_bytes(size_kb*1024)})")
+                    self.draw_progress_bar(stdscr, y + 1, split_x + 2, right_w - 4, prog)
+                else:
+                    # filler
+                    self.safe_addstr(stdscr, y, split_x + 2, "- waiting -")
+
+            self.safe_addstr(stdscr, 10, split_x + 2, f"Files completed: {downloader.completed}", curses.color_pair(6) | curses.A_BOLD)
+
+            # spacer
+            self.draw_section_spacer(stdscr, 12, right_w)
+
+            # ASCII art stream (scrolling)
+            self.safe_addstr(stdscr, 13, split_x + 2, "ASCII Stream:", curses.color_pair(5) | curses.A_BOLD)
+            if random.random() < 0.7:
+                ascii_line = "".join(random.choices(list("@#$%&*+=-" + string.ascii_letters), k=max(20, right_w - 4)))
+                ascii_log.appendleft(ascii_line)
+            # display few lines
+            for i, line in enumerate(list(ascii_log)[:6]):
+                self.safe_addstr(stdscr, 14 + i, split_x + 2, line)
+
+            # spacer
+            self.draw_section_spacer(stdscr, 21, right_w)
+
+            # Hex dump (bigger) - produce more columns and rows if space
+            hex_start = 22
+            self.safe_addstr(stdscr, hex_start, split_x + 2, "Hex Dump (random):", curses.color_pair(4) | curses.A_BOLD)
+            hex_rows = min(6, max(2, (max_y - hex_start - 2)))
+            for r in range(hex_rows):
+                data = [random.randint(0, 255) for _ in range(24)]  # wider dump
+                hexline = " ".join(f"{b:02X}" for b in data)
+                self.safe_addstr(stdscr, hex_start + 1 + r, split_x + 2, hexline)
+
+            # -----------------
+            # Hacker log (right-bottom big) with session id and filename access
+            # -----------------
+            log_start = max(hex_start + 1 + hex_rows + 1, 30)
+            if log_start < max_y - 2:
+                self.safe_addstr(stdscr, log_start, split_x + 2, "Hacker Log:", curses.color_pair(5) | curses.A_BOLD)
+                # add a new log entry each tick
+                session = f"SID{random.randint(100000,999999)}"
+                file_accessed = f'/var/data/{random.choice(["users","db","cache","tmp"])}/{random.randint(1,99999)}.{"log" if random.random()<0.5 else "dat"}'
+                action = random.choice(["READ", "WRITE", "DELETE", "OPEN", "CLOSE", "LOCK"])
+                entry = f"{session} - {action} - {file_accessed}"
+                hacker_log.appendleft(entry)
+                # display most recent entries fitting in the space
+                available = max_y - (log_start + 1) - 1
+                for i, line in enumerate(list(hacker_log)[:available]):
+                    self.safe_addstr(stdscr, log_start + 1 + i, split_x + 2, line)
+
+            # -----------------
+            # Network speeds (below left bottom area)
+            # -----------------
+            try:
+                net = psutil.net_io_counters()
+                sent = (net.bytes_sent - prev_net.bytes_sent) / max(1, time.time() - last_tick)
+                recv = (net.bytes_recv - prev_net.bytes_recv) / max(1, time.time() - last_tick)
+                prev_net = net
+                last_tick = time.time()
+                self.safe_addstr(stdscr, max_y - 2, 0, f"Network: {self.human_readable_bytes(int(sent))}/s sent | {self.human_readable_bytes(int(recv))}/s recv", curses.color_pair(4))
+            except Exception:
+                pass
+
+            # footer
+            self.safe_addstr(stdscr, max_y - 1, 0, 'Press "q" to quit | Resize terminal for different layouts', curses.color_pair(6))
+
+            stdscr.refresh()
+
+            # user input handling
+            try:
+                ch = stdscr.getch()
+                if ch == ord('q'):
+                    break
+            except Exception:
+                pass
+
+            # tick small time sleep
+            time.sleep(0.15)
+        
     #########
     # Hooks #
     #########
     
     def execute(self):
-        println()
-        
-        hackerman_mode = self.get_flag('hackerman-mode')
-        if hackerman_mode:
-            curses.wrapper(self.hackerman_mode)
+        try:
+            curses.wrapper(self.hackerman)
+        except KeyboardInterrupt:
+            print("Exiting...")
         
 if __name__ == '__main__':
     BusyBee()

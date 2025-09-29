@@ -25,6 +25,8 @@ multidict==6.6.3
 nh3==0.3.0
 orjson==3.10.18
 packaging==25.0
+pandas==2.3.0
+pip==24.3.1
 pluggy==1.6.0
 propcache==0.3.2
 psutil==7.0.0
@@ -41,6 +43,7 @@ rich==14.1.0
 SecretStorage==3.3.3
 setuptools==80.9.0
 termcolor==3.1.0
+tqdm==4.67.1
 twine==6.1.0
 urllib3==2.5.0
 wheel==0.45.1

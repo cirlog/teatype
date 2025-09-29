@@ -110,13 +110,13 @@ class Aliases(BaseCLI):
         """
         Open the aliases-edited.jsonc file in vim for modification. Creates the file if it doesn't exist.
         """
-        CIRLOG_CLI_WORKSPACE_PATH = env.get('CIRLOG_CLI_WORKSPACE_PATH')
+        TEATYPE_CLI_WORKSPACE_PATH = env.get('TEATYPE_CLI_WORKSPACE_PATH')
         # Path to the edited aliases file
-        edited_file = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') 
+        edited_file = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') 
 
         # If the edited aliases file doesn't exist, copy the default aliases file
         if not file.exists(edited_file):
-            source_path = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc')
+            source_path = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc')
             file.copy(source_path, edited_file)
 
         # Open the aliases file in vim for editing
@@ -153,8 +153,8 @@ class Aliases(BaseCLI):
         except FileNotFoundError:
             content = [] # Initialize empty if .bashrc doesn't exist
 
-        start_mark = '# --- CIRLOG ALIASES BEGIN ---\n' # Marker for start of aliases
-        end_mark = '# --- CIRLOG ALIASES END ---\n' # Marker for end of aliases
+        start_mark = '# --- TEATYPE ALIASES BEGIN ---\n' # Marker for start of aliases
+        end_mark = '# --- TEATYPE ALIASES END ---\n' # Marker for end of aliases
         
         # Check if the aliases block already exists
         start_index = None
@@ -210,8 +210,8 @@ class Aliases(BaseCLI):
             refresh (bool, optional): Whether to refresh the shell after removal. Defaults to True.
         """
         bashrc_path = os.path.expanduser('~/.bashrc') # Path to the user's .bashrc
-        start_mark = '# --- CIRLOG ALIASES BEGIN ---\n' # Marker for start of aliases
-        end_mark = '# --- CIRLOG ALIASES END ---\n' # Marker for end of aliases
+        start_mark = '# --- TEATYPE ALIASES BEGIN ---\n' # Marker for start of aliases
+        end_mark = '# --- TEATYPE ALIASES END ---\n' # Marker for end of aliases
 
         try:
             lines = file.read(bashrc_path, force_format='lines') # Read existing .bashrc content
@@ -275,9 +275,9 @@ class Aliases(BaseCLI):
         Restore the aliases-edited.jsonc file to its default state by copying from the default aliases file.
         """
         log('Restoring aliases to default...', pad_before=1)
-        CIRLOG_CLI_WORKSPACE_PATH = env.get('CIRLOG_CLI_WORKSPACE_PATH')
-        source_path = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Source default aliases file
-        destination_path = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Destination edited aliases file
+        TEATYPE_CLI_WORKSPACE_PATH = env.get('TEATYPE_CLI_WORKSPACE_PATH')
+        source_path = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Source default aliases file
+        destination_path = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Destination edited aliases file
 
         try:
             file.copy(source_path, destination_path) # Copy default to edited
@@ -362,10 +362,10 @@ class Aliases(BaseCLI):
         
         env_path = path.join(path.caller_parent(reverse_depth=2), '.env') # Path to the .env file
         env.load(env_path)
-        CIRLOG_CLI_WORKSPACE_PATH = env.get('CIRLOG_CLI_WORKSPACE_PATH')
+        TEATYPE_CLI_WORKSPACE_PATH = env.get('TEATYPE_CLI_WORKSPACE_PATH')
 
-        aliases_path_default = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Default aliases path
-        aliases_path_edited = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Edited aliases path
+        aliases_path_default = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Default aliases path
+        aliases_path_edited = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Edited aliases path
         # Determine which aliases file to use
         active_path = aliases_path_edited if file.exists(aliases_path_edited) else aliases_path_default
 

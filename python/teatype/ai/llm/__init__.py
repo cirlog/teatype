@@ -10,14 +10,23 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From local imports
-from .args.Argument import Argument
-from .args.Command import Command
-from .args.Flag import Flag
-from .BaseCLI import BaseCLI
-from .BaseIsRunningCLI import BaseIsRunningCLI
-from .BaseInstallCLI import BaseInstallCLI
-from .BaseStartCLI import BaseStartCLI
-from .BaseStopCLI import BaseStopCLI
-from .BaseTUI import BaseTUI
-from .MainCLI import MainCLI
+try:
+    import llama_cpp
+    
+    __all__ = ['Inferencer', 'PromptBuilder']
+
+    def __getattr__(name):
+        if name == "Inferencer":
+            from .inference import Inferencer
+            return Inferencer
+        if name == "PromptBuilder":
+            from .prompt_builder import PromptBuilder
+            return PromptBuilder
+        raise AttributeError(f"module 'llm' has no attribute '{name}'")
+
+    from .loader import load_model
+    from .inference import Inferencer
+    
+    __GPU_SUPPORT__ = True
+except:
+    __GPU_SUPPORT__ = False

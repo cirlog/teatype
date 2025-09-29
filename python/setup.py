@@ -13,12 +13,16 @@
 # System imports
 import os
 import requests
+import sys
 
 # From package imports
 from setuptools import setup, find_packages
 
 # From-as package imports
 from setuptools.command.sdist import sdist as _sdist
+
+# From local imports
+from teatype import __version__
 
 # Custom `sdist` command to include/exclude files from source distribution
 class sdist(_sdist):
@@ -30,7 +34,7 @@ class sdist(_sdist):
             filepath = os.path.join(base_dir, filename)
             if os.path.exists(filepath):
                 os.remove(filepath)
-
+                
 def ask_for_version():
     """
     Asks the user for a new version or auto-increments the latest version.
@@ -38,6 +42,7 @@ def ask_for_version():
     Returns:
         str: The determined version string.
     """
+    return __version__
     with open("requirements.txt") as f:
         # Read all lines from 'requirements.txt' and split them into a list
         install_requires = f.read().splitlines()
@@ -52,7 +57,7 @@ def ask_for_version():
             Returns:
                 List[str]: A sorted list of version strings.
             """
-            response = requests.get(f"https://pypi.org/pypi/{package_name}/json")
+            response = requests.get(f'https://pypi.org/pypi/{package_name}/json')
             if response.status_code != 200:
                 # If the package is not found or another error occurs, return an empty list
                 return []
@@ -85,44 +90,69 @@ def ask_for_version():
                     major += 1  # Increment the major version
             return f"{major}.{minor}.{patch}"
         
-        package_name = "teatype"
+        package_name = 'teatype'
         # Retrieve all existing versions of the package from PyPI
         existing_versions = get_existing_versions(package_name)
         if existing_versions:
             latest_version = existing_versions[-1]  # Get the latest version
             # Prompt the user to enter a new version or auto-increment
             user_version = input(
-                f"Latest version is {latest_version}. Enter new version or press Enter to auto-increment: "
+                f'Latest version is {latest_version}. Enter new version or press Enter to auto-increment: '
             )
             if not user_version:
                 # If no input is provided, automatically increment the latest version
                 new_version = increment_version(latest_version)
             else:
                 new_version = user_version  # Use the user-provided version
-        else:
-            new_version = "0.0.1"  # Default version if no existing versions are found
-        
         version = new_version  # Set the determined version
 
+# Detect variants via env var or command line arg
+install_requires = []
+parent_directory = os.path.dirname(os.path.abspath(__file__))
+# file.read()
+variants = ['base'] # default
+# if '--gpu' in sys.argv:
+#     variant = 'gpu'
+#     sys.argv.remove('--gpu')
+    
+# if '--fastapi' in sys.argv:
+#     variant = 'fastapi'
+#     sys.argv.remove('--fastapi')
+    
+# if '--django' in sys.argv:
+#     variant = 'django'
+#     sys.argv.remove('--django')
+# # Conditional packages
+# packages = find_packages()
+# if variant == 'cpu':
+#     # Remove AI folder
+#     packages = [package for package in packages if not package.startswith('teatype.ai')]
+# # Conditional dependencies
+# if variant == 'gpu':
+#     install_requires.append('llama-cpp-python')
+
+# Package name adjustment
+package_name = 'teatype-gpu' if 'gpu' in variants else 'teatype'
+version = ask_for_version()
+
 setup(
-    name="teatype",
-    version="0.0.1",
-    author="arsonite",
-    author_email="notarson@gmail.com",
-    description="A package for tea",
-    url="https://github.com/arsonite/teatype",
-    packages=find_packages(),
+    author='arsonite',
+    author_email='notarson@gmail.com',
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: Own License",
-        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: Own License',
+        'Operating System :: OS Independent',
     ],
-    
-    # Custom commands
     cmdclass={
-        "sdist": sdist,  # Use the custom sdist command
+        # 'develop': deploy,
+        # 'install': deploy,
+        'sdist': sdist
     },
-    
+    description='A package for tea',
+    install_requires=install_requires,
+    name=package_name,
+    packages=find_packages(),
     python_requires='>=3.11',
-    install_requires=[],
+    url='https://github.com/arsonite/teatype',
+    version=version,
 )

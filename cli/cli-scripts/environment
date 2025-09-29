@@ -23,8 +23,8 @@ from teatype.enum import EscapeColor
 from teatype.io import env, enable_sudo, file, path
 from teatype.logging import log, err, println, hint, success, warn
 
-ENV_START_MARK = '# --- CIRLOG ENV VARS BEGIN ---'
-ENV_END_MARK = '# --- CIRLOG ENV VARS END ---'
+ENV_START_MARK = '# --- TEATYPE ENV VARS BEGIN ---'
+ENV_END_MARK = '# --- TEATYPE ENV VARS END ---'
 ENV_FILE = '/etc/environment'
 BASHRC_FILE = os.path.expanduser('~/.bashrc')
 
@@ -33,7 +33,7 @@ class Environment(BaseCLI):
         return {
             'name': 'environment',
             'shorthand': 'env',
-            'help': 'Manage the (system) environment variables for the Cir.Log project.',
+            'help': 'Manage the (system) environment variables for the TeaType project.',
             'commands': [
                 {
                     'name': 'eject',
@@ -77,24 +77,24 @@ class Environment(BaseCLI):
         # Update ~/.bashrc (for shell sessions)
         self._inject_env_block(BASHRC_FILE, env_vars, shell_style=True)
 
-        # Inject into /etc/profile.d/cirlog_env.sh
-        profile_script = ['# Auto-generated Cir.Log environment\n']
+        # Inject into /etc/profile.d/teatype.sh
+        profile_script = ['# Auto-generated TeaType environment\n']
         for k, v in env_vars.items():
             v_clean = v.strip().replace('"', '\\"')
             profile_script.append(f'export {k}="{v_clean}"\n')
 
-        subprocess.run(['sudo', 'tee', '/etc/profile.d/cirlog_env.sh'],
+        subprocess.run(['sudo', 'tee', '/etc/profile.d/teatype.sh'],
                        input=''.join(profile_script),
                        text=True,
                        stdout=subprocess.DEVNULL)
 
-        # Inject into /etc/systemd/system.conf.d/cirlog_env.conf
+        # Inject into /etc/systemd/system.conf.d/teatype.conf
         systemd_env_lines = ['[Manager]\n']
         exports = [f'{k}={v}' for k, v in env_vars.items()]
         systemd_env_lines.append(f'DefaultEnvironment=' + ' '.join(exports) + '\n')
 
         subprocess.run(['sudo', 'mkdir', '-p', '/etc/systemd/system.conf.d/'])
-        subprocess.run(['sudo', 'tee', '/etc/systemd/system.conf.d/cirlog_env.conf'],
+        subprocess.run(['sudo', 'tee', '/etc/systemd/system.conf.d/teatype.conf'],
                        input=''.join(systemd_env_lines),
                        text=True,
                        stdout=subprocess.DEVNULL)
@@ -123,8 +123,8 @@ class Environment(BaseCLI):
         self._remove_env_block(BASHRC_FILE)
 
         # Remove profile script and systemd config
-        subprocess.run(['sudo', 'rm', '-f', '/etc/profile.d/cirlog_env.sh'])
-        subprocess.run(['sudo', 'rm', '-f', '/etc/systemd/system.conf.d/cirlog_env.conf'])
+        subprocess.run(['sudo', 'rm', '-f', '/etc/profile.d/teatype.sh'])
+        subprocess.run(['sudo', 'rm', '-f', '/etc/systemd/system.conf.d/teatype.conf'])
         subprocess.run(['sudo', 'systemctl', 'daemon-reexec'])
 
         if not auto_mode:
@@ -134,7 +134,7 @@ class Environment(BaseCLI):
 
     def list_available_env_vars(self, env_vars:dict):
         println()
-        log(f'Available {EscapeColor.GRAY}(custom Cir.Log){EscapeColor.RESET} environment variables:')
+        log(f'Available {EscapeColor.GRAY}(custom TeaType){EscapeColor.RESET} environment variables:')
         max_line_width = max([len(k) for k in env_vars.keys()])
         for key, value in env_vars.items():
             value = value or 'null'
@@ -144,24 +144,24 @@ class Environment(BaseCLI):
         log('Checking whether environment variable blocks exist or not:')
         println()
         etc_environment = self._check_env_block_status('/etc/environment')
-        cirlog_profile_env = self._check_env_block_status('/etc/profile.d/cirlog_env.sh', check_block=False)
-        cirlog_system_env = self._check_env_block_status('/etc/systemd/system.conf.d/cirlog_env.conf', check_block=False)
+        teatype_profile_env = self._check_env_block_status('/etc/profile.d/teatype.sh', check_block=False)
+        teatype_system_env = self._check_env_block_status('/etc/systemd/system.conf.d/teatype.conf', check_block=False)
         bashrc = self._check_env_block_status(os.path.expanduser('~/.bashrc'))
         
-        if etc_environment and cirlog_profile_env and cirlog_system_env and bashrc:
+        if etc_environment and teatype_profile_env and teatype_system_env and bashrc:
             success('All environment variable blocks are present and correctly configured.')
-        elif etc_environment or cirlog_profile_env or cirlog_system_env or bashrc:
+        elif etc_environment or teatype_profile_env or teatype_system_env or bashrc:
             warn('Some environment variable blocks are present, but not all are correctly configured. Please check the logs above for details.')
             if not etc_environment:
                 err('The /etc/environment block is missing or not correctly configured.', use_prefix=False, verbose=False)
-            if not cirlog_profile_env:
-                err('The /etc/profile.d/cirlog_env.sh block is missing or not correctly configured.', use_prefix=False, verbose=False)
-            if not cirlog_system_env:
-                err('The /etc/systemd/system.conf.d/cirlog_env.conf block is missing or not correctly configured.', use_prefix=False, verbose=False)
+            if not teatype_profile_env:
+                err('The /etc/profile.d/teatype.sh block is missing or not correctly configured.', use_prefix=False, verbose=False)
+            if not teatype_system_env:
+                err('The /etc/systemd/system.conf.d/teatype.conf block is missing or not correctly configured.', use_prefix=False, verbose=False)
             if not bashrc:
                 err('The ~/.bashrc block is missing or not correctly configured.', use_prefix=False, verbose=False)
         else:
-            err('No environment variable blocks found. Please inject them first using `cl env inject`.', use_prefix=False, verbose=False)
+            err('No environment variable blocks found. Please inject them first using `tt env inject`.', use_prefix=False, verbose=False)
 
     def _inject_env_block(self, filepath, env_vars, shell_style=False):
         # Read current content
@@ -267,22 +267,18 @@ class Environment(BaseCLI):
         println()
         
         parent_directoy = path.caller_parent(reverse_depth=2)
-        cirlog_env_path = path.join(parent_directoy, '.env')
-        cirlog_env_variables = file.read(cirlog_env_path)
+        teatype_path = path.join(parent_directoy, '.env')
+        teatype_variables = file.read(teatype_path)
 
         command = self.get_command()
         if command == 'inject':
-            self.inject_system_env_vars(cirlog_env_variables)
+            self.inject_system_env_vars(teatype_variables)
         elif command == 'eject':
             self.eject_system_env_vars()
         elif command == 'list':
-            self.list_available_env_vars(cirlog_env_variables)
+            self.list_available_env_vars(teatype_variables)
         elif command == 'status':
             self.status_system_env_vars()
-
-        if 'CIRLOG_ID' not in cirlog_env_variables:
-            println()
-            warn(f'No CIRLOG_ID found in {cirlog_env_path}. This WILL cause issues with the firmware, please set the id via ´cl device-info´ or write it into the .env file in the CLI directory manually.')
 
         println()
 

@@ -10,4 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# From local imports
 from .util import *
+
+__VERSION__ = '0.0.1'

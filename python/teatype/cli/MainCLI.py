@@ -14,13 +14,13 @@
 
 # System imports
 import inspect
-import os
 import shutil
 import sys
 
 # From package imports
 from teatype.cli import BaseCLI, Command
 from teatype.enum import EscapeColor
+from teatype.io import clear_shell, file, path
 from teatype.logging import err, log, hint
 
 # From-as system imports
@@ -32,15 +32,31 @@ from teatype.io import TemporaryDirectory as TempDir
 # TODO: Time the execution of the CLI with stopwatch
 # TODO: Increase performance of CLI execution by using a single instance of the CLI loaded in memory
 class MainCLI(BaseCLI):
-    def __init__(self):
+    parent_path:str
+    scripts:dict
+    tuis:dict
+    
+    def __init__(self, auto_parse:bool=False, auto_validate:bool=False, parent_path:str=None) -> None:
         """
         Initializes the MainCLI instance, setting up the CLI environment.
+        
+        Args:
+            parent_path (str, optional): The parent directory path where the CLI scripts and TUIs are located. 
+                                         If None, it defaults to two levels up from the current file's location.
+            auto_parse (bool, optional): If True, automatically parses command-line arguments upon initialization.
+            auto_validate (bool, optional): If True, automatically validates parsed arguments upon initialization.
         """
-        super().__init__(auto_parse=False, auto_validate=False)
+        if parent_path == None:
+            self.parent_path = path.caller_parent(reverse_depth=2)
+        else:
+            self.parent_path = parent_path
+            
+        super().__init__(auto_parse=auto_parse, auto_validate=auto_validate)
+        
         self.scripts = {}
         self.tuis = {}
         
-    def discover_python_modules(self, folder_name:str):
+    def discover_python_modules(self, folder_name:str) -> dict:
         """
         Dynamically discovers and loads python files from the specified directory and tries to load them into memory.
         Returns a sorted dictionary of module instances keyed by their names.
@@ -49,20 +65,20 @@ class MainCLI(BaseCLI):
         polluting the system path, and handles potential loading errors gracefully.
         """
         module_registry = {} # Dictionary to store discovered script instances
-        current_directory = os.path.dirname(os.path.abspath(__file__)) # Get the directory containing this file
-        module_directory = os.path.join(current_directory, folder_name) # Path to scripts directory
+        current_directory = self.parent_path # Get the directory containing this file
+        module_directory = path.join(current_directory, folder_name) # Path to scripts directory
 
         # Create temporary directory for safe module loading
         with TempDir(directory_path=current_directory) as temporary_directory:
             try:
                 # Iterate through files in the scripts directory
-                for file in os.listdir(module_directory):
+                for f in file.list(module_directory):
                     # Skip special Python files
-                    if file not in ['__init__.py', '__pycache__']:
+                    if f not in ['__init__.py', '__pycache__']:
                         # Convert filename to valid Python module name
-                        module_name = file.replace('-', '_').replace('.py', '')
-                        temp_file = os.path.join(temporary_directory, module_name + '.py')
-                        original_file = os.path.join(module_directory, file)
+                        module_name = f.name.replace('-', '_').replace('.py', '')
+                        temp_file = path.join(temporary_directory, module_name + '.py')
+                        original_file = path.join(module_directory, f.path)
 
                         try:
                             # Copy script to temp directory and load as module
@@ -89,45 +105,54 @@ class MainCLI(BaseCLI):
                 sys.path.pop(0)
         return dict(sorted(module_registry.items())) # Return alphabetically sorted scripts
     
-    def discover_scripts(self):
+    def discover_scripts(self) -> dict:
         return self.discover_python_modules('cli-scripts')
     
-    def discover_tuis(self):
+    def discover_tuis(self) -> dict:
         return self.discover_python_modules('cli-tuis')
 
-    def display_help(self):
+    def display_help(self) -> None:
         """
         Displays formatted help message showing available scripts and their basic information.
         Includes usage instructions and a hint for accessing detailed help for specific scripts.
         """
-        disclaimer = f'{EscapeColor.GRAY}\TeaType CLI - {self.help}\n (c) 2024-2026 @arsonite\n{EscapeColor.RESET}'
+        disclaimer = self.help
         log(disclaimer)
-        help_message = 'Usage:\n    cl <script> [args]\n\nScripts:\n'
+        help_message = f'Usage:\n    {self.shorthand} <script> [args]\n\nScripts:\n'
         # Format and add each script's information to help message
-        max_line_width = max([len(script.name) for script in self.scripts.values()])
+        max_line_width = max([
+            len(f'{script.shorthand}, {script.name}')
+            for script in self.scripts.values()
+        ] + [
+            len(f'{tui.shorthand}, {tui.name}')
+            for tui in self.tuis.values()
+        ])
         for _, script_key in enumerate(self.scripts):
             script = self.scripts[script_key]
             script_name = script.shorthand + ', ' + script.name
-            script_info = f'    {script_name.ljust(max_line_width)}     {script.help}'
+            script_info = f'    {script_name.ljust(max_line_width)}    {script.help}'
             help_message += f'{script_info}\n'
         help_message += f'\nTUIs: {EscapeColor.GRAY}(Terminal User-Interfaces)\n{EscapeColor.RESET}'
         for _, tui_key in enumerate(self.tuis):
             tui = self.tuis[tui_key]
             tui_name = tui.shorthand + ', ' + tui.name
-            tui_info = f'    {tui_name.ljust(max_line_width)}     {tui.help}'
+            tui_info = f'    {tui_name.ljust(max_line_width)}    {tui.help}'
             help_message += f'{tui_info}\n'
         log(help_message)
-        hint('Use `$ cl <script> -h, --help` for more details on specific scripts.', pad_after=1)
+        hint(f'Use `$ {self.shorthand} <script> -h, --help` for more details on specific scripts.', pad_after=1)
         
     #########
     # Hooks #
     #########
     
-    def execute(self):
+    def execute(self) -> None:
         """
         Main execution method that handles script discovery, argument parsing,
         and delegation to the appropriate script handler.
         """
+        # DEPRECATED: Advising against using this, because it's confusing
+            # clear_shell()
+        
         # Discover available scripts and create command objects
         self.scripts = self.discover_scripts()
         self.tuis = self.discover_tuis()
@@ -187,7 +212,7 @@ class MainCLI(BaseCLI):
                 selected_tui.execute()
             else:
                 # If command not found, display help
-                err(f'Unknown command: {self.parsed_command}. Use "cl -h" for help.', exit=True, pad_before=1, pad_after=1)
+                err(f'Unknown command: {self.parsed_command}. Use "{self.shorthand}" for help.', exit=True, pad_before=1, pad_after=1)
         except SystemExit:
             pass
         except Exception as e:

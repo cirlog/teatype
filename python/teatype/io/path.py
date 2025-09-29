@@ -85,7 +85,7 @@ def caller_parent(reverse_depth:int=1, skip_call_stacks:int=None, stringify:bool
         parent = parent.parent # Traverse up the directory tree
     return str(parent) if stringify else parent # Return the parent path as string or Path object
 
-def change(path:str, stringify:bool=True) -> str:
+def cd(path:str, stringify:bool=True) -> str:
     """
     Change the current working directory to the given path.
 

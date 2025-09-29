@@ -104,6 +104,7 @@ class Deadpoint:
         # Default response if nothing matches
         return {'message': f'Default response for {path}'}
 
+# TODO: Unify with my web request function to avoid conflicts with requests package or make request compatible with requests
 def deadpoint(response:Dict[str,any]=None, status:int=None):
     """ 
     A decorator that checks for 'testmode' query param and delegates 
@@ -112,10 +113,10 @@ def deadpoint(response:Dict[str,any]=None, status:int=None):
     def decorator(callable:Callable):
         @wraps(callable)
         def wrapper(caller:object,
-                          initial_request:Request,
-                          initial_response:Response,
-                          *args,
-                          **kwargs):
+                    initial_request:Request,
+                    initial_response:Response,
+                    *args,
+                    **kwargs):
             try:
                 # Access the 'testmode' query parameter directly from the request, so that it can
                 # be omitted in the call signature of the route handler
@@ -125,13 +126,15 @@ def deadpoint(response:Dict[str,any]=None, status:int=None):
                 if testmode:
                     if response is None:
                         # Delegate the request to the singleton instance of the endpoint simulator
-                        response.content = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
+                        response['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
                     else:
-                        response.content = response
+                        response['content'] = response
                     # Set the response status code
-                    response.status_code = status
+                    response['status_code'] = status
                     # Modify the response body
-                    response.headers['Content-Type'] = 'application/json'
+                    if 'headers' not in response:
+                        response['headers'] = {}
+                    response['headers']['Content-Type'] = 'application/json'
                     return response
                 # If not testmode, proceed with the actual callable
                 # Ensure to pass all necessary arguments (request, response)

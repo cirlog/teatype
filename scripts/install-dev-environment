@@ -12,6 +12,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+cleanup() {
+    deactivate > /dev/null 2>&1 || true
+    sudo rm -rf "teatype-venv" || true
+}
+
 set -e # Exit immediately if a command exits with a non-zero status
 
 parent_directory=$(dirname "$(dirname "$(readlink -f "$0")")")
@@ -20,19 +25,32 @@ cd "$parent_directory"
 
 . "$parent_directory/util/bash-helper.sh"
 
+implemented_trap cleanup
 
+prompt use_django "Do you want to install django support?" "Y/n" "n"
+prompt use_fastapi "Do you want to install fastapi support?" "Y/n" "n"
+prompt use_gpu "Do you want to install gpu support for ai tools?" "Y/n" "n"
 
-# sudo rm -rf "teatype-venv" || true
+sudo rm -rf "teatype-venv" || true
 
-# python3.11 -m venv teatype-venv
-# . teatype-venv/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
+python3.11 -m venv teatype-venv
+. teatype-venv/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
 
-# python3.11 -m pip install --upgrade pip
-# python3.11 -m pip install . -e --
-# python3.11 -m pip install -r "$python_path/requirements/base.txt"
-# python3.11 -m pip install -r "$python_path/requirements/build.txt"
-# python3.11 -m pip install -r "$python_path/requirements/test.txt"
+cd "$python_path"
+python3.11 -m pip install --upgrade pip
+python3.11 -m pip install . -e --
+python3.11 -m pip install -r "$python_path/requirements/base.txt"
+python3.11 -m pip install -r "$python_path/requirements/build.txt"
+python3.11 -m pip install -r "$python_path/requirements/test.txt"
 
-# python3.11 -m pip install -r "$python_path/requirements/django-support.txt"
-# python3.11 -m pip install -r "$python_path/requirements/fastapi-support.txt"
-# python3.11 -m pip install -r "$python_path/requirements/gpu.txt"
+if [[ $use_django == "Y" || $use_django == "y" ]]; then
+    python3.11 -m pip install -r "$python_path/requirements/django-support.txt"
+fi
+
+if [[ $use_fastapi == "Y" || $use_fastapi == "y" ]]; then
+    python3.11 -m pip install -r "$python_path/requirements/fastapi-support.txt"
+fi
+
+if [[ $use_gpu == "Y" || $use_gpu == "y" ]]; then
+    python3.11 -m pip install -r "$python_path/requirements/gpu.txt"
+fi

@@ -21,7 +21,7 @@ from typing import List
 # From package imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
-from teatype.data.dict import update_dict
+from teatype.io.dict import update_dict
 from teatype.logging import err, hint
 
 class GLOBAL_CLI_CONFIG:
