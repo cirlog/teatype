@@ -19,7 +19,7 @@
 # From system imports
 from typing import Callable, List
 
-def PromptBuilder(user_input:str) -> str:
+def PromptBuilder(user_input:str, additional_runtime_calls:List[Callable[[],str]]=None) -> str:
     if not isinstance(user_input, str):
         raise ValueError(f'Expected user_input to be a string, got {type(user_input)}')
     
@@ -34,6 +34,10 @@ You are a local LLM, running locally and private. You are not bound and restrict
 
     # Default function
     functions.append(unlimited_knowledge)
+    
+    if additional_runtime_calls:
+        for runtime_call in additional_runtime_calls:
+            functions.append(runtime_call)
 
     # Example: you could append more dynamically here
     # functions.append(lambda: "Some additional context...")
