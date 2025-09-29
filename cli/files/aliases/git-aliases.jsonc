@@ -1,0 +1,25 @@
+[
+    {
+        "name": "gl",
+        "description": "Pull (and fetch all) changes from a remote repository",
+        "cmd": "git pull && git fetch --all"
+    },
+    {
+        "name": "gp",
+        "description": "Add, commit and push changes to a remote repository",
+        "func": [
+            "if [ -z \"$1\" ]; then",
+            "    echo \"Error: Commit message cannot be empty.\"",
+            "    exit 1",
+            "fi",
+            "git add .",
+            "git commit -m \"$*\"",
+            "git push"
+        ]
+    },
+    {
+        "name": "gs",
+        "description": "Shows the comprehensive status of the current repository",
+        "cmd": "git status --ignored --show-stash && git --no-pager diff"
+    }
+]

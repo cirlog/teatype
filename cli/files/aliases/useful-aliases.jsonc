@@ -1,0 +1,131 @@
+[
+    {
+        "name": "c",
+        "description": "Clear the terminal screen",
+        "cmd": "clear"
+    },
+    {
+        "name": "clean-all",
+        "description": "Search and delete venv, node_modules, and temporary files",
+        "func": [
+            "echo \"Searching and deleting venv and node_modules directories, ignoring .git\"",
+            "sudo find . \\( -path \"./.git\" -o -path \"./node_modules\" \\) -prune -o \\",
+            "    -type d \\( -exec test -f '{}/pyvenv.cfg' \\; -o -path '{}/bin' -o -path '{}/Scripts' \\) -print -exec rm -rf {} +",
+            "sudo find . \\( -path \"./.git\" -o -path \"./venv\" \\) -prune -o \\",
+            "    -type d -name \"node_modules\" -print -exec rm -rf {} +",
+            "clean-trash"
+        ]
+    },
+    {
+        "name": "clean-trash",
+        "description": "Delete temporary and cached files",
+        "func": [
+            "echo \"Searching and deleting .zone.identifier files, .pytest_cache, and __pycache__ directories\"",
+            "find . \\( -path \"./.git\" -o -path \"./node_modules\" -o -path \"./venv\" \\) -prune -o \\",
+            "    -type d -name \".pytest_cache\" -print -exec sudo rm -rf {} +",
+            "find . \\( -path \"./.git\" -o -path \"./node_modules\" -o -path \"./venv\" \\) -prune -o \\",
+            "    -type d -name \"__pycache__\" -print -exec sudo rm -rf {} +",
+            "find . \\( -path \"./.git\" -o -path \"./node_modules\" -o -path \"./venv\" \\) -prune -o \\",
+            "    -type f -name \"*:Zone.Identifier\" -print -exec sudo rm -f {} +",
+            "echo \"Cleanup complete.\""
+        ]
+    },
+    {
+        "name": "home",
+        "description": "Navigate to home directory",
+        "cmd": "cd ~"
+    },
+    {
+        "name": "l",
+        "description": "List files with details and color",
+        "cmd": "ls -g -h -F -la --color=always"
+    },
+    {
+        "name": "rc",
+        "description": "Edit the bash configuration file",
+        "cmd": "vim ~/.bashrc"
+    },
+    {
+        "name": "rf",
+        "description": "Delete files or directories with confirmation",
+        "func": [
+            "if [ \"$1\" == \".\" ]; then",
+            "    echo \"Warning: You are about to delete EVERYTHING inside the current directory!\"",
+            "    read -p \"This action is irreversible. Are you sure? (Press Enter to confirm or Ctrl+C to abort): \" confirm1",
+            "    if [ -z \"$confirm1\" ]; then",
+            "        read -p \"This will delete ALL files and subdirectories. Are you absolutely sure? (Press Enter to confirm or Ctrl+C to abort): \" confirm2",
+            "        if [ -z \"$confirm2\" ]; then",
+            "            echo \"Deleting everything inside the current directory...\"",
+            "            rm -rf ./*",
+            "        else",
+            "            echo \"Operation aborted.\"",
+            "        fi",
+            "    else",
+            "        echo \"Operation aborted.\"",
+            "    fi",
+            "else",
+            "    echo \"Are you sure you want to delete '$1'? This action is irreversible.\"",
+            "    read -p \"Press Enter to confirm or Ctrl+C to abort: \" confirm",
+            "    if [ -z \"$confirm\" ]; then",
+            "        rm -rf \"$1\"",
+            "    else",
+            "        echo \"Operation aborted.\"",
+            "    fi",
+            "fi"
+        ]
+    },
+    {
+        "name": "root",
+        "description": "Navigate to the root directory",
+        "cmd": "cd /"
+    },
+    {
+        "name": "src",
+        "description": "Reload the bash configuration file",
+        "cmd": ". ~/.bashrc"
+    },
+    {
+        "name": "srf",
+        "description": "Delete files or directories with confirmation (using sudo)",
+        "func": [
+            "if [ \"$1\" == \".\" ]; then",
+            "    echo \"Warning: You are about to delete EVERYTHING inside the current directory!\"",
+            "    read -p \"This action is irreversible. Are you sure? (Press Enter to confirm or Ctrl+C to abort): \" confirm1",
+            "    if [ -z \"$confirm1\" ]; then",
+            "        read -p \"This will delete ALL files and subdirectories. Are you absolutely sure? (Press Enter to confirm or Ctrl+C to abort): \" confirm2",
+            "        if [ -z \"$confirm2\" ]; then",
+            "            echo \"Deleting everything inside the current directory...\"",
+            "            sudo rm -rf ./*",
+            "        else",
+            "            echo \"Operation aborted.\"",
+            "        fi",
+            "    else",
+            "        echo \"Operation aborted.\"",
+            "    fi",
+            "else",
+            "    echo \"Are you sure you want to delete '$1'? This action is irreversible.\"",
+            "    read -p \"Press Enter to confirm or Ctrl+C to abort: \" confirm",
+            "    if [ -z \"$confirm\" ]; then",
+            "        sudo rm -rf \"$1\"",
+            "    else",
+            "        echo \"Operation aborted.\"",
+            "    fi",
+            "fi"
+        ]
+    },
+    {
+        "name": "tt",
+        "help": "Change directory to teatype source path",
+        "command": "cd $TEATYPE_SOURCE_PATH"
+    },
+    {
+        "name": "ttp",
+        "help": "Change directory to teatype python source path",
+        "command": "cd $TEATYPE_PYTHON_SOURCE_PATH"
+    },
+    {
+        "name": "tts",
+        "help": "Change directory to teatype typescript source path",
+        "command": "cd $TEATYPE_TYPESCRIPT_SOURCE_PATH"
+    }
+]

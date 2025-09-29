@@ -1,0 +1,171 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# System imports
+import time
+
+# From package imports
+from teatype.cli import BaseCLI
+from teatype.enum import EscapeColor
+from teatype.io import file
+from teatype.logging import err, hint, log, println
+
+# From-as package imports
+from teatype import generate_id
+
+try:
+    import pyperclip
+    PYPERCLIP_AVAILABLE = True
+except ImportError:
+    PYPERCLIP_AVAILABLE = False
+
+class Identifier(BaseCLI):
+    def meta(self):
+        return {
+            'name': 'id',
+            'shorthand': 'identifier',
+            'help': 'Generates one or multiple (globally) unique identifiers',
+            'flags': [
+                {
+                    'short': 'c',
+                    'long': 'count',
+                    'help': ['Set the number of identifiers to generate in `burst` mode', '(Default: 100)'],
+                    'options': int,
+                    'required': False  
+                },
+                {
+                    'short': 'l',
+                    'long': 'length',
+                    'help': ['Set the length of the identifier/s', '(Default: 60)'],
+                    'options': int,
+                    'required': False
+                },
+                {
+                    'short': 'm',
+                    'long': 'mode',
+                    'help': ['Select the mode of the identifier generation', '(Default: single)'],
+                    'options': ['burst', 'continous', 'single'],
+                    'required': False
+                },
+                {
+                    'short': 'o',
+                    'long': 'output',
+                    'help': ['Save the generated identifier/s to the specified file', '(Only works in `single` and `burst` mode)'],
+                    'options': str,
+                    'required': False
+                }
+            ]
+        }
+        
+    #########
+    # Hooks #
+    #########
+    
+    def execute(self):
+        # Determine the length (default to 60)
+        length = self.get_flag('length')
+        if length is None:
+            length = 60
+
+        # generate() will always call generate_id with the fixed `length`
+        def generate():
+            if length > 60:
+                id_string = ''
+                while len(id_string) < length:
+                    id_string += generate_id(truncate=60)
+                return id_string[:length]
+            return generate_id(truncate=length)
+        
+        println()
+        
+        mode = self.get_flag('mode')
+        has_defaulted = False
+        if mode is None:
+            mode = 'single'
+            has_defaulted = True
+            
+        if mode == 'continous':
+            try:
+                if not PYPERCLIP_AVAILABLE:
+                    hint('Pyperclip is not available. Please install it to use continous mode.')
+                else:
+                    hint('Pyperclip is enabled. The generated IDs will be copied to your clipboard.')
+                    
+                println()
+                hint('Press CTRL+C to stop', use_prefix=False)
+                println()
+                i = 0
+                while True:
+                    id = generate()
+                    color = EscapeColor.MAGENTA if i % 2 == 0 else EscapeColor.BLUE
+                    log(f'{color}  {id}')
+                    i += 1
+                    if PYPERCLIP_AVAILABLE:
+                        pyperclip.copy(id)
+                    
+                    time.sleep(0.1)
+                        
+            except KeyboardInterrupt:
+                println()
+                println()
+                err('Continous mode stopped.', use_prefix=False, verbose=False)
+                println()
+                return
+        elif mode == 'burst':
+            count = self.get_flag('count')
+            if count is None:
+                count = 100
+                has_defaulted = True
+                
+            if not isinstance(count, int) or count <= 0:
+                err('Count must be a positive integer.', raise_exception=True)
+                return
+            
+            generated_ids = []
+            for _ in range(count):
+                generated_ids.append(generate())
+        elif mode == 'single':
+            generated_ids = [generate()]
+        
+        if len(generated_ids) == 0:
+            err('Failed to generate ID, please try again.', raise_exception=False)
+            return
+        
+        if len(generated_ids) > 1:
+            log('Generated IDs:')
+        else:
+            log('Generated ID:')
+        for generated_id in generated_ids:
+            log(f'{EscapeColor.MAGENTA}  {generated_id}')
+        
+        output = self.get_flag('output')
+        if output:
+            file.write(output, generated_ids)
+            
+        if PYPERCLIP_AVAILABLE:
+            println()
+            if len(generated_ids) > 1:
+                hint('Results copied to clipboard', use_prefix=False)
+            else:
+                hint('Result copied to clipboard', use_prefix=False)
+            pyperclip.copy('\n'.join(generated_ids).strip())
+            
+        if has_defaulted:
+            println()
+            hint('More options available, use `-h, --help` for more information')
+            
+        println()
+
+if __name__ == '__main__':
+    Identifier()

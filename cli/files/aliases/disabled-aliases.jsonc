@@ -1,0 +1,30 @@
+[
+    // Git aliases
+    {
+        "name": "gb",
+        "description": "Checkout a branch (or create one if it doesn't exist)",
+        "func": [
+            "local branch_name=\"$1\"",
+            "if [ -z \"$branch_name\" ]; then",
+            "    git branch -a",
+            "elif git rev-parse --verify \"$branch_name\" >/dev/null 2>&1; then",
+            "    git checkout \"$branch_name\"",
+            "else",
+            "    git checkout -B \"$branch_name\"",
+            "fi"
+        ]
+    },
+    {
+        "name": "gd",
+        "description": "Delete a branch (and prune remote)",
+        "func": [
+            "local branch_name=\"$1\"",
+            "if [ -z \"$branch_name\" ]; then",
+            "    echo \"Error: Branch name cannot be empty.\"",
+            "    exit 1",
+            "fi",
+            "git remote prune origin",
+            "git branch -d \"$branch_name\""
+        ]
+    }
+]
