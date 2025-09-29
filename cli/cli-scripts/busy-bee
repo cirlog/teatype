@@ -1,0 +1,121 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# System imports
+import curses
+import random
+import time
+
+# From system imports
+from collections import deque
+
+# Package imports
+import psutil
+
+# From package imports
+from teatype.cli import BaseCLI
+from teatype.logging import err, hint, log, println
+
+class BusyBee(BaseCLI):
+    def meta(self):
+        return {
+            'name': 'busy-bee',
+            'shorthand': 'bb',
+            'help': 'For when time is honey, but you need to be busy',
+            'flags': [
+                {
+                    'short': 'hm',
+                    'long': 'hackerman-mode',
+                    'help': 'Converts all busy-bee scripts into a single dashboard',
+                    'required': False
+                }
+            ]
+        }
+        
+    def hackerman_mode(self, stdscr:curses.window):
+        curses.curs_set(0)
+        stdscr.nodelay(True)
+        
+        words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india"]
+        chars = ['@','#','$','%','&','*','+','=','-']
+        actions = ["ACCESS GRANTED", "ACCESS DENIED", "CONNECTION ESTABLISHED", "DOWNLOADING DATA", "UPLOADING DATA"]
+        prev_net = psutil.net_io_counters()
+        
+        max_y, max_x = stdscr.getmaxyx()
+        
+        while True:
+            try:
+                stdscr.erase()
+                
+                # Top-left: Random Words
+                for i in range(3):
+                    stdscr.addstr(i, 0, " ".join(random.sample(words, 3)))
+                
+                # Top-right: Random Numbers / Fake Download
+                stdscr.addstr(0, max_x//2, f"Number: {random.randint(1000,9999)}")
+                stdscr.addstr(1, max_x//2, f"Download file_{random.randint(1,999)}.bin {random.randint(0,100)}%")
+                
+                # Middle-left: Hacker log
+                for i in range(3):
+                    stdscr.addstr(4+i, 0, f"{time.strftime('%H:%M:%S')} - {random.choice(actions)} - session {random.randint(1000,9999)}")
+                
+                # Middle-right: ASCII scroll
+                for i in range(3):
+                    stdscr.addstr(4+i, max_x//2, "".join(random.choices(chars, k=40)))
+                
+                # Bottom-left: System stats
+                cpu = psutil.cpu_percent(interval=0.1)
+                mem = psutil.virtual_memory()
+                stdscr.addstr(8, 0, f"CPU: {cpu:5.1f}% | RAM: {mem.percent:5.1f}% ({mem.used//1024**2}MB/{mem.total//1024**2}MB)")
+                
+                # Disk usage
+                disk_info = psutil.disk_partitions()
+                for i, part in enumerate(disk_info[:2]):  # show max 2 partitions
+                    usage = psutil.disk_usage(part.mountpoint)
+                    stdscr.addstr(9+i, 0, f"{part.device} - {usage.percent}% used ({usage.used//1024**3}GB/{usage.total//1024**3}GB)")
+                
+                # Network activity
+                net = psutil.net_io_counters()
+                stdscr.addstr(11, 0, f"Sent: {(net.bytes_sent-prev_net.bytes_sent)//1024} KB/s | Recv: {(net.bytes_recv-prev_net.bytes_recv)//1024} KB/s")
+                prev_net = net
+                
+                # Bottom-right: Top processes
+                procs = sorted(psutil.process_iter(['pid','name','cpu_percent']), key=lambda p: p.info['cpu_percent'], reverse=True)[:3]
+                for i, p in enumerate(procs):
+                    stdscr.addstr(8+i, max_x//2, f"{p.info['pid']:5} {p.info['name'][:20]:20} CPU: {p.info['cpu_percent']:5.1f}%")
+                
+                # Hex memory dump (fake random)
+                data = [random.randint(0, 255) for _ in range(16)]
+                stdscr.addstr(12, max_x//2, " ".join(f"{b:02X}" for b in data))
+                
+                stdscr.refresh()
+                time.sleep(0.2)
+            except KeyboardInterrupt:
+                stdscr.nodelay(False)
+                stdscr.clear()
+                stdscr.addstr(0, 0, "Hackerman mode exited. Press any key to continue...")
+    
+    #########
+    # Hooks #
+    #########
+    
+    def execute(self):
+        println()
+        
+        hackerman_mode = self.get_flag('hackerman-mode')
+        if hackerman_mode:
+            curses.wrapper(self.hackerman_mode)
+        
+if __name__ == '__main__':
+    BusyBee()

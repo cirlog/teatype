@@ -1,0 +1,400 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# System imports
+import glob
+import json
+import os
+import re
+
+# From system imports
+from typing import List
+
+# From package imports
+from teatype.cli import BaseCLI
+from teatype.io import env, file, path, shell
+from teatype.logging import err, hint, log, println
+
+class Aliases(BaseCLI):
+    """
+    Aliases CLI tool for managing, editing, injecting, ejecting, and listing custom shorthand commands.
+    """
+    class _Alias:
+        """
+        Represents a single alias with its properties.
+        """
+        def __init__(self, name:str, description:str, cmd:str=None, func:List[str]=None):
+            """
+            Initialize an Alias instance.
+
+            Args:
+                name (str): The name of the alias.
+                description (str): A brief description of the alias.
+                cmd (str, optional): The command that the alias executes. Defaults to None.
+                func (List[str], optional): A list of functions associated with the alias. Defaults to None.
+
+            Raises:
+                SystemExit: If neither cmd nor func is provided.
+            """
+            # Ensure at least one of cmd or func is provided
+            if not cmd and not func:
+                err('Must provide either "cmd" or "func" for the alias.', exit=True, traceback=True)
+            self.name = name
+            self.description = description
+            self.cmd = cmd
+            self.func = func
+
+    def meta(self):
+        """
+        Provides metadata for the Aliases CLI commands.
+
+        Returns:
+            dict: A dictionary containing metadata details such as name, shorthand, help description, and available commands.
+        """
+        return {
+            'name': 'aliases',
+            'shorthand': 'al',
+            'help': 'Manage, edit, inject, eject and list aliases for all custom shorthand commands',
+            'commands': [
+                {
+                    'name': 'edit',
+                    'shorthand': 'ed',
+                    'help': 'Edit aliases'
+                },
+                {
+                    'name': 'eject',
+                    'shorthand': 'ej',
+                    'help': 'Eject all aliases'
+                },
+                {
+                    'name': 'inject',
+                    'shorthand': 'in',
+                    'help': 'Inject all aliases'
+                },
+                {
+                    'name': 'list',
+                    'shorthand': 'ls',
+                    'help': 'List all aliases'
+                },
+                {
+                    'name': 'reset',
+                    'shorthand': 'rs',
+                    'help': 'Resets the edited aliases file to the default aliases file'
+                }
+            ]
+        }
+
+    def display_aliases(self, aliases_list:List[_Alias]):
+        """
+        Display the list of current aliases with their descriptions.
+
+        Args:
+            aliases_list (List[_Alias]): A list of Alias instances to display.
+        """
+        log('Current aliases:', pad_before=1)
+        for alias in aliases_list:
+            log(f'  {alias.name}: {alias.description}') # Log each alias name and description
+
+    def modify_aliases(self):
+        """
+        Open the aliases-edited.jsonc file in vim for modification. Creates the file if it doesn't exist.
+        """
+        CIRLOG_CLI_WORKSPACE_PATH = env.get('CIRLOG_CLI_WORKSPACE_PATH')
+        # Path to the edited aliases file
+        edited_file = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') 
+
+        # If the edited aliases file doesn't exist, copy the default aliases file
+        if not file.exists(edited_file):
+            source_path = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc')
+            file.copy(source_path, edited_file)
+
+        # Open the aliases file in vim for editing
+        shell(f'vim {edited_file}')
+
+    def inject_all_aliases(self, aliases_list:List[_Alias], refresh:bool=True):
+        """
+        Inject all aliases into the user's shell configuration.
+
+        Args:
+            aliases_list (List[_Alias]): A list of Alias instances to inject.
+            refresh (bool, optional): Whether to refresh the shell after injection. Defaults to True.
+        """
+        log('Starting alias injection...', pad_before=1, pad_after=1)
+        formatted_aliases = [] # List to hold formatted aliases
+
+        for alias in aliases_list:
+            if alias.cmd:
+                # Substitute environment variables in the command
+                alias_cmd = env.substitute(alias.cmd, env.get())
+                formatted = f'alias {alias.name}="{alias_cmd}"' # Format the alias command
+            elif alias.func:
+                # Replace single quotes with double quotes in functions and join them
+                func = [func.replace("'", '"') for func in alias.func]
+                func = [f'  {line}' for line in func] # Indent each line of the function
+                func.insert(0, alias.name + '() {')
+                func.append('}')
+                formatted = '\n'.join(func) # Combine function lines
+            formatted_aliases.append(formatted) # Add to the list
+
+        bashrc_path = os.path.expanduser('~/.bashrc') # Path to the user's .bashrc
+        try:
+            content = file.read(bashrc_path, force_format='lines') # Read existing .bashrc content
+        except FileNotFoundError:
+            content = [] # Initialize empty if .bashrc doesn't exist
+
+        start_mark = '# --- CIRLOG ALIASES BEGIN ---\n' # Marker for start of aliases
+        end_mark = '# --- CIRLOG ALIASES END ---\n' # Marker for end of aliases
+        
+        # Check if the aliases block already exists
+        start_index = None
+        end_index = None
+        for i, line in enumerate(content):
+            if start_mark in line:
+                start_index = i
+            if end_mark in line:
+                end_index = i
+                
+        # Remove existing aliases block if present
+        if start_index is not None and end_index is not None:
+            log('Aliases already exist. Ejecting existing aliases first...')
+            self.remove_all_aliases(aliases_list, quiet=True, refresh=False)
+
+        # Re-read the .bashrc after potential removal
+        try:
+            content = file.read(bashrc_path, force_format='lines')
+        except FileNotFoundError:
+            content = []
+
+        new_content = content # Initialize new content with existing .bashrc
+        new_content.append('\n') # Add a new line for separation
+        # Append the new aliases between the start and end markers
+        new_content.append(start_mark)
+        for alias in formatted_aliases:
+            new_content.append(f'{alias}\n') # Add each formatted alias
+        new_content.append(end_mark)
+
+        try:
+            file.write(bashrc_path, new_content, force_format='lines') # Write updated content to .bashrc
+        except Exception as e:
+            err(f"Failed to write to {bashrc_path}: {e}", exit=True, traceback=True)
+
+        log(f'Added aliases: {len(formatted_aliases)}', pad_after=1)
+        log('Alias injection complete.')
+
+        if refresh:
+            log('Refreshing shell to apply changes...')
+            shell(f'. {bashrc_path}') # Source the updated .bashrc
+            # FIXME: Probably this code here causing hanging processes
+            shell('exec bash') # Restart the shell
+        else:
+            hint('To apply changes, run `$ exec bash`.', pad_before=1)
+
+    def remove_all_aliases(self, aliases_list:List[_Alias], quiet:bool=False, refresh:bool=True):
+        """
+        Remove all injected aliases from the user's shell configuration.
+
+        Args:
+            aliases_list (List[_Alias]): A list of Alias instances to remove.
+            quiet (bool, optional): If True, suppresses logs. Defaults to False.
+            refresh (bool, optional): Whether to refresh the shell after removal. Defaults to True.
+        """
+        bashrc_path = os.path.expanduser('~/.bashrc') # Path to the user's .bashrc
+        start_mark = '# --- CIRLOG ALIASES BEGIN ---\n' # Marker for start of aliases
+        end_mark = '# --- CIRLOG ALIASES END ---\n' # Marker for end of aliases
+
+        try:
+            lines = file.read(bashrc_path, force_format='lines') # Read existing .bashrc content
+        except FileNotFoundError:
+            lines = [] # Initialize empty if .bashrc doesn't exist
+            
+        filtered_lines = [] # List to hold lines after removal
+        skip = False # Flag to indicate skipping lines between markers
+        
+        # Validate that both start and end markers are present
+        if start_mark in lines and end_mark not in lines:
+            err('Found start mark but not end mark. Aborting.', exit=True, traceback=True)
+        if start_mark not in lines and end_mark in lines:
+            err('Found end mark but not start mark. Aborting.', exit=True, traceback=True)
+        if start_mark not in lines and end_mark not in lines:
+            if not quiet:
+                println()
+                log('No aliases found to remove.')
+            return # Nothing to remove
+        
+        if not quiet:
+            log('Removing all injected aliases...', pad_before=1)
+
+        # Iterate through each line to filter out the aliases block
+        for line in lines:
+            if line.strip() == start_mark.strip():
+                skip = True # Start skipping lines
+                continue
+            if line.strip() == end_mark.strip():
+                skip = False # Stop skipping lines
+                continue
+            if not skip:
+                filtered_lines.append(line) # Keep lines outside the markers
+                
+        # Remove trailing empty lines for cleanliness
+        while filtered_lines and not filtered_lines[-1].strip():
+            filtered_lines.pop()
+                
+        try:
+            file.write(bashrc_path, filtered_lines, force_format='lines') # Write updated content to .bashrc
+        except Exception as e:
+            err(f"Failed to write to {bashrc_path}: {e}", exit=True, traceback=True)
+
+        if not quiet:
+            log(f'Removed aliases: {len(filtered_lines)}', pad_after=1)
+
+        log('All aliases removed.')
+
+        if refresh:
+            if not quiet:
+                log('Refreshing shell to apply changes...')
+            shell(f'. {bashrc_path}') # Source the updated .bashrc
+            # FIXME: Probably this code here causing hanging processes
+            shell('exec bash') # Restart the shell
+        else:
+            if not quiet:
+                hint('To apply changes, run `$ exec bash`.', pad_before=1)
+
+    def restore_aliases_file(self):
+        """
+        Restore the aliases-edited.jsonc file to its default state by copying from the default aliases file.
+        """
+        log('Restoring aliases to default...', pad_before=1)
+        CIRLOG_CLI_WORKSPACE_PATH = env.get('CIRLOG_CLI_WORKSPACE_PATH')
+        source_path = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Source default aliases file
+        destination_path = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Destination edited aliases file
+
+        try:
+            file.copy(source_path, destination_path) # Copy default to edited
+            log('Aliases file successfully restored.')
+        except Exception as e:
+            err(f"Failed to restore aliases: {e}", exit=True, pad_after=1, traceback=True)
+    
+    # FIXME: Not working completely, but fix later, no time now
+    def create_bashrc_backup(self):
+        """
+        Create a backup of the user's .bashrc file.
+
+        This method performs the following steps:
+        1. Determines the path to the user's .bashrc file.
+        2. Reads the CLI configuration to obtain backup settings.
+        3. Ensures the distribution directory exists for storing backups.
+        4. Optionally creates an original backup of .bashrc if configured.
+        5. Manages backup files by maintaining a maximum number of backups.
+           It removes the oldest backup if the maximum is exceeded and shifts existing backups.
+        6. Creates a new backup of the current .bashrc file.
+        """
+        bashrc_path = os.path.expanduser('~/.bashrc') # Expand the user's home directory and get the .bashrc path
+
+        # Read the CLI configuration file to obtain backup settings
+        aliases_config = file.read(path.join(path.caller_parent(reverse_depth=2), 'config', 'cli.ini'))
+        bashrc_max_backups = int(aliases_config.get('ALIASES', 'bashrc_max_backups')) # Maximum number of backups to keep
+        keep_original_bashrc_backup = aliases_config.get('ALIASES', 'keep_original_bashrc_backup') # Flag to keep the original .bashrc backup
+
+        dist_directory = path.join(path.caller_parent(reverse_depth=2), 'dist') # Path to the distribution directory for backups
+        os.makedirs(dist_directory, exist_ok=True) # Create the dist directory if it doesn't exist
+
+        if keep_original_bashrc_backup:
+            original_backup_path = path.join(dist_directory, '.bashrc.original.bak') # Path for the original .bashrc backup
+            if not file.exists(original_backup_path):
+                try:
+                    file.copy(bashrc_path, original_backup_path) # Create a backup of the original .bashrc
+                    log(f'Created backup of original .bashrc at {original_backup_path}.') # Log successful backup creation
+                except Exception as e:
+                    err(f"Failed to create backup of original .bashrc: {e}", exit=True, pad_after=1, traceback=True) # Handle copy failure
+
+        # Define the pattern to identify existing backup files
+        backup_pattern = path.join(dist_directory, 'bashrc.bak.*') # Pattern to match backup files like bashrc.bak.1, bashrc.bak.2, etc.
+        backup_files = glob.glob(backup_pattern) # Retrieve all backup files matching the pattern
+
+        # Extract backup numbers from filenames and sort them in ascending order
+        backup_numbers = []
+        for bf in backup_files:
+            match = re.match(r'bashrc\.bak\.(\d+)$', os.path.basename(bf)) # Use regex to extract the numerical part
+            if match:
+                backup_numbers.append(int(match.group(1))) # Add the backup number to the list
+        backup_numbers.sort() # Sort backup numbers to identify the oldest backup
+
+        # Remove the oldest backup if the number of backups exceeds the maximum allowed
+        if len(backup_numbers) >= bashrc_max_backups:
+            oldest_backup = path.join(dist_directory, f'bashrc.bak.{backup_numbers[0]}') # Path to the oldest backup
+            file.remove(oldest_backup) # Delete the oldest backup file
+            backup_numbers.pop(0) # Remove the oldest backup number from the list
+
+            # Shift remaining backups to maintain the backup numbering sequence
+            for num in backup_numbers:
+                src = path.join(dist_directory, f'bashrc.bak.{num}') # Current backup file path
+                dst = path.join(dist_directory, f'bashrc.bak.{num - 1}') # New backup file path after shifting
+                file.move(src, dst) # Rename/move the backup file to the new path
+
+        # Define the path for the new backup based on the maximum backups allowed
+        backup_path = path.join(dist_directory, f'bashrc.bak.{bashrc_max_backups}') # New backup file path
+        try:
+            file.copy(bashrc_path, backup_path) # Create a new backup of the current .bashrc
+        except Exception as e:
+            # Handle copy failure
+            err(f"Failed to create backup of .bashrc: {e}", exit=True, pad_after=1, traceback=True) 
+
+    def execute(self):
+        """
+        Execute the appropriate alias command based on user input.
+        """
+        cmd = self.get_command() # Retrieve the user command
+        
+        if cmd == 'reset':
+            self.restore_aliases_file()
+            return
+        
+        env_path = path.join(path.caller_parent(reverse_depth=2), '.env') # Path to the .env file
+        env.load(env_path)
+        CIRLOG_CLI_WORKSPACE_PATH = env.get('CIRLOG_CLI_WORKSPACE_PATH')
+
+        aliases_path_default = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Default aliases path
+        aliases_path_edited = path.join(CIRLOG_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Edited aliases path
+        # Determine which aliases file to use
+        active_path = aliases_path_edited if file.exists(aliases_path_edited) else aliases_path_default
+
+        try:
+            self.create_bashrc_backup() # Create a backup of the user's .bashrc file
+            
+            if cmd == 'edit':
+                self.modify_aliases()
+                log(f'Applied changes. File saved at "{aliases_path_edited}".', pad_before=1, pad_after=1)
+                return
+
+            # Open and read the active aliases file
+            aliases_data = file.read(active_path)
+
+            # Create Alias objects from the JSON data
+            aliases_objects = [self._Alias(**alias) for alias in aliases_data]
+
+            if cmd == 'list':
+                self.display_aliases(aliases_objects)
+            elif cmd == 'eject':
+                # FIXME: Disabling refresh for now until I can fix hanging processes
+                self.remove_all_aliases(aliases_objects, refresh=False)
+            elif cmd == 'inject':
+                self.inject_all_aliases(aliases_objects, refresh=False)
+            println()
+        except json.JSONDecodeError:
+            err(f'Error parsing aliases file at "{active_path}". Please verify its correct format or run "aliases reset".', exit=True)
+        except Exception:
+            err('An unexpected error occurred while handling aliases.', exit=True, traceback=True)
+        
+if __name__ == '__main__':
+    Aliases()

@@ -1,0 +1,192 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# System imports
+import os
+
+# Package imports
+try:
+    import pyperclip
+    pyperclip_installed = True
+except:
+    from teatype.logging import warn
+    pyperclip_installed = False
+
+# From package imports
+from teatype.cli import BaseCLI
+from teatype.io import file
+from teatype.logging import err, hint, log, warn
+
+class License(BaseCLI):
+    """
+    License CLI command handler.
+
+    This class provides functionalities to print the project's license 
+    in various programming language formats. It supports different 
+    license types and formatting options based on user-specified flags 
+    and commands.
+    """
+    def meta(self):
+        return {
+            'name': 'license',
+            'shorthand': 'li',
+            'help': 'Print the license of the project for different programming languages',
+            'commands': [
+                {
+                    'name': 'go',
+                    'help': 'Print the license for Go',
+                    'shorthand': 'g'
+                },
+                {
+                    'name': 'html',
+                    'help': 'Print the license for HTML',
+                    'shorthand': 'h'
+                },
+                {
+                    'name': 'jsonc',
+                    'help': 'Print the license for JSONC',
+                    'shorthand': 'jc'
+                },
+                {
+                    'name': 'python',
+                    'help': 'Print the license for Python',
+                    'shorthand': 'py'
+                },
+                {
+                    'name': 'text',
+                    'help': 'Print the license as plain text',
+                    'shorthand': 'tx'
+                },
+                {
+                    'name': 'typescript',
+                    'help': 'Print the license for TypeScript',
+                    'shorthand': 'ts'
+                }
+            ],
+            'flags': [
+                {
+                    'long': 'long',
+                    'short': 'l',
+                    'help': 'Print the long version of the license',
+                    'required': False
+                },
+                {
+                    'long': 'no-copy',
+                    'short': 'nc',
+                    'help': 'Stop copying the license text',
+                    'required': False,
+                },
+                {
+                    'long': 'no-print',
+                    'short': 'nv',
+                    'help': 'Stop printing the license text',
+                    'required': False
+                }
+            ]
+        }
+
+    def format_license(self, license: str):
+        """
+        Format the license text based on the selected programming language.
+
+        Splits the license text into lines and prefixes each line with 
+        the appropriate comment character for the specified language.
+        Additionally, wraps the formatted license text with language-specific 
+        multi-line comment syntax if necessary.
+
+        Args:
+            license (str): The raw license text to be formatted.
+
+        Returns:
+            str: The formatted license text with appropriate comment syntax.
+        """
+        # Split the license text into individual lines
+        lines = license.split('\n')
+
+        # Initialize the comment character based on the selected language
+        comment_character = ''
+        selected_language = self.get_command() # Retrieve the language flag value
+        if selected_language == 'go':
+            comment_character = '// '
+        elif selected_language == 'html':
+            comment_character = ''
+        elif selected_language == 'jsonc':
+            comment_character = ' * '
+        elif selected_language == 'python':
+            comment_character = '# '
+        elif selected_language == 'text':
+            comment_character = ''
+        elif selected_language == 'typescript':
+            comment_character = ' * '
+
+        # Prefix each line of the license with the comment character
+        formatted_license = '\n'.join([f'{comment_character}{line}' for line in lines])
+
+        # Wrap the formatted license with multi-line comment syntax if needed
+        if selected_language == 'h' or selected_language == 'html':
+            formatted_license = f'<!--\n{formatted_license}\n-->'
+        if selected_language == 'jc' or selected_language == 'jsonc':
+            formatted_license = f'/**\n{formatted_license}\n */'
+        elif selected_language == 'ts' or selected_language == 'typescript':
+            formatted_license = f'/**\n * @license\n{formatted_license}\n */'
+
+        return formatted_license
+
+    def execute(self):
+        """
+        Execute the license command based on user input and flags.
+
+        This method reads the appropriate license file, optionally copies 
+        it to the clipboard, formats it according to the selected language, 
+        and prints the formatted license text. Handles errors gracefully 
+        and provides relevant logging messages.
+        """
+        try:
+            # Determine the parent directory relative to this script
+            parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+            files_directory_path = os.path.join(parent_directory, 'cli-files')
+
+            # Check if the user requested the long version of the license
+            long_version = self.get_flag('long')
+            # Construct the filename based on license type and version
+            license_text_filename = 'license-' + ('long' if long_version else 'short') + '.txt'
+
+            # Open and read the license file
+            license = file.read(f'{files_directory_path}/{license_text_filename}')
+            # Format the license text based on the selected language
+            formatted_license = self.format_license(license)
+            # If copying to clipboard is not disabled
+            if not self.get_flag('no-copy'):
+                if pyperclip_installed:
+                    try:
+                        pyperclip.copy(formatted_license) # Copy license text to clipboard
+                        hint('The license text has been copied to the clipboard.')
+                    except:
+                        # Log an error if copying fails, possibly due to SSH session
+                        err('Could not copy the license text to the clipboard. Is it possible you are in a ssh session?')
+            else:
+                # Warn the user if pyperclip is not installed
+                warn('The "pyperclip" package is not installed. The license text will not be copied to the clipboard.',
+                    pad_before=1)
+                
+            log(formatted_license, pad_after=1, pad_before=1) # Log the formatted license
+
+        except:
+            # Handle any unexpected errors during execution
+            err('An error occurred while trying to print the license text.', 
+                exit=True,
+                traceback=True)
+            
+if __name__ == '__main__':
+    License()

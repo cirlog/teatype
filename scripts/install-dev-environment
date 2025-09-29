@@ -13,11 +13,26 @@
 # all copies or substantial portions of the Software.
 
 set -e # Exit immediately if a command exits with a non-zero status
+
 parent_directory=$(dirname "$(dirname "$(readlink -f "$0")")")
+python_directory="$parent_directory/python"
 cd "$parent_directory"
 
-python3.11 -m pip install --upgrade pip
-python3.11 -m venv teatype-venv
-. teatype-venv/bin/activate
-python3.11 -m pip install -r $parent_directory/python/requirements/package.txt
-python3.11 -m pip install -r $parent_directory/python/requirements/test.txt
+. "$parent_directory/util/bash-helper.sh"
+
+
+
+# sudo rm -rf "teatype-venv" || true
+
+# python3.11 -m venv teatype-venv
+# . teatype-venv/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
+
+# python3.11 -m pip install --upgrade pip
+# python3.11 -m pip install . -e --
+# python3.11 -m pip install -r "$python_path/requirements/base.txt"
+# python3.11 -m pip install -r "$python_path/requirements/build.txt"
+# python3.11 -m pip install -r "$python_path/requirements/test.txt"
+
+# python3.11 -m pip install -r "$python_path/requirements/django-support.txt"
+# python3.11 -m pip install -r "$python_path/requirements/fastapi-support.txt"
+# python3.11 -m pip install -r "$python_path/requirements/gpu.txt"

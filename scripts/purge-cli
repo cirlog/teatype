@@ -15,6 +15,3 @@
 set -e
 
 sudo -v >/dev/null 2>&1
-
-python setup.py bdist_wheel --llm
-pip install dist/teatype-llm-0.0.1-py3-none-any.whl

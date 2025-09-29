@@ -1,0 +1,113 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# System imports
+import os
+
+# From package imports
+from teatype.cli import BaseCLI
+from teatype.io import enable_sudo, shell
+from teatype.logging import err, log, println
+
+# TODO: List all files made executable
+# Create an editable ignore list on what kind of folders to ignore for blank operations
+class MakeExecutable(BaseCLI):
+    """
+    CLI class for making files or directories executable by setting appropriate permissions.
+    Inherits from BaseCLI to provide command-line interface functionality.
+    Can handle both single files and entire directories recursively.
+    """
+    def meta(self):
+        """
+        Defines the CLI metadata including command name, help text, and parameter definitions.
+        Returns a dictionary containing all CLI configuration parameters.
+        """
+        return {
+            'name': 'make-executable',
+            'shorthand': 'me',
+            'help': 'Make a file executable by setting the appropiate permission bits (git support)',
+            'arguments': [
+                {
+                    'name': 'filename',
+                    'help': 'The name of the file (or directory including files) to make executable',
+                    'required': True
+                }
+            ],
+            'flags': [
+                {
+                    'short': 'ng',
+                    'long': 'no-git',
+                    'help': ['Disables adding the file to the git index and setting the executable bit',
+                             '(This flag is not recommended for version control)'],
+                    'required': False
+                },
+            ]
+        }
+
+    def set_executable(self, path: str, include_git: bool):
+        """
+        Sets executable permissions for a single file and optionally updates git index.
+        
+        Args:
+            path (str): Path to the file to make executable
+            include_git (bool): Whether to update git index with executable bit
+        """
+        try:
+            # Set executable bit for all users (owner, group, others)
+            shell(f'chmod a+x {path}', sudo=True)
+            # Set specific permissions: rwxr-xr-x (755)
+            shell(f'chmod 755 {path}', sudo=True)
+            
+            # Update git index if requested
+            if include_git:
+                # Add file to git staging area
+                shell(f'git add {path}')
+                # Set executable bit in git index
+                shell(f'git update-index --chmod=+x {path}')
+        except Exception as e:
+            err(f'Failed to set executable permissions for {path}: {e}', exit=True, traceback=True)
+
+    def execute(self):
+        """
+        Main execution method that processes the command-line arguments and sets executable permissions.
+        Handles both single files and directories recursively.
+        """
+        enable_sudo()
+        
+        # Check if git operations should be skipped
+        include_git = not self.get_flag('--no-git')
+        # Get the target path from command line arguments
+        target_path = self.get_argument('filename')
+        
+        println()
+        try:
+            # Handle directory case - walk through all files recursively
+            if os.path.isdir(target_path):
+                for root, _, files in os.walk(target_path):
+                    for file in files:
+                        log(f'Set executable permissions for {file}')
+                        self.set_executable(os.path.join(root, file), include_git)
+            # Handle single file case
+            elif os.path.isfile(target_path):
+                log(f'Set executable permissions for {target_path}')
+                self.set_executable(target_path, include_git)
+            else:
+                # Error if path is neither file nor directory
+                err(f'The specified path "{target_path}" is neither a file nor a directory.', exit=True, traceback=True)
+        except Exception as e:
+            err(f'Error processing the path "{target_path}": {e}', exit=True, traceback=True)
+        println()
+    
+if __name__ == '__main__':
+    MakeExecutable()
