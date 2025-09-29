@@ -11,7 +11,6 @@
 # all copies or substantial portions of the Software.
 
 # System imports
-import json
 import pprint
 
 # Package imports
@@ -24,13 +23,12 @@ from typing import Any, Dict, List, Union
 from simdjson import Parser, Object, Array
 
 JSONType = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
-
 simdjson_parser = Parser()
 
 def compress(data:JSONType,
-                  compression_map:Dict[str, str],
-                  delimiter:str=".",
-                  flatten:bool=False) -> JSONType:
+             compression_map:Dict[str, str],
+             delimiter:str=".",
+             flatten:bool=False) -> JSONType:
     """
     :param data: JSON data to compress
     :param compression_map: full → short key map
@@ -66,9 +64,9 @@ def compress(data:JSONType,
     return flat
 
 def decompress(flat:Union[Dict[str, Any], JSONType],
-                    compression_map:Dict[str, str],
-                    delimiter:str=".",
-                    flatten:bool=False) -> JSONType:
+               compression_map:Dict[str, str],
+               delimiter:str=".",
+               flatten:bool=False) -> JSONType:
     """
     :param flat: flat dict if flatten=True, else nested with compressed keys
     :param compression_map: full→short key map
@@ -142,6 +140,5 @@ def load(file_path:str) -> JSONType:
     else:
         raise TypeError(f'Unsupported top-level JSON type: {type(simdjson_object)}')
 
-def pretty_print(data:JSONType) -> str:
+def print(data:JSONType) -> str:
     pprint.pprint(data, indent=4, width=80, compact=True)
-    # return json.dumps(data, indent=4)

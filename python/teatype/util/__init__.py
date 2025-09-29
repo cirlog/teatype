@@ -22,3 +22,4 @@ from .implemented_trap import implemented_trap
 from .SingletonMeta import SingletonMeta
 from .staticproperty import staticproperty
 from .stopwatch import GLOBAL_STOPWATCH_CONFIG, stopwatch
+from .Timer import Timer

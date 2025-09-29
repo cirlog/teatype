@@ -18,6 +18,7 @@
 import ast
 
 # From package imports
+from teatype.ai import LLMInferencer
 from teatype.cli import BaseTUI
 from teatype.enum import EscapeColor
 from teatype.io import clear_shell, env, file, path, shell
