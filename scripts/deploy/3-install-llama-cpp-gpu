@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Copyright © 2025-2026 @arsonite.
+#
+# This software and all its associated assets, code, designs, dialogue systems, characters, and in-game logic
+# are proprietary and owned exclusively by @arsonite. Permission is granted to the user to install and play
+# the game for personal use. Redistribution, resale, modification, reverse-engineering, or reuse of any part
+# of the game is strictly prohibited without written permission.
+#
+# Third-party open-source components are used under their respective licenses.
+# See /third-party-licenses.md for details.
+#
+# THE GAME IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING, BUT
+# NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+# NON-INFRINGEMENT, OR TITLE. @arsonite DOES NOT WARRANT THAT THE GAME WILL MEET YOUR
+# REQUIREMENTS OR THAT OPERATION OF THE GAME WILL BE UNINTERRUPTED OR ERROR-FREE.
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+set -e # Exit immediately if a command exits with a non-zero status
+
+# Set sudo permissions for entire script before further execution and surpress the output
+sudo -v >/dev/null 2>&1
+
+parent_path=$(dirname "$(dirname "$(readlink -f "$0")")")
+cd "$parent_path"
+
+# Optional: It's good practice to create and activate a Python virtual environment
+. ./nightshade-venv/bin/activate
+
+sudo apt-get update -y
+sudo apt-get install -y build-essential cmake python3-dev python3-pip git ninja-build libcurl4-openssl-dev gcc-12 g++-12 libgomp1
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
+
+git clone --recurse-submodules https://github.com/abetlen/llama-cpp-python.git | echo "Cloned llama-cpp-python repository"
+cd llama-cpp-python
+
+# Set environment variables for the build
+export PATH=/usr/local/cuda/bin:$PATH
+nvcc_path=$(which nvcc)
+export CUDACXX="$nvcc_path"
+export CMAKE_CUDA_COMPILER="$nvcc_path"
+export LLAMA_CMAKE_ARGS="-DGGML_CUDA=on"
+export CMAKE_ARGS="-DGGML_CUDA=on -DCUDA_PATH=/usr/local/cuda-13.0 -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 -DCUDAToolkit_INCLUDE_DIR=/usr/local/cuda-12/include -DCUDAToolkit_LIBRARY_DIR=/usr/local/cuda-13.0/lib64 -DCMAKE_CUDA_ARCHITECTURES=all-major -DCUDAToolkit_ROOT=/usr/lib/cuda"
+export FORCE_CMAKE=1
+export CC="/usr/bin/gcc-12"
+export CXX="/usr/bin/g++-12"
+export CUDAHOSTCXX="/usr/bin/g++-12"
+
+# Run the installation from the cloned directory
+pip install --no-cache-dir .
+
+# Apparently the script of choice

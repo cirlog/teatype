@@ -21,7 +21,7 @@ import sys
 from teatype.cli import BaseCLI, Command
 from teatype.enum import EscapeColor
 from teatype.io import clear_shell, file, path
-from teatype.logging import err, log, hint
+from teatype.logging import err, log, hint, println
 
 # From-as system imports
 from importlib import util as iutil
@@ -117,6 +117,7 @@ class MainCLI(BaseCLI):
         Includes usage instructions and a hint for accessing detailed help for specific scripts.
         """
         disclaimer = self.help
+        println()
         log(disclaimer)
         help_message = f'Usage:\n    {self.shorthand} <script> [args]\n\nScripts:\n'
         # Format and add each script's information to help message

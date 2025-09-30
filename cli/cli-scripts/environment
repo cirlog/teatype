@@ -23,10 +23,10 @@ from teatype.enum import EscapeColor
 from teatype.io import env, enable_sudo, file, path
 from teatype.logging import log, err, println, hint, success, warn
 
-ENV_START_MARK = '# --- TEATYPE ENV VARS BEGIN ---'
-ENV_END_MARK = '# --- TEATYPE ENV VARS END ---'
-ENV_FILE = '/etc/environment'
 BASHRC_FILE = os.path.expanduser('~/.bashrc')
+ENV_END_MARK = '# --- TEATYPE ENV VARS END --- #'
+ENV_START_MARK = '# --- TEATYPE ENV VARS BEGIN --- #'
+ENV_FILE = '/etc/environment'
 
 class Environment(BaseCLI):
     def meta(self):
@@ -144,8 +144,8 @@ class Environment(BaseCLI):
         log('Checking whether environment variable blocks exist or not:')
         println()
         etc_environment = self._check_env_block_status('/etc/environment')
-        teatype_profile_env = self._check_env_block_status('/etc/profile.d/teatype.sh', check_block=False)
-        teatype_system_env = self._check_env_block_status('/etc/systemd/system.conf.d/teatype.conf', check_block=False)
+        teatype_profile_env = self._check_env_block_status('/etc/profile.d/teatype-vars.sh', check_block=False)
+        teatype_system_env = self._check_env_block_status('/etc/systemd/system.conf.d/teatype-vars.conf', check_block=False)
         bashrc = self._check_env_block_status(os.path.expanduser('~/.bashrc'))
         
         if etc_environment and teatype_profile_env and teatype_system_env and bashrc:
@@ -266,19 +266,21 @@ class Environment(BaseCLI):
     def execute(self):
         println()
         
-        parent_directoy = path.caller_parent(reverse_depth=2)
-        teatype_path = path.join(parent_directoy, '.env')
-        teatype_variables = file.read(teatype_path)
+        parent_directoy = path.caller_parent(reverse_depth=2, stringify=False)
+        grandparent_directory = parent_directoy.parent
+        teatype_env_path = path.join(grandparent_directory, '.env')
+        teatype_variables = file.read(teatype_env_path)
+        print(teatype_variables)
 
-        command = self.get_command()
-        if command == 'inject':
-            self.inject_system_env_vars(teatype_variables)
-        elif command == 'eject':
-            self.eject_system_env_vars()
-        elif command == 'list':
-            self.list_available_env_vars(teatype_variables)
-        elif command == 'status':
-            self.status_system_env_vars()
+        # command = self.get_command()
+        # if command == 'inject':
+        #     self.inject_system_env_vars(teatype_variables)
+        # elif command == 'eject':
+        #     self.eject_system_env_vars()
+        # elif command == 'list':
+        #     self.list_available_env_vars(teatype_variables)
+        # elif command == 'status':
+        #     self.status_system_env_vars()
 
         println()
 

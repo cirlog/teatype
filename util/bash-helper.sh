@@ -12,19 +12,19 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+error() {
+    local error_message=$1
+    echo 
+    echo -e "\033[31mERROR - $error_message \033[0m" 
+    echo 
+}
+
 exit_error() {
     local error_message=$1
     echo 
     echo -e "\033[35mFATAL EXIT ERROR - $error_message \033[0m"
     echo 
     exit 1 
-}
-
-error() {
-    local error_message=$1
-    echo 
-    echo -e "\033[31mERROR - $error_message \033[0m" 
-    echo 
 }
 
 # Generic implemented trap registration
@@ -94,6 +94,15 @@ prompt() {
 
     echo ""
     printf -v "$__resultvar" '%s' "$input_value"
+}
+
+prepare_env() {
+    set -e
+}
+
+prepare_sudo_env() {
+    set -e
+    sudo -v >/dev/null 2>&1
 }
 
 prompt_for_env_variable() {
