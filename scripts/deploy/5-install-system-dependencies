@@ -12,13 +12,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-grandparent_directory=$(dirname "$(readlink -f "$0")")
-parent_directory=$(dirname "$grandparent_directory")
-grandparent_directory=$(dirname "$parent_directory")
-. "$grandparent_directory/util/bash-helper.sh"
-
-prepare_sudo_env
-
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt-get update -y
-sudo apt install -y python3.11 python3.11-dev python3.11-venv python3-pip
+sudo apt-get install -y chromium-browser || true
+sudo apt-get install -y graphviz || true
+sudo apt-get install -y jq || true
+sudo apt-get install -y libgl1 || true
+sudo apt-get install -y libgl1-mesa-glx || true
+sudo apt-get install -y libglx-mesa0 || true
+sudo apt-get install -y openjdk-17-jre-headless || true
+sudo apt-get install -y vim || true

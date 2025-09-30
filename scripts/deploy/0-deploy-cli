@@ -12,36 +12,36 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-grandparent_directory=$(dirname "$(readlink -f "$0")")
-parent_directory=$(dirname "$grandparent_directory")
-grandparent_directory=$(dirname "$parent_directory")
+workspace_directory=$(dirname "$(readlink -f "$0")") # teatype/scripts/deploy
+parent_directory=$(dirname "$grandparent_directory") # teatype/scripts
+grandparent_directory=$(dirname "$parent_directory") # teatype
 . "$grandparent_directory/util/bash-helper.sh"
 
 prepare_sudo_env
 
-# ./2-create-env
-# ./3-install-python311
+$workspace_directory/1-install-python311
+$workspace_directory/2-create-env
+$workspace_directory/3-install-dev-environment
 
-# sudo apt-get install -y libgl1-mesa-glx || true
-# sudo apt-get install -y libgl1 libglx-mesa0 || true
-# sudo apt-get install -y chromium-browser vim graphviz openjdk-17-jre-headless jq
+env_path="$grandparent_directory/.env"
+. "$env_path"
 
-# . "$env_path"
+if [[ ":$PATH:" != *":/usr/local/bin:"* ]]; then
+    echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+    echo "Added /usr/local/bin to PATH in ~/.bashrc"
+fi
 
-# if [[ ":$PATH:" != *":/usr/local/bin:"* ]]; then
-#     echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
-#     echo "Added /usr/local/bin to PATH in ~/.bashrc"
-# fi
+cli_path="$grandparent_directory/cli"
+input_file="$cli_path/proxy.template"
+output_file="/usr/local/bin/tt"
 
-# input_file="$cli_path/proxy.template"
-# output_file="/usr/local/bin/tt"
-# sudo rm -f "$output_file"
+sudo rm -f "$output_file"
 
-# sed -e "s|{{WORKSPACE_PATH}}|$grandparent_directory|g" "$input_file" | sudo tee "$output_file" >/dev/null
+sed -e "s|{{WORKSPACE_PATH}}|$grandparent_directory|g" "$input_file" | sudo tee "$output_file" >/dev/null
 
-# sudo chmod a+x "$cli_path/tt"
-# sudo chmod a+x "$input_file"
-# sudo chmod a+x "$output_file"
-# echo "Processed script saved to $output_file"
+sudo chmod a+x "$cli_path/tt"
+sudo chmod a+x "$input_file"
+sudo chmod a+x "$output_file"
+echo "Processed script saved to $output_file"
 
-# exec bash
+exec bash
