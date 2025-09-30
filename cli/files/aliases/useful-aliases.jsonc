@@ -31,6 +31,11 @@
         ]
     },
     {
+        "name": "eb",
+        "description": "Reload current bash session",
+        "command": "exec bash"
+    },
+    {
         "name": "home",
         "description": "Navigate to home directory",
         "command": "cd ~"
@@ -116,16 +121,16 @@
     {
         "name": "tts",
         "description": "Change directory to teatype source path",
-        "command": "cd $TEATYPE_SOURCE_PATH"
+        "command": "cd $TEATYPE_WORKSPACE_PATH"
     },
     {
         "name": "ttp",
         "description": "Change directory to teatype python source path",
-        "command": "cd $TEATYPE_PYTHON_SOURCE_PATH"
+        "command": "cd $TEATYPE_PYTHON_PATH"
     },
     {
         "name": "ttt",
         "description": "Change directory to teatype typescript source path",
-        "command": "cd $TEATYPE_TYPESCRIPT_SOURCE_PATH"
+        "command": "cd $TEATYPE_TYPESCRIPT_PATH"
     }
 ]
