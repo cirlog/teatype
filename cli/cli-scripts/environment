@@ -83,7 +83,7 @@ class Environment(BaseCLI):
             v_clean = v.strip().replace('"', '\\"')
             profile_script.append(f'export {k}="{v_clean}"\n')
 
-        subprocess.run(['sudo', 'tee', '/etc/profile.d/teatype.sh'],
+        subprocess.run(['sudo', 'tee', '/etc/profile.d/teatype-vars.sh'],
                        input=''.join(profile_script),
                        text=True,
                        stdout=subprocess.DEVNULL)
@@ -94,7 +94,7 @@ class Environment(BaseCLI):
         systemd_env_lines.append(f'DefaultEnvironment=' + ' '.join(exports) + '\n')
 
         subprocess.run(['sudo', 'mkdir', '-p', '/etc/systemd/system.conf.d/'])
-        subprocess.run(['sudo', 'tee', '/etc/systemd/system.conf.d/teatype.conf'],
+        subprocess.run(['sudo', 'tee', '/etc/systemd/system.conf.d/teatype-vars.conf'],
                        input=''.join(systemd_env_lines),
                        text=True,
                        stdout=subprocess.DEVNULL)
@@ -123,8 +123,8 @@ class Environment(BaseCLI):
         self._remove_env_block(BASHRC_FILE)
 
         # Remove profile script and systemd config
-        subprocess.run(['sudo', 'rm', '-f', '/etc/profile.d/teatype.sh'])
-        subprocess.run(['sudo', 'rm', '-f', '/etc/systemd/system.conf.d/teatype.conf'])
+        subprocess.run(['sudo', 'rm', '-f', '/etc/profile.d/teatype-vars.sh'])
+        subprocess.run(['sudo', 'rm', '-f', '/etc/systemd/system.conf.d/teatype-vars.conf'])
         subprocess.run(['sudo', 'systemctl', 'daemon-reexec'])
 
         if not auto_mode:
@@ -270,17 +270,16 @@ class Environment(BaseCLI):
         grandparent_directory = parent_directoy.parent
         teatype_env_path = path.join(grandparent_directory, '.env')
         teatype_variables = file.read(teatype_env_path)
-        print(teatype_variables)
 
-        # command = self.get_command()
-        # if command == 'inject':
-        #     self.inject_system_env_vars(teatype_variables)
-        # elif command == 'eject':
-        #     self.eject_system_env_vars()
-        # elif command == 'list':
-        #     self.list_available_env_vars(teatype_variables)
-        # elif command == 'status':
-        #     self.status_system_env_vars()
+        command = self.get_command()
+        if command == 'inject':
+            self.inject_system_env_vars(teatype_variables)
+        elif command == 'eject':
+            self.eject_system_env_vars()
+        elif command == 'list':
+            self.list_available_env_vars(teatype_variables)
+        elif command == 'status':
+            self.status_system_env_vars()
 
         println()
 

@@ -68,7 +68,7 @@ prompt() {
     if [ -z "$default_value" ]; then
         echo -ne "> "
     else
-        echo -ne "\033[90m(Or press ENTER to accept default value ['$default_value'])\033[0m: "
+        echo -ne "\033[90m(Or press ENTER to accept default value ['$default_value'])\033[0m:\n> "
     fi
 
     read input_value

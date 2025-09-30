@@ -23,38 +23,14 @@ from typing import List
 
 # From package imports
 from teatype.cli import BaseCLI
+from teatype.enum import EscapeColor
 from teatype.io import env, file, path, shell
 from teatype.logging import err, hint, log, println
 
 class Aliases(BaseCLI):
     """
-    Aliases CLI tool for managing, editing, injecting, ejecting, and listing custom shorthand commands.
+    Aliases CLI tool for managing, injecting, ejecting, and listing custom shorthand commands.
     """
-    class _Alias:
-        """
-        Represents a single alias with its properties.
-        """
-        def __init__(self, name:str, description:str, cmd:str=None, func:List[str]=None):
-            """
-            Initialize an Alias instance.
-
-            Args:
-                name (str): The name of the alias.
-                description (str): A brief description of the alias.
-                cmd (str, optional): The command that the alias executes. Defaults to None.
-                func (List[str], optional): A list of functions associated with the alias. Defaults to None.
-
-            Raises:
-                SystemExit: If neither cmd nor func is provided.
-            """
-            # Ensure at least one of cmd or func is provided
-            if not cmd and not func:
-                err('Must provide either "cmd" or "func" for the alias.', exit=True, traceback=True)
-            self.name = name
-            self.description = description
-            self.cmd = cmd
-            self.func = func
-
     def meta(self):
         """
         Provides metadata for the Aliases CLI commands.
@@ -65,13 +41,8 @@ class Aliases(BaseCLI):
         return {
             'name': 'aliases',
             'shorthand': 'al',
-            'help': 'Manage, edit, inject, eject and list aliases for all custom shorthand commands',
+            'help': 'Manage and list aliases for all custom shorthand commands',
             'commands': [
-                {
-                    'name': 'edit',
-                    'shorthand': 'ed',
-                    'help': 'Edit aliases'
-                },
                 {
                     'name': 'eject',
                     'shorthand': 'ej',
@@ -86,14 +57,40 @@ class Aliases(BaseCLI):
                     'name': 'list',
                     'shorthand': 'ls',
                     'help': 'List all aliases'
-                },
-                {
-                    'name': 'reset',
-                    'shorthand': 'rs',
-                    'help': 'Resets the edited aliases file to the default aliases file'
                 }
             ]
         }
+        
+    class _Alias:
+        """
+        Represents a single alias with its properties.
+        """
+        def __init__(self,
+                     name:str,
+                     description:str,
+                     filename:str,
+                     command:str=None,
+                     function:List[str]=None):
+            """
+            Initialize an Alias instance.
+
+            Args:
+                name (str): The name of the alias.
+                description (str): A brief description of the alias.
+                command (str, optional): The command that the alias executes. Defaults to None.
+                function (List[str], optional): A list of functions associated with the alias. Defaults to None.
+
+            Raises:
+                SystemExit: If neither command nor function is provided.
+            """
+            # Ensure at least one of command or function is provided
+            if not command and not function:
+                err('Must provide either "command" or "function" for the alias.', exit=True, traceback=True)
+            self.name = name
+            self.description = description
+            self.filename = filename
+            self.command = command
+            self.function = function
 
     def display_aliases(self, aliases_list:List[_Alias]):
         """
@@ -102,25 +99,19 @@ class Aliases(BaseCLI):
         Args:
             aliases_list (List[_Alias]): A list of Alias instances to display.
         """
-        log('Current aliases:', pad_before=1)
+        println()
+        log(f'Found {len(aliases_list)} aliases:')
+        grouped_aliases = {}
         for alias in aliases_list:
-            log(f'  {alias.name}: {alias.description}') # Log each alias name and description
-
-    def modify_aliases(self):
-        """
-        Open the aliases-edited.jsonc file in vim for modification. Creates the file if it doesn't exist.
-        """
-        TEATYPE_CLI_WORKSPACE_PATH = env.get('TEATYPE_CLI_WORKSPACE_PATH')
-        # Path to the edited aliases file
-        edited_file = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') 
-
-        # If the edited aliases file doesn't exist, copy the default aliases file
-        if not file.exists(edited_file):
-            source_path = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc')
-            file.copy(source_path, edited_file)
-
-        # Open the aliases file in vim for editing
-        shell(f'vim {edited_file}')
+            if alias.filename not in grouped_aliases:
+                grouped_aliases[alias.filename] = []
+            grouped_aliases[alias.filename].append(alias)
+        
+        for filename, aliases in grouped_aliases.items():
+            println()
+            log(f'{EscapeColor.MAGENTA}{filename.replace(".jsonc", "")}:')
+            for alias in aliases:
+                log(f'{EscapeColor.LIGHT_CYAN}  {alias.name}: {alias.description}') # Log each alias name and description
 
     def inject_all_aliases(self, aliases_list:List[_Alias], refresh:bool=True):
         """
@@ -134,17 +125,17 @@ class Aliases(BaseCLI):
         formatted_aliases = [] # List to hold formatted aliases
 
         for alias in aliases_list:
-            if alias.cmd:
+            if alias.command:
                 # Substitute environment variables in the command
-                alias_cmd = env.substitute(alias.cmd, env.get())
+                alias_cmd = env.substitute(alias.command, env.get())
                 formatted = f'alias {alias.name}="{alias_cmd}"' # Format the alias command
-            elif alias.func:
+            elif alias.function:
                 # Replace single quotes with double quotes in functions and join them
-                func = [func.replace("'", '"') for func in alias.func]
-                func = [f'  {line}' for line in func] # Indent each line of the function
-                func.insert(0, alias.name + '() {')
-                func.append('}')
-                formatted = '\n'.join(func) # Combine function lines
+                function = [function.replace("'", '"') for function in alias.function]
+                function = [f'  {line}' for line in function] # Indent each line of the function
+                function.insert(0, alias.name + '() {')
+                function.append('}')
+                formatted = '\n'.join(function) # Combine function lines
             formatted_aliases.append(formatted) # Add to the list
 
         bashrc_path = os.path.expanduser('~/.bashrc') # Path to the user's .bashrc
@@ -270,21 +261,6 @@ class Aliases(BaseCLI):
             if not quiet:
                 hint('To apply changes, run `$ exec bash`.', pad_before=1)
 
-    def restore_aliases_file(self):
-        """
-        Restore the aliases-edited.jsonc file to its default state by copying from the default aliases file.
-        """
-        log('Restoring aliases to default...', pad_before=1)
-        TEATYPE_CLI_WORKSPACE_PATH = env.get('TEATYPE_CLI_WORKSPACE_PATH')
-        source_path = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Source default aliases file
-        destination_path = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Destination edited aliases file
-
-        try:
-            file.copy(source_path, destination_path) # Copy default to edited
-            log('Aliases file successfully restored.')
-        except Exception as e:
-            err(f"Failed to restore aliases: {e}", exit=True, pad_after=1, traceback=True)
-    
     # FIXME: Not working completely, but fix later, no time now
     def create_bashrc_backup(self):
         """
@@ -302,9 +278,9 @@ class Aliases(BaseCLI):
         bashrc_path = os.path.expanduser('~/.bashrc') # Expand the user's home directory and get the .bashrc path
 
         # Read the CLI configuration file to obtain backup settings
-        aliases_config = file.read(path.join(path.caller_parent(reverse_depth=2), 'config', 'cli.ini'))
-        bashrc_max_backups = int(aliases_config.get('ALIASES', 'bashrc_max_backups')) # Maximum number of backups to keep
-        keep_original_bashrc_backup = aliases_config.get('ALIASES', 'keep_original_bashrc_backup') # Flag to keep the original .bashrc backup
+        aliases_config = file.read(path.join(path.caller_parent(reverse_depth=2), 'config', 'aliases.ini'))
+        bashrc_max_backups = int(aliases_config.get('BACKUP', 'bashrc_max_backups')) # Maximum number of backups to keep
+        keep_original_bashrc_backup = aliases_config.get('BACKUP', 'keep_original_bashrc_backup') # Flag to keep the original .bashrc backup
 
         dist_directory = path.join(path.caller_parent(reverse_depth=2), 'dist') # Path to the distribution directory for backups
         os.makedirs(dist_directory, exist_ok=True) # Create the dist directory if it doesn't exist
@@ -354,45 +330,39 @@ class Aliases(BaseCLI):
         """
         Execute the appropriate alias command based on user input.
         """
-        cmd = self.get_command() # Retrieve the user command
+        command = self.get_command() # Retrieve the user command
         
-        if cmd == 'reset':
-            self.restore_aliases_file()
-            return
-        
-        env_path = path.join(path.caller_parent(reverse_depth=2), '.env') # Path to the .env file
-        env.load(env_path)
-        TEATYPE_CLI_WORKSPACE_PATH = env.get('TEATYPE_CLI_WORKSPACE_PATH')
+        TEATYPE_CLI_PATH = env.get('TEATYPE_CLI_PATH', None)
+        if TEATYPE_CLI_PATH is None:
+            err('Environment variable TEATYPE_CLI_PATH is not set. Please inject env variables with `tt env inject` first.',
+                exit=True)
 
-        aliases_path_default = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'cli-files', 'aliases.jsonc') # Default aliases path
-        aliases_path_edited = path.join(TEATYPE_CLI_WORKSPACE_PATH, 'dist', 'aliases-edited.jsonc') # Edited aliases path
-        # Determine which aliases file to use
-        active_path = aliases_path_edited if file.exists(aliases_path_edited) else aliases_path_default
+        aliases_path_default = path.join(TEATYPE_CLI_PATH, 'files', 'aliases') # Default aliases path
 
         try:
             self.create_bashrc_backup() # Create a backup of the user's .bashrc file
-            
-            if cmd == 'edit':
-                self.modify_aliases()
-                log(f'Applied changes. File saved at "{aliases_path_edited}".', pad_before=1, pad_after=1)
-                return
 
-            # Open and read the active aliases file
-            aliases_data = file.read(active_path)
+            aliases_objects = []
+            for f in file.list(aliases_path_default):
+                filename = f.name
+                if 'disabled' in filename:
+                    continue
+                
+                aliases = file.read(f.path)
+                
+                # Create Alias objects from the JSON data
+                aliases_objects.extend([self._Alias(**alias, filename=filename) for alias in aliases])
 
-            # Create Alias objects from the JSON data
-            aliases_objects = [self._Alias(**alias) for alias in aliases_data]
-
-            if cmd == 'list':
+            if command == 'list':
                 self.display_aliases(aliases_objects)
-            elif cmd == 'eject':
+            elif command == 'eject':
                 # FIXME: Disabling refresh for now until I can fix hanging processes
                 self.remove_all_aliases(aliases_objects, refresh=False)
-            elif cmd == 'inject':
+            elif command == 'inject':
                 self.inject_all_aliases(aliases_objects, refresh=False)
             println()
         except json.JSONDecodeError:
-            err(f'Error parsing aliases file at "{active_path}". Please verify its correct format or run "aliases reset".', exit=True)
+            err(f'Error parsing aliases file at "{aliases_path_default}". Please verify its correct format or run "aliases reset".', exit=True)
         except Exception:
             err('An unexpected error occurred while handling aliases.', exit=True, traceback=True)
         

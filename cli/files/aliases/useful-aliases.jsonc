@@ -2,12 +2,12 @@
     {
         "name": "c",
         "description": "Clear the terminal screen",
-        "cmd": "clear"
+        "command": "clear"
     },
     {
         "name": "clean-all",
         "description": "Search and delete venv, node_modules, and temporary files",
-        "func": [
+        "function": [
             "echo \"Searching and deleting venv and node_modules directories, ignoring .git\"",
             "sudo find . \\( -path \"./.git\" -o -path \"./node_modules\" \\) -prune -o \\",
             "    -type d \\( -exec test -f '{}/pyvenv.cfg' \\; -o -path '{}/bin' -o -path '{}/Scripts' \\) -print -exec rm -rf {} +",
@@ -19,7 +19,7 @@
     {
         "name": "clean-trash",
         "description": "Delete temporary and cached files",
-        "func": [
+        "function": [
             "echo \"Searching and deleting .zone.identifier files, .pytest_cache, and __pycache__ directories\"",
             "find . \\( -path \"./.git\" -o -path \"./node_modules\" -o -path \"./venv\" \\) -prune -o \\",
             "    -type d -name \".pytest_cache\" -print -exec sudo rm -rf {} +",
@@ -33,22 +33,22 @@
     {
         "name": "home",
         "description": "Navigate to home directory",
-        "cmd": "cd ~"
+        "command": "cd ~"
     },
     {
         "name": "l",
         "description": "List files with details and color",
-        "cmd": "ls -g -h -F -la --color=always"
+        "command": "ls -g -h -F -la --color=always"
     },
     {
         "name": "rc",
         "description": "Edit the bash configuration file",
-        "cmd": "vim ~/.bashrc"
+        "command": "vim ~/.bashrc"
     },
     {
         "name": "rf",
         "description": "Delete files or directories with confirmation",
-        "func": [
+        "function": [
             "if [ \"$1\" == \".\" ]; then",
             "    echo \"Warning: You are about to delete EVERYTHING inside the current directory!\"",
             "    read -p \"This action is irreversible. Are you sure? (Press Enter to confirm or Ctrl+C to abort): \" confirm1",
@@ -77,17 +77,17 @@
     {
         "name": "root",
         "description": "Navigate to the root directory",
-        "cmd": "cd /"
+        "command": "cd /"
     },
     {
         "name": "src",
         "description": "Reload the bash configuration file",
-        "cmd": ". ~/.bashrc"
+        "command": ". ~/.bashrc"
     },
     {
         "name": "srf",
         "description": "Delete files or directories with confirmation (using sudo)",
-        "func": [
+        "function": [
             "if [ \"$1\" == \".\" ]; then",
             "    echo \"Warning: You are about to delete EVERYTHING inside the current directory!\"",
             "    read -p \"This action is irreversible. Are you sure? (Press Enter to confirm or Ctrl+C to abort): \" confirm1",
@@ -115,17 +115,17 @@
     },
     {
         "name": "tt",
-        "help": "Change directory to teatype source path",
+        "description": "Change directory to teatype source path",
         "command": "cd $TEATYPE_SOURCE_PATH"
     },
     {
         "name": "ttp",
-        "help": "Change directory to teatype python source path",
+        "description": "Change directory to teatype python source path",
         "command": "cd $TEATYPE_PYTHON_SOURCE_PATH"
     },
     {
         "name": "tts",
-        "help": "Change directory to teatype typescript source path",
+        "description": "Change directory to teatype typescript source path",
         "command": "cd $TEATYPE_TYPESCRIPT_SOURCE_PATH"
     }
 ]
