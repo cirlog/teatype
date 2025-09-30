@@ -247,7 +247,7 @@ class Aliases(BaseCLI):
             err(f"Failed to write to {bashrc_path}: {e}", exit=True, traceback=True)
 
         if not quiet:
-            log(f'Removed aliases: {len(filtered_lines)}', pad_after=1)
+            log(f'Removed lines: {len(filtered_lines)}', pad_after=1)
 
         log('All aliases removed.')
 
