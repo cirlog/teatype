@@ -31,58 +31,41 @@ from teatype.io import env, path
 from teatype.logging import *
 
 class ConversationalAI(LLMInferencer):
-    def initialize(self,
-                   model_path:str,
-                   context_size:int=2048,
-                   cpu_cores:int=os.cpu_count(),
-                   gpu_layers:int=-1,
-                   chat_format:Optional[str]=None,
-                   surpress_output:bool=True):
-        """
-        Initializes the llama-cpp model with raw prompt-based inference.
-        """
-        self.llm = Llama(
-            model_path=model_path,
-            n_ctx=context_size,
-            n_threads=cpu_cores,
-            n_gpu_layers=gpu_layers,
-            verbose=not surpress_output
-        )
-        self.initialized = True
+    chat_history:deque
+    messages:List[Dict[str, str]]
+    
+    def __init__(self,
+                 model:str,
+                 model_directory:str=None,
+                 max_tokens:int=2048,
+                 context_size:int=4096,
+                 temperature:float=0.7,
+                 cpu_cores:int=os.cpu_count(),
+                 gpu_layers:int=-1,
+                 auto_init:bool=True,
+                 surpress_output:bool=True,
+                 top_p:float=0.9):
+        super().__init__(model=model,
+                         model_directory=model_directory,
+                         max_tokens=max_tokens,
+                         context_size=context_size,
+                         temperature=temperature,
+                         cpu_cores=cpu_cores,
+                         gpu_layers=gpu_layers,
+                         auto_init=auto_init,
+                         surpress_output=surpress_output,
+                         top_p=top_p)
+
+        self.chat_history = deque() # Store past interactions
+        self.messages = []
 
     def reset_chat(self):
-        """Clears conversation history and alerts."""
+        """
+        Clears conversation history and alerts.
+        """
         self.chat_history.clear()
-        self.game_state_alerts.clear()
 
-    def add_game_state_alert(self, alert: str):
-        """Adds a game event/system message."""
-        self.game_state_alerts.append(f"[GAME_EVENT]: {alert}")
-
-    def build_prompt(self, player_action:Optional[str], player_prompt:str) -> str:
-        """
-        Assembles the full prompt string including system, game, chat, and player info.
-        Accepts player_action as optional (empty string allowed).
-        """
-        prompt = self.system_prompt + "\n\n"
-
-        for alert in self.game_state_alerts:
-            prompt += f"{alert}\n"
-
-        for entry in self.chat_history:
-            prompt += f"Player: {entry['player']}\n"
-            prompt += f"NPC: {entry['npc']}\n"
-
-        # Only add player_action if it is not None or empty
-        if player_action and player_action.strip():
-            prompt += f"Player action: {player_action.strip()}\n"
-
-        prompt += f"Player says: {player_prompt}\n"
-        prompt += "NPC:"
-
-        return prompt
-
-    def predict(self, player_action: Optional[str], player_prompt: str, stream: bool = False) -> Dict[str, Optional[str]]:
+    def prompt(self, player_action: Optional[str], player_prompt: str, stream: bool = False) -> Dict[str, Optional[str]]:
         """
         Performs a streamed prompt-based inference and extracts structured NPC response.
 
@@ -101,9 +84,6 @@ class ConversationalAI(LLMInferencer):
                            temperature=self.temperature,
                            top_p=self.top_p,
                            stop=["Player says:", "Player:", "### NPC:"])
-        
-        import pprint
-        pprint.pprint(output)
         
         # Edge case for mistral models
         raw_text = output['choices'][0]['text']
@@ -127,46 +107,3 @@ class ConversationalAI(LLMInferencer):
             'player': player_prompt,
             'npc': npc_text
         })
-
-        # Stream the npc text nicely
-        self._simulate_stream(npc_text)
-
-    def _parse_structured_output(self, output: str) -> Dict[str, Optional[str]]:
-        """
-        Extracts the structured reply block from the model output.
-        """
-        import re
-        parsed = {}
-
-        sections = {
-            'npc': r'### NPC:\n(.*?)(?=###|$)',
-            'mood': r'### Mood:\n(.*?)(?=###|$)',
-            'friendship': r'### Friendship:\n(.*?)(?=###|$)',
-            'action': r'### Action:\n(.*?)(?=###|$)',
-        }
-
-        for key, pattern in sections.items():
-            match = re.search(pattern, output, re.DOTALL)
-            if match:
-                parsed[key] = match.group(1).strip()
-            else:
-                parsed[key] = None
-
-        return parsed
-
-    def _simulate_stream(self, text: str, delay: float = 0.05):
-        """
-        Simulate streaming output character-by-character after parsing is done,
-        like a typical LLM streaming response.
-
-        Args:
-            text (str): The full NPC response text to stream.
-            delay (float): Delay in seconds between characters.
-        """
-        import sys
-        import time
-
-        for char in text:
-            print(char, end='', flush=True)
-            time.sleep(delay)
-        print() # newline after finishing simulated stream

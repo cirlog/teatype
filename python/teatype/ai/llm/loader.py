@@ -29,7 +29,8 @@ def load_model(model_path:str,
                context_size:int=4096,
                cpu_cores:int=os.cpu_count(),
                gpu_layers:int=-1,
-               surpress_output:bool=True) -> Llama|None:
+               surpress_output:bool=True,
+               verbose:bool=False) -> Llama|None:
     """
     Loads a model from the specified path.
     
@@ -55,9 +56,11 @@ def load_model(model_path:str,
                 sys.stdout = old_stdout
                 sys.stderr = old_stderr
     
+    if verbose:
+        log(f'Loading model with parameters: context_size {context_size}, cpu_cores {cpu_cores}, gpu_layers {gpu_layers}')
+        
     if surpress_output:
         with suppress_stdout_stderr():
-            log(f'Loading model with parameters: context_size {context_size}, cpu_cores {cpu_cores}, gpu_layers {gpu_layers}')
             model = Llama(
                 model_path=model_path,
                 n_ctx=context_size,
@@ -65,14 +68,9 @@ def load_model(model_path:str,
                 n_gpu_layers=gpu_layers,
                 use_mlock=True,
                 use_mmap=True,
-                verbose=False
+                verbose=verbose
             )
-            if not model:
-                err(f'Failed to load model from {model_path}. Please check the path and parameters.', raise_exception=True)
-                return None
-            success(f'Model loaded successfully from {model_path}.') 
     else:
-        log(f'Loading model with parameters: context_size {context_size}, cpu_cores {cpu_cores}, gpu_layers {gpu_layers}')
         model = Llama(
             model_path=model_path,
             n_ctx=context_size,
@@ -80,10 +78,13 @@ def load_model(model_path:str,
             n_gpu_layers=gpu_layers,
             use_mlock=True,
             use_mmap=True,
-            verbose=False
+            verbose=verbose
         )
-        if not model:
-            err(f'Failed to load model from {model_path}. Please check the path and parameters.', raise_exception=True)
-            return None
-        success(f'Model loaded successfully from {model_path}.')
+        if verbose:
+            success(f'Model loaded successfully from {model_path}.')
+        
+    if not model:
+        if verbose:
+            err(f'Failed to load model from {model_path}. Please check the path and parameters.')
+        return None
     return model

@@ -14,7 +14,8 @@
 
 # From package imports
 from teatype import colorwrap
-from teatype.ai import LLMInferencer
+# from teatype.ai import LLMInferencer
+from teatype.ai.llm import Inferencer
 from teatype.cli import BaseCLI
 from teatype.io import fetch, path
 from teatype.logging import *
@@ -24,12 +25,26 @@ class Ask(BaseCLI):
         return {
             'name': 'ask',
             'shorthand': 'ak',
-            'help': 'Ask a one-shot question to a LLM model',
+            'help': 'Ask a one-shot question to a local LLM model',
             'arguments': [
                 {
                     'name': 'question',
                     'help': 'The question to ask the model',
                     'required': True
+                }
+            ],
+            'flags': [
+                {
+                    'short': 's',
+                    'long': 'stream',
+                    'help': 'Stream the response as it is generated',
+                    'required': False  
+                },
+                {
+                    'short': 'v',
+                    'long': 'verbose',
+                    'help': 'Enable verbose output',
+                    'required': False
                 }
             ]
         }
@@ -57,7 +72,12 @@ class Ask(BaseCLI):
             println()
             return
         
-        llm = LLMInferencer(model_dir=conversational_model_directory)
+        llm = Inferencer(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
+                         model_directory=conversational_model_directory)
+        
+        response = llm(user_prompt=self.get_argument('question'),
+                       stream_response=self.get_flag('stream'))
+        print(response)
 
 if __name__ == '__main__':
     Ask()
