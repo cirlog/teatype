@@ -43,6 +43,7 @@ class Inferencer():
     model:Optional[Llama]
     temperature:float
     top_p:float
+    unlock_full_potential:bool
     
     def __init__(self,
                  model:str,
@@ -55,6 +56,7 @@ class Inferencer():
                  auto_init:bool=True,
                  surpress_output:bool=True,
                  top_p:float=0.9, # nucleus sampling - Affects diversity. Lower values makes output more focused
+                 unlock_full_potential:bool=False,
                  verbose:bool=False):
         """
         Base class for LLM inferencers.
@@ -64,6 +66,7 @@ class Inferencer():
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.top_p = top_p
+        self.unlock_full_potential = unlock_full_potential
         
         self.model_name = model
         self.model_directory = model_directory if model_directory else MODELS_PATH
@@ -94,7 +97,7 @@ class Inferencer():
             sys.stdout.write('\r' + ' ' * 20 + '\r') # clear line
             
         response = ''
-        input = PromptBuilder(user_prompt)
+        input = PromptBuilder(user_prompt, unlock_full_potential=self.unlock_full_potential)
 
         if show_thinking:
             # Spinner setup
