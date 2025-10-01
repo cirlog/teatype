@@ -19,15 +19,6 @@ from teatype.cli import BaseCLI
 from teatype.io import fetch, path
 from teatype.logging import *
 
-try:
-    import llama_cpp
-except ImportError:
-    from teatype.logging import *
-    error('The "llama-cpp-python" package is not installed. Please run "pip install llama-cpp-python" and try again.',
-          use_prefix=False)
-    println()
-    exit(1)
-
 class Ask(BaseCLI):
     def meta(self):
         return {
@@ -42,6 +33,15 @@ class Ask(BaseCLI):
                 }
             ]
         }
+        
+    def pre_validate(self):
+        try:
+            import llama_cpp
+        except ImportError:
+            err('teatype was not installed with gpu-support.',
+                exit=True,
+                pad_after=1,
+                pad_before=1)
 
     def execute(self):
         println()
