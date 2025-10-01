@@ -12,9 +12,9 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-grandparent_directory=$(dirname "$(readlink -f "$0")")
-parent_directory=$(dirname "$grandparent_directory")
-grandparent_directory=$(dirname "$parent_directory")
+workspace_directory=$(dirname "$(readlink -f "$0")") # teatype/scripts/deploy
+parent_directory=$(dirname "$workspace_directory") # teatype/scripts
+grandparent_directory=$(dirname "$parent_directory") # teatype
 . "$grandparent_directory/util/bash-helper.sh"
 
 env_path="$grandparent_directory/.env"

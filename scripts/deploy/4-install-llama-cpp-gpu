@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/bin/bash
 
 # Copyright (C) 2024-2025 Burak Günaydin
 #
@@ -12,17 +12,23 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Apparently the script of choice
-set -e # Exit immediately if a command exits with a non-zero status
+workspace_directory=$(dirname "$(readlink -f "$0")") # teatype/scripts/deploy
+parent_directory=$(dirname "$workspace_directory") # teatype/scripts
+grandparent_directory=$(dirname "$parent_directory") # teatype
+. "$grandparent_directory/util/bash-helper.sh"
 
-# Set sudo permissions for entire script before further execution and surpress the output
-sudo -v >/dev/null 2>&1
+prepare_sudo_env
 
-parent_path=$(dirname "$(dirname "$(readlink -f "$0")")")
-cd "$parent_path"
+cleanup() {
+    sudo rm -rf "$grandparent_directory/python/dist/llama-cpp-python"
+}
+implemented_trap cleanup
 
-# Optional: It's good practice to create and activate a Python virtual environment
-. ./nightshade-venv/bin/activate
+cd "$grandparent_directory"
+. teatype-venv/bin/activate
+
+mkdir -p "$grandparent_directory/python/dist"
+cd "$grandparent_directory/python/dist"
 
 sudo apt-get update -y
 sudo apt-get install -y build-essential cmake python3-dev python3-pip git ninja-build libcurl4-openssl-dev gcc-12 g++-12 libgomp1
