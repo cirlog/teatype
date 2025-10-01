@@ -17,7 +17,11 @@
 # all copies or substantial portions of the Software.
 
 # System imports
+import itertools
 import os
+import sys
+import threading
+import time
 
 # From system imports
 from abc import ABC
@@ -26,7 +30,8 @@ from typing import List, Dict, Optional
 
 # From package imports
 from llama_cpp import Llama
-from teatype.ai.llm import load_model
+from teatype.ai.llm import load_model, PromptBuilder
+from teatype.enum import EscapeColor
 from teatype.io import env, file, path
 from teatype.logging import *
 
@@ -42,14 +47,14 @@ class Inferencer():
     def __init__(self,
                  model:str,
                  model_directory:str=None,
-                 max_tokens:int=2048,
-                 context_size:int=4096,
-                 temperature:float=0.7,
+                 max_tokens:int=2048, # The maximum number of tokens to generate in the output - affects length of responses
+                 context_size:int=4096, # The context window size of the model - Affects how much text the model can "see" at once
+                 temperature:float=0.7, # Affects randomness. Lowering results in less random completions
                  cpu_cores:int=os.cpu_count(),
                  gpu_layers:int=-1,
                  auto_init:bool=True,
                  surpress_output:bool=True,
-                 top_p:float=0.9,
+                 top_p:float=0.9, # nucleus sampling - Affects diversity. Lower values makes output more focused
                  verbose:bool=False):
         """
         Base class for LLM inferencers.
@@ -70,38 +75,71 @@ class Inferencer():
                                   surpress_output=surpress_output,
                                   verbose=verbose)
     
-    def __call__(self, user_prompt:str, stream_response:bool=True) -> str:
+    def __call__(self,
+                 user_prompt:str,
+                 artificial_delay:float=0.0,
+                 show_thinking:bool=True,
+                 stream_response:bool=True) -> str:
         """
-        Generate text from LLaMA model.
-        
-        Args:
-            user_prompt (str): The input prompt.
-            stream_response (bool): Whether to stream output tokens live.
-
-        Returns:
-            str: Final full response.
+        Generate text from LLaMA model with optional streaming.
+        Shows a spinner until the first token or response is available.
         """
+        def _spinner(stop_event):
+            for symbol in itertools.cycle('|/-\\'):
+                if stop_event.is_set():
+                    break
+                sys.stdout.write('\rThinking ' + symbol)
+                sys.stdout.flush()
+                time.sleep(0.1)
+            sys.stdout.write('\r' + ' ' * 20 + '\r') # clear line
+            
         response = ''
+        input = PromptBuilder(user_prompt)
+
+        if show_thinking:
+            # Spinner setup
+            first_token = True
+            stop_event = threading.Event()
+            spinner_thread = threading.Thread(target=_spinner, args=(stop_event,))
+            spinner_thread.start()
+        
+        if artificial_delay > 0:
+            time.sleep(artificial_delay)
+
         if stream_response:
-            # Stream tokens as they are generated
-            for output in self.model(user_prompt,
-                                     max_tokens=self.max_tokens,
-                                     temperature=self.temperature,
-                                     top_p=self.top_p,
-                                     stream=True):
+            for output in self.model(
+                input,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                top_p=self.top_p,
+                stream=True
+            ):
                 token = output['choices'][0]['text']
-                print(token, end='', flush=True) # live output
+
+                if show_thinking:
+                    if first_token: # stop spinner when first token arrives
+                        stop_event.set()
+                        spinner_thread.join()
+                        first_token = False
+
+                print(f'{EscapeColor.LIGHT_GREEN}{token}{EscapeColor.RESET}', end='', flush=True)
                 response += token
-            print()  # newline after streaming
+            println()
         else:
-            # Normal non-streaming inference
-            raw_output = self.model(user_prompt,
-                                     max_tokens=self.max_tokens,
-                                     temperature=self.temperature,
-                                     top_p=self.top_p,
-                                     stream=False)
+            raw_output = self.model(
+                input,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                top_p=self.top_p,
+                stream=False
+            )
+            if show_thinking:
+                stop_event.set()
+                spinner_thread.join()
             response = raw_output['choices'][0]['text']
-        return response
+
+        # Strip leading newlines/whitespace only once at the start
+        return response.lstrip()
             
     def initialize_model(self,
                          context_size:int=4096,

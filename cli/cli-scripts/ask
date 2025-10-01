@@ -57,7 +57,11 @@ class Ask(BaseCLI):
                 exit=True,
                 pad_after=1,
                 pad_before=1)
-
+        
+    def post_validate(self):
+        self.full_prompt = ' '.join(self.parsed_arguments)
+        self._parsing_errors = []
+        
     def execute(self):
         println()
         
@@ -71,13 +75,16 @@ class Ask(BaseCLI):
             path.create(conversational_model_directory)
             println()
             return
-        
+
+        stream = self.get_flag('stream')
+        if not stream:
+            stream = True
+            
         llm = Inferencer(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
                          model_directory=conversational_model_directory)
         
-        response = llm(user_prompt=self.get_argument('question'),
-                       stream_response=self.get_flag('stream'))
-        print(response)
-
+        response = llm(user_prompt=self.full_prompt,
+                       stream_response=stream)
+        println()
 if __name__ == '__main__':
     Ask()

@@ -32,6 +32,7 @@ try:
 
     from .loader import load_model
     from .inference import Inferencer
+    from .prompt_builder import PromptBuilder
     
     from .models.analytical import AnalyticalAI
     from .models.conversational import ConversationalAI
