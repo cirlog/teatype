@@ -18,7 +18,7 @@ import os
 # From package imports
 from teatype.cli import BaseCLI
 from teatype.io import enable_sudo, shell
-from teatype.logging import err, log, println
+from teatype.logging import *
 
 # Create an editable ignore list on what kind of folders to ignore for blank operations
 class MakeExecutable(BaseCLI):

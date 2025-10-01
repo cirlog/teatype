@@ -21,7 +21,7 @@ import subprocess
 from teatype.cli import BaseCLI
 from teatype.enum import EscapeColor
 from teatype.io import env, enable_sudo, file, path
-from teatype.logging import log, err, println, hint, success, warn
+from teatype.logging import *
 
 BASHRC_FILE = os.path.expanduser('~/.bashrc')
 ENV_END_MARK = '# --- TEATYPE ENV VARS END --- #'

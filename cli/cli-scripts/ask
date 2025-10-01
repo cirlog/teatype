@@ -1,0 +1,54 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# From package imports
+from teatype import colorwrap
+from teatype.ai import LLMInferencer
+from teatype.cli import BaseCLI
+from teatype.io import fetch, path
+from teatype.logging import *
+
+class Ask(BaseCLI):
+    def meta(self):
+        return {
+            'name': 'ask',
+            'shorthand': 'ak',
+            'help': 'Ask a one-shot question to a LLM model',
+            'arguments': [
+                {
+                    'name': 'question',
+                    'help': 'The question to ask the model',
+                    'required': True
+                }
+            ]
+        }
+
+    def execute(self):
+        println()
+        
+        parent_directory = path.caller_parent(reverse_depth=2)
+        cli_dist_directory = path.join(parent_directory, 'dist')
+        model_directory = path.join(cli_dist_directory, 'llm-models')
+        conversational_model_directory = path.join(model_directory, 'conversational')
+        if not path.exists(conversational_model_directory):
+            warn(f'Conversational model directory not found at {conversational_model_directory}. Creating it. Please re-run this script after placing your model there.',
+                 use_prefix=False)
+            path.create(conversational_model_directory)
+            println()
+            return
+        
+        llm = LLMInferencer(model_dir=conversational_model_directory)
+
+if __name__ == '__main__':
+    Ask()

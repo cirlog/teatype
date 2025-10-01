@@ -27,7 +27,7 @@ import psutil
 
 # From package imports
 from teatype.cli import BaseCLI
-from teatype.logging import err, hint, log, println
+from teatype.logging import *
 
 LOG_MAX = 200 # TODO: Make configurable
     

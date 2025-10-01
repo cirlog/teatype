@@ -25,7 +25,7 @@ from typing import List
 from teatype.cli import BaseCLI
 from teatype.enum import EscapeColor
 from teatype.io import env, file, path, shell
-from teatype.logging import err, hint, log, println
+from teatype.logging import *
 
 class Aliases(BaseCLI):
     """
