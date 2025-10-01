@@ -15,7 +15,7 @@ import os
 import re
 
 # From local imports
-from teatype.logging import err
+from teatype.logging import *
 from teatype.io import file
 
 def get(key:str=None, default:str=None) -> str | dict:

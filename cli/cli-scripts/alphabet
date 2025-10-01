@@ -16,7 +16,7 @@
 from teatype.cli import BaseCLI
 from teatype.logging import log, println
 
-class ABC(BaseCLI):
+class Alphabet(BaseCLI):
     """
     A CLI tool to display the alphabet either horizontally or vertically based on user input.
     """
@@ -28,9 +28,17 @@ class ABC(BaseCLI):
             dict: A dictionary containing command metadata such as name, shorthand, help description, and available flags.
         """
         return {
-            'name': 'abc',
-            'shorthand': 'ab',
-            'help': 'Prints the alphabet for big dum dums (listen, but don\'t judge)'
+            'name': 'alphabet',
+            'shorthand': 'abc',
+            'help': 'Prints the alphabet for big dum dums (listen, but don\'t judge)',
+            'flags': [
+                {
+                    'short': 'v',
+                    'long': 'vertical',
+                    'help': 'Print the alphabet vertically with indices',
+                    'required': False,
+                }
+            ]
         }
 
     def execute(self):
@@ -51,7 +59,7 @@ class ABC(BaseCLI):
         # Log the corresponding indices for the horizontal display
         log(alphabet_indices)
         
-        println() # Add another newline at the end for output formatting
+        println()
 
 if __name__ == '__main__':
-    ABC()
+    Alphabet()

@@ -21,7 +21,7 @@ import time
 # From package imports
 from teatype.cli import BaseCLI, BaseIsRunningCLI
 from teatype.io import path
-from teatype.logging import err, hint, log, println, warn
+from teatype.logging import *
 
 # From-as system imports
 from importlib import util as iutil

@@ -22,7 +22,7 @@ from typing import List
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
 from teatype.io.dict import update_dict
-from teatype.logging import err, hint
+from teatype.logging import *
 
 class GLOBAL_CLI_CONFIG:
     """

@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 # From package imports
-from teatype.logging import err
+from teatype.logging import *
 
 def caller(skip_call_stacks:int=None, stringify:bool=True) -> str:
     """

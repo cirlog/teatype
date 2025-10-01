@@ -21,7 +21,7 @@ from typing import List
 from pympler import asizeof
 from teatype.enum import EscapeColor
 from teatype.hsdb.indices import Index, RelationalIndex
-from teatype.logging import println
+from teatype.logging import *
 
 class _MemoryFootprint:
     def __init__(self, index_db:'IndexDatabase'):

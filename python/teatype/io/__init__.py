@@ -11,6 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # From local imports
+from .fetch import fetch
 from .prompt import prompt
 from .shell import clear, enable_sudo, shell
 from .TemporaryDirectory import TemporaryDirectory

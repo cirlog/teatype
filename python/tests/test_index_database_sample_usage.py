@@ -23,7 +23,7 @@ from pprint import pprint
 
 # From package imports
 from teatype.hsdb import HSDBAttribute, HSDBRelation, HSDBModel, HybridStorage
-from teatype.logging import hint, log, println
+from teatype.logging import *
 from teatype.util import generate_id, stopwatch
 
 ##################

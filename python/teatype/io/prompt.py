@@ -18,7 +18,7 @@ from typing import List
 
 # From package imports
 from teatype.enum import EscapeColor
-from teatype.logging import err, log, warn
+from teatype.logging import *
 
 # TODO: if options are supplied, return selected option, not bool
 def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, return_int:bool=True, colorize:bool=True) -> any:

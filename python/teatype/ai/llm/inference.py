@@ -27,7 +27,7 @@ from typing import List, Dict, Optional
 # From package imports
 from llama_cpp import Llama
 from teatype.io import env, path
-from teatype.logging import err, success
+from teatype.logging import *
 
 # Constants
 DEFAULT_MODEL = 'Nous-Hermes-2-Mistral-7B-DPO.Q6_K'

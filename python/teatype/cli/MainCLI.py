@@ -21,7 +21,7 @@ import sys
 from teatype.cli import BaseCLI, Command
 from teatype.enum import EscapeColor
 from teatype.io import clear_shell, file, path
-from teatype.logging import err, log, hint, println
+from teatype.logging import *
 
 # From-as system imports
 from importlib import util as iutil

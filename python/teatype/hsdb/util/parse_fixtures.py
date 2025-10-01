@@ -15,7 +15,7 @@ from typing import List
 
 # From package imports
 from teatype.io import file
-from teatype.logging import println
+from teatype.logging import *
 
 def parse_fixtures(fixtures_path:str) -> List[dict]:
     fixture_files = file.list(fixtures_path, walk=False)

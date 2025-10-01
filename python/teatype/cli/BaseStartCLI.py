@@ -23,7 +23,7 @@ from abc import abstractmethod
 # From package imports
 from teatype.cli import BaseCLI, BaseStopCLI
 from teatype.io import env, file, path, shell
-from teatype.logging import err, hint, log, warn
+from teatype.logging import *
 
 # From-as system imports
 from importlib import util as iutil

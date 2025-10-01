@@ -10,4 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Define what is exported when using 'from teatype.logging import *'
+__all__ = [
+    'GLOBAL_LOGGING_CONFIG',
+    'err',
+    'hint',
+    'log',
+    'println',
+    'success',
+    'warn',
+]
+
 from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, warn

@@ -16,7 +16,7 @@ import os
 
 # From package imports
 from teatype.io import probe
-from teatype.logging import err
+from teatype.logging import *
 
 fastapi_support = probe.package('fastapi')
     

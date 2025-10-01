@@ -23,7 +23,7 @@ from contextlib import contextmanager
 
 # Package imports
 from llama_cpp import Llama
-from teatype.logging import err, log, success
+from teatype.logging import *
 
 def load_model(model_path:str,
                context_size:int=4096,

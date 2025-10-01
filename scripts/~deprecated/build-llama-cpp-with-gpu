@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Copyright © 2025-2026 @arsonite.
+#
+# This software and all its associated assets, code, designs, dialogue systems, characters, and in-game logic
+# are proprietary and owned exclusively by @arsonite. Permission is granted to the user to install and play
+# the game for personal use. Redistribution, resale, modification, reverse-engineering, or reuse of any part
+# of the game is strictly prohibited without written permission.
+#
+# Third-party open-source components are used under their respective licenses.
+# See /third-party-licenses.md for details.
+#
+# THE GAME IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING, BUT
+# NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+# NON-INFRINGEMENT, OR TITLE. @arsonite DOES NOT WARRANT THAT THE GAME WILL MEET YOUR
+# REQUIREMENTS OR THAT OPERATION OF THE GAME WILL BE UNINTERRUPTED OR ERROR-FREE.
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+set -e # Exit immediately if a command exits with a non-zero status
+
+# Set sudo permissions for entire script before further execution and surpress the output
+sudo -v >/dev/null 2>&1
+
+parent_path=$(dirname "$(dirname "$(readlink -f "$0")")")
+cd "$parent_path"
+
+sudo apt-get update -y
+sudo apt-get install -y build-essential cmake python3-dev python3-pip git ninja-build libcurl4-openssl-dev
+
+# rm -rf llama.cpp
+
+git clone https://github.com/ggerganov/llama.cpp.git | echo "repo already exists, skipping clone"
+cd llama.cpp
+cmake -B build -DGGML_CUDA=on
+cmake --build build --config Release -j $(nproc)
+./build/bin/llama-cli --help
+ldd build/bin/llama-cli | grep cuda
+
+# pip install llama-cpp-python --no-binary llama-cpp-python
+# export LLAMA_CMAKE_ARGS="-DGGML_CUDA=on"
+# export CMAKE_ARGS="-DGGML_CUDA=on -DCUDA_PATH=/usr/local/cuda-13.0 -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 -DCUDAToolkit_INCLUDE_DIR=/usr/local/cuda-12/include -DCUDAToolkit_LIBRARY_DIR=/usr/local/cuda-13.0/lib64"
+# pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir
+# pip uninstall llama-cpp-python
+# pip install llama-cpp-python --force-reinstall --no-binary llama-cpp-python

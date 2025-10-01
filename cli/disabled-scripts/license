@@ -20,13 +20,12 @@ try:
     import pyperclip
     pyperclip_installed = True
 except:
-    from teatype.logging import warn
     pyperclip_installed = False
 
 # From package imports
 from teatype.cli import BaseCLI
 from teatype.io import file
-from teatype.logging import err, hint, log, warn
+from teatype.logging import *
 
 class License(BaseCLI):
     """

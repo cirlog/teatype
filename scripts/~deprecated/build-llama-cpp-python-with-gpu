@@ -1,18 +1,23 @@
-#!/usr/bin/env python3.11
+#!/bin/bash
 
-# Copyright (C) 2024-2025 Burak Günaydin
+# Copyright © 2025-2026 @arsonite.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This software and all its associated assets, code, designs, dialogue systems, characters, and in-game logic
+# are proprietary and owned exclusively by @arsonite. Permission is granted to the user to install and play
+# the game for personal use. Redistribution, resale, modification, reverse-engineering, or reuse of any part
+# of the game is strictly prohibited without written permission.
+#
+# Third-party open-source components are used under their respective licenses.
+# See /third-party-licenses.md for details.
+#
+# THE GAME IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING, BUT
+# NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+# NON-INFRINGEMENT, OR TITLE. @arsonite DOES NOT WARRANT THAT THE GAME WILL MEET YOUR
+# REQUIREMENTS OR THAT OPERATION OF THE GAME WILL BE UNINTERRUPTED OR ERROR-FREE.
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Apparently the script of choice
 set -e # Exit immediately if a command exits with a non-zero status
 
 # Set sudo permissions for entire script before further execution and surpress the output
@@ -45,3 +50,5 @@ export CUDAHOSTCXX="/usr/bin/g++-12"
 
 # Run the installation from the cloned directory
 pip install --no-cache-dir .
+
+# Apparently the script of choice

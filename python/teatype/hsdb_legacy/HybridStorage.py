@@ -24,7 +24,7 @@ from datetime import datetime as dt
 from multiprocessing import Queue
 from teatype.hsdb_legacy import IndexDatabase, RawFileHandler
 from teatype.io import env
-from teatype.logging import log
+from teatype.logging import *
 from teatype.util import SingletonMeta
 
 # TODO: Implement Coroutine and Operation (Atomic)

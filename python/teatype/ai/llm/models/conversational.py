@@ -28,7 +28,7 @@ from typing import List, Dict, Optional
 from llama_cpp import Llama
 from teatype.ai import LLMInferencer
 from teatype.io import env, path
-from teatype.logging import err, success
+from teatype.logging import *
 
 class ConversationalAI(LLMInferencer):
     def initialize(self,

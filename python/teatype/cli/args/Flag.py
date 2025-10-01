@@ -11,7 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # From package imports
-from teatype.logging import err
+from teatype.logging import *
 
 # From system imports
 from typing import List

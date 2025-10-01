@@ -19,7 +19,7 @@ from typing import Callable, Dict, Optional
 
 # From package imports
 from teatype.io import probe
-from teatype.logging import err
+from teatype.logging import *
 
 try:
     fastapi_support = probe.package('fastapi')
