@@ -26,11 +26,11 @@ from typing import List, Dict, Optional
 
 # From package imports
 from llama_cpp import Llama
-from teatype.ai import LLMInferencer
+from teatype.ai.llm import Inferencer, PromptBuilder
 from teatype.io import env, path
 from teatype.logging import *
 
-class ConversationalAI(LLMInferencer):
+class ConversationalAI(Inferencer):
     chat_history:deque
     messages:List[Dict[str, str]]
     
@@ -43,6 +43,7 @@ class ConversationalAI(LLMInferencer):
                  cpu_cores:int=os.cpu_count(),
                  gpu_layers:int=-1,
                  auto_init:bool=True,
+                 max_history:int=10, # max number of turns to keep in memory
                  surpress_output:bool=True,
                  top_p:float=0.9):
         super().__init__(model=model,
@@ -55,55 +56,45 @@ class ConversationalAI(LLMInferencer):
                          auto_init=auto_init,
                          surpress_output=surpress_output,
                          top_p=top_p)
+        self.chat_history: deque[Dict[str, str]] = deque(maxlen=max_history)
 
-        self.chat_history = deque() # Store past interactions
-        self.messages = []
+        def conversional_directive() -> str:
+            return """You will reply conversationally, keeping context from earlier turns in the chat. Engage in a conversational manner. Remember previous interactions and provide contextually relevant responses."""
+        self.system_prompt = PromptBuilder(additional_runtime_calls=[conversional_directive],
+                                           include_assistant_context=False,
+                                           unlock_full_potential=True)
 
-    def reset_chat(self):
+    def _build_conversation_prompt(self, user_prompt:str) -> str:
         """
-        Clears conversation history and alerts.
+        Build the full prompt including history + current user input.
         """
-        self.chat_history.clear()
+        messages = [f'System: {self.system_prompt}']
 
-    def prompt(self, player_action: Optional[str], player_prompt: str, stream: bool = False) -> Dict[str, Optional[str]]:
+        for turn in self.chat_history:
+            messages.append(f'User: {turn["user"]}')
+            messages.append(f'Assistant: {turn["assistant"]}')
+
+        messages.append(f'User: {user_prompt}')
+        messages.append('Assistant:')
+
+        return '\n'.join(messages)
+
+    def chat(self,
+             user_prompt:str,
+             artificial_delay:float=0.0,
+             show_thinking:bool=True,
+             stream_response:bool=True) -> str:
         """
-        Performs a streamed prompt-based inference and extracts structured NPC response.
-
-        Returns:
-            dict: Parsed NPC response structure with keys 'npc', 'mood', 'friendship', 'action'.
+        One conversational turn. Tracks history automatically.
         """
-        if not self.initialized:
-            err('Inferencer not initialized. Call initialize().')
-            return {}
-
-        prompt = self.build_prompt(player_action, player_prompt)
-
-        # Streaming or non-streaming loop from llama-cpp
-        output =  self.llm(prompt=prompt,
-                           max_tokens=self.max_tokens,
-                           temperature=self.temperature,
-                           top_p=self.top_p,
-                           stop=["Player says:", "Player:", "### NPC:"])
-        
-        # Edge case for mistral models
-        raw_text = output['choices'][0]['text']
-        npc_dialogue, npc_analysis = raw_text.strip().split("### Mood:")
-        reconstructed_output = f"### NPC:\n{npc_dialogue.strip()}\n### Mood:{npc_analysis.strip()}"
-        # print(reconstructed_output)
-
-        # Cap history size by rough token count (words count as proxy)
-        while sum(len(turn['player'].split()) + len(turn['npc'].split()) for turn in self.chat_history) > self.max_tokens:
-            self.chat_history.popleft()
-
-        # Parse structured output block from the raw output
-        parsed_response = self._parse_structured_output(reconstructed_output)
-
-        npc_text = parsed_response.get('npc') or ''
-        if not npc_text:
-            err("Warning: NPC response missing or empty.")
-
-        # Save only parsed npc text in history if you want
-        self.chat_history.append({
-            'player': player_prompt,
-            'npc': npc_text
-        })
+        full_prompt = self._build_conversation_prompt(user_prompt)
+        response = super().__call__(
+            user_prompt=full_prompt,
+            artificial_delay=artificial_delay,
+            show_thinking=show_thinking,
+            stream_response=stream_response,
+            use_prompt_builder=False
+        )
+        # Save to history
+        self.chat_history.append({"user": user_prompt, "assistant": response})
+        return response

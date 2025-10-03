@@ -82,7 +82,8 @@ class Inferencer():
                  user_prompt:str,
                  artificial_delay:float=0.0,
                  show_thinking:bool=True,
-                 stream_response:bool=True) -> str:
+                 stream_response:bool=True,
+                 use_prompt_builder:bool=True) -> str:
         """
         Generate text from LLaMA model with optional streaming.
         Shows a spinner until the first token or response is available.
@@ -97,7 +98,10 @@ class Inferencer():
             sys.stdout.write('\r' + ' ' * 20 + '\r') # clear line
             
         response = ''
-        input = PromptBuilder(user_prompt, unlock_full_potential=self.unlock_full_potential)
+        if use_prompt_builder:
+            input = PromptBuilder(user_prompt, unlock_full_potential=self.unlock_full_potential)
+        else:
+            input = user_prompt
 
         if show_thinking:
             # Spinner setup

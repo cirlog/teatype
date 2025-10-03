@@ -66,7 +66,7 @@ def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, retur
             # Prompt the user for input using the constructed options string
             if colorize:
                 options_string = f'{EscapeColor.GRAY}{options_string}{EscapeColor.RESET}'
-            prompt_answer = input(options_string)
+            prompt_answer = '> ' + input(options_string)
             
             # Validate the user's input against the available options
             if prompt_answer not in options:

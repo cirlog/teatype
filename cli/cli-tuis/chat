@@ -16,7 +16,7 @@
 from teatype import colorwrap
 from teatype.ai.llm import ConversationalAI
 from teatype.cli import BaseTUI
-from teatype.io import fetch, path
+from teatype.io import fetch, path, prompt
 from teatype.logging import *
 
 DEFAULT_MODEL_PATH = ''
@@ -51,7 +51,24 @@ class Chat(BaseTUI):
             println()
             return
         
-        llm = ConversationalAI()
+        stream = self.get_flag('stream')
+        if not stream:
+            stream = True
+            
+        llm = ConversationalAI(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
+                               model_directory=conversational_model_directory)
+        
+        try:
+            while True:
+                user_input = prompt('[You]:', return_bool=False)
+                if user_input.lower() in ['exit', 'quit', 'q', 'bye']:
+                    println()
+                    break
+                response = llm.chat(user_input, stream_response=stream)
+                if not stream:
+                    println(f'\n{colorwrap("Assistant: ", "green", bold=True)}{response}\n')
+        except KeyboardInterrupt:
+            println()
         
 if __name__ == '__main__':
     Chat()
