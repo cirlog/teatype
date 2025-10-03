@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.11
-
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,19 +10,19 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From local imports
-from teatype.cli import BaseCLI
+# From system imports
+from typing import List
 
-class TestTUI(BaseCLI):
-    def meta(self):
-        return {
-            'name': 'testtui',
-            'shorthand': 'tt',
-            'help': 'Test the TUI framework',
-        }
+class Action:
+    def __init__(self,
+                name:str,
+                help:str|List[str],
+                option_name:str|None=None,
+                option:any=None):
+        self.name = name
+        self.help = help
+        self.option_name = option_name
+        self.option = option
         
-    def on_before_run(self):
-        pass
-        
-if __name__ == '__main__':
-    TestTUI()
+        self.str = None
+        self.value = None

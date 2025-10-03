@@ -14,7 +14,7 @@
 
 # From package imports
 from teatype import colorwrap
-from teatype.ai.llm import ConversationalAI, Inferencer
+from teatype.ai.llm import ConversationalAI
 from teatype.cli import BaseTUI
 from teatype.io import fetch, path
 from teatype.logging import *
@@ -30,6 +30,12 @@ class Chat(BaseTUI):
             'shorthand': 'ch',
             'help': 'Chat with a local LLM model',
         }
+        
+    def on_display(self):
+        pass
+    
+    def on_prompt(self):
+        pass
 
     def run(self):
         println()
@@ -45,7 +51,7 @@ class Chat(BaseTUI):
             println()
             return
         
-        llm = ConversationalAI
+        llm = ConversationalAI()
         
 if __name__ == '__main__':
     Chat()

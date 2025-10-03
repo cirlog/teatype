@@ -19,9 +19,23 @@ try:
     """
     import llama_cpp
     
-    __all__ = ['Inferencer', 'PromptBuilder']
+    __all__ = ['AnalyticalAI',
+               'ConversationalAI',
+               'Inferencer',
+               'load_model',
+               'PromptBuilder']
+    __GPU_SUPPORT__ = True
 
     def __getattr__(name):
+        if name == 'AnalyticalAI':
+            from .models.analytical import AnalyticalAI
+            return AnalyticalAI
+        if name == 'ConversationalAI':
+            from .models.conversational import ConversationalAI
+            return ConversationalAI
+        if name == 'load_model':
+            from .loader import load_model
+            return load_model
         if name == 'Inferencer':
             from .inference import Inferencer
             return Inferencer
@@ -29,14 +43,5 @@ try:
             from .prompt_builder import PromptBuilder
             return PromptBuilder
         raise AttributeError(f'module "llm" has no attribute "{name}"')
-
-    from .loader import load_model
-    from .inference import Inferencer
-    from .prompt_builder import PromptBuilder
-    
-    from .models.analytical import AnalyticalAI
-    from .models.conversational import ConversationalAI
-    
-    __GPU_SUPPORT__ = True
 except:
     __GPU_SUPPORT__ = False
