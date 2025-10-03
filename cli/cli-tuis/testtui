@@ -12,37 +12,19 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
-from teatype import colorwrap
-from teatype.cli import BaseTUI
-from teatype.io import fetch, path
-from teatype.logging import *
+# From local imports
+from teatype.cli import BaseCLI
 
-DEFAULT_MODEL_PATH = ''
-MANUAL_REFRESH = False # If True, the shell will be cleared automatically after each command
-DEBUG_MODE = False
-
-class TestTUI(BaseTUI):
+class TestTUI(BaseCLI):
     def meta(self):
         return {
             'name': 'testtui',
             'shorthand': 'tt',
             'help': 'Test the TUI framework',
         }
-
-    def run(self):
-        println()
         
-        parent_directory = path.caller_parent(reverse_depth=2)
-        cli_dist_directory = path.join(parent_directory, 'dist')
-        model_directory = path.join(cli_dist_directory, 'llm-models')
-        conversational_model_directory = path.join(model_directory, 'conversational')
-        if not path.exists(conversational_model_directory):
-            warn(f'Conversational model directory not found at {conversational_model_directory}. Creating it. Please re-run this script after placing your model there.',
-                 use_prefix=False)
-            path.create(conversational_model_directory)
-            println()
-            return
+    def on_before_run(self):
+        pass
         
 if __name__ == '__main__':
     TestTUI()
