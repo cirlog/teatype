@@ -56,17 +56,22 @@ class Chat(BaseTUI):
             stream = True
             
         llm = ConversationalAI(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
-                               model_directory=conversational_model_directory)
-        
+                               model_directory=conversational_model_directory,
+                               verbose=True)
+        println()
+        log(colorwrap('[LLM]:', 'cyan'))
+        response = llm.chat('Instruction: Greet the user.', stream_response=stream)
         try:
             while True:
                 user_input = prompt('[You]:', return_bool=False)
                 if user_input.lower() in ['exit', 'quit', 'q', 'bye']:
                     println()
                     break
+                println()
+                log(colorwrap('[LLM]:', 'cyan'))
                 response = llm.chat(user_input, stream_response=stream)
                 if not stream:
-                    println(f'\n{colorwrap("Assistant: ", "green", bold=True)}{response}\n')
+                    print(response)
         except KeyboardInterrupt:
             println()
         

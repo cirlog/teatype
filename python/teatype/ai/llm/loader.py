@@ -55,10 +55,17 @@ def load_model(model_path:str,
             finally:
                 sys.stdout = old_stdout
                 sys.stderr = old_stderr
-    
     if verbose:
-        log(f'Loading model with parameters: context_size {context_size}, cpu_cores {cpu_cores}, gpu_layers {gpu_layers}')
-        
+        warn(f'> Loading model with parameters:',
+             use_prefix=False)
+        warn(f'     - Path: {model_path}',
+             use_prefix=False)
+        warn(f'     - Context Size: {context_size}',
+             use_prefix=False)
+        warn(f'     - CPU Cores: {cpu_cores}',
+             use_prefix=False)
+        warn(f'     - GPU Layers: {gpu_layers}',
+             use_prefix=False)
     if surpress_output:
         with suppress_stdout_stderr():
             model = Llama(
@@ -68,7 +75,7 @@ def load_model(model_path:str,
                 n_gpu_layers=gpu_layers,
                 use_mlock=True,
                 use_mmap=True,
-                verbose=verbose
+                verbose=False
             )
     else:
         model = Llama(
@@ -78,13 +85,12 @@ def load_model(model_path:str,
             n_gpu_layers=gpu_layers,
             use_mlock=True,
             use_mmap=True,
-            verbose=verbose
+            verbose=True
         )
-        if verbose:
-            success(f'Model loaded successfully from {model_path}.')
-        
     if not model:
         if verbose:
-            err(f'Failed to load model from {model_path}. Please check the path and parameters.')
+            err(f'Failed to load model. Please check the path and parameters.')
         return None
+    if verbose:
+        success(f'> Model loaded successfully!')
     return model

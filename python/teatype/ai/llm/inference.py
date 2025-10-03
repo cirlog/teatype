@@ -34,7 +34,9 @@ from teatype.ai.llm import load_model, PromptBuilder
 from teatype.enum import EscapeColor
 from teatype.io import env, file, path
 from teatype.logging import *
+from teatype.util import colorwrap
 
+APPLY_WHITESPACE_PATCH = True
 ROOT_PATH = env.get('TEATYPE_WORKSPACE_PATH')
 MODELS_PATH = path.join(ROOT_PATH, 'cli', 'dist', 'llm-models')
 
@@ -81,6 +83,8 @@ class Inferencer():
     def __call__(self,
                  user_prompt:str,
                  artificial_delay:float=0.0,
+                 colorized_output:EscapeColor.Colors=None,
+                 decorator:str=None,
                  show_thinking:bool=True,
                  stream_response:bool=True,
                  use_prompt_builder:bool=True) -> str:
@@ -113,13 +117,16 @@ class Inferencer():
         if artificial_delay > 0:
             time.sleep(artificial_delay)
 
+        if decorator:
+            print(decorator + ':', end=' ', flush=True)
         if stream_response:
             for output in self.model(
                 input,
                 max_tokens=self.max_tokens,
+                stop=['User:', '\nUser:', '\n\nUser:'], # Stop generation when user prompt is detected again
+                stream=True,
                 temperature=self.temperature,
-                top_p=self.top_p,
-                stream=True
+                top_p=self.top_p
             ):
                 token = output['choices'][0]['text']
 
@@ -128,17 +135,23 @@ class Inferencer():
                         stop_event.set()
                         spinner_thread.join()
                         first_token = False
+                        if APPLY_WHITESPACE_PATCH:
+                            token = token.lstrip() # Strip leading whitespace only once at the start
 
-                print(f'{EscapeColor.LIGHT_GREEN}{token}{EscapeColor.RESET}', end='', flush=True)
+                if colorized_output:
+                    print(colorwrap(token, colorized_output), end='', flush=True)
+                else:
+                    print(token, end='', flush=True)
                 response += token
             println()
         else:
             raw_output = self.model(
                 input,
                 max_tokens=self.max_tokens,
+                stop=['User:', '\nUser:', '\n\nUser:'], # Stop generation when user prompt is detected again
+                stream=False,
                 temperature=self.temperature,
-                top_p=self.top_p,
-                stream=False
+                top_p=self.top_p
             )
             if show_thinking:
                 stop_event.set()

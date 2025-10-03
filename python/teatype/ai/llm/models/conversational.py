@@ -45,7 +45,8 @@ class ConversationalAI(Inferencer):
                  auto_init:bool=True,
                  max_history:int=10, # max number of turns to keep in memory
                  surpress_output:bool=True,
-                 top_p:float=0.9):
+                 top_p:float=0.9,
+                 verbose:bool=False):
         super().__init__(model=model,
                          model_directory=model_directory,
                          max_tokens=max_tokens,
@@ -55,7 +56,8 @@ class ConversationalAI(Inferencer):
                          gpu_layers=gpu_layers,
                          auto_init=auto_init,
                          surpress_output=surpress_output,
-                         top_p=top_p)
+                         top_p=top_p,
+                         verbose=verbose)
         self.chat_history: deque[Dict[str, str]] = deque(maxlen=max_history)
 
         def conversional_directive() -> str:
