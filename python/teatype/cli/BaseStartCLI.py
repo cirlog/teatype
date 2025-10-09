@@ -313,16 +313,29 @@ class BaseStartCLI(BaseCLI):
             hint('"auto_activate_venv" automatically set to "True". Trying to activate a possibly present virtual environment ...',
                 pad_before=1)
         
-        venv_path = ''
-        venv_found = False  # Initialize flag to track if a virtual environment is found
-        # Iterate through all files in the parent directory to locate a virtual environment
-        for f in file.list(self.parent_path):
-            if 'venv' in f.name:
-                venv_path = f.path # Store the path of the found virtual environment
-                if not silent_mode:
-                    log(f'Virtual environment {f.name} found.') # Log the discovery of the virtual environment
-                venv_found = True # Update the flag as a virtual environment is found
-                break # Exit the loop since the virtual environment has been found
+        venv_name = None
+        if hasattr(self, 'venv_name'):
+            venv_name = self.venv_name
+            venv_path = path.join(self.parent_path, venv_name)
+            if not path.exists(venv_path):
+                err(f'Virtual environment {venv_name} does not exist.')
+                venv_found = False
+            else:
+                venv_found = True
+        
+        if not venv_name:
+            if not silent_mode:
+                warn(f'No self.venv_name in start-script specified, trying to locate venv automatically instead ...') # Log the discovery of the virtual environment
+            venv_path = ''
+            venv_found = False # Initialize flag to track if a virtual environment is found
+            # Iterate through all files in the parent directory to locate a virtual environment
+            for f in file.list(self.parent_path):
+                if 'venv' in f.name:
+                    venv_path = f.path # Store the path of the found virtual environment
+                    if not silent_mode:
+                        log(f'Virtual environment {f.name} found.') # Log the discovery of the virtual environment
+                    venv_found = True # Update the flag as a virtual environment is found
+                    break # Exit the loop since the virtual environment has been found
             
         env.set('VIRTUAL_ENV', venv_path) # Set the VIRTUAL_ENV environment variable to an empty string
         env.set('PYTHONUNBUFFERED', '1') # Set the PYTHONUNBUFFERED environment variable to '1'
