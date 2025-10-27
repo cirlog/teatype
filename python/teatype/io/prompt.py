@@ -47,7 +47,6 @@ def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, retur
         # Log the prompt text for debugging or record-keeping purposes
         if colorize:
             prompt_text = f'{EscapeColor.LIGHT_GREEN}{prompt_text}{EscapeColor.RESET}'
-        log(prompt_text, pad_before=1)
         
         if options:
             # Initialize the string that will display the options
@@ -66,8 +65,13 @@ def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, retur
             # Prompt the user for input using the constructed options string
             if colorize:
                 options_string = f'{EscapeColor.GRAY}{options_string}{EscapeColor.RESET}'
-            prompt_answer = '> ' + input(options_string)
+            prompt_text += ' ' + options_string
+                
+        log(prompt_text, pad_before=1)
+        
+        prompt_answer = input('> ')
             
+        if options:
             # Validate the user's input against the available options
             if prompt_answer not in options:
                 # Log an error message and exit if the input is invalid
@@ -76,9 +80,7 @@ def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, retur
                     exit=True,
                     use_prefix=False,
                     verbose=False)
-        else:
-            prompt_answer = input()
-        
+            
         # Return the validated user input
         return prompt_answer == options[0] if return_bool else prompt_answer
     except KeyboardInterrupt:
