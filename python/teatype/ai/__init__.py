@@ -13,6 +13,7 @@
 try:
     from .llm.loader import load_model as load_llm_model
     from .llm.inference import Inferencer as LLMInferencer
+    from .OpenGPT import OpenGPT
     
     __GPU_SUPPORT__ = True
 except:

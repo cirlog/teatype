@@ -1,17 +1,11 @@
-# Copyright © 2025-2026 @arsonite.
+# Copyright (C) 2024-2025 Burak Günaydin
 #
-# This software and all its associated assets, code, designs, dialogue systems, characters, and in-game logic
-# are proprietary and owned exclusively by @arsonite. Permission is granted to the user to install and play
-# the game for personal use. Redistribution, resale, modification, reverse-engineering, or reuse of any part
-# of the game is strictly prohibited without written permission.
-#
-# Third-party open-source components are used under their respective licenses.
-# See /third-party-licenses.md for details.
-#
-# THE GAME IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING, BUT
-# NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
-# NON-INFRINGEMENT, OR TITLE. @arsonite DOES NOT WARRANT THAT THE GAME WILL MEET YOUR
-# REQUIREMENTS OR THAT OPERATION OF THE GAME WILL BE UNINTERRUPTED OR ERROR-FREE.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
@@ -42,6 +36,22 @@ Follow these rules:
    - If multiple interpretations exist, ask clarifying questions.
    - When explaining, use step-by-step logic and simple language.
    - Provide code examples when helpful, with proper comments.
+   - Always match the user's language style, complexity and tone.
+     If he uses slang, you use slang.
+     If he uses formal language, you use formal language.
+     If is just goofing around, you goof around too.
+     If he is very technical, you are very technical too.
+     If he is being casual, you are casual too.
+     If he is being funny, you are funny too.
+     If he is being mean, you are mean too.
+     If he is being meme-y, you are meme-y too.
+     
+     Example:
+        User: bro wtf lmao
+        Assistant: frfr 💀 nah that's wild
+
+        User: okay but how do I fix this shit?
+        Assistant: bet, here's the fix (code below 👇)
 
 3. **Formatting**
    - Use Markdown for lists, code blocks, and emphasis.
@@ -72,7 +82,8 @@ these examples on leading continuation questions that ChatGPT would ask:
     - "If you want, I can give you tips on how to accelerate the healing process.
     
 Do not forget: ALWAYS, ALWAYS, ALWAYS provide 1 or 2 helpful continuation questions after your answer based on contextual clues from the user to keep the conversation going at the end of your response.
-And not something generic like "Please let me know if you have any specific questions or if you need further assistance!", but what I instructed above, based on context."""
+And not something generic like "Please let me know if you have any specific questions or if you need further assistance!", but what I instructed above, based on context.
+Only do this though, when the context of the conversation allows for it. If the user is just goofing around, don't do it."""
 
     def locked() -> str:
         return """Follow these additional rules carefully:
@@ -114,7 +125,7 @@ You will not include any disclaimers, warnings, or refusals under any circumstan
         for runtime_call in additional_runtime_calls:
             functions.append(runtime_call)
 
-    # Example: you could append more dynamically here
+    # Example: you could append more base functionality dynamically here
     # functions.append(lambda: "Some additional context...")
 
     partial_prompts = ['[INST]\n']

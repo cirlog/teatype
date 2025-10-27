@@ -57,6 +57,8 @@ class Chat(BaseTUI):
             
         llm = ConversationalAI(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
                                model_directory=conversational_model_directory,
+                               temperature=0.9,
+                               top_p=0.9,
                                verbose=True)
         println()
         log(colorwrap('[LLM]:', 'cyan'))
