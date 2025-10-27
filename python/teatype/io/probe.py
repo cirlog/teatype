@@ -14,7 +14,7 @@
 import importlib
 
 # From package imports
-from teatype.logging import err
+from teatype.logging import *
 
 def ip(ip: str) -> bool:
     pass

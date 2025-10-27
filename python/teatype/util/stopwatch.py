@@ -18,7 +18,7 @@ from typing import Union
 
 # From package imports
 from teatype.enum import EscapeColor
-from teatype.logging import err, log
+from teatype.logging import *
 
 class GLOBAL_STOPWATCH_CONFIG:
     """

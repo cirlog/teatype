@@ -20,7 +20,7 @@ import tty
 
 # From package imports
 from teatype.enum import EscapeColor
-from teatype.logging import err, hint, log, println
+from teatype.logging import *
 
 # From-as package imports
 from teatype.io import env as current_env

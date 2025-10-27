@@ -1,0 +1,53 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# From local imports
+from teatype.cli import BaseTUI
+
+class Test(BaseTUI):
+    def meta(self):
+        return {
+            'name': 'test',
+            'shorthand': 'tt',
+            'help': 'A test TUI for testing purposes',
+            'actions': [
+                {
+                    'name': 'edit',
+                    'help': 'Edit an entry',
+                    'option_name': 'index',
+                    'option': int
+                },
+                {
+                    'name': 'delete',
+                    'help': 'Delete an entry',
+                    'option_name': 'index',
+                    'option': int
+                },
+                {
+                    'name': 'view',
+                    'help': 'View an entry',
+                    'option_name': 'index',
+                    'option': int
+                }
+            ]
+        }
+    
+    def on_display(self):
+        pass
+    
+    def on_prompt(self):
+        pass
+        
+if __name__ == '__main__':
+    Test()

@@ -19,7 +19,7 @@ from typing import List
 
 # From package imports
 from teatype.io import file, path
-from teatype.logging import err, hint, println, warn
+from teatype.logging import *
 from teatype.util import kebabify
 
 class _ParsingError:

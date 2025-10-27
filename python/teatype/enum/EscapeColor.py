@@ -14,7 +14,8 @@
 from enum import Enum
 from typing import Literal
 
-_ColorType = Literal['black',
+class EscapeColor(Enum):
+    Colors = Literal['black',
                      'blue',
                      'cyan',
                      'gray',
@@ -31,8 +32,7 @@ _ColorType = Literal['black',
                      'light_red',
                      'light_white',
                      'light_yellow']
-
-class EscapeColor(Enum):
+    
     BLACK = '\033[30m'
     BLUE = '\033[34m'
     CYAN = '\033[36m'
@@ -51,7 +51,7 @@ class EscapeColor(Enum):
     LIGHT_RED = '\033[91m'
     LIGHT_WHITE = '\033[97m'
     LIGHT_YELLOW = '\033[93m'
-    
+        
     def __str__(self):
         """
         Returns the ANSI escape code associated with the enumeration member.
@@ -115,12 +115,12 @@ class EscapeColor(Enum):
         return len(EscapeColor.LIGHT_COLORS(exclude_black))
     
     @staticmethod
-    def lighten(color:'EscapeColor') -> str:
+    def lighten(color:'EscapeColor.Colors') -> str:
         """
         Returns the light version of a given color.
 
         Args:
-            color (ColorType): The color to lighten.
+            color (Colors): The color to lighten.
 
         Returns:
             str: The light version of the specified color.
@@ -131,19 +131,3 @@ class EscapeColor(Enum):
         if light_color_name not in EscapeColor.__members__:
             raise ValueError(f'No light version available for color: {color}.')
         return EscapeColor[light_color_name].value
-
-def colorwrap(string:str, color:_ColorType) -> str:
-    """
-    Wraps a string with the specified color escape code.
-
-    Args:
-        string (str): The string to be wrapped.
-        color (EscapeColor): The color to wrap the string with.
-
-    Returns:
-        str: The wrapped string with ANSI escape codes for coloring.
-    """
-    if color.upper() not in EscapeColor:
-        raise ValueError(f'Invalid color: {color}. Must be one of {list(EscapeColor)}.')
-    escape_color = EscapeColor[color.upper()]
-    return f'{escape_color}{string}{EscapeColor.RESET}' # Wrap the string with the specified color and reset code

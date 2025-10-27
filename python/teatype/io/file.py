@@ -30,7 +30,7 @@ from pathlib import PosixPath
 from typing import Dict, List
 
 # From local imports
-from teatype.logging import err, warn
+from teatype.logging import *
 
 # From-as system imports
 from builtins import list as list_type

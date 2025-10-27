@@ -10,6 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+from .colorwrap import colorwrap
 from .dt import dt
 # TODO: Deactivated until auto updating all components is possible
 # from .fastjson import compress as compress_json
@@ -22,3 +23,4 @@ from .implemented_trap import implemented_trap
 from .SingletonMeta import SingletonMeta
 from .staticproperty import staticproperty
 from .stopwatch import GLOBAL_STOPWATCH_CONFIG, stopwatch
+from .Timer import Timer

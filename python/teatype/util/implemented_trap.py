@@ -20,10 +20,10 @@ def implemented_trap(message:str,
                      verbose:bool=False,
                      use_prefix:bool=True) -> None:
     trap_message = logging._format(message,
-                           prefix='IMPLEMENTED TRAP',
-                           use_prefix=use_prefix,
-                           pad_before=pad_before,
-                           verbose=verbose)
+                                   prefix='IMPLEMENTED TRAP',
+                                   use_prefix=use_prefix,
+                                   pad_before=pad_before,
+                                   verbose=verbose)
     
     # logger.critical(trap_message) # Log the message as is
     

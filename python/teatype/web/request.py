@@ -24,7 +24,7 @@ from typing import List
 
 
 # From package imports
-from teatype.logging import err, log, warn
+from teatype.logging import *
 from teatype.util import stopwatch
 from urllib.parse import urlparse
 

@@ -7,7 +7,7 @@
     <img src="https://avatars.githubusercontent.com/u/177637833?s=200&v=4" alt="teatype icon" width="80" height="80">
   </a>
 
-<h3 align="center">teatype <i>(Cir.Log fork)</i></h3>
+<h3 align="center">teatype</i></h3>
 
   <p align="center">
     Useful utility classes & more <i>(there isn't more)</i>. TypeScript and Python support.

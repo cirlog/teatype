@@ -17,7 +17,7 @@ from typing import List, Union
 
 # From package imports
 from teatype.hsdb import HybridStorage
-from teatype.logging import log, println
+from teatype.logging import *
 from teatype.util import stopwatch
 
 _EXECUTION_HOOKS = ['__iter__', '__len__', '__getitem__', 'all', 'collect', 'first', 'last', 'set']

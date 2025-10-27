@@ -15,7 +15,7 @@ import psutil
 
 # From package imports
 from teatype.cli import BaseCLI
-from teatype.logging import err, log, println
+from teatype.logging import *
 
 class BaseIsRunningCLI(BaseCLI):
     def meta(self):

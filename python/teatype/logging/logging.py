@@ -13,7 +13,7 @@
 # System imports
 import inspect
 import logging
-import logging.handlers
+# import logging.handlers
 import os
 import sys
 
@@ -27,6 +27,7 @@ from typing import Literal
 
 # From package imports
 from teatype.enum import EscapeColor
+from teatype.util import colorwrap
 
 SymbolPosition = Literal['start', 'center', 'end', None]
 SymbolPositions = ['start', 'center', 'end', None]
@@ -46,13 +47,13 @@ class GLOBAL_LOGGING_CONFIG:
         LOG_LEVEL (int): The minimum log level to capture.
         SURPRESS_CONSOLE (bool): Flag to determine whether to suppress console output.
     """
-    BASE_LOG_DIR = os.path.join(os.path.expanduser("~"), "ApplicationLogs")
-    LOG_DIRECTORY = os.path.join(BASE_LOG_DIR, datetime.now().strftime("%Y-%m-%d"))
-    LOG_NAME = "global_custom_logger"
-    LOG_FILE = "application.log"
-    LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s - [File: %(filename)s, Line: %(lineno)d]'
-    LOG_LEVEL = logging.DEBUG
-    SURPRESS_CONSOLE = False
+    BASE_LOG_DIR=os.path.join(os.path.expanduser("~"), "ApplicationLogs")
+    LOG_DIRECTORY=os.path.join(BASE_LOG_DIR, datetime.now().strftime("%Y-%m-%d"))
+    LOG_NAME="global_custom_logger"
+    LOG_FILE="application.log"
+    LOG_FORMAT='%(asctime)s - %(levelname)s - %(message)s - [File: %(filename)s, Line: %(lineno)d]'
+    LOG_LEVEL=logging.DEBUG
+    SURPRESS_CONSOLE=False
 
 def create_log_directory() -> str:
     """
@@ -290,6 +291,7 @@ def hint(message:str,
 #       and the default value can be set to 0 for no padding
 #       Also, allow this: (0,) and (,0) to specify padding before and after, respectively
 def log(message:any,
+        color:EscapeColor.Colors='default',
         pad_after:int=None,
         pad_before:int=None,
         prettify:bool=False,
@@ -305,6 +307,7 @@ def log(message:any,
     
     Args:
         message (any, optional): The message to be logged. Defaults to ''.
+        color (Colors=Literal['black', 'blue', 'cyan', 'gray', 'green', 'magenta', 'red', 'white', 'yellow', 'light_black', 'light_blue', 'light_cyan', 'light_green', 'light_magenta', 'light_red', 'light_white', 'light_yellow'], optional): The color to apply to the message. Defaults to 'default'.
         pad_after (int , optional): Number of blank lines to add after the message. Defaults to None.
         pad_before (int , optional): Number of blank lines to add before the message. Defaults to None.
         prettify (bool, optional): If True, formats complex objects into a pretty-printed string. Defaults to False.
@@ -342,6 +345,8 @@ def log(message:any,
 
     if tab > 0:
         log_message = f'{"    " * tab}{log_message}'
+    if color and color != 'default':
+        log_message = colorwrap(log_message, color)
     # Log the final message at the INFO level using the global logger
     logger.info(f'{log_message}{EscapeColor.RESET}') # Log the message as is and reset the color
 

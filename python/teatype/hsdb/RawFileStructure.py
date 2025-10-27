@@ -20,11 +20,10 @@ _DEFAULT_ROOT_PATH = '/var/lib/hsdb'
 _FS = {
     'hsdb': {
         'backups': {
-            'data': {},
+            'index': {},
             'migration': {},
             'rawfiles': {}
         },
-        'data': {},
         'dumps': {
             'migrations': {}
         },
@@ -34,11 +33,13 @@ _FS = {
             'migrations': {}
         },
         'meta': {},
-        'models': {},
+        'models': {
+            'adapters': {},
+        },
         'rawfiles': {},
         'redundancy': {},
         'rejectpile': {
-            'data': {},
+            'index': {},
             'rawfiles': {}
         }
     }
