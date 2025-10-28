@@ -12,7 +12,7 @@
 
 # Define what is exported when using 'from teatype.logging import *'
 __all__ = [
-    'GLOBAL_LOGGING_CONFIG',
+    # 'GLOBAL_LOGGING_CONFIG',
     'err',
     'hint',
     'log',
@@ -21,4 +21,5 @@ __all__ = [
     'warn',
 ]
 
-from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, warn
+# from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, warn
+from .logging import err, hint, log, println, success, warn
