@@ -44,6 +44,9 @@ class sdist(_sdist):
 def gather_requirements(variants:List[str]):
     for file in os.listdir('requirements'):
         if file.endswith('.txt'):
+            requirements_file = file.replace('.txt', '')
+            if requirements_file not in variants:
+                continue
             with open(os.path.join('requirements', file)) as f:
                 for line in f:
                     line = line.strip()
