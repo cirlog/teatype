@@ -350,6 +350,7 @@ def is_file(path:PosixPath|str) -> bool:
 def list(directory:str,
          walk:bool=False,
          depth:int=None,
+         include_folders:bool=True,
          ignore_folders:List[str]=None,
          only_include:List[str]=None, # TODO: Seperate include_extensions and include_regex
          trim_files:bool=True,
@@ -388,6 +389,13 @@ def list(directory:str,
                         # Skip folders that are in the ignore list
                         if entry.name in ignore_folders:
                             continue
+                        
+                    if not include_folders or only_include != None:
+                        # Skip adding folders to the results if include_folders is False
+                        # But still walk through the subdirectory
+                        walk_directory(entry.path, current_depth + 1)
+                        continue
+                    
                     # Append directory details to the results list
                     results.append(_File(entry.path, trimmed=trim_files, nested_depth=current_depth))
                     # Recursively walk through the subdirectory, increasing the depth
