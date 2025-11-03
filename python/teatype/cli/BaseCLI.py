@@ -392,17 +392,19 @@ class BaseCLI(ABC):
                                         match flag_options_name:
                                             case 'int':
                                                 parsed_flag_value = int(parsed_flag_value)
-                                            case 'str':
-                                                parsed_flag_value = str(parsed_flag_value)
                                             case 'bool':
                                                 parsed_flag_value = bool(parsed_flag_value)
                                             case 'float':
                                                 parsed_flag_value = float(parsed_flag_value)
+                                            case 'str':
+                                                parsed_flag_value = str(parsed_flag_value)
+                                                
+                                        if type(parsed_flag_value) != flag_options:
+                                            # Report type mismatch errors
+                                            self.add_parsing_error(f'Flag `{flag.short}, {flag.long}` expects a value of type {flag_options_name}, but "{parsed_flag_value}" was given.')
                                     except Exception as exc:
                                         # Report type conversion errors
-                                        self.add_parsing_error(
-                                            f'Flag `{flag.short}, {flag.long}` expects a value of type {flag_options_name}, but "{parsed_flag_value}" was given.'
-                                        )
+                                        self.add_parsing_error(f'Could not properly parse flag `{flag.short}, {flag.long}` value "{parsed_flag_value}" to type {flag_options_name}. Error: {str(exc)}')
                                 else:
                                     # Validate that the flag value is within the allowed options
                                     if parsed_flag_value not in flag_options:
@@ -412,7 +414,7 @@ class BaseCLI(ABC):
                             flag.value = parsed_flag_value # Assign the validated flag value
                             
                 if not skip_hooks:
-                    # Hook for pre-validation logic
+                    # Hook for post-validation logic
                     if hasattr(self, 'post_validate') and callable(getattr(self, 'post_validate')):
                         self.post_validate()
 
