@@ -166,7 +166,7 @@ setup(
     install_requires=INSTALL_REQUIRES,
     name=PACKAGE_NAME,
     packages=find_packages(),
-    python_requires='>=3.11',
+    python_requires='>=3.10.2',
     url='https://github.com/arsonite/teatype',
     version=VERSION,
 )
