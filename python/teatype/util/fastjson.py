@@ -26,7 +26,7 @@ JSONType = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
 simdjson_parser = Parser()
 
 def compress(data:JSONType,
-             compression_map:Dict[str, str],
+             compression_map:Dict[str,str],
              delimiter:str=".",
              flatten:bool=False) -> JSONType:
     """

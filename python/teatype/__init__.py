@@ -11,4 +11,5 @@
 # all copies or substantial portions of the Software.
 
 # From local imports
+from .io.print import print
 from .util import *

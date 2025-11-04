@@ -177,6 +177,7 @@ dist-ssr
 # Temporary directory
 ~temp/*
 ~temp
+~temp*
 
 # Distribution files
 *build/*

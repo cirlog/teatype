@@ -246,7 +246,8 @@ class BaseStartCLI(BaseCLI):
             path.create('./logs') # Create a logs directory if it does not exist
             # Append shell redirection to merge stderr with stdout
             stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
-            self.start_command += f' > {stdout_path} 2>&1 &'
+            self.start_command = f'{self.start_command} > {stdout_path}'
+            # self.start_command += f' > {stdout_path} 2>&1 &'
         
         if file.exists('./.env'):
             env.load() # Load the environment variables
@@ -307,22 +308,35 @@ class BaseStartCLI(BaseCLI):
         signal.signal(signal.SIGQUIT, signal_handler)
         signal.signal(signal.SIGUSR1, signal_handler)
         signal.signal(signal.SIGUSR2, signal_handler)
-        
+    
         if not silent_mode:
             # Notify user that auto activation is attempted
             hint('"auto_activate_venv" automatically set to "True". Trying to activate a possibly present virtual environment ...',
                 pad_before=1)
         
-        venv_path = ''
-        venv_found = False  # Initialize flag to track if a virtual environment is found
-        # Iterate through all files in the parent directory to locate a virtual environment
-        for f in file.list(self.parent_path):
-            if 'venv' in f.name:
-                venv_path = f.path # Store the path of the found virtual environment
-                if not silent_mode:
-                    log(f'Virtual environment {f.name} found.') # Log the discovery of the virtual environment
-                venv_found = True # Update the flag as a virtual environment is found
-                break # Exit the loop since the virtual environment has been found
+        venv_name = None
+        if hasattr(self, 'venv_name'):
+            venv_name = self.venv_name
+            venv_path = path.join(self.parent_path, venv_name)
+            if not path.exists(venv_path):
+                err(f'Virtual environment {venv_name} does not exist.')
+                venv_found = False
+            else:
+                venv_found = True
+        
+        if not venv_name:
+            if not silent_mode:
+                warn(f'No self.venv_name in start-script specified, trying to locate venv automatically instead ...') # Log the discovery of the virtual environment
+            venv_path = ''
+            venv_found = False # Initialize flag to track if a virtual environment is found
+            # Iterate through all files in the parent directory to locate a virtual environment
+            for f in file.list(self.parent_path):
+                if 'venv' in f.name:
+                    venv_path = f.path # Store the path of the found virtual environment
+                    if not silent_mode:
+                        log(f'Virtual environment {f.name} found.') # Log the discovery of the virtual environment
+                    venv_found = True # Update the flag as a virtual environment is found
+                    break # Exit the loop since the virtual environment has been found
             
         env.set('VIRTUAL_ENV', venv_path) # Set the VIRTUAL_ENV environment variable to an empty string
         env.set('PYTHONUNBUFFERED', '1') # Set the PYTHONUNBUFFERED environment variable to '1'
@@ -331,13 +345,13 @@ class BaseStartCLI(BaseCLI):
             if not silent_mode:
                 # Warn the user if no virtual environment is found, indicating limited functionality
                 warn('No virtual environment found. Script functionality may be limited.', pad_after=1)
-            shell(self.start_command)
+            shell(self.start_command, combine_stdout_and_stderr=True, detached=True if detached == True else False)
         else:
             try:
                 # Attempt to activate the found virtual environment
                 if not silent_mode:
                     log('Virtual environment activated.') # Log successful activation
-                shell(f'. {venv_path}/bin/activate && {self.start_command}')
+                shell(f'. {venv_path}/bin/activate && {self.start_command}', combine_stdout_and_stderr=True, detached=True if detached == True else False)
             except Exception as e:
                 if not silent_mode:
                     # Log an error if activation fails, providing the exception details

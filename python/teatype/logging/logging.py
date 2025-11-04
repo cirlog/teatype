@@ -274,7 +274,7 @@ def hint(message:str,
                            include_symbol=include_symbol,
                            pad_before=pad_before,
                            prefix='HINT',
-                           symbol='ℹ️', # \u2139
+                           symbol='ℹ️ ', # \u2139
                            symbol_position=symbol_position,
                            use_prefix=use_prefix,
                            verbose=False)
