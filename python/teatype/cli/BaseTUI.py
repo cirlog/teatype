@@ -62,6 +62,10 @@ class BaseTUI(BaseCLI):
             action.str = f"  {name_part} {option_part}  {action.help}"
             if action.name == 'clear':
                 action.str = colorwrap(action.str, 'cyan')
+            if action.name == 'exit':
+                action.str = colorwrap(action.str, 'red')
+                
+        self.on_init()
         
     def post_validate(self):
         if 'No command provided.' in self._parsing_errors:
@@ -77,7 +81,7 @@ class BaseTUI(BaseCLI):
         
         self.dirty = False
         self.exit = False
-        self.no_index = False
+        self.no_option = False
         self.output = None
         self.unknown_command = None
         while True:
@@ -101,10 +105,10 @@ class BaseTUI(BaseCLI):
                     println()
                     self.unknown_command = None
                     
-                if self.no_index:
-                    warn('No valid index provided. Please specify an index after the command (e.g., "edit 1").', use_prefix=False)
+                if self.no_option:
+                    warn('No valid option provided. Please specify an option after the command (e.g., "edit 1").', use_prefix=False)
                     println()
-                    self.no_index = False
+                    self.no_option = False
                     
                 if self.output:
                     log(f'{EscapeColor.GREEN}Output:')
@@ -116,8 +120,20 @@ class BaseTUI(BaseCLI):
                     println()
                     self.output = None
                     
-                println()
                 user_input = input(f'{EscapeColor.LIGHT_GREEN}{self.name}> {EscapeColor.RESET}').strip().lower()
+                matching_action = next((action for action in self.actions if action.name == user_input), None)
+                if matching_action:
+                    option = None
+                    if matching_action.option:
+                        try:
+                            option = user_input.split(' ')[1]
+                        except:
+                            self.no_option = True
+                            continue
+                        
+                    self.output = self.on_prompt(user_input, option)
+                    continue
+                
                 if MANUAL_REFRESH:
                     if user_input == 'clear':
                         clear_shell()
@@ -132,14 +148,12 @@ class BaseTUI(BaseCLI):
         warn(f'Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
         println()
         
-    ####################
-    # Abstract methods #
-    ####################
+    #########
+    # Hooks #
+    #########
     
-    @abstractmethod
-    def on_display(self):
+    def on_init(self):
         pass
     
-    @abstractmethod
-    def on_prompt(self):
+    def on_prompt(self, user_input:str, option:any=None):
         pass

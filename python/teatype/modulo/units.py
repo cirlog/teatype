@@ -356,3 +356,37 @@ class WorkhorseUnit(_CoreUnit):
             name: Name of the workhorse unit
         """
         super().__init__(name=name, type='workhorse')
+        
+if __name__ == '__main__':
+    print('units')
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description='Teatype Modulo unit definitions.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    # TODO: Add launch key, so that only Launchpad can execute this script
+    parser.add_argument('unit-type',
+                        type=str,
+                        choices=['backend', 'service', 'workhorse'],
+                        help='Type of the unit to launch')
+    parser.add_argument('unit-name',
+                        type=str,
+                        help='Name of the unit to launch')
+    
+    args = parser.parse_args()
+    unit_type = args.unit_type
+    unit_name = args.unit_name
+    
+    try:
+        from .launchpad import LaunchPad
+        unit = LaunchPad.create(args.unit_name, args.unit_type, host=args.host, port=args.port)
+        # Run unit directly (blocking mode)
+        unit.start()
+        unit.join()
+    except KeyboardInterrupt:
+        println()
+        hint('\nInterrupted. Shutting down gracefully...', use_prefix=False)
+    finally:
+        println()

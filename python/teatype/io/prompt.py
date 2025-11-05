@@ -21,7 +21,11 @@ from teatype.enum import EscapeColor
 from teatype.logging import *
 
 # TODO: if options are supplied, return selected option, not bool
-def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, return_int:bool=True, colorize:bool=True) -> any:
+def prompt(prompt_text:str,
+           options:List[any]=None,
+           return_bool:bool=True,
+           colorize:bool=True,
+           exit_on_error:bool=True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
 
@@ -74,12 +78,17 @@ def prompt(prompt_text:str, options:List[any]=None, return_bool:bool=True, retur
         if options:
             # Validate the user's input against the available options
             if prompt_answer not in options:
+                error_message = 'Invalid input. Available options are: ' + ', '.join(options)
                 # Log an error message and exit if the input is invalid
-                err('Invalid input. Available options are: ' + ', '.join(options),
+                err(error_message   ,
                     pad_after=1,
-                    exit=True,
+                    exit=exit_on_error,
+                    raise_exception=not exit_on_error,
                     use_prefix=False,
                     verbose=False)
+                
+                if not exit_on_error:
+                    return error_message
             
         # Return the validated user input
         return prompt_answer == options[0] if return_bool else prompt_answer

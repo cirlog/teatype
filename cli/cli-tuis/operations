@@ -12,16 +12,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Package imports
 from teatype import colorwrap
 from teatype.ai.llm import ConversationalAI
 from teatype.cli import BaseTUI
-from teatype.io import fetch, path, prompt
+from teatype.io import clear_shell, fetch, path, prompt
 from teatype.logging import *
-
-DEFAULT_MODEL_PATH = ''
-MANUAL_REFRESH = False # If True, the shell will be cleared automatically after each command
-DEBUG_MODE = False
+from teatype.modulo.launchpad import LaunchPad
+from teatype.modulo.operations import Operations as ModuloOperations
 
 class Operations(BaseTUI):
     def meta(self):
@@ -29,16 +27,49 @@ class Operations(BaseTUI):
             'name': 'operations',
             'shorthand': 'op',
             'help': 'Teatype Modulo operations interface',
+            'actions': [
+                {
+                    'name': 'check',
+                    'help': 'Check the status of a Modulo unit.',
+                    'option_name': 'unit-id',
+                    'option': str
+                },
+                {
+                    'name': 'fire',
+                    'help': 'Use Launchpad to fire up a Modulo unit.'
+                },
+                {
+                    'name': 'kill',
+                    'help': 'Terminate a running Modulo unit.',
+                    'option_name': 'unit-id',
+                    'option': str  
+                },
+                {
+                    'name': 'list',
+                    'help': 'List all available and running Modulo units.'
+                }
+            ]
         }
         
-    def on_display(self):
-        pass
-    
-    def on_prompt(self):
-        pass
-
-    def run(self):
-        println()
+    def fire(self):
+        unit_type = prompt('Which Modulo unit would you like to launch?',
+                            options=['backend', 'service', 'workhorse'],
+                            return_bool=False)
+        unit_name = prompt(f'Enter the name of the {unit_type} unit to launch:',
+                           return_bool=False)
+        LaunchPad.fire(unit_name, unit_type)
         
+    def on_init(self):
+        self.operations = ModuloOperations()
+        
+    def on_prompt(self, user_input:str, option:any=None) -> str:
+        match user_input:
+            case 'fire':
+                self.fire()
+            case 'kill':
+                self.operations.kill(id=option)
+            case 'list':
+                pass
+
 if __name__ == '__main__':
     Operations()

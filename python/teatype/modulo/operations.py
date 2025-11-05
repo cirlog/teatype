@@ -24,15 +24,8 @@ from teatype.comms.ipc.redis import RedisConnectionPool, RedisDispatch, RedisCha
 class Operations:
     def __init__(self):
         self.redis_connection_pool = RedisConnectionPool(verbose_logging=True)
-
-    def kill(self, designation:str) -> None:
-        """
-        Kill a Teatype Modulo unit by designation.
-        """
-        if designation == 'all':
-            pass
         
-    def dispatch(self, designation:str, command:str) -> None:
+    def dispatch(self, id:str, command:str) -> None:
         if not self.redis_connection_pool.establish_connection():
             err('Failed to establish Redis connection. Is Redis server running?',
                 raise_exception=ConnectionError)
@@ -40,8 +33,17 @@ class Operations:
         dispatch = RedisDispatch(RedisChannel.COMMANDS.value,
                                  'modulo.operations.dispatch',
                                  command,
-                                 designation)
+                                 id)
         self.redis_connection_pool.send_message(dispatch)
+
+    def kill(self, id:str) -> None:
+        """
+        Kill a Teatype Modulo unit by id.
+        """
+        if id == 'all':
+            pass
+        else:
+            self.dispatch(id=id, command='kill')
         
 if __name__ == "__main__":
     import argparse
@@ -57,16 +59,16 @@ if __name__ == "__main__":
                         type=str,
                         choices=['broadcast', 'dispatch', 'kill'],
                         help='Which command to execute')
-    parser.add_argument('designation',
+    parser.add_argument('id',
                         type=str,
-                        help='Designation of the unit')
+                        help='ID of the unit')
     parser.add_argument('--message',
                         type=str,
                         help='Message to send (required for broadcast and dispatch operations)')
 
     args = parser.parse_args()
     operation = args.operation
-    designation = args.designation
+    id = args.id
     
     operations = Operations()
     match operation:
@@ -75,6 +77,6 @@ if __name__ == "__main__":
             if not message:
                 err('Message is required for send operation.',
                     raise_exception=ValueError)
-            operations.dispatch(designation=designation, command=message)
+            operations.dispatch(id=id, command=message)
         case 'kill':
-            operations.kill(designation=designation)
+            operations.kill(id=id)

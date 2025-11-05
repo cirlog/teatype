@@ -11,10 +11,5 @@
 # all copies or substantial portions of the Software.
 
 # Local imports
-from .base_interface import RedisBaseInterface
-from .channels import RedisChannel
-from .connection_pool import RedisConnectionPool
-from .messages import RedisBroadcast, RedisDispatch
-# from .data_store_front import RedisDataStoreFront
-from .message_processor import RedisMessageProcessor
-from .service import RedisServiceManager
+from .app import app
+from .schedulers import TaskScheduler

@@ -76,26 +76,25 @@ class LaunchPad:
         Launch the worker in its own detached process.
         """
         python_executable = sys.executable
-        script_path = path.caller()
-        print(python_executable)
-        print(script_path)
+        script_directory = path.caller_parent()
+        script_path = path.join(script_directory, 'modulo', 'units.py')
         
-        return
-
         # DETACHED process flags
         DETACHED_PROCESS = 0x00000008
         CREATE_NEW_PROCESS_GROUP = 0x00000200
 
-        subprocess.Popen(
-            [python_exe, script_path, worker_id],
+        process = subprocess.Popen(
+            [python_executable, script_path, unit_type, unit_name] + (
+                ['--host', host] if host else []) + (
+                ['--port', str(port)] if port else []),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
-            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
             close_fds=True,
-            start_new_session=True  # Unix only
+            start_new_session=True # Unix only
         )
-        print(f"Worker '{worker_id}' launched.")
+        print(process.pid)
         
 if __name__ == "__main__":
     import argparse
