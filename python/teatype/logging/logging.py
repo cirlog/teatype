@@ -27,7 +27,7 @@ from typing import Literal
 
 # From package imports
 from teatype.enum import EscapeColor
-from teatype.util import colorwrap
+from teatype.toolkit import colorwrap
 
 SymbolPosition = Literal['start', 'center', 'end', None]
 SymbolPositions = ['start', 'center', 'end', None]

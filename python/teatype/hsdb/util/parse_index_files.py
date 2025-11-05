@@ -20,7 +20,7 @@ from typing import List
 # From package imports
 from teatype.io import file, path
 from teatype.logging import *
-from teatype.util import kebabify
+from teatype.toolkit import kebabify
 
 class _ParsingError:
     entry_id:str

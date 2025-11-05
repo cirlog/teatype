@@ -31,7 +31,7 @@ from pprint import pprint
 
 # From package imports
 from teatype.io import file, path
-from teatype.util import generate_id, fastjson, stopwatch
+from teatype.toolkit import generate_id, fastjson, stopwatch
 
 ##########
 # PyTest #

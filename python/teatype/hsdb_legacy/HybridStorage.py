@@ -25,7 +25,7 @@ from multiprocessing import Queue
 from teatype.hsdb_legacy import IndexDatabase, RawFileHandler
 from teatype.io import env
 from teatype.logging import *
-from teatype.util import SingletonMeta
+from teatype.toolkit import SingletonMeta
 
 # TODO: Implement Coroutine and Operation (Atomic)
 # TODO: Implement threaded Coroutine scheduler

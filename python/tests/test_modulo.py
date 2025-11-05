@@ -10,4 +10,24 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .responses import *
+# System imports
+import time
+from pprint import pprint
+
+# Package imports
+import pytest
+from teatype.modulo import Launchpad
+
+##########
+# PyTest #
+##########
+
+@pytest.mark.skip()
+def test_redis_toolkit():
+    launch_pad = Launchpad()
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass

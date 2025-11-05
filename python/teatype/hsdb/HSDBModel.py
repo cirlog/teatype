@@ -20,10 +20,10 @@ from typing import List
 
 # From package imports
 from teatype.hsdb import HSDBAttribute, HSDBField, HSDBMeta, HSDBQuery, HSDBRelation
-from teatype.util import dt, staticproperty
+from teatype.toolkit import dt, staticproperty
 
 # From-as package imports
-from teatype.util import generate_id, kebabify
+from teatype.toolkit import generate_id, kebabify
 
 # TODO: Implement a short-key map for attributes for compression
 #       - automate by implementing a smart algorithm that first checks how many seperations of underscore are there and then abbreviates that way

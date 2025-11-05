@@ -10,4 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# from .request import *
+# System imports
+from abc import ABC
+
+class RedisBaseInterface(ABC):
+    DEFAULT_HOST='127.0.0.1'
+    DEFAULT_PORT=6379
+    verbose_logging:bool
+    
+    def __init__(self, verbose_logging:bool):
+        self.verbose_logging = verbose_logging

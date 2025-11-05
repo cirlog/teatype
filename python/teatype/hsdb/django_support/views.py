@@ -22,7 +22,7 @@ from typing import List, Type
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.hsdb import HybridStorage
-from teatype.util import kebabify
+from teatype.toolkit import kebabify
 from teatype.web.django_support.responses import NotAllowed, ServerError, Success
 
 _COLLECTION_METHODS=['GET', 'POST']

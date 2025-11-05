@@ -10,6 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From local imports
-from .io.print import print
-from .toolkit import *
+# Package imports
+import test
+
+def skip_on_fail_hook(function:callable, expected_failure_messages:any):
+    @test.hookimpl(hookwrapper=True)
+    def pytest_runtest_call(item):
+        output = yield
+        if output.excinfo:
+            for potential_error_message in expected_failure_messages.keys():
+                if output._excinfo[1].stacktrace and potential_error_message in output._excinfo[1].stacktrace:
+                    test.skip(reason=expected_failure_messages[potential_error_message])

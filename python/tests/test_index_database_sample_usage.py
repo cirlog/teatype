@@ -24,7 +24,7 @@ from pprint import pprint
 # From package imports
 from teatype.hsdb import HSDBAttribute, HSDBRelation, HSDBModel, HybridStorage
 from teatype.logging import *
-from teatype.util import generate_id, stopwatch
+from teatype.toolkit import generate_id, stopwatch
 
 ##################
 # Example Models #

@@ -18,7 +18,7 @@ from typing import Generic, Type, TypeVar
 
 # From package imports
 from teatype.hsdb.HSDBField import HSDBField
-from teatype.util import dt
+from teatype.toolkit import dt
 
 # Supported attribute types
 _AVAILABLE_FIELDS = [
