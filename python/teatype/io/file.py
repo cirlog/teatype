@@ -613,6 +613,32 @@ def read(file:_File|PosixPath|str,
             # Log an error message if an exception occurs
             err(f'Error reading file "{path_string}": {exc}')
         raise exc
+    
+def size(path:str, human_readable:bool=False) -> int|str:
+    """
+    Get the size of a file at the specified path.
+
+    Parameters:
+        path (str): The path to the file.
+        human_readable (bool, optional): Whether to return the size in a human-readable format. Defaults to False.
+
+    Returns:
+        int|str: The size of the file in bytes, or as a human-readable string if specified.
+    """
+    try:
+        file_size = os.path.getsize(path)
+        if human_readable:
+            # Convert the file size to a human-readable format
+            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+                if file_size < 1024.0:
+                    return f'{file_size:.2f} {unit}'
+                file_size /= 1024.0
+            return f'{file_size:.2f} PB'
+        return file_size
+    except Exception as exc:
+        # Log an error message if an exception occurs
+        err(f'Error getting size of file "{path}": {exc}')
+        raise exc
 
 def write(path:str, data:any, force_format:str=None, prettify:bool=False, create_parents:bool=True) -> bool:
     """

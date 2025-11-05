@@ -12,42 +12,33 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From local imports
+# From package imports
+from teatype import colorwrap
+from teatype.ai.llm import ConversationalAI
 from teatype.cli import BaseTUI
+from teatype.io import fetch, path, prompt
+from teatype.logging import *
 
-class Test(BaseTUI):
+DEFAULT_MODEL_PATH = ''
+MANUAL_REFRESH = False # If True, the shell will be cleared automatically after each command
+DEBUG_MODE = False
+
+class Operations(BaseTUI):
     def meta(self):
         return {
-            'name': 'test',
-            'shorthand': 'tt',
-            'help': 'A test TUI for testing purposes',
-            'actions': [
-                {
-                    'name': 'edit',
-                    'help': 'Edit an entry',
-                    'option_name': 'index',
-                    'option': int
-                },
-                {
-                    'name': 'delete',
-                    'help': 'Delete an entry',
-                    'option_name': 'index',
-                    'option': int
-                },
-                {
-                    'name': 'view',
-                    'help': 'View an entry',
-                    'option_name': 'index',
-                    'option': int
-                }
-            ]
+            'name': 'operations',
+            'shorthand': 'op',
+            'help': 'Teatype Modulo operations interface',
         }
-    
+        
     def on_display(self):
         pass
     
     def on_prompt(self):
         pass
+
+    def run(self):
+        println()
         
 if __name__ == '__main__':
-    Test()
+    Operations()
