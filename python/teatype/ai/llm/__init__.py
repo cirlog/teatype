@@ -25,6 +25,12 @@ try:
                'load_model',
                'PromptBuilder']
     __GPU_SUPPORT__ = True
+    
+    # from .models.analytical import AnalyticalAI
+    # from .models.conversational import ConversationalAI
+    # from .loader import load_model
+    # from .inference import Inferencer
+    # from .prompt_builder import PromptBuilder
 
     def __getattr__(name):
         if name == 'AnalyticalAI':

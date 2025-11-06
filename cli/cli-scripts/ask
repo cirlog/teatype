@@ -17,7 +17,7 @@ from teatype import colorwrap
 # from teatype.ai import LLMInferencer
 from teatype.ai.llm import Inferencer
 from teatype.cli import BaseCLI
-from teatype.io import fetch, path
+from teatype.io import fetch, file, path, prompt
 from teatype.logging import *
 
 class Ask(BaseCLI):
@@ -34,6 +34,12 @@ class Ask(BaseCLI):
                 }
             ],
             'flags': [
+                {
+                    'short': 'lm',
+                    'long': 'load-model',
+                    'help': 'Load and save a default model for future use',
+                    'required': False
+                },
                 {
                     'short': 's',
                     'long': 'stream',
@@ -79,8 +85,29 @@ class Ask(BaseCLI):
         stream = self.get_flag('stream')
         if not stream:
             stream = True
+        
+        default_model_file_path = path.join(conversational_model_directory, 'default-model.txt')
+        if not file.exists(default_model_file_path):
+            file.write(default_model_file_path, '')
+        
+        default_model = file.read(default_model_file_path).strip()
+        if default_model == '' or default_model is None or self.get_flag('load-model'):
+            hint('No default model set. Select one of these available local models:',
+                 use_prefix=False)
+            available_local_models = [f.name.split('.gguf')[0] for f in file.list(conversational_model_directory, only_include='.gguf')]
+            prompt_options = {str(i+1): model_name for i, model_name in enumerate(available_local_models)}
+            for available_model_index, available_model_name in prompt_options.items():
+                model_file_path = path.join(conversational_model_directory, f'{available_model_name}.gguf')
+                file_size = file.size(model_file_path, human_readable=True)
+                log(f'  [{available_model_index}] {available_model_name} ({file_size})')
+            selection = prompt('Please enter the number corresponding to your choice:',
+                               options=prompt_options,
+                               return_bool=False)
+            default_model = available_local_models[int(selection)-1]
+            file.write(default_model_file_path, default_model)
             
-        llm = Inferencer(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
+        default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
+        llm = Inferencer(model=default_model,
                          model_directory=conversational_model_directory)
         
         response = llm(user_prompt=self.full_prompt,

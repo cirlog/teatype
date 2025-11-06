@@ -3,6 +3,7 @@ aiohttp==3.12.15
 aiosignal==1.4.0
 attrs==25.3.0
 certifi==2025.7.14
+celery==5.5.3
 cffi==1.17.1
 charset-normalizer==3.4.2
 coverage==7.10.1
@@ -28,6 +29,7 @@ packaging==25.0
 pandas==2.3.0
 pip==24.3.1
 pluggy==1.6.0
+prompt_toolkit==3.0.52
 propcache==0.3.2
 psutil==7.0.0
 pycparser==2.22
@@ -36,6 +38,7 @@ Pympler==1.1
 pyperclip==1.9.0
 pysimdjson==7.0.1
 readme_renderer==44.0
+redis==5.2.1
 requests==2.32.4
 requests-toolbelt==1.0.0
 rfc3986==2.0.0

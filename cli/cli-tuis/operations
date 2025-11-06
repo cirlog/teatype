@@ -1,0 +1,99 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# Package imports
+from teatype.cli import BaseTUI
+from teatype.enum import EscapeColor
+from teatype.io import prompt
+from teatype.logging import *
+from teatype.modulo import LaunchPad, ModuloOperations, parse_designation
+
+class Operations(BaseTUI):
+    def meta(self):
+        return {
+            'name': 'operations',
+            'shorthand': 'op',
+            'help': 'Teatype Modulo operations interface',
+            'actions': [
+                {
+                    'name': 'check',
+                    'help': 'Check the status of a Modulo unit.',
+                    'option_name': 'unit-id',
+                    'option': str
+                },
+                {
+                    'name': 'fire',
+                    'help': 'Use Launchpad to fire up a Modulo unit.'
+                },
+                {
+                    'name': 'kill',
+                    'help': 'Terminate a running Modulo unit.',
+                    'option_name': 'unit-id',
+                    'option': str  
+                },
+                {
+                    'name': 'list',
+                    'help': 'List all available and running Modulo units.'
+                }
+            ]
+        }
+        
+    def fire(self):
+        unit_type = prompt('Which Modulo unit would you like to launch?',
+                            options=['backend', 'service', 'workhorse'],
+                            return_bool=False)
+        unit_name = prompt(f'Enter the name of the {unit_type} unit to launch:',
+                           return_bool=False)
+        LaunchPad.fire(unit_name, unit_type)
+        
+    def list(self):
+        units = self.operations.list()
+        n_units = len(units)
+        list_string = ''
+        if n_units == 0:
+            list_string += f'{EscapeColor.LIGHT_YELLOW}No Modulo units found.'
+        else:
+            list_string += f'{EscapeColor.LIGHT_GREEN}Found {EscapeColor.RESET}{len(units)}{EscapeColor.LIGHT_GREEN} Modulo units:\n'
+            list_string += '\n'
+            
+        for unit in units:
+            designation = unit.get('designation')
+            info = parse_designation(designation)
+            list_string += f'   {info["type"]}-unit:\n'
+            list_string += f'       {EscapeColor.MAGENTA}Name:        {EscapeColor.CYAN}{info["name"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}ID:          {EscapeColor.CYAN}{info["id"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}Pod:         {EscapeColor.CYAN}{info["pod"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}Type:        {EscapeColor.CYAN}{info["type"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}Designation: {EscapeColor.CYAN}{designation}\n'
+            list_string += '\n'
+        return list_string
+        
+    def on_init(self):
+        self.operations = ModuloOperations()
+        
+    def on_prompt(self, user_input:str, option:any=None) -> str:
+        try:
+            match user_input:
+                case 'fire':
+                    return self.fire()
+                case 'kill':
+                    return 'Sent kill command to unit.' if self.operations.kill(id=option) else 'Failed to send kill command.'
+                case 'list':
+                    return self.list()
+            return None
+        except KeyboardInterrupt:
+            return None
+
+if __name__ == '__main__':
+    Operations()

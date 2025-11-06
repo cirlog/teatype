@@ -16,7 +16,7 @@ from typing import Generic, List, Type, TypeVar
 
 # From package imports
 from teatype.hsdb import HSDBField, HSDBQuery, HybridStorage
-from teatype.util import generate_id, kebabify
+from teatype.toolkit import generate_id, kebabify
 
 _AVAILABLE_FUNCTIONS = [
     'all',

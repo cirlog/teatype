@@ -12,4 +12,4 @@
 
 # From local imports
 from .io.print import print
-from .util import *
+from .toolkit import *

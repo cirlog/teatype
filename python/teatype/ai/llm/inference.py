@@ -28,10 +28,10 @@ from teatype.ai.llm import load_model, PromptBuilder
 from teatype.enum import EscapeColor
 from teatype.io import env, file, path
 from teatype.logging import *
-from teatype.util import colorwrap
+from teatype.toolkit import colorwrap
 
 APPLY_WHITESPACE_PATCH = True
-ROOT_PATH = env.get('TEATYPE_WORKSPACE_PATH')
+ROOT_PATH = env.get('TEATYPE_WORKSPACE_PATH', path.caller_parent(reverse_depth=5))
 MODELS_PATH = path.join(ROOT_PATH, 'cli', 'dist', 'llm-models')
 
 class Inferencer():

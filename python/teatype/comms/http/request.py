@@ -22,10 +22,9 @@ import json as json_util
 from enum import Enum
 from typing import List
 
-
 # From package imports
 from teatype.logging import *
-from teatype.util import stopwatch
+from teatype.toolkit import stopwatch
 from urllib.parse import urlparse
 
 class _CRUD_METHOD(Enum):

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,11 +10,24 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Exit immediately if a command exits with a non-zero status
-set -e
+# System imports
+import time
+from pprint import pprint
 
-export PYTHONDONTWRITEBYTECODE=1 # Prevent Python from writing .pyc files
+# Package imports
+import pytest
+from teatype.modulo import Launchpad
 
-. {{WORKSPACE_PATH}}/teatype-venv/bin/activate
+##########
+# PyTest #
+##########
 
-exec {{WORKSPACE_PATH}}/cli/tt "$@" # Execute the main Python script with all passed arguments
+@pytest.mark.skip()
+def test_redis_toolkit():
+    launch_pad = Launchpad()
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass

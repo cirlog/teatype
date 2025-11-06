@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,11 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Exit immediately if a command exits with a non-zero status
-set -e
+# System imports
+from enum import Enum
 
-export PYTHONDONTWRITEBYTECODE=1 # Prevent Python from writing .pyc files
-
-. {{WORKSPACE_PATH}}/teatype-venv/bin/activate
-
-exec {{WORKSPACE_PATH}}/cli/tt "$@" # Execute the main Python script with all passed arguments
+class RedisChannel(Enum):
+    ALERTS='channel:alerts' # System alerts and critical notifications
+    COMMANDS='channel:commands' # Commands sent to modulos for execution
+    COMMS='channel:comms' # Bi-directional communication channel for modulo that enforce request-response patterns
+    NOTIFICATIONS='channel:notifications' # General notifications and informational messages
+    SYSTEM_STATUS='channel:status:system' # System-wide status updates
+    UNIT_STATUS='channel:status:unit' # Status updates specific to individual modulo

@@ -247,6 +247,7 @@ class BaseStartCLI(BaseCLI):
             # Append shell redirection to merge stderr with stdout
             stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
             self.start_command = f'{self.start_command} > {stdout_path}'
+            # self.start_command += f' > {stdout_path} 2>&1 &'
         
         if file.exists('./.env'):
             env.load() # Load the environment variables

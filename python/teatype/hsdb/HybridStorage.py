@@ -23,7 +23,7 @@ from teatype.hsdb import IndexDatabase, RawFileHandler
 from teatype.hsdb.util import parse_fixtures, parse_index_files
 from teatype.io import env
 from teatype.logging import *
-from teatype.util import SingletonMeta
+from teatype.toolkit import SingletonMeta
 
 # TODO: Implement Coroutine and Operation (Atomic)
 # TODO: Implement threaded Coroutine scheduler

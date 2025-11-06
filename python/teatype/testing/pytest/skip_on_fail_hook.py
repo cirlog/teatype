@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,11 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Exit immediately if a command exits with a non-zero status
-set -e
+# Package imports
+import test
 
-export PYTHONDONTWRITEBYTECODE=1 # Prevent Python from writing .pyc files
-
-. {{WORKSPACE_PATH}}/teatype-venv/bin/activate
-
-exec {{WORKSPACE_PATH}}/cli/tt "$@" # Execute the main Python script with all passed arguments
+def skip_on_fail_hook(function:callable, expected_failure_messages:any):
+    @test.hookimpl(hookwrapper=True)
+    def pytest_runtest_call(item):
+        output = yield
+        if output.excinfo:
+            for potential_error_message in expected_failure_messages.keys():
+                if output._excinfo[1].stacktrace and potential_error_message in output._excinfo[1].stacktrace:
+                    test.skip(reason=expected_failure_messages[potential_error_message])
