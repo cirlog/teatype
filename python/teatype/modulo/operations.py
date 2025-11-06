@@ -11,19 +11,17 @@
 # all copies or substantial portions of the Software.
 
 # System imports
-import os
-import sys
-import subprocess
-from typing import Literal
+from typing import Dict, List
 
 # Local imports
-from teatype.io import path
-from teatype.modulo.units import *
+from teatype.logging import *
+from teatype.modulo.units import parse_designation, print_designation
 from teatype.comms.ipc.redis import RedisConnectionPool, RedisDispatch, RedisChannel
 
 class Operations:
     def __init__(self):
         self.redis_connection_pool = RedisConnectionPool(verbose_logging=True)
+        self.redis_connection_pool.establish_connection()
         
     def dispatch(self, id:str, command:str) -> None:
         if not self.redis_connection_pool.establish_connection():
@@ -35,6 +33,42 @@ class Operations:
                                  command,
                                  id)
         self.redis_connection_pool.send_message(dispatch)
+        
+    def list(self, print:bool=False) -> List[Dict]|None:
+        """
+        List all available and running Modulo units.
+        """
+        clients = self.redis_connection_pool._connection.client_list()
+        units = []
+        for client in clients:
+            client_name = client.get('name', None)
+            if client_name == None:
+                continue
+            
+            try:
+                designation_info = parse_designation(client_name)
+                units.append({
+                    'designation': client_name,
+                    'name': designation_info.get('name'),
+                    'type': designation_info.get('type'),
+                    'id': designation_info.get('id'),
+                    'pod': designation_info.get('pod')
+                })
+            except ValueError:
+                continue
+        
+        n_units = len(units)
+        if print:
+            if n_units == 0:
+                warn('No Modulo units found.', use_prefix=False)
+            elif n_units == 1:
+                success('Found 1 Modulo unit:')
+            else:
+                success(f'Found {len(units)} Modulo units:')
+            for unit in units:
+                print_designation(unit.get('designation'))
+                println()
+        return units if n_units > 0 else None
 
     def kill(self, id:str) -> None:
         """
@@ -78,5 +112,7 @@ if __name__ == "__main__":
                 err('Message is required for send operation.',
                     raise_exception=ValueError)
             operations.dispatch(id=id, command=message)
+        case 'list':
+            operations.list()
         case 'kill':
             operations.kill(id=id)

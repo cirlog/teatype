@@ -145,10 +145,13 @@ class BaseTUI(BaseCLI):
                 if self.output:
                     log(f'{EscapeColor.GREEN}Output:')
                     log(f'{EscapeColor.GREEN}-------')
+                    println()
                     for line in self.output.split('\n'):
                         if line.strip() == '':
                             continue
                         log('   ' + line)
+                    println()
+                    log(f'{EscapeColor.GREEN}-------')
                     println()
                     self.output = None
                     

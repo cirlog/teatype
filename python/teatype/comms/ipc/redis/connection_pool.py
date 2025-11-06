@@ -41,8 +41,12 @@ class RedisConnectionPool(RedisBaseInterface):
     
     pubsub:redis.client.PubSub
     
-    def __init__(self, verbose_logging:bool=True):
+    def __init__(self,
+                 client_name:Optional[str]=None,
+                 verbose_logging:Optional[bool]=True):
         super().__init__(verbose_logging)
+        
+        self.client_name = client_name
         
         self._active_subscriptions = set()
         self._connection = None
@@ -132,6 +136,9 @@ class RedisConnectionPool(RedisBaseInterface):
                 # Verify connection with ping
                 if not self._verify_connection():
                     raise redis.ConnectionError('Ping verification failed')
+                
+                if self.client_name:
+                    self._connection.client_setname(self.client_name)
                 
                 self.pubsub = self._connection.pubsub(ignore_subscribe_messages=True)
                 self._is_connected = True

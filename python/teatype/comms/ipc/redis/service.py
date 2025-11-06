@@ -37,14 +37,15 @@ class RedisServiceManager(RedisBaseInterface):
     pool:RedisConnectionPool
     
     def __init__(self,
+                 client_name:Optional[str]=None,
                  channels:Optional[List[Union[str,Enum]]]=None,
                  on_shutdown:Optional[Callable]=None,
                  preprocess_function:Optional[Callable]=None,
-                 verbose_logging:bool=True) -> None:
+                 verbose_logging:Optional[bool]=True) -> None:
         super().__init__(verbose_logging=verbose_logging)
         
         # Initialize components
-        self.pool = RedisConnectionPool(verbose_logging=verbose_logging)
+        self.pool = RedisConnectionPool(client_name=client_name, verbose_logging=verbose_logging)
         
         # Establish connection
         if not self.pool.establish_connection():

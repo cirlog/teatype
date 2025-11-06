@@ -13,13 +13,11 @@
 # all copies or substantial portions of the Software.
 
 # Package imports
-from teatype import colorwrap
-from teatype.ai.llm import ConversationalAI
 from teatype.cli import BaseTUI
-from teatype.io import clear_shell, fetch, path, prompt
+from teatype.enum import EscapeColor
+from teatype.io import prompt
 from teatype.logging import *
-from teatype.modulo.launchpad import LaunchPad
-from teatype.modulo.operations import Operations as ModuloOperations
+from teatype.modulo import LaunchPad, ModuloOperations, parse_designation
 
 class Operations(BaseTUI):
     def meta(self):
@@ -59,6 +57,26 @@ class Operations(BaseTUI):
                            return_bool=False)
         LaunchPad.fire(unit_name, unit_type)
         
+    def list(self):
+        units = self.operations.list()
+        n_units = len(units)
+        list_string = ''
+        if n_units == 0:
+            list_string += f'{EscapeColor.LIGHT_YELLOW}No Modulo units found.'
+        else:
+            list_string += f'{EscapeColor.LIGHT_GREEN}Found {len(units)} Modulo units:\n'
+            
+        for unit in units:
+            designation = unit.get('designation')
+            info = parse_designation(designation)
+            list_string += f'  {EscapeColor.MAGENTA}Name: {EscapeColor.CYAN}{info["name"]}\n'
+            list_string += f'  {EscapeColor.MAGENTA}Type: {EscapeColor.CYAN}{info["type"]}\n'
+            list_string += f'  {EscapeColor.MAGENTA}ID:   {EscapeColor.CYAN}{info["id"]}\n'
+            list_string += f'  {EscapeColor.MAGENTA}Pod:  {EscapeColor.CYAN}{info["pod"]}\n'
+            list_string += f'  {EscapeColor.MAGENTA}Designation: {EscapeColor.CYAN}{designation}\n'
+            list_string += '\n'
+        return list_string
+        
     def on_init(self):
         self.operations = ModuloOperations()
         
@@ -70,7 +88,7 @@ class Operations(BaseTUI):
                 case 'kill':
                     return self.operations.kill(id=option)
                 case 'list':
-                    pass
+                    return self.list()
             return None
         except KeyboardInterrupt:
             return None

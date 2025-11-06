@@ -12,4 +12,6 @@
 
 # From local imports
 from .launchpad import LaunchPad
-from .units import BackendUnit, ServiceUnit, WorkhorseUnit
+from .operations import Operations
+from .operations import Operations as ModuloOperations
+from .units import ApplicationUnit, BackendUnit, CoreUnit, ServiceUnit, WorkhorseUnit, parse_designation, print_designation

@@ -14,7 +14,7 @@
 import threading
 import time
 from queue import LifoQueue
-from typing import List
+from typing import List, Union
 
 # From package imports
 from teatype.enum import EscapeColor
@@ -22,7 +22,43 @@ from teatype.logging import *
 from teatype.comms.ipc.redis import *
 from teatype.toolkit import generate_id
 
-class _CoreUnit(threading.Thread):
+def parse_designation(designation:str) -> dict[Union[str,str|int]]:
+    """
+    Parse a Teatype Modulo unit designation string into its components.
+
+    Args:
+        designation: The designation string to parse.
+
+    Returns:
+        A dictionary containing the parsed components.
+    """
+    parts = designation.split(':')
+    if len(parts) != 7 or parts[0] != 'teatype':
+        err('Invalid designation format and/or not a teatype-module',
+            raise_exception=ValueError)
+
+    return {
+        'type': parts[3],
+        'name': parts[4],
+        'pod': int(parts[5]),
+        'id': parts[6]
+    }
+    
+def print_designation(designation:str) -> None:
+    """
+    Print the components of a Teatype Modulo unit designation string.
+
+    Args:
+        designation: The designation string to print. 
+    """
+    info = parse_designation(designation)
+    log(f'  {EscapeColor.MAGENTA}Name: {EscapeColor.CYAN}{info["name"]}')
+    log(f'  {EscapeColor.MAGENTA}Type: {EscapeColor.CYAN}{info["type"]}')
+    log(f'  {EscapeColor.MAGENTA}ID:   {EscapeColor.CYAN}{info["id"]}')
+    log(f'  {EscapeColor.MAGENTA}Pod:  {EscapeColor.CYAN}{info["pod"]}')
+    log(f'  {EscapeColor.MAGENTA}Designation: {EscapeColor.CYAN}{designation}')
+
+class CoreUnit(threading.Thread):
     """
     Base class for Teatype Modulo units.
     """
@@ -55,7 +91,8 @@ class _CoreUnit(threading.Thread):
         
         self.id = generate_id(truncate=16)
         self.pod = 0 # Enumeration for units with the same name
-        self.designation = f'unit:{self.type}:{self.name}:{self.pod}:{self.id}'
+        # TODO: Make PID part of designation to allow external process management
+        self.designation = f'teatype:modulo:unit:{self.type}:{self.name}:{self.pod}:{self.id}'
         self.loop_idle_time = 1.0
         self.loop_iter = 0
         
@@ -65,16 +102,12 @@ class _CoreUnit(threading.Thread):
         self._shutdown_in_progress = False
         
         log(f'Initialized unit:')
-        log(f'  {EscapeColor.CYAN}Name:        {EscapeColor.MAGENTA}{self.name}')
-        log(f'  Type:        {self.type}')
-        log(f'  ID:          {self.id}')
-        log(f'  Pod:         {self.pod}')
-        log(f'  Designation: {self.designation}')
+        print_designation(self.designation)
         
     def __new__(cls, *args, **kwargs):
         if not cls._ALLOW_DIRECT_INSTANTIATION:
             raise TypeError(
-                'Direct instantiation of _CoreUnit baseclasses is not allowed. '
+                'Direct instantiation of CoreUnit baseclasses is not allowed. '
                 'Use Subclass.create() or better yet, Launchpads to instantiate appropriate worker units.'
             )
         return super().__new__(cls)
@@ -84,7 +117,7 @@ class _CoreUnit(threading.Thread):
     #################
     
     @classmethod
-    def create(cls, **kwargs) -> '_CoreUnit':
+    def create(cls, **kwargs) -> 'CoreUnit':
         cls._ALLOW_DIRECT_INSTANTIATION = True
         try:
             return cls(**kwargs)
@@ -141,7 +174,34 @@ class _CoreUnit(threading.Thread):
         """
         pass
     
-class BackendUnit(_CoreUnit):
+class ApplicationUnit:
+    """
+    Composite application unit consisting of backend and service units.
+    """
+    def __init__(self, name:str):
+        self.backend = BackendUnit.create(name=name)
+        self.service = ServiceUnit.create(name=name)
+        
+    ##############
+    # Public API #
+    ##############
+
+    def start(self):
+        # Start backend and service threads if needed
+        self.backend.start()
+        self.service.start()
+    
+    def join(self):
+        self.backend.join()
+        self.service.join()
+    
+    def broadcast(self, *args, **kwargs):
+        return self.service.broadcast(*args, **kwargs)
+    
+    def dispatch(self, *args, **kwargs):
+        return self.service.dispatch(*args, **kwargs)
+    
+class BackendUnit(CoreUnit):
     def __init__(self, name:str) -> None:
         """
         Initialize the backend unit.
@@ -150,8 +210,8 @@ class BackendUnit(_CoreUnit):
             name: Name of the backend unit
         """
         super().__init__(name=name, type='backend')
-    
-class ServiceUnit(_CoreUnit):
+        
+class ServiceUnit(CoreUnit):
     """
     Advanced service orchestration unit providing core system management capabilities.
     
@@ -180,7 +240,8 @@ class ServiceUnit(_CoreUnit):
         Initialize Redis connection and message routing.
         """
         try:
-            self.redis_service = RedisServiceManager(preprocess_function=self._default_message_preprocessor,
+            self.redis_service = RedisServiceManager(client_name=self.designation,
+                                                     preprocess_function=self._default_message_preprocessor,
                                                      verbose_logging=self._verbose_logging)
         except Exception:
             err('Redis infrastructure setup failed.',
@@ -344,7 +405,7 @@ class ServiceUnit(_CoreUnit):
             
         self.on_redis_shutdown_after()
     
-class WorkhorseUnit(_CoreUnit):
+class WorkhorseUnit(CoreUnit):
     """
     Lightweight one-shot worker unit for specialized tasks within the Teatype Modulo framework.
     """
@@ -366,20 +427,28 @@ if __name__ == '__main__':
     )
     
     # TODO: Add launch key, so that only Launchpad can execute this script
-    parser.add_argument('unit-type',
+    parser.add_argument('unit_type',
                         type=str,
                         choices=['backend', 'service', 'workhorse'],
                         help='Type of the unit to launch')
-    parser.add_argument('unit-name',
+    parser.add_argument('unit_name',
                         type=str,
                         help='Name of the unit to launch')
+    parser.add_argument('--host',
+                        type=str,
+                        default=None,
+                        help='Host address for backend units')
+    parser.add_argument('--port',
+                        type=int,
+                        default=None,
+                        help='Port number for backend units')
     
     args = parser.parse_args()
     unit_type = args.unit_type
     unit_name = args.unit_name
     
     try:
-        from .launchpad import LaunchPad
+        from teatype.modulo.launchpad import LaunchPad
         unit = LaunchPad.create(args.unit_name, args.unit_type, host=args.host, port=args.port)
         # Run unit directly (blocking mode)
         unit.start()

@@ -20,6 +20,11 @@
         "command": "python3.11 -m pip install"
     },
     {
+        "name": "pip3.11",
+        "description": "Run pip for the baseline python interpreter",
+        "command": "python3.11 -m pip"
+    },
+    {
         "name": "pie",
         "description": "Install a python package in editable mode",
         "command": "python3.11 -m pip install -e ."

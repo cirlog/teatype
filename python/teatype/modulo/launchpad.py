@@ -79,7 +79,7 @@ class LaunchPad:
         """
         python_executable = sys.executable
         script_directory = path.caller_parent()
-        script_path = path.join(script_directory, 'modulo', 'units.py')
+        script_path = path.join(script_directory, 'units.py')
         
         launch_command = f'{python_executable} {script_path} {unit_type} {unit_name}'
         if unit_type == 'backend':
@@ -91,9 +91,11 @@ class LaunchPad:
         if detached:
             log_directory = '/tmp/modulo/logs'
             timestamp = dt.now()
-            log_path = '{log_directory}/{unit_type}-{unit_name}.log'
+            log_path = f'{log_directory}/{unit_type}-{unit_name}-{timestamp}.log'
             path.create('/tmp/modulo/logs')
-            launch_command = f'nohup {launch_command} > {log_directory} 2>&1 &'
+            launch_command = f'nohup {launch_command} > {log_path} 2>&1 &'
+        print(launch_command)
+        shell(launch_command, mute=True)
         return True
         
 if __name__ == "__main__":

@@ -12,28 +12,29 @@
 
 # System import
 import sys
-
-# From system imports
 from typing import List
 
-# From package imports
+# Package imports
+from prompt_toolkit import prompt as pt_prompt
+from prompt_toolkit.completion import WordCompleter
 from teatype.enum import EscapeColor
 from teatype.logging import *
 
-# TODO: if options are supplied, return selected option, not bool
-def prompt(prompt_text:str,
-           options:List[any]=None,
-           return_bool:bool=True,
-           colorize:bool=True,
-           exit_on_error:bool=True) -> any:
+def prompt(prompt_text: str,
+           options: List[str] = None,
+           return_bool: bool = True,
+           colorize: bool = True,
+           exit_on_error: bool = True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
+    Supports arrow-key navigation for option selection via prompt_toolkit.
 
     Args:
         prompt_text (str): The message to display to the user.
-        options (List[any]): A list of valid options that the user can choose from.
-        return_bool (bool): Whether to return a boolean value based on the user's selection. Default is True.
+        options (List[str]): A list of valid options that the user can choose from.
+        return_bool (bool): Whether to return a boolean value based on the user's selection.
         colorize (bool): Whether to colorize the prompt text. Default is True.
+        exit_on_error (bool): Whether to exit on invalid input.
 
     Returns:
         any: The user's selected option.
@@ -41,61 +42,50 @@ def prompt(prompt_text:str,
     try:
         if return_bool:
             if options:
-                # Determine if the return type should be a boolean based on the user's preference
                 if len(options) > 2:
-                    # Raise an error if more than two options are provided, as a boolean return is only valid for binary choices
                     err('Cannot return a boolean value for more than two options.', exit=True)
             else:
                 err('Cannot return a boolean value without options. If you don\'t want to use options, set "return_bool=False"', exit=True)
-        
-        # Log the prompt text for debugging or record-keeping purposes
-        if colorize:
-            prompt_text = f'{EscapeColor.LIGHT_GREEN}{prompt_text}{EscapeColor.RESET}'
-        
+
+        # Apply color to the prompt
+        display_text = f'{EscapeColor.LIGHT_GREEN}{prompt_text}{EscapeColor.RESET}' if colorize else prompt_text
+
+        # Build options string for display
         if options:
-            # Initialize the string that will display the options
-            options_string = '('
-            
-            # Iterate over each option to build the options string
-            for i, option in enumerate(options):
-                options_string += f'{option}'
-                # If it's the last option, append a '/' to indicate the end
-                if i < len(options) - 1:
-                    options_string += '/'
-            
-            # Close the options string with a colon and space for user input
-            options_string += '): '
-            
-            # Prompt the user for input using the constructed options string
+            options_string = '(' + '/'.join(options) + '): '
             if colorize:
                 options_string = f'{EscapeColor.GRAY}{options_string}{EscapeColor.RESET}'
-            prompt_text += ' ' + options_string
-                
-        log(prompt_text, pad_before=1)
-        
-        prompt_answer = input('> ')
-            
+            display_text += ' ' + options_string
+
+        # Log the prompt
+        log(display_text, pad_before=1)
+
+        # Use prompt_toolkit with arrow-key selection
         if options:
-            # Validate the user's input against the available options
+            completer = WordCompleter(options, ignore_case=True)
+            prompt_answer = pt_prompt('> ', completer=completer)
+        else:
+            prompt_answer = pt_prompt('> ')
+
+        # Validate input if options are provided
+        if options:
             if prompt_answer not in options:
                 error_message = 'Invalid input. Available options are: ' + ', '.join(options)
-                # Log an error message and exit if the input is invalid
-                err(error_message   ,
+                err(error_message,
                     pad_after=1,
                     exit=exit_on_error,
                     raise_exception=not exit_on_error,
                     use_prefix=False,
                     verbose=False)
-                
                 if not exit_on_error:
                     return error_message
-            
-        # Return the validated user input
-        return prompt_answer == options[0] if return_bool else prompt_answer
+
+        # Return boolean if requested
+        return prompt_answer == options[0] if return_bool and options else prompt_answer
     except KeyboardInterrupt:
         warn('User interrupted the input prompt.', pad_before=2, pad_after=1, use_prefix=False)
         sys.exit(1)
     except SystemExit as se:
         sys.exit(se.code)
-    except:
+    except Exception:
         err(f'An error occurred while prompting the user for input', pad_after=1, exit=True, traceback=True)
