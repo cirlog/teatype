@@ -38,7 +38,8 @@ class _StopOnSpaceCompleter(Completer):
             for word in self.words:
                 if word.startswith(text):
                     yield Completion(word, start_position=-len(text))
-
+                    
+# TODO: Auto-complete designations
 def _modified_prompt(prompt_text:str, options:list[str]=None) -> any:
     try:
         # Apply color to the prompt
@@ -205,8 +206,8 @@ class BaseTUI(BaseCLI):
                     log(f'{EscapeColor.GREEN}Output:')
                     log(f'{EscapeColor.GREEN}-------')
                     for line in self.output.split('\n'):
-                        if line.strip() == '':
-                            continue
+                        # if line.strip() == '':
+                        #     continue
                         log('   ' + line)
                     log(f'{EscapeColor.GREEN}-------')
                     println()

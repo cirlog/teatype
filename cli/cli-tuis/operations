@@ -64,16 +64,18 @@ class Operations(BaseTUI):
         if n_units == 0:
             list_string += f'{EscapeColor.LIGHT_YELLOW}No Modulo units found.'
         else:
-            list_string += f'{EscapeColor.LIGHT_GREEN}Found {len(units)} Modulo units:\n'
+            list_string += f'{EscapeColor.LIGHT_GREEN}Found {EscapeColor.RESET}{len(units)}{EscapeColor.LIGHT_GREEN} Modulo units:\n'
+            list_string += '\n'
             
         for unit in units:
             designation = unit.get('designation')
             info = parse_designation(designation)
-            list_string += f'  {EscapeColor.MAGENTA}Name: {EscapeColor.CYAN}{info["name"]}\n'
-            list_string += f'  {EscapeColor.MAGENTA}Type: {EscapeColor.CYAN}{info["type"]}\n'
-            list_string += f'  {EscapeColor.MAGENTA}ID:   {EscapeColor.CYAN}{info["id"]}\n'
-            list_string += f'  {EscapeColor.MAGENTA}Pod:  {EscapeColor.CYAN}{info["pod"]}\n'
-            list_string += f'  {EscapeColor.MAGENTA}Designation: {EscapeColor.CYAN}{designation}\n'
+            list_string += f'   {info["type"]}-unit:\n'
+            list_string += f'       {EscapeColor.MAGENTA}Name:        {EscapeColor.CYAN}{info["name"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}ID:          {EscapeColor.CYAN}{info["id"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}Pod:         {EscapeColor.CYAN}{info["pod"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}Type:        {EscapeColor.CYAN}{info["type"]}\n'
+            list_string += f'       {EscapeColor.MAGENTA}Designation: {EscapeColor.CYAN}{designation}\n'
             list_string += '\n'
         return list_string
         
