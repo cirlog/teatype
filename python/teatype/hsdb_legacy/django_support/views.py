@@ -22,7 +22,7 @@ from typing import List, Type
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.hsdb_legacy import HybridStorage
-from teatype.web.django_support.responses import NotAllowed, ServerError, Success
+from teatype.comms.http.responses import NotAllowed, ServerError, Success
 
 # TODO: Create a seperate base class without hsdb support
 class HSDBDjangoView(APIView):

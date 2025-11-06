@@ -10,7 +10,19 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .deadpoint import Deadpoint, deadpoint
-from .routing import register_middleware, register_routes
+try:
+    from .deadpoint import Deadpoint, deadpoint
+except ImportError:
+    fastapi_support = False
+    
+try:
+    from .routing import register_middleware, register_routes
+except ImportError:
+    fastapi_support = False
+    
 from .request import *
-from .response import *
+
+try:
+    from .responses import *
+except ImportError:
+    django_support = False
