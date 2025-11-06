@@ -20,11 +20,11 @@ from prompt_toolkit.completion import WordCompleter
 from teatype.enum import EscapeColor
 from teatype.logging import *
 
-def prompt(prompt_text: str,
-           options: List[str] = None,
-           return_bool: bool = True,
-           colorize: bool = True,
-           exit_on_error: bool = True) -> any:
+def prompt(prompt_text:str,
+           options:List[str]=None,
+           return_bool:bool=True,
+           colorize:bool=True,
+           exit_on_error:bool=True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
     Supports arrow-key navigation for option selection via prompt_toolkit.

@@ -29,6 +29,7 @@ from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
 from teatype.comms.ipc.redis.connection_pool import RedisConnectionPool
 from teatype.comms.ipc.redis.message_processor import RedisMessageProcessor
 
+# TODO: Figure out how to make request-response patterns work with Redis pub/sub
 class RedisServiceManager(RedisBaseInterface):
     """
     Comprehensive Redis service manager with connection pooling and message handling.

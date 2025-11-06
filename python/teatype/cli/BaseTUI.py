@@ -10,16 +10,74 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
-from abc import abstractmethod
+# System imports
+import sys
+from typing import List
 
 # From package imports
+from prompt_toolkit import prompt as pt_prompt
+from prompt_toolkit.completion import Completer, Completion, WordCompleter
 from teatype import colorwrap
 from teatype.cli import BaseCLI
 from teatype.cli.args import Action
 from teatype.enum import EscapeColor
 from teatype.io import clear_shell
 from teatype.logging import *
+
+class _StopOnSpaceCompleter(Completer):
+    """
+    Provides completions only until the first space is typed.
+    Once a space is detected, no more completions are offered.
+    """
+    def __init__(self, words):
+        self.words = words
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        if ' ' not in text:  # Only complete if no space typed yet
+            for word in self.words:
+                if word.startswith(text):
+                    yield Completion(word, start_position=-len(text))
+
+def _modified_prompt(prompt_text:str, options:list[str]=None) -> any:
+    try:
+        # Apply color to the prompt
+        display_text = f'{EscapeColor.LIGHT_GREEN}{prompt_text}{EscapeColor.RESET}'
+
+        # Build options string for display
+        if options:
+            options_string = '(' + '/'.join(options) + '): '
+            options_string = f'{EscapeColor.GRAY}{options_string}{EscapeColor.RESET}'
+
+        # Log the prompt
+        log(display_text)
+
+        # Use prompt_toolkit with custom completer
+        if options:
+            completer = _StopOnSpaceCompleter(options)
+            prompt_answer = pt_prompt(
+                '> ',
+                completer=completer,
+                complete_while_typing=True, # keep completions while typing first word
+                handle_sigint=True          # allows Ctrl+C to raise KeyboardInterrupt
+            )
+        else:
+            prompt_answer = pt_prompt(
+                '> ',
+                handle_sigint=True
+            )
+
+        # Validate input if options are provided
+        if options and prompt_answer.split()[0] not in options:
+            error_message = 'Invalid input. Available options are: ' + ', '.join(options)
+            err(error_message, use_prefix=False, verbose=False)
+        return prompt_answer
+    except KeyboardInterrupt:
+        return 'exit'
+    except SystemExit:
+        return None
+    except Exception:
+        return None
 
 class BaseTUI(BaseCLI):
     def __init__(self,
@@ -145,17 +203,16 @@ class BaseTUI(BaseCLI):
                 if self.output:
                     log(f'{EscapeColor.GREEN}Output:')
                     log(f'{EscapeColor.GREEN}-------')
-                    println()
                     for line in self.output.split('\n'):
                         if line.strip() == '':
                             continue
                         log('   ' + line)
-                    println()
                     log(f'{EscapeColor.GREEN}-------')
                     println()
                     self.output = None
-                    
-                user_input = input(f'{EscapeColor.LIGHT_GREEN}{self.name}> {EscapeColor.RESET}').strip().lower()
+                
+                user_input = _modified_prompt('Enter an action to perform:',
+                                              options=[action.name for action in self.actions])
                 matching_action = next((action for action in self.actions if action.name == user_input), None)
                 if matching_action:
                     if self.manual_refresh:

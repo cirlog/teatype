@@ -70,14 +70,15 @@ class Operations:
                 println()
         return units if n_units > 0 else None
 
-    def kill(self, id:str) -> None:
+    def kill(self, id:str) -> bool:
         """
         Kill a Teatype Modulo unit by id.
         """
         if id == 'all':
-            pass
+            return False
         else:
             self.dispatch(id=id, command='kill')
+        return True
         
 if __name__ == "__main__":
     import argparse

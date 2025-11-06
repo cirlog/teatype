@@ -260,7 +260,7 @@ class ServiceUnit(CoreUnit):
         message = self._filter_irrelevant_messages(message)
         if message == None:
             return None
-        message = self._react_to_kill_command(message)
+        message = self._default_commands(message)
             
     def _filter_irrelevant_messages(self, message:any) -> any:
         """
@@ -287,15 +287,10 @@ class ServiceUnit(CoreUnit):
             err(f'Message filtering error', traceback=True)
             return None
         
-    def _react_to_kill_command(self, message:any) -> any:
+    def _default_commands(self, message:any) -> dict:
         """
-        React to 'kill' command messages by initiating shutdown.
-        
         Args:
             msg: Incoming Redis message
-            
-        Returns:
-            Message if not a kill command, None otherwise
         """
         try:
             command = message.get('command', None)

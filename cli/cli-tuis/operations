@@ -86,7 +86,7 @@ class Operations(BaseTUI):
                 case 'fire':
                     return self.fire()
                 case 'kill':
-                    return self.operations.kill(id=option)
+                    return 'Sent kill command to unit.' if self.operations.kill(id=option) else 'Failed to send kill command.'
                 case 'list':
                     return self.list()
             return None
