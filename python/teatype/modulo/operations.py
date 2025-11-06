@@ -68,16 +68,13 @@ class Operations:
             for unit in units:
                 print_designation(unit.get('designation'))
                 println()
-        return units if n_units > 0 else None
+        return units if n_units > 0 else []
 
     def kill(self, id:str) -> bool:
         """
         Kill a Teatype Modulo unit by id.
         """
-        if id == 'all':
-            return False
-        else:
-            self.dispatch(id=id, command='kill')
+        self.dispatch(id=id, command='kill')
         return True
         
 if __name__ == "__main__":

@@ -276,10 +276,11 @@ class ServiceUnit(CoreUnit):
             sender = message.get('sender')
             receiver = message.get('receiver')
             
-            if sender == self.designation:
+            # TODO: Or use designation instead? dont know yet
+            if sender == self.id:
                 return None
                 
-            if receiver and receiver != 'all' and receiver != self.designation:
+            if receiver and receiver != 'all' and receiver != self.id:
                 return None
                 
             return message

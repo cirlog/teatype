@@ -53,31 +53,29 @@ def _modified_prompt(prompt_text:str, options:list[str]=None) -> any:
         log(display_text)
 
         # Use prompt_toolkit with custom completer
-        if options:
-            completer = _StopOnSpaceCompleter(options)
-            prompt_answer = pt_prompt(
-                '> ',
-                completer=completer,
-                complete_while_typing=True, # keep completions while typing first word
-                handle_sigint=True          # allows Ctrl+C to raise KeyboardInterrupt
-            )
+        completer = _StopOnSpaceCompleter(options)
+        prompt_answer = pt_prompt(
+            '> ',
+            completer=completer,
+            complete_while_typing=True, # keep completions while typing first word
+            handle_sigint=True          # allows Ctrl+C to raise KeyboardInterrupt
+        )
+        prompt_answer = prompt_answer.strip()
+        if ' ' in prompt_answer:
+            user_input, option = prompt_answer.split(' ', 1)
         else:
-            prompt_answer = pt_prompt(
-                '> ',
-                handle_sigint=True
-            )
-
-        # Validate input if options are provided
-        if options and prompt_answer.split()[0] not in options:
-            error_message = 'Invalid input. Available options are: ' + ', '.join(options)
-            err(error_message, use_prefix=False, verbose=False)
-        return prompt_answer
+            user_input = prompt_answer
+            option = None
+            
+        if user_input not in options:
+            return None, None
+        return user_input, option
     except KeyboardInterrupt:
-        return 'exit'
+        return 'exit', None
     except SystemExit:
-        return None
+        return None, None
     except Exception:
-        return None
+        return None, None
 
 class BaseTUI(BaseCLI):
     def __init__(self,
@@ -183,6 +181,9 @@ class BaseTUI(BaseCLI):
                     hint('MANUAL REFRESH: Shell will not be cleared automatically.', use_prefix=False)
                 else:
                     clear_shell()
+                    
+                println()
+                log(f'> {self.meta().get("name")}-TUI', color='gray')
                 
                 println()
                 log('Available actions:')
@@ -211,8 +212,8 @@ class BaseTUI(BaseCLI):
                     println()
                     self.output = None
                 
-                user_input = _modified_prompt('Enter an action to perform:',
-                                              options=[action.name for action in self.actions])
+                user_input, option = _modified_prompt('Input:',
+                                                      options=[action.name for action in self.actions])
                 matching_action = next((action for action in self.actions if action.name == user_input), None)
                 if matching_action:
                     if self.manual_refresh:
@@ -224,13 +225,9 @@ class BaseTUI(BaseCLI):
                         self.exit = True
                         continue
                     
-                    option = None
-                    if matching_action.option:
-                        try:
-                            option = user_input.split(' ')[1]
-                        except:
-                            self.no_option = True
-                            continue
+                    if matching_action.option and not option:
+                        self.no_option = True
+                        continue
                         
                     self.output = self.on_prompt(user_input, option)
                     continue
