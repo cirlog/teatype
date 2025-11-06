@@ -63,13 +63,17 @@ class Operations(BaseTUI):
         self.operations = ModuloOperations()
         
     def on_prompt(self, user_input:str, option:any=None) -> str:
-        match user_input:
-            case 'fire':
-                self.fire()
-            case 'kill':
-                self.operations.kill(id=option)
-            case 'list':
-                pass
+        try:
+            match user_input:
+                case 'fire':
+                    return self.fire()
+                case 'kill':
+                    return self.operations.kill(id=option)
+                case 'list':
+                    pass
+            return None
+        except KeyboardInterrupt:
+            return None
 
 if __name__ == '__main__':
     Operations()

@@ -17,8 +17,9 @@ import subprocess
 from typing import Literal
 
 # Local imports
-from teatype.io import path
+from teatype.io import path, shell
 from teatype.modulo.units import *
+from teatype.toolkit import dt
 
 class LaunchPad:
     """
@@ -71,7 +72,8 @@ class LaunchPad:
              unit_name:str,
              unit_type:Literal['backend','service','workhorse'],
              host:str|None=None,
-             port:int|None=None) -> bool:
+             port:int|None=None,
+             detached:bool=True) -> bool:
         """
         Launch the worker in its own detached process.
         """
@@ -79,22 +81,20 @@ class LaunchPad:
         script_directory = path.caller_parent()
         script_path = path.join(script_directory, 'modulo', 'units.py')
         
-        # DETACHED process flags
-        DETACHED_PROCESS = 0x00000008
-        CREATE_NEW_PROCESS_GROUP = 0x00000200
-
-        process = subprocess.Popen(
-            [python_executable, script_path, unit_type, unit_name] + (
-                ['--host', host] if host else []) + (
-                ['--port', str(port)] if port else []),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
-            close_fds=True,
-            start_new_session=True # Unix only
-        )
-        print(process.pid)
+        launch_command = f'{python_executable} {script_path} {unit_type} {unit_name}'
+        if unit_type == 'backend':
+            if host is None or port is None:
+                raise err('Host and port must be specified for backend units.',
+                          raise_exception=ValueError)
+            launch_command += f' --host={host} --port={port}'
+        
+        if detached:
+            log_directory = '/tmp/modulo/logs'
+            timestamp = dt.now()
+            log_path = '{log_directory}/{unit_type}-{unit_name}.log'
+            path.create('/tmp/modulo/logs')
+            launch_command = f'nohup {launch_command} > {log_directory} 2>&1 &'
+        return True
         
 if __name__ == "__main__":
     import argparse

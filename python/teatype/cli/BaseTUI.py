@@ -21,9 +21,6 @@ from teatype.enum import EscapeColor
 from teatype.io import clear_shell
 from teatype.logging import *
 
-DEBUG_MODE = False
-MANUAL_REFRESH = True # If True, the shell will be cleared automatically after each command
-
 class BaseTUI(BaseCLI):
     def __init__(self,
                  proxy_mode:bool=False,
@@ -32,6 +29,33 @@ class BaseTUI(BaseCLI):
                  auto_validate:bool=True,
                  auto_execute:bool=True,
                  env_path:str='.../.env'):
+        # Prepare meta with additional flags
+        meta_info = self.meta()
+        def _meta_closure():
+            additional_flags = [
+                {
+                    'long': 'debug',
+                    'short': 'd',
+                    'help': 'Enable debug mode for the TUI.',
+                    'required': False,
+                },
+                {
+                    'long': 'manual-refresh',
+                    'short': 'mr',
+                    'help': 'Enable manual refresh mode for the TUI.',
+                    'required': False,
+                },
+                {
+                    'long': 'one-shot',
+                    'short': 'os',
+                    'help': 'Execute a single command and exit the TUI.',
+                    'required': False
+                }
+            ]
+            meta_info['flags'] = meta_info['flags'] + additional_flags if 'flags' in meta_info else additional_flags
+            return meta_info
+        self.meta = _meta_closure
+        
         super().__init__(proxy_mode,
                          auto_init,
                          auto_parse,
@@ -39,12 +63,19 @@ class BaseTUI(BaseCLI):
                          auto_execute,
                          env_path)
         self.actions = [Action(**action) for action in self.meta().get('actions', [])]
-        if MANUAL_REFRESH:
+        self.actions.append(Action(name='exit', help=f'{EscapeColor.GRAY}(or CRTL+C){EscapeColor.RESET} Leave the TUI.'))
+                
+        self.on_init()
+        
+    def post_validate(self):
+        self.debug = self.get_flag('debug')
+        self.manual_refresh = self.get_flag('manual-refresh')
+        self.one_shot = self.get_flag('one-shot')
+        if self.manual_refresh:
             manual_refresh_action = Action(name='clear',
-                                           help='Refreshes the shell in debug mode.')
+                                           help='Refreshes the shell in manual mode.')
             self.actions.append(manual_refresh_action)
             
-        self.actions.append(Action(name='exit', help=f'{EscapeColor.GRAY}(or CRTL+C){EscapeColor.RESET} Leave the TUI.'))
         # Calculate max lengths for action.name and action.option_name separately
         name_lengths = [len(action.name) for action in self.actions]
         option_lengths = [len(action.option_name) for action in self.actions if action.option_name]
@@ -64,10 +95,7 @@ class BaseTUI(BaseCLI):
                 action.str = colorwrap(action.str, 'cyan')
             if action.name == 'exit':
                 action.str = colorwrap(action.str, 'red')
-                
-        self.on_init()
-        
-    def post_validate(self):
+            
         if 'No command provided.' in self._parsing_errors:
             self._parsing_errors.remove('No command provided.')
         
@@ -77,19 +105,23 @@ class BaseTUI(BaseCLI):
     def run(self):
         clear_shell()
         
-        println()
-        
         self.dirty = False
         self.exit = False
         self.no_option = False
         self.output = None
         self.unknown_command = None
+        iter = 0
         while True:
             try:
+                iter += 1
+                if iter > 1 and self.one_shot:
+                    break
+                
+                println()
                 if self.exit:
                     break
                 
-                if MANUAL_REFRESH:
+                if self.manual_refresh:
                     hint('MANUAL REFRESH: Shell will not be cleared automatically.', use_prefix=False)
                 else:
                     clear_shell()
@@ -104,7 +136,7 @@ class BaseTUI(BaseCLI):
                     warn(f'Unknown command: "{self.unknown_command}". Please try again.', use_prefix=False)
                     println()
                     self.unknown_command = None
-                    
+                
                 if self.no_option:
                     warn('No valid option provided. Please specify an option after the command (e.g., "edit 1").', use_prefix=False)
                     println()
@@ -123,6 +155,15 @@ class BaseTUI(BaseCLI):
                 user_input = input(f'{EscapeColor.LIGHT_GREEN}{self.name}> {EscapeColor.RESET}').strip().lower()
                 matching_action = next((action for action in self.actions if action.name == user_input), None)
                 if matching_action:
+                    if self.manual_refresh:
+                        if user_input == 'clear':
+                            clear_shell()
+                            continue
+                        
+                    if user_input == 'exit':
+                        self.exit = True
+                        continue
+                    
                     option = None
                     if matching_action.option:
                         try:
@@ -134,18 +175,13 @@ class BaseTUI(BaseCLI):
                     self.output = self.on_prompt(user_input, option)
                     continue
                 
-                if MANUAL_REFRESH:
-                    if user_input == 'clear':
-                        clear_shell()
-                        continue
-                elif user_input == 'exit':
-                    self.exit = True
-                else:
-                    self.unknown_command = user_input
+                self.unknown_command = user_input
             except (KeyboardInterrupt, EOFError):
                 self.exit = True
-        println()
-        warn(f'Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
+        if self.one_shot:
+            warn(f'One-shot command executed. Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
+        else:
+            warn(f'Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
         println()
         
     #########

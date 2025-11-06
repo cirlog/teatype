@@ -358,7 +358,6 @@ class WorkhorseUnit(_CoreUnit):
         super().__init__(name=name, type='workhorse')
         
 if __name__ == '__main__':
-    print('units')
     import argparse
     
     parser = argparse.ArgumentParser(
