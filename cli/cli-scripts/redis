@@ -115,12 +115,18 @@ class Redis(BaseCLI):
         println()
         
         shell('echo "never" | sudo tee /sys/kernel/mm/transparent_hugepage/enabled', mute=True)
-        hint('Disabled Transparent Huge Pages to reduce Redis latency')
+        hint('Disabled Transparent Huge Pages to reduce Redis latency', include_symbol=True, use_prefix=False)
+        println()
         
         shell('sysctl -w vm.overcommit_memory=1', mute=True, sudo=True)
-        hint('Enabled memory overcommit for optimal Redis performance')
+        hint('Enabled memory overcommit for optimal Redis performance', include_symbol=True, use_prefix=False)
+        println()
         
-        shell(f'redis-server {parent_directory}/config/redis.conf 2>&1')
+        logs_directory = path.join(parent_directory, 'logs')
+        path.create(path.join(logs_directory, 'logs'))
+        shell(f'redis-server {parent_directory}/config/redis.conf > {logs_directory}/redis.log 2>&1 &')
+        success('Redis server started successfully.', include_symbol=True)
+        println()
         
     def stop(self, parent_directory, process_pid:int) -> None:
         def _is_process_running(pid:int) -> bool:
@@ -194,31 +200,17 @@ class Redis(BaseCLI):
             MAX_SIGINT_ATTEMPTS = 3
             MAX_SIGTERM_ATTEMPTS = 3
             MAX_SIGKILL_ATTEMPTS = 3
-            
-            force_signal = self.get_flag('force-signal')
-            if force_signal:
-                match force_signal:
-                    case 'SIGINT':
-                        if not self.attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, "SIGINT"):
-                            return False
-                    case 'SIGTERM':
-                        if not self.attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, "SIGTERM"):
-                            return False
-                    case 'SIGKILL':
-                        if not self.attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, "SIGKILL"):
-                            return False
-            else:
-                # Attempt to stop the process using SIGINT
-                if not self.attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, "SIGINT"):
-                    # Warn and attempt to stop using SIGTERM if SIGINT fails
-                    warn("SIGINT attempts failed. Trying with SIGTERM...")
-                    if not self.attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, "SIGTERM"):
-                        # Warn and attempt to stop using SIGKILL if SIGTERM fails
-                        warn("SIGTERM attempts failed. Trying with SIGKILL...")
-                        if not self.attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, "SIGKILL"):
-                            # Log an error if all attempts fail
-                            err("SIGKILL failed. Manual intervention required.")
-                            return False
+            # Attempt to stop the process using SIGINT
+            if not _attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, 'SIGINT'):
+                # Warn and attempt to stop using SIGTERM if SIGINT fails
+                warn('SIGINT attempts failed. Trying with SIGTERM...')
+                if not _attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, 'SIGTERM'):
+                    # Warn and attempt to stop using SIGKILL if SIGTERM fails
+                    warn('SIGTERM attempts failed. Trying with SIGKILL...')
+                    if not _attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, 'SIGKILL'):
+                        # Log an error if all attempts fail
+                        err('SIGKILL failed. Manual intervention required.')
+                        return False
             return True
         
         def recursive_kill():
@@ -228,9 +220,8 @@ class Redis(BaseCLI):
 
             # Execute the is_running to update the list of process PIDs
             is_running, process_pid = self.is_running()
-            if len(process_pid) == 0:
-                # Inform the user if there are no more processes to stop
-                log('No more processes alive.')
+            if not is_running:
+                log('No running Redis server processes found. Exiting recursive kill.')
                 return
             
             if _is_process_running(process_pid):
@@ -258,7 +249,9 @@ class Redis(BaseCLI):
             case 'start':
                 if is_running:
                     println()
-                    warn('Redis server is already running. No action taken.')
+                    warn('Redis server is already running. Use `tt redis stop` to shut it down.',
+                         include_symbol=True,
+                         use_prefix=False)
                     println()
                 else:
                     self.start(parent_directory)
