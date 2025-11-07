@@ -15,7 +15,7 @@ try:
     You're looking at a standard “lazy-import” pattern for a package and in short accomplishes:
         - reduced startup time (by deferring imports until first use)
         - cut down memory usage (never import unused bits)
-        - and most importantly: avoid import-time side-effects or circular dependencies
+        - and most importantly: avoid import-time side-effects or circular dependenciews
     """
     import llama_cpp
     
@@ -26,29 +26,29 @@ try:
                'PromptBuilder']
     __GPU_SUPPORT__ = True
     
-    from .models.analytical import AnalyticalAI
-    from .models.conversational import ConversationalAI
-    from .loader import load_model
-    from .inference import Inferencer
-    from .prompt_builder import PromptBuilder
+    # from .models.analytical import AnalyticalAI
+    # from .models.conversational import ConversationalAI
+    # from .loader import load_model
+    # from .inference import Inferencer
+    # from .prompt_builder import PromptBuilder
 
-    # def __getattr__(name):
-    #     if name == 'AnalyticalAI':
-    #         from .models.analytical import AnalyticalAI
-    #         return AnalyticalAI
-    #     if name == 'ConversationalAI':
-    #         from .models.conversational import ConversationalAI
-    #         return ConversationalAI
-    #     if name == 'load_model':
-    #         from .loader import load_model
-    #         return load_model
-    #     if name == 'Inferencer':
-    #         from .inference import Inferencer
-    #         return Inferencer
-    #     if name == 'PromptBuilder':
-    #         from .prompt_builder import PromptBuilder
-    #         return PromptBuilder
-    #     raise AttributeError(f'module "llm" has no attribute "{name}"')
+    def __getattr__(name):
+        if name == 'AnalyticalAI':
+            from .models.analytical import AnalyticalAI
+            return AnalyticalAI
+        if name == 'ConversationalAI':
+            from .models.conversational import ConversationalAI
+            return ConversationalAI
+        if name == 'load_model':
+            from .loader import load_model
+            return load_model
+        if name == 'Inferencer':
+            from .inference import Inferencer
+            return Inferencer
+        if name == 'PromptBuilder':
+            from .prompt_builder import PromptBuilder
+            return PromptBuilder
+        raise AttributeError(f'module "llm" has no attribute "{name}"')
 except:
     import traceback
     traceback.print_exc()

@@ -51,6 +51,6 @@ if [[ $use_fastapi == "Y" || $use_fastapi == "y" ]]; then
 fi
 
 if [[ $use_gpu == "Y" || $use_gpu == "y" ]]; then
-    python3.11 -m pip install -r "$python_directory/requirements/gpu.txt"
+    # python3.11 -m pip install -r "$python_directory/requirements/gpu.txt"
     . "$grandparent_directory/scripts/deploy/4-install-llama-cpp-gpu"
 fi
