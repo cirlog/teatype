@@ -23,7 +23,7 @@ from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.hsdb import HybridStorage
 from teatype.toolkit import kebabify
-from teatype.web.django_support.responses import NotAllowed, ServerError, Success
+from teatype.comms.http.responses import NotAllowed, ServerError, Success
 
 _COLLECTION_METHODS=['GET', 'POST']
 _DATA_REQUIRED_METHODS=['POST', 'PUT', 'PATCH']

@@ -143,5 +143,5 @@ try:
                     traceback.print_exc()
             return wrapper
         return decorator
-except:
+except ImportError:
     fastapi_support = None

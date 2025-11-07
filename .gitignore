@@ -191,3 +191,5 @@ dist
 *logs/*
 logs
 *.pytest_cache
+
+*/*llama-cpp-python

@@ -13,6 +13,7 @@
 # all copies or substantial portions of the Software.
 
 # Package imports
+import redis
 from teatype.cli import BaseTUI
 from teatype.enum import EscapeColor
 from teatype.io import prompt
@@ -79,7 +80,16 @@ class Operations(BaseTUI):
             list_string += '\n'
         return list_string
         
-    def on_init(self):
+    def post_validate(self):
+        try:
+            redis.Redis().ping()
+        except:
+            println()
+            err('Cannot connect to Redis server. Please run the redis server with `tt redis start` before using Modulo operations.',
+                exit=True,
+                pad_after=1,
+                verbose=False)
+            
         self.operations = ModuloOperations()
         
     def on_prompt(self, user_input:str, option:any=None) -> str:

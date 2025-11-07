@@ -138,7 +138,7 @@ class BaseStopCLI(BaseCLI):
         # Sort the scripts dictionary by keys for consistent ordering
         scripts = dict(sorted(scripts.items()))
         return scripts
-        
+    
     def is_process_running(self, pid):
         """
         Check if a process with the given PID is currently running.
