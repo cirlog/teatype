@@ -12,7 +12,6 @@
 
 # Standard library imports
 import importlib
-
 # Third-party imports
 from teatype.logging import *
 

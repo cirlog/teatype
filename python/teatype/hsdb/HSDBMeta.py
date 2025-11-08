@@ -12,7 +12,6 @@
 
 # Standard library imports
 from abc import ABCMeta
-
 # Third-party imports
 from teatype.hsdb import HSDBAttribute
 

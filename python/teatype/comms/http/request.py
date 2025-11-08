@@ -11,10 +11,9 @@
 # all copies or substantial portions of the Software.
 
 # Standard library imports
+import json as json_util
 from enum import Enum
 from typing import List
-import json as json_util
-
 # Third-party imports
 import aiohttp
 import requests

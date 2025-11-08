@@ -14,7 +14,6 @@
 import random
 from functools import wraps
 from typing import Callable, Dict, Optional
-
 # Third-party imports
 from teatype.logging import *
 

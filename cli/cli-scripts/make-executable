@@ -14,7 +14,6 @@
 
 # Standard library imports
 import os
-
 # Third-party imports
 from teatype.cli import BaseCLI
 from teatype.io import enable_sudo, shell

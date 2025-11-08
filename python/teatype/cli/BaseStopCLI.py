@@ -18,7 +18,6 @@ import shutil
 import sys
 import time
 from importlib import util as iutil
-
 # Third-party imports
 from teatype.cli import BaseCLI, BaseIsRunningCLI
 from teatype.io import path

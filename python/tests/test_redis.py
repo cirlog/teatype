@@ -12,7 +12,6 @@
 
 # Standard library imports
 from pprint import pprint
-
 # Third-party imports
 import pytest
 from teatype.comms.ipc.redis import *

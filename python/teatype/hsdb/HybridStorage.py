@@ -14,7 +14,6 @@
 import threading
 from multiprocessing import Queue
 from typing import List
-
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.hsdb import IndexDatabase, RawFileHandler

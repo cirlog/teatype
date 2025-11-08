@@ -18,7 +18,6 @@ import shutil
 import sys
 from abc import abstractmethod
 from importlib import util as iutil
-
 # Third-party imports
 from teatype.cli import BaseCLI, BaseStopCLI
 from teatype.io import env, file, path, shell

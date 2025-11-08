@@ -10,10 +10,6 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
-import sys
-from typing import List
-
 # Third-party imports
 from prompt_toolkit import prompt as pt_prompt
 from prompt_toolkit.completion import Completer, Completion, WordCompleter

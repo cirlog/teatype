@@ -13,7 +13,6 @@
 # Standard library imports
 import json
 from abc import ABC
-
 # Third-party imports
 from teatype.logging import *
 

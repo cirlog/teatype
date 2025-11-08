@@ -15,7 +15,6 @@ import os
 from abc import ABC
 from collections import deque
 from typing import List, Dict, Optional
-
 # Third-party imports
 from llama_cpp import Llama
 from teatype.ai.llm import Inferencer, PromptBuilder

@@ -16,7 +16,6 @@
 import os
 import re
 import subprocess
-
 # Third-party imports
 from teatype.cli import BaseCLI
 from teatype.enum import EscapeColor

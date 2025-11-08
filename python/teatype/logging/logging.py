@@ -19,7 +19,6 @@ import sys
 from datetime import datetime
 from pprint import pformat
 from typing import Literal
-
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.toolkit import colorwrap

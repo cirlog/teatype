@@ -17,7 +17,6 @@ import inspect
 import shutil
 import sys
 from importlib import util as iutil
-
 # Third-party imports
 from teatype.cli import BaseCLI, Command
 from teatype.enum import EscapeColor

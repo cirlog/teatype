@@ -15,7 +15,6 @@ import re
 import traceback
 from abc import ABCMeta
 from typing import List, Type
-
 # Third-party imports
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView

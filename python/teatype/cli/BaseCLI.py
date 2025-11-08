@@ -15,7 +15,6 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from typing import List
-
 # Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag

@@ -13,7 +13,6 @@
 # Standard library imports
 import time
 from typing import Union
-
 # Third-party imports
 from teatype.enum import EscapeColor
 

@@ -13,7 +13,6 @@
 # Standard library imports
 from typing import List
 from datetime import datetime as dt
-
 # Third-party imports
 from teatype.hsdb.util import parse_index_files
 from teatype.io import file, path

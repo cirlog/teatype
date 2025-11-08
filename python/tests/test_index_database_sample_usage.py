@@ -15,7 +15,6 @@ import os
 import random
 from concurrent.futures import ProcessPoolExecutor
 from pprint import pprint
-
 # Third-party imports
 import pytest
 from teatype.hsdb import HSDBAttribute, HSDBRelation, HSDBModel, HybridStorage

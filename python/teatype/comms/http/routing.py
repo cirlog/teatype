@@ -13,7 +13,6 @@
 # Standard library imports
 import importlib
 import os
-
 # Third-party imports
 from teatype.io import probe
 from teatype.logging import *

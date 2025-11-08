@@ -13,7 +13,6 @@
 # Standard library imports
 import json
 from typing import List
-
 # Third-party imports
 from pympler import asizeof
 from teatype.enum import EscapeColor

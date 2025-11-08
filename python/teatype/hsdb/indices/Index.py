@@ -12,7 +12,6 @@
 
 # Standard library imports
 import threading
-
 # Third-party imports
 from teatype.hsdb.HSDBField import HSDBField
 from teatype.hsdb.util import transmute_id

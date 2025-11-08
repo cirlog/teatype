@@ -14,7 +14,6 @@
 import platform
 import shutil
 import subprocess
-
 # Third-party imports
 from teatype.io import shell
 from teatype.logging import *

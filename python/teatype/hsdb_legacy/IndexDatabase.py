@@ -13,7 +13,6 @@
 # Standard library imports
 import threading
 from typing import List
-
 # Third-party imports
 from teatype import generate_id
 

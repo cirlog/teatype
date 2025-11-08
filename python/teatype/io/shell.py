@@ -16,7 +16,6 @@ import subprocess
 import sys
 import termios
 import tty
-
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *

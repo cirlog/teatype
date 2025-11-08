@@ -12,7 +12,6 @@
 
 # Standard library imports
 from typing import List
-
 # Third-party imports
 from teatype.io import file
 from teatype.logging import *

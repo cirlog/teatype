@@ -13,11 +13,9 @@
 # Standard library imports
 import importlib
 import pkgutil
-
 # Third-party imports
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
-
 # Local imports
 from teatype.hsdb_legacy.django_support.views import HSDBDjangoCollection, HSDBDjangoResource, HSDBDjangoView
 

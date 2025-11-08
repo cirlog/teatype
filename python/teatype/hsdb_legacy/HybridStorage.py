@@ -14,7 +14,6 @@
 import threading
 from typing import List
 from datetime import datetime as dt
-
 # Third-party imports
 from multiprocessing import Queue
 from teatype.hsdb_legacy import IndexDatabase, RawFileHandler

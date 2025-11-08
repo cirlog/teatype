@@ -14,7 +14,6 @@
 import os
 import sys
 from contextlib import contextmanager
-
 # Third-party imports
 from llama_cpp import Llama
 from teatype.logging import *

@@ -12,8 +12,7 @@
 
 # Third-party imports
 import psutil
-
-# Third-party imports
+# Local imports
 from teatype.cli import BaseCLI
 from teatype.logging import *
 

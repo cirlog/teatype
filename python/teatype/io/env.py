@@ -13,7 +13,6 @@
 # Standard library imports
 import os
 import re
-
 # Local imports
 from teatype.logging import *
 from teatype.io import file

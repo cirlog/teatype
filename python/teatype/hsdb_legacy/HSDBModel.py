@@ -15,7 +15,6 @@ import json
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime as dt
-
 # Third-party imports
 from teatype import generate_id
 

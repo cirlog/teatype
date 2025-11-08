@@ -13,7 +13,6 @@
 # Standard library imports
 import time
 from pprint import pprint
-
 # Third-party imports
 import pytest
 from teatype.modulo import Launchpad

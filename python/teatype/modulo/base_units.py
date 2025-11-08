@@ -15,7 +15,6 @@ import threading
 import time
 from queue import LifoQueue
 from typing import List, Union
-
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
@@ -447,7 +446,7 @@ if __name__ == '__main__':
     
     try:
         from teatype.modulo.launchpad import LaunchPad
-        unit = LaunchPad.create(args.unit_name, args.unit_type, host=args.host, port=args.port)
+        unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
         # Run unit directly (blocking mode)
         unit.start()
         unit.join()

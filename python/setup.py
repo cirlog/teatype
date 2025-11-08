@@ -14,11 +14,9 @@
 import os
 import requests
 from typing import List
-
 # Third-party imports
 from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist as _sdist
-
 # Local imports
 # from teatype import __version__
 

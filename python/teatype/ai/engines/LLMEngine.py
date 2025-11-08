@@ -27,11 +27,10 @@ class LLMEngine(BaseAIEngine):
         if dispatch.command == 'load-model':
             print(dispatch)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         # Third-party imports
         from teatype.logging import *
-        
         # Local imports
         from teatype.modulo.launchpad import LaunchPad
         

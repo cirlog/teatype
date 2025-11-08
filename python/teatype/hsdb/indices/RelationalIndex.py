@@ -12,7 +12,6 @@
 
 # Standard library imports
 from typing import List
-
 # Third-party imports
 from teatype.hsdb import HSDBField
 from teatype.hsdb.indices import Index

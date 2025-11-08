@@ -16,7 +16,6 @@
 import os
 import signal
 import time
-
 # Third-party imports
 import psutil
 import redis

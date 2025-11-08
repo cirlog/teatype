@@ -13,7 +13,6 @@
 # Standard library imports
 import sys
 from typing import Generic, Type, TypeVar
-
 # Third-party imports
 from teatype.hsdb.HSDBField import HSDBField
 from teatype.toolkit import dt

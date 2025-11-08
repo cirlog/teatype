@@ -16,7 +16,6 @@ import os
 import shutil
 import sys
 from pathlib import Path
-
 # Third-party imports
 from teatype.logging import *
 

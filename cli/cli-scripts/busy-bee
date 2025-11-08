@@ -19,7 +19,6 @@ import string
 import time
 from collections import deque
 from typing import List, Tuple
-
 # Third-party imports
 import psutil
 from teatype.cli import BaseCLI

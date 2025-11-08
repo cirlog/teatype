@@ -12,7 +12,6 @@
 
 # Standard library imports
 import copy
-
 # Third-party imports
 from teatype.io import path
 
