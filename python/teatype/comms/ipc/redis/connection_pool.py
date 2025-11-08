@@ -108,8 +108,7 @@ class RedisConnectionPool(RedisBaseInterface):
     def establish_connection(self,
                              host:str=RedisBaseInterface.DEFAULT_HOST,
                              port:int=RedisBaseInterface.DEFAULT_PORT,
-                             decode_responses:bool=DEFAULT_DECODE_RESPONSES,
-                             verbose:bool=True) -> bool:
+                             decode_responses:bool=DEFAULT_DECODE_RESPONSES) -> bool:
         """
         Establish connection with comprehensive error handling.
         
@@ -143,18 +142,18 @@ class RedisConnectionPool(RedisBaseInterface):
                 self.pubsub = self._connection.pubsub(ignore_subscribe_messages=True)
                 self._is_connected = True
                 
-                if verbose:
+                if self.verbose_logging:
                     log(f'Redis connection established: {host}:{port}')
                 
                 return True
             except redis.RedisError as exc:
                 self._is_connected = False
-                if verbose:
+                if self.verbose_logging:
                     err(f'Redis connection failed: {exc}')
                 return False
             except Exception as exc:
                 self._is_connected = False
-                if verbose:
+                if self.verbose_logging:
                     err(f'Unexpected connection error: {exc}')
                 return False
     
@@ -217,13 +216,12 @@ class RedisConnectionPool(RedisBaseInterface):
         try:
             if isinstance(message, str):
                 if not channel:
-                    err("Channel required for simple string messages")
+                    err('Channel required for simple string messages')
                     return False
                 self._connection.publish(channel, message)
             else:
                 self._connection.publish(message.channel, message.dump())
             return True
-            
         except redis.RedisError as exc:
             err(f"Message publish failed: {exc}")
             return False

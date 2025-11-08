@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# System imports
 from typing import Dict, List
 
 # Local imports
@@ -19,22 +19,18 @@ from teatype.modulo.base_units import parse_designation, print_designation
 from teatype.comms.ipc.redis import RedisConnectionPool, RedisDispatch, RedisChannel
 
 class Operations:
-    def __init__(self):
-        self.redis_connection_pool = RedisConnectionPool(verbose_logging=True)
+    def __init__(self, verbose_logging:bool=True):
+        self.redis_connection_pool = RedisConnectionPool(verbose_logging=verbose_logging)
         self.redis_connection_pool.establish_connection()
         
     def dispatch(self, id:str, command:str) -> None:
-        if not self.redis_connection_pool.establish_connection():
-            err('Failed to establish Redis connection. Is Redis server running?',
-                raise_exception=ConnectionError)
-        
         dispatch = RedisDispatch(RedisChannel.COMMANDS.value,
                                  'modulo.operations.dispatch',
                                  command,
                                  id)
         self.redis_connection_pool.send_message(dispatch)
         
-    def list(self, print:bool=False) -> List[Dict]|None:
+    def list(self, filters:List[tuple[str,str]]=None, print:bool=False) -> List[Dict]|None:
         """
         List all available and running Modulo units.
         """
@@ -47,6 +43,9 @@ class Operations:
             
             try:
                 designation_info = parse_designation(client_name)
+                for filter_key, filter_value in (filters or []):
+                    if designation_info.get(filter_key) != filter_value:
+                        continue
                 units.append({
                     'designation': client_name,
                     'name': designation_info.get('name'),
@@ -114,3 +113,6 @@ if __name__ == "__main__":
             operations.list()
         case 'kill':
             operations.kill(id=id)
+
+# TODO: Create singleton
+# operations = Operations()

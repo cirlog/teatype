@@ -14,10 +14,11 @@
 
 # Third-party imports
 from teatype import colorwrap
-from teatype.ai.llm import __GPU_SUPPORT__, Inferencer
+from teatype.ai import __GPU_SUPPORT__, LLMEngine
 from teatype.cli import BaseCLI
 from teatype.io import fetch, file, path, prompt
 from teatype.logging import *
+from teatype.modulo import LaunchPad, Operations
 
 class Ask(BaseCLI):
     AVAILABLE = __GPU_SUPPORT__
@@ -72,6 +73,8 @@ class Ask(BaseCLI):
     def execute(self):
         println()
         
+        verbose = self.get_flag('verbose')
+        
         parent_directory = path.caller_parent(reverse_depth=2)
         cli_dist_directory = path.join(parent_directory, 'dist')
         model_directory = path.join(cli_dist_directory, 'llm-models')
@@ -106,13 +109,26 @@ class Ask(BaseCLI):
                                return_bool=False)
             default_model = available_local_models[int(selection)-1]
             file.write(default_model_file_path, default_model)
-            
-        default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
-        llm = Inferencer(model=default_model,
-                         model_directory=conversational_model_directory)
         
-        response = llm(user_prompt=self.full_prompt,
-                       stream_response=stream)
+        default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
+        
+        operations = Operations(verbose_logging=False if verbose == None else verbose)
+        # TODO: Fix kebabify to convert words like LLM to llm instead of l-l-m
+        units = operations.list(filters=[('type', 'l-l-m-engine')])
+        if len(units) == 0:
+            LaunchPad.fire(LLMEngine)
+            # llm = Inferencer(model=default_model,
+            #                  model_directory=conversational_model_directory)
+            
+            # response = llm(user_prompt=self.full_prompt,
+            #                stream_response=stream)
+        else:
+            if verbose:
+                log('Found existing LLM Engine unit.')
+            llm_unit = units[0]
+            operations.dispatch(llm_unit.get('id'),
+                                command='load-model')
+        
         println()
 if __name__ == '__main__':
     Ask()

@@ -20,7 +20,7 @@ from typing import List, Union
 from teatype.enum import EscapeColor
 from teatype.logging import *
 from teatype.comms.ipc.redis import *
-from teatype.toolkit import generate_id
+from teatype.toolkit import generate_id, kebabify
 
 def parse_designation(designation:str) -> dict[Union[str,str|int]]:
     """
@@ -71,11 +71,13 @@ class CoreUnit(threading.Thread):
     _verbose_logging:bool
     
     designation:str
+    name:str
     id:str
     loop_idle_time:float
     loop_iter:int
+    type:str
     
-    def __init__(self, name:str, type:str, verbose_logging:bool=True) -> None:
+    def __init__(self, name:str, verbose_logging:bool=True) -> None:
         """
         Initialize the service unit with configuration and communication infrastructure.
         
@@ -86,7 +88,7 @@ class CoreUnit(threading.Thread):
         super().__init__()
         
         self.name = name
-        self.type = type
+        self.type = kebabify(self.__class__.__name__.replace('Unit', ''))
         self._verbose_logging = verbose_logging
         
         self.id = generate_id(truncate=16)
@@ -209,7 +211,7 @@ class BackendUnit(CoreUnit):
         Args:
             name: Name of the backend unit
         """
-        super().__init__(name=name, type='backend')
+        super().__init__(name=name)
         
 class ServiceUnit(CoreUnit):
     """
@@ -226,7 +228,7 @@ class ServiceUnit(CoreUnit):
         Args:
             name: Name of the service unit
         """
-        super().__init__(name=name, type='service')
+        super().__init__(name=name)
         
         self._setup_redis_infrastructure()
         self._register()
@@ -412,7 +414,7 @@ class WorkhorseUnit(CoreUnit):
         Args:
             name: Name of the workhorse unit
         """
-        super().__init__(name=name, type='workhorse')
+        super().__init__(name=name)
         
 if __name__ == '__main__':
     import argparse
