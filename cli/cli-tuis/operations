@@ -57,6 +57,7 @@ class Operations(BaseTUI):
         unit_name = prompt(f'Enter the name of the {unit_type} unit to launch:',
                            return_bool=False)
         LaunchPad.fire(unit_name, unit_type)
+        return f'Launched {unit_type} unit: {unit_name}'
         
     def list(self):
         units = self.operations.list()
@@ -80,7 +81,7 @@ class Operations(BaseTUI):
             list_string += '\n'
         return list_string
         
-    def post_validate(self):
+    def pre_execute(self):
         try:
             redis.Redis().ping()
         except:

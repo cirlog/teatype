@@ -67,9 +67,6 @@ def _modified_prompt(prompt_text:str, options:list[str]=None) -> any:
         else:
             user_input = prompt_answer
             option = None
-            
-        if user_input not in options:
-            return None, None
         return user_input, option
     except KeyboardInterrupt:
         return 'exit', None
@@ -184,7 +181,7 @@ class BaseTUI(BaseCLI):
                     clear_shell()
                     
                 println()
-                log(f'> {self.meta().get("name")}-TUI', color='gray')
+                log(f'<| {self.meta().get("name")} tui |>', color='gray')
                 
                 println()
                 log('Available actions:')
@@ -215,24 +212,25 @@ class BaseTUI(BaseCLI):
                 
                 user_input, option = _modified_prompt('Input:',
                                                       options=[action.name for action in self.actions])
-                matching_action = next((action for action in self.actions if action.name == user_input), None)
-                if matching_action:
-                    if self.manual_refresh:
-                        if user_input == 'clear':
-                            clear_shell()
+                if user_input != None:
+                    matching_action = next((action for action in self.actions if action.name == user_input), None)
+                    if matching_action:
+                        if self.manual_refresh:
+                            if user_input == 'clear':
+                                clear_shell()
+                                continue
+                            
+                        if user_input == 'exit':
+                            self.exit = True
                             continue
                         
-                    if user_input == 'exit':
-                        self.exit = True
+                        if matching_action.option and not option:
+                            self.no_option = True
+                            continue
+                            
+                        self.output = self.on_prompt(user_input, option)
                         continue
                     
-                    if matching_action.option and not option:
-                        self.no_option = True
-                        continue
-                        
-                    self.output = self.on_prompt(user_input, option)
-                    continue
-                
                 self.unknown_command = user_input
             except (KeyboardInterrupt, EOFError):
                 self.exit = True
