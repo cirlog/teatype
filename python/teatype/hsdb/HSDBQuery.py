@@ -10,12 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 from functools import reduce
 from pprint import pprint
 from typing import List, Union
 
-# From package imports
+# Third-party imports
 from teatype.hsdb import HybridStorage
 from teatype.logging import *
 from teatype.toolkit import stopwatch

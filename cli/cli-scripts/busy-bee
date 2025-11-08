@@ -12,20 +12,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import curses
 import random
 import string
 import time
-
-# From system imports
 from collections import deque
 from typing import List, Tuple
 
-# Package imports
+# Third-party imports
 import psutil
-
-# From package imports
 from teatype.cli import BaseCLI
 from teatype.logging import *
 

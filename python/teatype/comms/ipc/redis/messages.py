@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import json
 from abc import ABC
 
-# Package imports
+# Third-party imports
 from teatype.logging import *
 
 class _BaseRedisMessage(ABC):

@@ -10,6 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Local imports
 from .colorwrap import colorwrap
 from .dt import dt
 # TODO: Deactivated until auto updating all components is possible

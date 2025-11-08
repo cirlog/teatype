@@ -10,14 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import json
-import os
-import random
 import statistics
 import time
 
-# Package imports
+# Third-party imports
 import msgspec
 import orjson
 import pytest
@@ -25,13 +23,8 @@ import rapidjson
 import simdjson
 import simplejson
 import ujson
-
-# From system imports
-from pprint import pprint
-
-# From package imports
 from teatype.io import file, path
-from teatype.toolkit import generate_id, fastjson, stopwatch
+from teatype.toolkit import fastjson, stopwatch
 
 ##########
 # PyTest #

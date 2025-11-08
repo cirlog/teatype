@@ -10,19 +10,17 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import itertools
 import os
 import sys
 import threading
 import time
-
-# From system imports
 from abc import ABC
 from collections import deque
 from typing import List, Dict, Optional
 
-# From package imports
+# Third-party imports
 from llama_cpp import Llama
 from teatype.ai.llm import load_model, PromptBuilder
 from teatype.enum import EscapeColor

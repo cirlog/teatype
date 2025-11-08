@@ -10,19 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
+# Standard library imports
+from enum import Enum
+from typing import List
+import json as json_util
+
+# Third-party imports
 import aiohttp
 import requests
 import urllib3
-
-# As system imports
-import json as json_util
-
-# From system imports
-from enum import Enum
-from typing import List
-
-# From package imports
 from teatype.logging import *
 from teatype.toolkit import stopwatch
 from urllib.parse import urlparse

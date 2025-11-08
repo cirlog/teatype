@@ -10,10 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
+# Third-party imports
 import psutil
 
-# From package imports
+# Third-party imports
 from teatype.cli import BaseCLI
 from teatype.logging import *
 

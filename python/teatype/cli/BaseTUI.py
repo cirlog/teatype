@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import sys
 from typing import List
 
-# From package imports
+# Third-party imports
 from prompt_toolkit import prompt as pt_prompt
 from prompt_toolkit.completion import Completer, Completion, WordCompleter
 from teatype import colorwrap

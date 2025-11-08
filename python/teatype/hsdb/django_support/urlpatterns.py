@@ -10,15 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import importlib
 import pkgutil
 
-# From package imports
+# Third-party imports
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-# From local imports
+# Local imports
 from teatype.hsdb.django_support.views import HSDBDjangoCollection, HSDBDjangoResource, HSDBDjangoView
 
 # TODO: Create a seperate base class without hsdb support

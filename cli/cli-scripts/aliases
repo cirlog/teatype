@@ -12,16 +12,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import glob
 import json
 import os
 import re
-
-# From system imports
 from typing import List
 
-# From package imports
+# Third-party imports
 from teatype.cli import BaseCLI
 from teatype.enum import EscapeColor
 from teatype.io import env, file, path, shell

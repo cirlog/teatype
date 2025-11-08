@@ -10,21 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
-import json
-import re
-
-# From system imports
-from abc import ABC, abstractmethod
+# Standard library imports
 from typing import List
+from datetime import datetime as dt
 
-# From package imports
+# Third-party imports
 from teatype.hsdb.util import parse_index_files
 from teatype.io import file, path
 from teatype.logging import *
-
-# From-as system imports
-from datetime import datetime as dt
 
 __MAX_AMOUNT_OF_WORKERS = 8
 

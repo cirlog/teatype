@@ -10,10 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 from typing import TypeVar
 
-# From-as package imports
+# Third-party imports
 from teatype.hsdb.HSDBAttribute import HSDBAttribute as HSDBAttributeClass
 from teatype.hsdb.HSDBField import HSDBField as HSDBFieldClass
 

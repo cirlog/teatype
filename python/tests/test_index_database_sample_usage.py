@@ -10,18 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 import random
-
-# Package imports
-import pytest
-
-# From system imports
 from concurrent.futures import ProcessPoolExecutor
 from pprint import pprint
 
-# From package imports
+# Third-party imports
+import pytest
 from teatype.hsdb import HSDBAttribute, HSDBRelation, HSDBModel, HybridStorage
 from teatype.logging import *
 from teatype.toolkit import generate_id, stopwatch

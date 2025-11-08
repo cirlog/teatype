@@ -12,17 +12,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 
-# Package imports
+# Third-party imports
 try:
     import pyperclip
     pyperclip_installed = True
 except:
     pyperclip_installed = False
-
-# From package imports
 from teatype.cli import BaseCLI
 from teatype.io import file
 from teatype.logging import *

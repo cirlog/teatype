@@ -12,9 +12,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Third-party imports
 from teatype import colorwrap
-# from teatype.ai import LLMInferencer
 from teatype.ai.llm import __GPU_SUPPORT__, Inferencer
 from teatype.cli import BaseCLI
 from teatype.io import fetch, file, path, prompt

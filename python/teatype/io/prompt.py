@@ -14,7 +14,7 @@
 import sys
 from typing import List
 
-# Package imports
+# Third-party imports
 from prompt_toolkit import prompt as pt_prompt
 from prompt_toolkit.completion import WordCompleter
 from teatype.enum import EscapeColor

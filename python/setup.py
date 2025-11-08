@@ -10,20 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 import requests
-
-# From system imports
 from typing import List
 
-# From package imports
+# Third-party imports
 from setuptools import setup, find_packages
-
-# From-as package imports
 from setuptools.command.sdist import sdist as _sdist
 
-# From local imports
+# Local imports
 # from teatype import __version__
 
 PARENT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))

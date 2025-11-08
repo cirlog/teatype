@@ -10,15 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import re
 import traceback
-
-# From system imports
 from abc import ABCMeta
 from typing import List, Type
 
-# From package imports
+# Third-party imports
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.hsdb import HybridStorage

@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 from enum import Enum
 from typing import Literal
 

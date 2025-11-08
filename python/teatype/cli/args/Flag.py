@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
-from teatype.logging import *
-
-# From system imports
+# Standard library imports
 from typing import List
+
+# Third-party imports
+from teatype.logging import *
 
 class Flag:
     """

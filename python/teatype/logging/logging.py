@@ -10,22 +10,17 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import inspect
 import logging
 # import logging.handlers
 import os
 import sys
-
-# As system imports
-import traceback as traceback_exc
-
-# From system imports
 from datetime import datetime
 from pprint import pformat
 from typing import Literal
 
-# From package imports
+# Third-party imports
 from teatype.enum import EscapeColor
 from teatype.toolkit import colorwrap
 

@@ -10,17 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import threading
-import traceback
-
-# From system imports
 from typing import List
-
-# From-as system imports
 from datetime import datetime as dt
 
-# From package imports
+# Third-party imports
 from multiprocessing import Queue
 from teatype.hsdb_legacy import IndexDatabase, RawFileHandler
 from teatype.io import env

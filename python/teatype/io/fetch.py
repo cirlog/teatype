@@ -10,12 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import platform
 import shutil
 import subprocess
 
-# From package imports
+# Third-party imports
 from teatype.io import shell
 from teatype.logging import *
 

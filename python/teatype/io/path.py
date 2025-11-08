@@ -10,16 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import inspect
 import os
 import shutil
 import sys
-
-# From system imports
 from pathlib import Path
 
-# From package imports
+# Third-party imports
 from teatype.logging import *
 
 def caller(skip_call_stacks:int=None, stringify:bool=True) -> str:

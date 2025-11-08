@@ -10,19 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
-import os
+# Standard library imports
 import shlex
 import subprocess
 import sys
 import termios
 import tty
 
-# From package imports
+# Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
-
-# From-as package imports
 from teatype.io import env as current_env
 
 def clear(use_ansi:bool=False) -> None:

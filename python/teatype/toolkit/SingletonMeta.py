@@ -10,10 +10,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import threading
-
-# From system imports
 from abc import ABCMeta
 
 class SingletonMeta(ABCMeta):

@@ -10,15 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 import sys
-
-# From system imports
 from abc import ABC, abstractmethod
 from typing import List
 
-# From package imports
+# Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
 from teatype.io.dict import update_dict

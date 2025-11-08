@@ -10,13 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import time
-
-# From system imports
 from typing import Union
 
-# From package imports
+# Third-party imports
 from teatype.enum import EscapeColor
 
 class GLOBAL_STOPWATCH_CONFIG:

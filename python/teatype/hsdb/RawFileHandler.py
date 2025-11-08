@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Third-party imports
 from teatype.io import env, file, path
 from teatype.hsdb import RawFileStructure
 

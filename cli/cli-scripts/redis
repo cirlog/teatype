@@ -12,12 +12,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 import signal
 import time
 
-# Package imports
+# Third-party imports
 import psutil
 import redis
 from teatype.cli import BaseCLI

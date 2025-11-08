@@ -10,8 +10,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From local imports
+# Local imports
+from .base_units import ApplicationUnit, BackendUnit, CoreUnit, ServiceUnit, WorkhorseUnit, parse_designation, print_designation
 from .launchpad import LaunchPad
 from .operations import Operations
 from .operations import Operations as ModuloOperations
-from .units import ApplicationUnit, BackendUnit, CoreUnit, ServiceUnit, WorkhorseUnit, parse_designation, print_designation

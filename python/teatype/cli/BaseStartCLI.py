@@ -10,25 +10,19 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import inspect
 import os
 import signal
 import shutil
 import sys
-
-# From system imports
 from abc import abstractmethod
+from importlib import util as iutil
 
-# From package imports
+# Third-party imports
 from teatype.cli import BaseCLI, BaseStopCLI
 from teatype.io import env, file, path, shell
 from teatype.logging import *
-
-# From-as system imports
-from importlib import util as iutil
-
-# From-as package imports
 from teatype.io import TemporaryDirectory as TempDir
 
 class BaseStartCLI(BaseCLI):

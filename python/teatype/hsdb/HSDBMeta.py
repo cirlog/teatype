@@ -10,10 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 from abc import ABCMeta
 
-# From package imports
+# Third-party imports
 from teatype.hsdb import HSDBAttribute
 
 class HSDBMeta(ABCMeta):

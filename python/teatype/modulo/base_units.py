@@ -10,13 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 import threading
 import time
 from queue import LifoQueue
 from typing import List, Union
 
-# From package imports
+# Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
 from teatype.comms.ipc.redis import *

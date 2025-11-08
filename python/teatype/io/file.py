@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import builtins
 import configparser
 import csv
@@ -18,24 +18,16 @@ import json
 import os
 import re
 import shutil
-
-# As-system imports
 import xml.etree.ElementTree as ET
-
-# As-package imports
-import numpy as np
-
-# From system imports
 from pathlib import PosixPath
-from typing import Dict, List
-
-# From local imports
-from teatype.logging import *
-
-# From-as system imports
+from typing import List
 from builtins import list as list_type
 
-# From-as local imports
+# Third-party imports
+import numpy as np
+
+# Local imports
+from teatype.logging import *
 from teatype.io import path as path_functions
 
 # TODO: Implement with context handling

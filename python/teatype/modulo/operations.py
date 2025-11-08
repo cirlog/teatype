@@ -10,12 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 from typing import Dict, List
 
 # Local imports
 from teatype.logging import *
-from teatype.modulo.units import parse_designation, print_designation
+from teatype.modulo.base_units import parse_designation, print_designation
 from teatype.comms.ipc.redis import RedisConnectionPool, RedisDispatch, RedisChannel
 
 class Operations:

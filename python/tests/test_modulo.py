@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import time
 from pprint import pprint
 
-# Package imports
+# Third-party imports
 import pytest
 from teatype.modulo import Launchpad
 

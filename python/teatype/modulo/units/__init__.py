@@ -10,17 +10,4 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
-from pprint import pprint
-
-# Third-party imports
-import pytest
-from teatype.comms.ipc.redis import *
-
-##########
-# PyTest #
-##########
-
-@pytest.mark.skip()
-def test_redis_toolkit():
-    redis_service_manager = RedisServiceManager()
+# Local imports

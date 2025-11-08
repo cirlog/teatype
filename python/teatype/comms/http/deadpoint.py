@@ -10,14 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import random
-
-# From system imports
 from functools import wraps
 from typing import Callable, Dict, Optional
 
-# From package imports
+# Third-party imports
 from teatype.logging import *
 
 try:

@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import atexit
 import json
 import threading
@@ -20,7 +20,7 @@ from contextlib import contextmanager
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-# Package imports
+# Third-party imports
 import redis
 from teatype.logging import *
 

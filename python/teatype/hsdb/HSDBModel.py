@@ -10,19 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import json
 import pprint
-
-# From system imports
 from abc import ABC
 from typing import List
 
-# From package imports
+# Third-party imports
 from teatype.hsdb import HSDBAttribute, HSDBField, HSDBMeta, HSDBQuery, HSDBRelation
 from teatype.toolkit import dt, staticproperty
-
-# From-as package imports
 from teatype.toolkit import generate_id, kebabify
 
 # TODO: Implement a short-key map for attributes for compression

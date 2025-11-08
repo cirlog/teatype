@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 from abc import ABC
 from typing import Generic, List, Type, TypeVar
 
-# From package imports
+# Third-party imports
 from teatype.hsdb import HSDBField, HSDBQuery, HybridStorage
 from teatype.toolkit import generate_id, kebabify
 

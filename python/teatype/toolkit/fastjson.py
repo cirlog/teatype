@@ -10,16 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import pprint
-
-# Package imports
-import orjson
-
-# From system imports
 from typing import Any, Dict, List, Union
 
-# From package imports
+# Third-party imports
+import orjson
 from simdjson import Parser, Object, Array
 
 JSONType = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
