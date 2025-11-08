@@ -68,6 +68,9 @@ class BaseCLI(ABC):
         _parsing_errors (list): A list of parsing errors encountered during validation.
     """
     _parsing_errors:List[str]
+    
+    AVAILABLE:bool=True
+    
     arguments:List[Argument]
     commands:List[Command]
     flags:List[Flag]

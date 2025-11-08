@@ -50,6 +50,4 @@ try:
             return PromptBuilder
         raise AttributeError(f'module "llm" has no attribute "{name}"')
 except:
-    import traceback
-    traceback.print_exc()
     __GPU_SUPPORT__ = False

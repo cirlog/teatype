@@ -99,7 +99,9 @@ class MainCLI(BaseCLI):
                                                                auto_execute=False)
                                 module_registry[script_instance.name] = script_instance
                         except Exception as exc:
-                            err(f'Failed to load script "{file}": {exc}')
+                            # print(script_class.AVAILABLE)
+                            err(f'Failed to load script "{file}": {exc}',
+                                traceback=True)
             finally:
                 # Clean up system path after module loading
                 sys.path.pop(0)

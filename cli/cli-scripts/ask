@@ -15,12 +15,14 @@
 # From package imports
 from teatype import colorwrap
 # from teatype.ai import LLMInferencer
-from teatype.ai.llm import Inferencer
+from teatype.ai.llm import __GPU_SUPPORT__, Inferencer
 from teatype.cli import BaseCLI
 from teatype.io import fetch, file, path, prompt
 from teatype.logging import *
 
 class Ask(BaseCLI):
+    AVAILABLE = __GPU_SUPPORT__
+    
     def meta(self):
         return {
             'name': 'ask',
