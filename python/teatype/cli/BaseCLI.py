@@ -18,7 +18,7 @@ from typing import List
 # Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
-from teatype.io.dict import update_dict
+from teatype.io import merge_dicts
 from teatype.logging import *
 
 class GLOBAL_CLI_CONFIG:
@@ -160,7 +160,7 @@ class BaseCLI(ABC):
         # Hook for modifying meta information
         if hasattr(self, 'modified_meta') and callable(getattr(self, 'modified_meta')):
             modfied_meta = self.modified_meta()
-            meta = update_dict(meta, modfied_meta)
+            meta = merge_dicts(meta, modfied_meta)
 
         # Initialize the name of the CLI
         self.name = meta['name'] if 'name' in meta else None

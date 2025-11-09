@@ -178,6 +178,7 @@ dist-ssr
 ~temp/*
 ~temp
 ~temp*
+*~temp*
 
 # Distribution files
 *build/*

@@ -16,11 +16,12 @@
 import os
 import signal
 import time
+from pprint import pprint
 # Third-party imports
 import psutil
-import redis
 from teatype.cli import BaseCLI
-from teatype.io import enable_sudo, file, path, prompt, shell
+from teatype.comms.ipc.redis import RedisConnectionPool
+from teatype.io import clear_shell, enable_sudo, file, path, prompt, shell
 from teatype.logging import *
 from teatype.toolkit import dt
 
@@ -126,6 +127,82 @@ class Redis(BaseCLI):
         shell(f'redis-server {parent_directory}/config/redis.conf > {logs_directory}/redis.log 2>&1 &')
         success('Redis server started successfully.', include_symbol=True)
         println()
+    
+    def status(self, is_running:bool) -> None:
+        if is_running:
+            client_buffer = []
+            old_client_buffer = []
+            
+            log_buffer = []
+            old_log_buffer = []
+            
+            redis_log_path = path.join(path.caller_parent(reverse_depth=2), 'logs', 'redis.log')
+            
+            self.redis_connection_pool = RedisConnectionPool(verbose_logging=False)
+            self.redis_connection_pool.establish_connection()
+            
+            while True:
+                try:
+                    clients = self.redis_connection_pool._connection.client_list()
+                    client_buffer = []
+                    for client in clients:
+                        client_buffer.append({
+                            'addr': client.get('addr'),
+                            'id': client.get('id'),
+                            'laddr': client.get('laddr'),
+                            'name': client.get('name')
+                        })
+                        
+                    log_buffer = shell('tail -n 10 ' + redis_log_path,
+                                   mute=True,
+                                   return_stdout=True)
+                    
+                    if log_buffer != old_log_buffer or client_buffer != old_client_buffer:
+                        clear_shell()
+                        println()
+                        success('Redis server is running.', include_symbol=True)
+                        println()
+                        hint('Monitoring Redis server logs. Press Ctrl + C to exit log monitoring.',
+                             use_prefix=False)
+                        println()
+                        
+                        for line in log_buffer:
+                            print(line)
+                            
+                        println()
+                        if len(client_buffer) == 0:
+                            log('No connected clients found.')
+                        else:
+                            success(f'Connected clients ({len(client_buffer)}):')
+                            for index, client in enumerate(client_buffer):
+                                println()
+                                print(f'    Client {index + 1}:')
+                                print(f'        ID: {client.get("id")}')
+                                print(f'        Name: {client.get("name")}')
+                                print(f'        Address: {client.get("addr")}')
+                                print(f'        Local Address: {client.get("laddr")}')
+                            
+                        println()
+                    
+                    if client_buffer != old_client_buffer:
+                        old_client_buffer = client_buffer
+                        
+                    if log_buffer != old_log_buffer:
+                        old_log_buffer = log_buffer
+                        
+                    time.sleep(0.25)
+                except KeyboardInterrupt:
+                    println()
+                    log('Exited log monitoring.', pad_after=1, verbose=False)
+                    println()
+                    break
+        else:
+            println()
+            err('Redis server is not running.',
+                include_symbol=True,
+                use_prefix=False,
+                verbose=False)
+            println()
         
     def stop(self, parent_directory, process_pid:int) -> None:
         def _is_process_running(pid:int) -> bool:
@@ -255,17 +332,7 @@ class Redis(BaseCLI):
                 else:
                     self.start(parent_directory)
             case 'status':
-                if is_running:
-                    println()
-                    success('Redis server is running.', include_symbol=True)
-                    println()
-                else:
-                    println()
-                    err('Redis server is not running.',
-                        include_symbol=True,
-                        use_prefix=False,
-                        verbose=False)
-                    println()
+                self.status(is_running)
             case 'stop':
                 if not is_running:
                     println()

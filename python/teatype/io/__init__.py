@@ -15,6 +15,7 @@ from .fetch import fetch
 from .prompt import prompt
 from .shell import clear, enable_sudo, shell
 from .tempdir import TemporaryDirectory
+from .dict import merge as merge_dicts
 from .env import get as get_env
 from .env import load as load_env
 from .env import set as set_env
@@ -28,6 +29,7 @@ from .file import list as list_files
 from .file import move as move_file
 from .file import read as read_file
 from .file import write as write_file
+from .list import merge as merge_lists
 from .path import caller as caller_folder
 from .path import caller_parent as caller_parent_folder
 from .path import copy as copy_folder
