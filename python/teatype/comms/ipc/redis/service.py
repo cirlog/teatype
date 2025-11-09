@@ -11,16 +11,10 @@
 # all copies or substantial portions of the Software.
 
 # Standard library imports
-import atexit
-import json
-import threading
-from abc import ABC
-from collections import OrderedDict
-from contextlib import contextmanager
+import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Union
 # Third-party imports
-import redis
 from teatype.logging import *
 # Local imports
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
@@ -38,21 +32,21 @@ class RedisServiceManager(RedisBaseInterface):
     def __init__(self,
                  client_name:Optional[str]=None,
                  channels:Optional[List[Union[str,Enum]]]=None,
+                 max_buffer_size:int=100,
                  on_shutdown:Optional[Callable]=None,
                  owner:Optional[object]=None,
                  preprocess_function:Optional[Callable]=None,
                  verbose_logging:Optional[bool]=True) -> None:
-        super().__init__(verbose_logging=verbose_logging)
+        super().__init__(max_buffer_size=max_buffer_size,
+                         verbose_logging=verbose_logging)
         
         # Initialize components
         self.pool = RedisConnectionPool(client_name=client_name,
                                         verbose_logging=verbose_logging)
-        
         # Establish connection
         if not self.pool.establish_connection():
             raise err('Failed to establish Redis connection. Is Redis server running?',
                       raise_exception=ConnectionError)
-        
         # Subscribe to channels
         if not self.pool.subscribe_channels(channels or []):
             raise err('Failed to subscribe to Redis channels',
@@ -64,11 +58,29 @@ class RedisServiceManager(RedisBaseInterface):
                                                        owner=owner,
                                                        preprocess_function=preprocess_function,
                                                        verbose_logging=verbose_logging)
-        
         # Start message processing
         self.message_processor.start()
         
         success('Redis service manager initialized.')
+        
+    def send_message(self,
+                     message:object,
+                     channel:Optional[str]=None,
+                     is_async:bool=True,
+                     timeout:float=10.0) -> dict|None:
+        self.pool.publish_message(message, channel)
+        if not is_async:
+            message_id = message.id
+            # Wait for response
+            waited_time = 0.0
+            poll_interval = 0.01
+            while waited_time < timeout:
+                if message_id in self.response_buffer:
+                    return self.response_buffer.pop(message_id, None)
+                time.sleep(poll_interval)
+                waited_time += poll_interval
+            err(f'Timeout waiting for response to message with ID: {message_id}')
+            return None
     
     def terminate(self) -> None:
         """

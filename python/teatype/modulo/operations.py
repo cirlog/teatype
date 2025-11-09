@@ -16,12 +16,12 @@ from typing import Dict, List
 # Local imports
 from teatype.logging import *
 from teatype.modulo.base_units import parse_designation, print_designation
-from teatype.comms.ipc.redis import RedisConnectionPool, RedisDispatch, RedisChannel
+from teatype.comms.ipc.redis import RedisServiceManager, RedisDispatch, RedisChannel
 
 class Operations:
     def __init__(self, verbose_logging:bool=True):
-        self.redis_connection_pool = RedisConnectionPool(verbose_logging=verbose_logging)
-        self.redis_connection_pool.establish_connection()
+        self.redis_service = RedisServiceManager(client_name='teatype.modulo.operations',
+                                                 verbose_logging=verbose_logging)
         
     def dispatch(self, id:str, command:str, is_async:bool=True, payload:any=None) -> None:
         """
@@ -39,7 +39,7 @@ class Operations:
                                  id,
                                  payload)
         if is_async:
-            self.redis_connection_pool.send_message(dispatch)
+            self.redis_service.send_message(dispatch)
         
     def list(self, filters:List[tuple[str,str]]=None, print:bool=False) -> List[Dict]|None:
         """
@@ -52,7 +52,7 @@ class Operations:
         Returns:
             List[Dict]|None: List of Modulo units or None if none found.
         """
-        clients = self.redis_connection_pool._connection.client_list()
+        clients = self.redis_service.pool.clients
         units = []
         for client in clients:
             client_name = client.get('name', None)

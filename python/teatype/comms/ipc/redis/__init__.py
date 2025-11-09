@@ -14,7 +14,7 @@
 from .base_interface import RedisBaseInterface
 from .channels import RedisChannel
 from .connection_pool import RedisConnectionPool
-from .messages import RedisBroadcast, RedisDispatch
+from .messages import RedisBroadcast, RedisDispatch, RedisResponse
 # from .data_store_front import RedisDataStoreFront
 from .message_processor import RedisMessageProcessor, redis_handler
 from .service import RedisServiceManager

@@ -11,7 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
-from teatype.comms.ipc.redis import RedisDispatch
+from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 from teatype.ai.engines.BaseAIEngine import BaseAIEngine
 
 class LLMEngine(BaseAIEngine):
@@ -21,8 +21,7 @@ class LLMEngine(BaseAIEngine):
         self.redis_service.message_processor.register_handler(message_class=RedisDispatch,
                                                               callable=self.load_model)
     
-    # TODO: Write incoming dispatch handler or make it even more generic and use method name as command
-    # But allow both, '-' and '_' in dispatch names
+    @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
         if dispatch.command == 'load-model':
             print(dispatch)

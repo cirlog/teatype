@@ -41,8 +41,10 @@ class RedisConnectionPool(RedisBaseInterface):
     
     def __init__(self,
                  client_name:Optional[str]=None,
+                 max_buffer_size:int=100,
                  verbose_logging:Optional[bool]=True):
-        super().__init__(verbose_logging)
+        super().__init__(max_buffer_size=max_buffer_size,
+                         verbose_logging=verbose_logging)
         
         self.client_name = client_name
         
@@ -98,6 +100,26 @@ class RedisConnectionPool(RedisBaseInterface):
         Convert channel enums to string values.
         """
         return [channel.value if isinstance(channel, Enum) else channel for channel in channels]
+    
+    ##############
+    # Properties #
+    ##############
+    
+    @property
+    def clients(self) -> List[Dict]:
+        """
+        Retrieve list of connected clients.
+        
+        Returns:
+            List[Dict]: List of client info dictionaries.
+        """
+        if not self._validate_state():
+            return []
+        try:
+            return self._connection.client_list()
+        except redis.RedisError as exc:
+            err(f'Client list retrieval error: {exc}')
+            return []
     
     ##############
     # Public API #

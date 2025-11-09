@@ -15,45 +15,35 @@ import atexit
 import json
 import inspect
 import threading
-from typing import Callable, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 # Third-party imports
 import redis
 from teatype.logging import *
 # Local imports
+from teatype.comms.ipc.redis.messages import RedisDispatch
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
-
-def redis_handler(message_class:type, listen_channels:list[str]|None=None):
-    """
-    Marks an instance method as a Redis handler.
-    The processor will discover and register it via .autowire(owner).
-    Ensures the decorated function has the signature (self, message:object).
-    """
-    def decorator(function:callable):
-        sig = inspect.signature(function)
-        params = list(sig.parameters.values())
-        if len(params) != 2 or params[0].name != 'self' or params[1].name != 'message':
-            raise TypeError(
-                f"@redis_handler-decorated function '{function.__qualname__}' must have signature (self, message:object)"
-            )
-        setattr(function, '_redis_handler_info', {
-            'message_class': message_class,
-            'listen_channels': listen_channels
-        })
-        return function
-    return decorator
 
 class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
     """
     Asynchronous message processor with handler routing.
     """
+    _is_active:bool
+    _message_handler_lock:threading.RLock
+    _message_handlers:Dict[str,List[Dict[str,any]]]
+    _preprocess_function:Optional[Callable]
+    _pubsub_instance:redis.client.PubSub
+    _shutdown_event:threading.Event
+    
     def __init__(self,
                  pubsub:redis.client.PubSub,
+                 max_buffer_size:int=100,
                  on_shutdown:Optional[Callable]=None,
                  owner:Optional[object]=None,
                  preprocess_function:Optional[Callable]=None,
                  verbose_logging:bool=True) -> None:
         threading.Thread.__init__(self, daemon=True)
-        super().__init__(verbose_logging=verbose_logging)
+        super().__init__(max_buffer_size=max_buffer_size,
+                         verbose_logging=verbose_logging)
         
         self._pubsub_instance = pubsub
         self._message_handlers = dict()
@@ -214,3 +204,41 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
         finally:
             warn('Message processor stopped')
             self._is_active = False
+
+def dispatch_handler(function:callable):
+    """
+    Marks an instance method as a dispatch handler.
+    The processor will discover and register it via .autowire(owner).
+    Ensures the decorated function has the signature (self, dispatch:object).
+    """
+    sig = inspect.signature(function)
+    params = list(sig.parameters.values())
+    if len(params) != 2 or params[0].name != 'self' or params[1].name != 'dispatch':
+        raise TypeError(
+            f"@dispatch_handler-decorated function '{function.__qualname__}' must have signature (self, dispatch:object)"
+        )
+    setattr(function, '_redis_handler_info', {
+        'message_class': RedisDispatch,
+        'listen_channels': None
+    })
+    return function
+
+def redis_handler(message_class:type, listen_channels:list[str]|None=None):
+    """
+    Marks an instance method as a Redis handler.
+    The processor will discover and register it via .autowire(owner).
+    Ensures the decorated function has the signature (self, message:object).
+    """
+    def decorator(function:callable):
+        sig = inspect.signature(function)
+        params = list(sig.parameters.values())
+        if len(params) != 2 or params[0].name != 'self' or params[1].name != 'message':
+            raise TypeError(
+                f"@redis_handler-decorated function '{function.__qualname__}' must have signature (self, message:object)"
+            )
+        setattr(function, '_redis_handler_info', {
+            'message_class': message_class,
+            'listen_channels': listen_channels
+        })
+        return function
+    return decorator
