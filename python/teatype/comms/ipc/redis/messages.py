@@ -15,9 +15,11 @@ import json
 from abc import ABC
 # Third-party imports
 from teatype.logging import *
+from teatype.toolkit import generate_id
 
 class _BaseRedisMessage(ABC):
     channel:str
+    id:str
     source:str
     type:str
 
@@ -26,6 +28,7 @@ class _BaseRedisMessage(ABC):
         self.source = source
 
         # Sets the message type based on the subclass name
+        self.id = generate_id()
         self.type = self.__class__.__name__.replace('Redis','').lower()
         
     #################

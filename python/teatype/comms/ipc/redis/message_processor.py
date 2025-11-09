@@ -13,26 +13,43 @@
 # Standard library imports
 import atexit
 import json
+import inspect
 import threading
-from abc import ABC
-from collections import OrderedDict
-from contextlib import contextmanager
-from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 # Third-party imports
 import redis
 from teatype.logging import *
 # Local imports
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
 
+def redis_handler(message_class:type, listen_channels:list[str]|None=None):
+    """
+    Marks an instance method as a Redis handler.
+    The processor will discover and register it via .autowire(owner).
+    Ensures the decorated function has the signature (self, message:object).
+    """
+    def decorator(function:callable):
+        sig = inspect.signature(function)
+        params = list(sig.parameters.values())
+        if len(params) != 2 or params[0].name != 'self' or params[1].name != 'message':
+            raise TypeError(
+                f"@redis_handler-decorated function '{function.__qualname__}' must have signature (self, message:object)"
+            )
+        setattr(function, '_redis_handler_info', {
+            'message_class': message_class,
+            'listen_channels': listen_channels
+        })
+        return function
+    return decorator
+
 class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
     """
     Asynchronous message processor with handler routing.
     """
-    
     def __init__(self,
                  pubsub:redis.client.PubSub,
                  on_shutdown:Optional[Callable]=None,
+                 owner:Optional[object]=None,
                  preprocess_function:Optional[Callable]=None,
                  verbose_logging:bool=True) -> None:
         threading.Thread.__init__(self, daemon=True)
@@ -45,6 +62,34 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
         self._shutdown_event = threading.Event()
         self._message_handler_lock = threading.RLock()
         self._preprocess_function = preprocess_function
+        
+        if owner:
+            try:
+                # Scan the owner for methods decorated with @redis_handler and register them.
+                # Returns the number of handlers registered.
+                registered = 0
+                for name in dir(owner):
+                    attr = getattr(owner, name, None)
+                    if attr is None:
+                        continue
+
+                    info = getattr(attr, '_redis_handler_info', None)
+                    if not info:
+                        continue
+
+                    # attr is a bound method when retrieved via instance
+                    message_class = info['message_class']
+                    listen_channels = info['listen_channels']
+                    ok = self.register_handler(
+                        message_class=message_class,
+                        callable=attr,
+                        listen_channels=listen_channels,
+                    )
+                    if ok:
+                        registered += 1
+                log(f'Autowired {registered} redis handler(s) from owner {owner.__class__.__name__}')
+            except Exception:
+                pass
         
         if on_shutdown:
             atexit.register(on_shutdown)
@@ -108,25 +153,34 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
             
             # Route to handler
             with self._message_handler_lock:
-                handler_config = self._message_handlers.get(message_type)
+                handlers = self._message_handlers.get(message_type)
                 
-                if not handler_config:
+                if not handlers:
                     err(f'No handler for message type: {message_type}')
                     return
-                
-                # Channel filtering
-                if handler_config['channels']:
-                    channel = message_data.get('channel')
-                    if not channel:
-                        err('Message missing "channel" field')
-                        return
                     
-                    if channel not in handler_config['channels']:
-                        return # Filtered by channel
-                
-                # Execute handler
-                handler_config['callback'](message_data)
+                if message_type == 'dispatch':
+                    command = message_data.get('command', None)
+                    print(command)
+                    if command is None:
+                        err('Dispatch message missing "command" field')
+                        return
+                    matching_handlers = [handler for handler in handlers if command == handler['callable'].__name__]
+                    if len(matching_handlers) == 0:
+                        warn(f'No handler for dispatch command: {command}')
+                        return
+                    # Execute the matching handler
+                    matching_handlers[0]['callable'](message_data)
+                else:
+                    channel = message_data.get('channel', None)
+                    # Execute handlers
+                    for handler in handlers:
+                        # Channel filtering
+                        if handler['listen_channels'] is not None:
+                            if channel not in handler['listen_channels']:
+                                continue
             
+                        handler['callable'](message_data)
         except Exception as exc:
             err(f'Message dispatch error', traceback=True)
     

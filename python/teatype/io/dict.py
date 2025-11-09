@@ -93,3 +93,70 @@ def merge(dict1, dict2):
             dict1[key] = value
     # Return the updated dict1
     return dict1
+
+def _autonest() -> defaultdict:
+    return defaultdict(_autonest)
+
+def to_plain_dict(d: Union[defaultdict, dict]) -> Dict[str, Any]:
+    """
+    Convert nested defaultdicts to plain dicts (recursively).
+    """
+    if isinstance(d, defaultdict):
+        d = dict(d)
+    if isinstance(d, dict):
+        return {k: to_plain_dict(v) for k, v in d.items()}
+    return d
+
+def build_hierarchy(
+    kv: Iterable[Tuple[str, Any]],
+    *,
+    sep: str = ":",
+    coerce_leaf: bool = True,
+) -> Dict[str, Any]:
+    """
+    Build a nested dict from iterable of (compound_key, value) where compound_key uses `sep`.
+    Example: "foo:bar:baz" -> {"foo": {"bar": {"baz": value}}}
+    """
+    root = _autonest()
+    for key, val in kv:
+        parts = [p for p in str(key).split(sep) if p]
+        if not parts:
+            # edge-case: empty key, skip
+            continue
+        node = root
+        for p in parts[:-1]:
+            node = node[p]
+        node[parts[-1]] = val if coerce_leaf else {"__value__": val}
+    return to_plain_dict(root)
+
+def render_tree(
+    data: Dict[str, Any],
+    *,
+    indent_size: int = 4,
+) -> List[str]:
+    """
+    Render a nested dict as an ASCII tree. Returns list of lines (no trailing newline).
+    Non-dict leaves are printed as `- key: value`.
+    """
+    lines: List[str] = []
+
+    def _walk(obj: Any, prefix: str = "") -> None:
+        if not isinstance(obj, dict) or not obj:
+            return
+
+        items = list(obj.items())
+        last_idx = len(items) - 1
+        for idx, (k, v) in enumerate(items):
+            is_last = idx == last_idx
+            branch = "└── " if is_last else "├── "
+            if isinstance(v, dict):
+                lines.append(f"{prefix}{branch}{k}")
+                child_prefix = f"{prefix}{'    ' if is_last else '│   '}"
+                _walk(v, child_prefix)
+            else:
+                leaf_prefix = f"{prefix}{'    ' if is_last else '│   '}"
+                lines.append(f"{leaf_prefix}{k}: {v}")
+
+    # Left pad every line by indent_size spaces at the very left for visual alignment
+    _walk(data, "")
+    return [(" " * indent_size) + line for line in lines]

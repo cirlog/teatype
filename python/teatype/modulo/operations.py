@@ -23,16 +23,34 @@ class Operations:
         self.redis_connection_pool = RedisConnectionPool(verbose_logging=verbose_logging)
         self.redis_connection_pool.establish_connection()
         
-    def dispatch(self, id:str, command:str) -> None:
+    def dispatch(self, id:str, command:str, is_async:bool=True, payload:any=None) -> None:
+        """
+        Dispatch command to a Modulo unit.
+        
+        Args:
+            id (str): ID of the Modulo unit.
+            command (str): Command to dispatch.
+            is_async (bool): Whether to dispatch asynchronously.
+            payload (any): Additional payload data.
+        """
         dispatch = RedisDispatch(RedisChannel.COMMANDS.value,
                                  'modulo.operations.dispatch',
                                  command,
-                                 id)
-        self.redis_connection_pool.send_message(dispatch)
+                                 id,
+                                 payload)
+        if is_async:
+            self.redis_connection_pool.send_message(dispatch)
         
     def list(self, filters:List[tuple[str,str]]=None, print:bool=False) -> List[Dict]|None:
         """
         List all available and running Modulo units.
+        
+        Args:
+            filters (List[tuple[str,str]]): List of filters to apply.
+            print (bool): Whether to print the results.
+            
+        Returns:
+            List[Dict]|None: List of Modulo units or None if none found.
         """
         clients = self.redis_connection_pool._connection.client_list()
         units = []
@@ -72,6 +90,12 @@ class Operations:
     def kill(self, id:str) -> bool:
         """
         Kill a Teatype Modulo unit by id.
+        
+        Args:
+            id (str): ID of the Modulo unit to kill.
+            
+        Returns:
+            bool: True if kill command was sent successfully, False otherwise.
         """
         self.dispatch(id=id, command='kill')
         return True

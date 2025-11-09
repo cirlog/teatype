@@ -12,6 +12,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Standard library imports
+import json
 # Third-party imports
 import redis
 from teatype.cli import BaseTUI
@@ -27,6 +29,10 @@ class Operations(BaseTUI):
             'shorthand': 'op',
             'help': 'Teatype Modulo operations interface',
             'actions': [
+                {
+                    'name': 'dispatch',
+                    'help': 'Dispatch commands to a Modulo units.'
+                },
                 {
                     'name': 'check',
                     'help': 'Check the status of a Modulo unit.',
@@ -49,6 +55,29 @@ class Operations(BaseTUI):
                 }
             ]
         }
+        
+    def dispatch(self):
+        receiver = prompt('Enter the ID of the Modulo unit to dispatch command to:',
+                          return_bool=False)
+        command = prompt('Enter the command to dispatch to the Modulo unit:',
+                         return_bool=False)
+        payload = prompt('Enter any additional payload data (or leave blank):',
+                         return_bool=False)
+        is_async = prompt('Dispatch command asynchronously?',
+                          options=['Y', 'n'],
+                          return_bool=True)
+
+        if payload == '':
+            payload = None
+        try:
+            if payload != None:
+                payload = json.loads(payload)
+        except:
+            pass
+        
+        self.operations.dispatch(id=receiver, command=command, payload=payload)
+            
+        return f'Dispatched command to Modulo unit {receiver}.'
         
     def fire(self):
         unit_type = prompt('Which Modulo unit would you like to launch?',
@@ -96,6 +125,8 @@ class Operations(BaseTUI):
     def on_prompt(self, user_input:str, option:any=None) -> str:
         try:
             match user_input:
+                case 'dispatch':
+                    return self.dispatch()
                 case 'fire':
                     return self.fire()
                 case 'kill':

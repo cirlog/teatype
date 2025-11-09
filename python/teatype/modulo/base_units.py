@@ -219,7 +219,6 @@ class ServiceUnit(CoreUnit):
     This class implements a robust framework for inter-process communication via Redis,
     shared memory management, state tracking, and unit lifecycle handling.
     """
-    
     def __init__(self, name:str) -> None:
         """
         Initialize the service unit with configuration and communication infrastructure.
@@ -242,26 +241,12 @@ class ServiceUnit(CoreUnit):
         """
         try:
             self.redis_service = RedisServiceManager(client_name=self.designation,
-                                                     preprocess_function=self._default_message_preprocessor,
+                                                     owner=self,
+                                                     preprocess_function=self._filter_irrelevant_messages,
                                                      verbose_logging=self._verbose_logging)
         except Exception:
             err('Redis infrastructure setup failed.',
                 traceback=True)
-            
-    def _default_message_preprocessor(self, message:any) -> any:
-        """
-        Default message preprocessor to filter irrelevant messages.
-        
-        Args:
-            msg: Incoming Redis message
-            
-        Returns:
-            Processed message or None if irrelevant
-        """
-        message = self._filter_irrelevant_messages(message)
-        if message == None:
-            return None
-        message = self._default_commands(message)
             
     def _filter_irrelevant_messages(self, message:any) -> any:
         """
@@ -288,22 +273,6 @@ class ServiceUnit(CoreUnit):
         except Exception:
             err(f'Message filtering error', traceback=True)
             return None
-        
-    def _default_commands(self, message:any) -> dict:
-        """
-        Args:
-            msg: Incoming Redis message
-        """
-        try:
-            command = message.get('command', None)
-            if command != None and command == 'kill':
-                hint(f'Received "kill" command. Initiating shutdown ...')
-                self.shutdown()
-                return None
-            return message
-        except Exception:
-            err(f'Kill command processing error', traceback=True)
-            return message
         
     def _register(self) -> None:
         """
@@ -347,6 +316,15 @@ class ServiceUnit(CoreUnit):
             Subscription status
         """
         return self.redis_service.pool.is_subscribed
+
+    ##################
+    # Redis handlers #
+    ##################
+    
+    @redis_handler(message_class=RedisDispatch)
+    def kill(self, message:object) -> None:
+        hint(f'Received "kill" command. Initiating shutdown ...')
+        self.shutdown()
     
     ##############
     # Public API #
@@ -418,10 +396,8 @@ class WorkhorseUnit(CoreUnit):
 if __name__ == '__main__':
     import argparse
     
-    parser = argparse.ArgumentParser(
-        description='Teatype Modulo unit definitions.',
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = argparse.ArgumentParser(description='Teatype Modulo unit definitions.',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     
     # TODO: Add launch key, so that only Launchpad can execute this script
     parser.add_argument('unit_type',
@@ -446,6 +422,7 @@ if __name__ == '__main__':
     
     try:
         from teatype.modulo.launchpad import LaunchPad
+        println()
         unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
         # Run unit directly (blocking mode)
         unit.start()

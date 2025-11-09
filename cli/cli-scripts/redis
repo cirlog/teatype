@@ -193,8 +193,7 @@ class Redis(BaseCLI):
                     time.sleep(0.25)
                 except KeyboardInterrupt:
                     println()
-                    log('Exited log monitoring.', pad_after=1, verbose=False)
-                    println()
+                    warn('Exited log monitoring.', pad_after=1, use_prefix=False)
                     break
         else:
             println()

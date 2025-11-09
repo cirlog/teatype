@@ -197,7 +197,9 @@ class RedisConnectionPool(RedisBaseInterface):
             self._active_subscriptions.update(channel_names)
             
             if self.verbose_logging:
-                log(f"Subscribed to channels: {channel_names}")
+                log('Subscribed to channels:')
+                for channel_name in channel_names:
+                    success(f' - {channel_name}')
             return True
             
         except redis.RedisError as exc:

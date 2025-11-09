@@ -39,12 +39,14 @@ class RedisServiceManager(RedisBaseInterface):
                  client_name:Optional[str]=None,
                  channels:Optional[List[Union[str,Enum]]]=None,
                  on_shutdown:Optional[Callable]=None,
+                 owner:Optional[object]=None,
                  preprocess_function:Optional[Callable]=None,
                  verbose_logging:Optional[bool]=True) -> None:
         super().__init__(verbose_logging=verbose_logging)
         
         # Initialize components
-        self.pool = RedisConnectionPool(client_name=client_name, verbose_logging=verbose_logging)
+        self.pool = RedisConnectionPool(client_name=client_name,
+                                        verbose_logging=verbose_logging)
         
         # Establish connection
         if not self.pool.establish_connection():
@@ -59,6 +61,7 @@ class RedisServiceManager(RedisBaseInterface):
         # Initialize store and processor
         self.message_processor = RedisMessageProcessor(pubsub=self.pool.pubsub,
                                                        on_shutdown=on_shutdown,
+                                                       owner=owner,
                                                        preprocess_function=preprocess_function,
                                                        verbose_logging=verbose_logging)
         
@@ -74,9 +77,9 @@ class RedisServiceManager(RedisBaseInterface):
         try:
             if self.message_processor and self.message_processor._is_active:
                 self.message_processor.shutdown()
-                self.message_processor.join(timeout=5)
+                # self.message_processor.join(timeout=5)
             
-            self.pool.terminate_connection()
+            self.pool.safely_terminate_connection()
             
             # Cleanup references
             self.message_processor = None
