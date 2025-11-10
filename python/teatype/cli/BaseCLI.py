@@ -10,18 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 import sys
-
-# From system imports
 from abc import ABC, abstractmethod
 from typing import List
-
-# From package imports
+# Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
-from teatype.io.dict import update_dict
+from teatype.io import merge_dicts
 from teatype.logging import *
 
 class GLOBAL_CLI_CONFIG:
@@ -68,6 +65,9 @@ class BaseCLI(ABC):
         _parsing_errors (list): A list of parsing errors encountered during validation.
     """
     _parsing_errors:List[str]
+    
+    AVAILABLE:bool=True
+    
     arguments:List[Argument]
     commands:List[Command]
     flags:List[Flag]
@@ -160,7 +160,7 @@ class BaseCLI(ABC):
         # Hook for modifying meta information
         if hasattr(self, 'modified_meta') and callable(getattr(self, 'modified_meta')):
             modfied_meta = self.modified_meta()
-            meta = update_dict(meta, modfied_meta)
+            meta = merge_dicts(meta, modfied_meta)
 
         # Initialize the name of the CLI
         self.name = meta['name'] if 'name' in meta else None

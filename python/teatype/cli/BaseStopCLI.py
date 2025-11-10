@@ -10,23 +10,18 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import inspect
 import os
 import signal
 import shutil
 import sys
 import time
-
-# From package imports
+from importlib import util as iutil
+# Third-party imports
 from teatype.cli import BaseCLI, BaseIsRunningCLI
 from teatype.io import path
 from teatype.logging import *
-
-# From-as system imports
-from importlib import util as iutil
-
-# From-as package imports
 from teatype.io import TemporaryDirectory as TempDir
 
 # TODO: Redis adapter to remove entries from a redis db?
@@ -138,7 +133,7 @@ class BaseStopCLI(BaseCLI):
         # Sort the scripts dictionary by keys for consistent ordering
         scripts = dict(sorted(scripts.items()))
         return scripts
-        
+    
     def is_process_running(self, pid):
         """
         Check if a process with the given PID is currently running.

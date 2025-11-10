@@ -12,17 +12,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 from logging import warn
 import os
 import signal
 import time
 import psutil
-
-# From system imports
 from typing import List
 
-# From package imports
+# Third-party imports
 from teatype.cli import BaseCLI
 from teatype.io import clear, enable_sudo
 from teatype.logging import *

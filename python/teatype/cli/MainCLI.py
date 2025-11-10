@@ -12,21 +12,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import inspect
 import shutil
 import sys
-
-# From package imports
+from importlib import util as iutil
+# Third-party imports
 from teatype.cli import BaseCLI, Command
 from teatype.enum import EscapeColor
 from teatype.io import clear_shell, file, path
 from teatype.logging import *
-
-# From-as system imports
-from importlib import util as iutil
-
-# From-as package imports
 from teatype.io import TemporaryDirectory as TempDir
 
 # TODO: Time the execution of the CLI with stopwatch
@@ -99,7 +94,9 @@ class MainCLI(BaseCLI):
                                                                auto_execute=False)
                                 module_registry[script_instance.name] = script_instance
                         except Exception as exc:
-                            err(f'Failed to load script "{file}": {exc}')
+                            # print(script_class.AVAILABLE)
+                            err(f'Failed to load script "{file}": {exc}',
+                                traceback=True)
             finally:
                 # Clean up system path after module loading
                 sys.path.pop(0)

@@ -10,22 +10,17 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import inspect
 import logging
+import traceback as traceback_exc
 # import logging.handlers
 import os
 import sys
-
-# As system imports
-import traceback as traceback_exc
-
-# From system imports
 from datetime import datetime
 from pprint import pformat
 from typing import Literal
-
-# From package imports
+# Third-party imports
 from teatype.enum import EscapeColor
 from teatype.toolkit import colorwrap
 
@@ -274,7 +269,7 @@ def hint(message:str,
                            include_symbol=include_symbol,
                            pad_before=pad_before,
                            prefix='HINT',
-                           symbol='ℹ️ ', # \u2139
+                           symbol='ℹ️', # \u2139
                            symbol_position=symbol_position,
                            use_prefix=use_prefix,
                            verbose=False)
@@ -411,7 +406,7 @@ def warn(message:str='',
                            include_symbol=include_symbol,
                            pad_before=pad_before,
                            prefix='WARN',
-                           symbol='⚠️ ', # \u26A0
+                           symbol='⚠️', # \u26A0
                            use_prefix=use_prefix,
                            verbose=False)
     logger.warning(warn_message) # Log the warning message

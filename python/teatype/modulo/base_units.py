@@ -10,17 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From system imports
+# Standard library imports
 import threading
 import time
 from queue import LifoQueue
 from typing import List, Union
-
-# From package imports
+# Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
 from teatype.comms.ipc.redis import *
-from teatype.toolkit import generate_id
+from teatype.toolkit import generate_id, kebabify
 
 def parse_designation(designation:str) -> dict[Union[str,str|int]]:
     """
@@ -71,11 +70,13 @@ class CoreUnit(threading.Thread):
     _verbose_logging:bool
     
     designation:str
+    name:str
     id:str
     loop_idle_time:float
     loop_iter:int
+    type:str
     
-    def __init__(self, name:str, type:str, verbose_logging:bool=True) -> None:
+    def __init__(self, name:str, verbose_logging:bool=True) -> None:
         """
         Initialize the service unit with configuration and communication infrastructure.
         
@@ -86,7 +87,7 @@ class CoreUnit(threading.Thread):
         super().__init__()
         
         self.name = name
-        self.type = type
+        self.type = kebabify(self.__class__.__name__.replace('Unit', ''))
         self._verbose_logging = verbose_logging
         
         self.id = generate_id(truncate=16)
@@ -209,7 +210,7 @@ class BackendUnit(CoreUnit):
         Args:
             name: Name of the backend unit
         """
-        super().__init__(name=name, type='backend')
+        super().__init__(name=name)
         
 class ServiceUnit(CoreUnit):
     """
@@ -218,7 +219,6 @@ class ServiceUnit(CoreUnit):
     This class implements a robust framework for inter-process communication via Redis,
     shared memory management, state tracking, and unit lifecycle handling.
     """
-    
     def __init__(self, name:str) -> None:
         """
         Initialize the service unit with configuration and communication infrastructure.
@@ -226,7 +226,7 @@ class ServiceUnit(CoreUnit):
         Args:
             name: Name of the service unit
         """
-        super().__init__(name=name, type='service')
+        super().__init__(name=name)
         
         self._setup_redis_infrastructure()
         self._register()
@@ -241,26 +241,12 @@ class ServiceUnit(CoreUnit):
         """
         try:
             self.redis_service = RedisServiceManager(client_name=self.designation,
-                                                     preprocess_function=self._default_message_preprocessor,
+                                                     owner=self,
+                                                     preprocess_function=self._filter_irrelevant_messages,
                                                      verbose_logging=self._verbose_logging)
         except Exception:
             err('Redis infrastructure setup failed.',
                 traceback=True)
-            
-    def _default_message_preprocessor(self, message:any) -> any:
-        """
-        Default message preprocessor to filter irrelevant messages.
-        
-        Args:
-            msg: Incoming Redis message
-            
-        Returns:
-            Processed message or None if irrelevant
-        """
-        message = self._filter_irrelevant_messages(message)
-        if message == None:
-            return None
-        message = self._default_commands(message)
             
     def _filter_irrelevant_messages(self, message:any) -> any:
         """
@@ -287,22 +273,6 @@ class ServiceUnit(CoreUnit):
         except Exception:
             err(f'Message filtering error', traceback=True)
             return None
-        
-    def _default_commands(self, message:any) -> dict:
-        """
-        Args:
-            msg: Incoming Redis message
-        """
-        try:
-            command = message.get('command', None)
-            if command != None and command == 'kill':
-                hint(f'Received "kill" command. Initiating shutdown ...')
-                self.shutdown()
-                return None
-            return message
-        except Exception:
-            err(f'Kill command processing error', traceback=True)
-            return message
         
     def _register(self) -> None:
         """
@@ -346,6 +316,15 @@ class ServiceUnit(CoreUnit):
             Subscription status
         """
         return self.redis_service.pool.is_subscribed
+
+    ##################
+    # Redis handlers #
+    ##################
+    
+    @redis_handler(message_class=RedisDispatch)
+    def kill(self, message:object) -> None:
+        hint(f'Received "kill" command. Initiating shutdown ...')
+        self.shutdown()
     
     ##############
     # Public API #
@@ -412,15 +391,13 @@ class WorkhorseUnit(CoreUnit):
         Args:
             name: Name of the workhorse unit
         """
-        super().__init__(name=name, type='workhorse')
+        super().__init__(name=name)
         
 if __name__ == '__main__':
     import argparse
     
-    parser = argparse.ArgumentParser(
-        description='Teatype Modulo unit definitions.',
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = argparse.ArgumentParser(description='Teatype Modulo unit definitions.',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     
     # TODO: Add launch key, so that only Launchpad can execute this script
     parser.add_argument('unit_type',
@@ -445,7 +422,8 @@ if __name__ == '__main__':
     
     try:
         from teatype.modulo.launchpad import LaunchPad
-        unit = LaunchPad.create(args.unit_name, args.unit_type, host=args.host, port=args.port)
+        println()
+        unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
         # Run unit directly (blocking mode)
         unit.start()
         unit.join()

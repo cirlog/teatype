@@ -10,13 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
-import pytest
-
-# From system imports
+# Standard library imports
 from pprint import pprint
-
-# From package imports
+# Third-party imports
+import pytest
 from teatype.comms.ipc.redis import *
 
 ##########

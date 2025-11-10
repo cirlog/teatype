@@ -10,15 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import json
 from abc import ABC
-
-# Package imports
+# Third-party imports
 from teatype.logging import *
+from teatype.toolkit import generate_id
 
 class _BaseRedisMessage(ABC):
     channel:str
+    id:str
     source:str
     type:str
 
@@ -27,6 +28,7 @@ class _BaseRedisMessage(ABC):
         self.source = source
 
         # Sets the message type based on the subclass name
+        self.id = generate_id()
         self.type = self.__class__.__name__.replace('Redis','').lower()
         
     #################
@@ -61,16 +63,35 @@ class _BaseRedisMessage(ABC):
         return {key: value for key, value in self.__dict__.items()}
 
 class RedisBroadcast(_BaseRedisMessage):
-    def __init__(self, channel:str, source:str, message:str, value:any=None) -> None:
+    message:str
+    value:any
+    
+    def __init__(self,
+                 channel:str,
+                 source:str,
+                 message:str,
+                 value:any=None) -> None:
         super().__init__(channel, source)
         
         self.message = message
         self.value = value
 
 class RedisDispatch(_BaseRedisMessage):
+    command:str
+    receiver:str
+    payload:any
+    
     def __init__(self, channel:str, source:str, command:str, receiver:str, payload:any=None) -> None:
         super().__init__(channel, source)
         
         self.command = command
         self.receiver = receiver
         self.payload = payload
+        
+class RedisResponse(_BaseRedisMessage):
+    response_message:str
+    
+    def __init__(self, channel:str, source:str, response_message:str) -> None:
+        super().__init__(channel, source)
+        
+        self.response_message = response_message

@@ -10,10 +10,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import re
-
-# From system imports
 from typing import Union
 
 def kebabify(raw_name:str,

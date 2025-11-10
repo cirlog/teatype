@@ -15,7 +15,7 @@ try:
     You're looking at a standard “lazy-import” pattern for a package and in short accomplishes:
         - reduced startup time (by deferring imports until first use)
         - cut down memory usage (never import unused bits)
-        - and most importantly: avoid import-time side-effects or circular dependencies
+        - and most importantly: avoid import-time side-effects or circular dependenciews
     """
     import llama_cpp
     

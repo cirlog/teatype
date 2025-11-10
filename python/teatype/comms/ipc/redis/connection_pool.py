@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import atexit
 import json
 import threading
@@ -19,11 +19,9 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-# Package imports
+# Third-party imports
 import redis
 from teatype.logging import *
-
 # Local imports
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
 from teatype.comms.ipc.redis.channels import RedisChannel
@@ -43,8 +41,10 @@ class RedisConnectionPool(RedisBaseInterface):
     
     def __init__(self,
                  client_name:Optional[str]=None,
+                 max_buffer_size:int=100,
                  verbose_logging:Optional[bool]=True):
-        super().__init__(verbose_logging)
+        super().__init__(max_buffer_size=max_buffer_size,
+                         verbose_logging=verbose_logging)
         
         self.client_name = client_name
         
@@ -102,14 +102,33 @@ class RedisConnectionPool(RedisBaseInterface):
         return [channel.value if isinstance(channel, Enum) else channel for channel in channels]
     
     ##############
+    # Properties #
+    ##############
+    
+    @property
+    def clients(self) -> List[Dict]:
+        """
+        Retrieve list of connected clients.
+        
+        Returns:
+            List[Dict]: List of client info dictionaries.
+        """
+        if not self._validate_state():
+            return []
+        try:
+            return self._connection.client_list()
+        except redis.RedisError as exc:
+            err(f'Client list retrieval error: {exc}')
+            return []
+    
+    ##############
     # Public API #
     ##############
         
     def establish_connection(self,
                              host:str=RedisBaseInterface.DEFAULT_HOST,
                              port:int=RedisBaseInterface.DEFAULT_PORT,
-                             decode_responses:bool=DEFAULT_DECODE_RESPONSES,
-                             verbose:bool=True) -> bool:
+                             decode_responses:bool=DEFAULT_DECODE_RESPONSES) -> bool:
         """
         Establish connection with comprehensive error handling.
         
@@ -143,18 +162,18 @@ class RedisConnectionPool(RedisBaseInterface):
                 self.pubsub = self._connection.pubsub(ignore_subscribe_messages=True)
                 self._is_connected = True
                 
-                if verbose:
+                if self.verbose_logging:
                     log(f'Redis connection established: {host}:{port}')
                 
                 return True
             except redis.RedisError as exc:
                 self._is_connected = False
-                if verbose:
+                if self.verbose_logging:
                     err(f'Redis connection failed: {exc}')
                 return False
             except Exception as exc:
                 self._is_connected = False
-                if verbose:
+                if self.verbose_logging:
                     err(f'Unexpected connection error: {exc}')
                 return False
     
@@ -200,7 +219,9 @@ class RedisConnectionPool(RedisBaseInterface):
             self._active_subscriptions.update(channel_names)
             
             if self.verbose_logging:
-                log(f"Subscribed to channels: {channel_names}")
+                log('Subscribed to channels:')
+                for channel_name in channel_names:
+                    success(f' - {channel_name}')
             return True
             
         except redis.RedisError as exc:
@@ -217,13 +238,12 @@ class RedisConnectionPool(RedisBaseInterface):
         try:
             if isinstance(message, str):
                 if not channel:
-                    err("Channel required for simple string messages")
+                    err('Channel required for simple string messages')
                     return False
                 self._connection.publish(channel, message)
             else:
                 self._connection.publish(message.channel, message.dump())
             return True
-            
         except redis.RedisError as exc:
             err(f"Message publish failed: {exc}")
             return False

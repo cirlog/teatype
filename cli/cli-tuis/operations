@@ -12,7 +12,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
+# Standard library imports
+import json
+# Third-party imports
+import redis
 from teatype.cli import BaseTUI
 from teatype.enum import EscapeColor
 from teatype.io import prompt
@@ -26,6 +29,10 @@ class Operations(BaseTUI):
             'shorthand': 'op',
             'help': 'Teatype Modulo operations interface',
             'actions': [
+                {
+                    'name': 'dispatch',
+                    'help': 'Dispatch commands to a Modulo units.'
+                },
                 {
                     'name': 'check',
                     'help': 'Check the status of a Modulo unit.',
@@ -49,6 +56,29 @@ class Operations(BaseTUI):
             ]
         }
         
+    def dispatch(self):
+        receiver = prompt('Enter the ID of the Modulo unit to dispatch command to:',
+                          return_bool=False)
+        command = prompt('Enter the command to dispatch to the Modulo unit:',
+                         return_bool=False)
+        payload = prompt('Enter any additional payload data (or leave blank):',
+                         return_bool=False)
+        is_async = prompt('Dispatch command asynchronously?',
+                          options=['Y', 'n'],
+                          return_bool=True)
+
+        if payload == '':
+            payload = None
+        try:
+            if payload != None:
+                payload = json.loads(payload)
+        except:
+            pass
+        
+        self.operations.dispatch(id=receiver, command=command, payload=payload)
+            
+        return f'Dispatched command to Modulo unit {receiver}.'
+        
     def fire(self):
         unit_type = prompt('Which Modulo unit would you like to launch?',
                             options=['backend', 'service', 'workhorse'],
@@ -56,6 +86,7 @@ class Operations(BaseTUI):
         unit_name = prompt(f'Enter the name of the {unit_type} unit to launch:',
                            return_bool=False)
         LaunchPad.fire(unit_name, unit_type)
+        return f'Launched {unit_type} unit: {unit_name}'
         
     def list(self):
         units = self.operations.list()
@@ -79,12 +110,23 @@ class Operations(BaseTUI):
             list_string += '\n'
         return list_string
         
-    def on_init(self):
+    def pre_execute(self):
+        try:
+            redis.Redis().ping()
+        except:
+            println()
+            err('Cannot connect to Redis server. Please run the redis server with `tt redis start` before using Modulo operations.',
+                exit=True,
+                pad_after=1,
+                verbose=False)
+            
         self.operations = ModuloOperations()
         
     def on_prompt(self, user_input:str, option:any=None) -> str:
         try:
             match user_input:
+                case 'dispatch':
+                    return self.dispatch()
                 case 'fire':
                     return self.fire()
                 case 'kill':

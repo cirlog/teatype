@@ -178,6 +178,7 @@ dist-ssr
 ~temp/*
 ~temp
 ~temp*
+*~temp*
 
 # Distribution files
 *build/*
@@ -191,3 +192,5 @@ dist
 *logs/*
 logs
 *.pytest_cache
+
+*/*llama-cpp-python
