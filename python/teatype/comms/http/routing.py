@@ -64,6 +64,7 @@ if fastapi_support:
                     app.add_middleware(attr)
                     print(f'Dynamically registered middleware: {attr_name} from {module_name}')
 
+    # TODO: Automatically insert folder as uri
     def register_routes(app,
                         base_path:str,
                         auto_routing:bool=False,
@@ -86,28 +87,44 @@ if fastapi_support:
                 routes_directory += f'/v{version}'
             routes_directory += '/routes'
         
-        for file_name in os.listdir(routes_directory):
-            # Skip non-Python files and special files
-            if not file_name.endswith('.py') or file_name.startswith('__'):
-                continue
+        def _register_from_directory(directory: str, prefix: str = None):
+            """
+            Helper function to register routes from a directory.
+            """
+            for entry in os.listdir(directory):
+                entry_path = os.path.join(directory, entry)
+                
+                # Handle subdirectories recursively
+                if os.path.isdir(entry_path) and not entry.startswith('__'):
+                    sub_prefix = f'{prefix}/{entry}' if prefix else f'/{entry}'
+                    _register_from_directory(entry_path, sub_prefix)
+                    continue
+                
+                # Skip non-Python files and special files
+                if not entry.endswith('.py') or entry.startswith('__'):
+                    continue
 
-            # Construct the module name and file path
-            module_name = f'{routes_directory.replace("/", ".")}.{file_name[:-3]}'
-            file_path = os.path.join(routes_directory, file_name)
+                # Construct the module name and file path
+                module_name = f'{directory.replace("/", ".")}.{entry[:-3]}'
+                file_path = entry_path
 
-            # Dynamically import the module
-            spec = importlib.util.spec_from_file_location(module_name, file_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            
-            # Check if the module defines a router
-            if hasattr(module, 'router'):
-                router = getattr(module, 'router')
-                # Check if the module contains a 'router' attribute and if it's a valid APIRouter
-                # if router and isinstance(router, dict) and "include_router" in router:
-                # Register the router with the app
-                if root_prefix is None:
-                    app.include_router(router)
-                else:
-                    app.include_router(router, prefix=root_prefix)
-                print(f'Dynamically registered routes from {module_name}')
+                # Dynamically import the module
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Check if the module defines a router
+                if hasattr(module, 'router'):
+                    router = getattr(module, 'router')
+                    # Combine root_prefix and subdirectory prefix
+                    combined_prefix = root_prefix or ''
+                    if prefix:
+                        combined_prefix += prefix
+                    
+                    if combined_prefix:
+                        app.include_router(router, prefix=combined_prefix)
+                    else:
+                        app.include_router(router)
+                    print(f'Dynamically registered routes from {module_name}')
+        
+        _register_from_directory(routes_directory)
