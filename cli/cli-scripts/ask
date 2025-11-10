@@ -113,8 +113,7 @@ class Ask(BaseCLI):
         default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
         
         operations = Operations(verbose_logging=False if verbose == None else verbose)
-        # TODO: Fix kebabify to convert words like LLM to llm instead of l-l-m
-        units = operations.list(filters=[('type', 'l-l-m-engine')])
+        units = operations.list(filters=[('type', 'llm-engine')])
         if len(units) == 0:
             LaunchPad.fire(LLMEngine)
             # llm = Inferencer(model=default_model,
