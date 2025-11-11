@@ -196,6 +196,13 @@ class BaseCLI(ABC):
         self.flags = []
         for flag in flags:
             self.flags.append(Flag(**flag))
+        self.secret_flags = [
+            Flag(short='oss',
+                 long='override-security',
+                 help=['A secret global debug option to override any potential security features', 'If you don\'t know what this is, don\'t use it!'],
+                 required=False,
+                 secret=True)
+        ]
             
         # DEPRECATED: Disabled auto adding help flag for now
             # Add the default help flag for all scripts
@@ -361,13 +368,14 @@ class BaseCLI(ABC):
                                 argument.value = self.parsed_arguments[argument.position]
 
                 # Validate the presence of only known flags
+                flags = self.flags + self.secret_flags
                 for parsed_flag in self.parsed_flags:
-                    search_result = [flag for flag in self.flags if flag.short == parsed_flag or flag.long == parsed_flag]
+                    search_result = [flag for flag in flags if flag.short == parsed_flag or flag.long == parsed_flag]
                     if len(search_result) == 0:
                         self.add_parsing_error(f'Unknown flag: {parsed_flag}.')
 
                 # Check for required flags and validate flag values
-                for flag in self.flags:
+                for flag in flags:
                     if flag.required:
                         if flag.short not in self.parsed_flags and flag.long not in self.parsed_flags:
                             self.add_parsing_error(f'Missing required flag: {flag.short}, {flag.long}.')
@@ -493,7 +501,7 @@ class BaseCLI(ABC):
         amount_of_commands_greater_0 = len(self.commands)
         # DEPRECATED: Not needed anymore really
             # Filter out the help flag from the list of flags
-            # flags = list(filter(lambda flag: not flag.short == '-h' and not flag.long == '--help', self.flags)) 
+            # flags = list(filter(lambda flag: not flag.short == '-h' and not flag.long == '--help', self.flags))
         amount_of_flags_greater_0 = len(self.flags)
         
         # Set the name to './<name>' by default
