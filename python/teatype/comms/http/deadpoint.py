@@ -102,6 +102,7 @@ try:
             return {'message': f'Default response for {path}'}
     
     # TODO: Return response as response object?
+    # TODO: Return data dict in response
     def deadpoint(response:Optional[Dict[str,Any]]=None,status:Optional[int]=None):
         """
         Decorator that checks for 'testmode' query parameter and delegates
