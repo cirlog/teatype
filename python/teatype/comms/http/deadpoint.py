@@ -12,14 +12,15 @@
 
 # Standard library imports
 import random
+from copy import deepcopy
 from functools import wraps
-from typing import Callable, Dict, Optional
+from inspect import iscoroutinefunction
+from typing import Any, Callable, Dict, Optional
 # Third-party imports
 from teatype.logging import *
+from teatype.io import probe
 
 try:
-    from teatype.io import probe
-    
     fastapi_support = probe.package('fastapi')
     
     from fastapi import Request, Response
@@ -99,46 +100,117 @@ try:
 
             # Default response if nothing matches
             return {'message': f'Default response for {path}'}
-
-    # TODO: Unify with my web request function to avoid conflicts with requests package or make request compatible with requests
-    def deadpoint(response:Dict[str,any]=None, status:int=None):
-        """ 
-        A decorator that checks for 'testmode' query param and delegates 
-        the request to the EndpointSimulator with the specified response and status code.
+    
+    # TODO: Return response as response object?
+    def deadpoint(response:Optional[Dict[str,Any]]=None,status:Optional[int]=None):
         """
-        def decorator(callable:Callable):
-            @wraps(callable)
-            def wrapper(caller:object,
-                        initial_request:Request,
-                        initial_response:Response,
-                        *args,
-                        **kwargs):
-                try:
-                    # Access the 'testmode' query parameter directly from the request, so that it can
-                    # be omitted in the call signature of the route handler
-                    testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
-                    
-                    # Check if testmode is enabled in the query parameters
-                    if testmode:
-                        if response is None:
-                            # Delegate the request to the singleton instance of the endpoint simulator
-                            response['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
-                        else:
-                            response['content'] = response
-                        # Set the response status code
-                        response['status_code'] = status
-                        # Modify the response body
-                        if 'headers' not in response:
-                            response['headers'] = {}
-                        response['headers']['Content-Type'] = 'application/json'
-                        return response
-                    # If not testmode, proceed with the actual callable
-                    # Ensure to pass all necessary arguments (request, response)
-                    return callable(caller, initial_request, initial_response, *args, **kwargs)
-                except:
-                    import traceback
-                    traceback.print_exc()
-            return wrapper
+        Decorator that checks for 'testmode' query parameter and delegates
+        the request to the EndpointSimulator with the specified response and status code.
+        Args:
+            response (Optional[Dict[str, Any]]): The predefined response to return in test mode.
+            status (Optional[int]): The HTTP status code to return in test mode.
+        Returns:
+            Callable: The decorated function.
+        """
+        def decorator(callable_fn:Callable):
+            if iscoroutinefunction(callable_fn):
+                @wraps(callable_fn)
+                async def async_wrapper(
+                    caller:object,
+                    initial_request: Request,
+                    initial_response: Response,
+                    *args,
+                    **kwargs
+                ):
+                    try:
+                        testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
+                        if testmode:
+                            payload = deepcopy(response) if response is not None else {}
+                            if 'content' not in payload:
+                                from teatype.comms.http.deadpoint import Deadpoint
+                                payload['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
+                            payload.setdefault('headers', {})
+                            payload['headers'].setdefault('Content-Type', 'application/json')
+                            if status is not None:
+                                payload['status_code'] = status
+                            return payload
+                        # real call (async)
+                        return await callable_fn(caller, initial_request, initial_response, *args, **kwargs)
+                    except Exception:
+                        import traceback
+                        traceback.print_exc()
+                        raise
+                return async_wrapper
+            else:
+                @wraps(callable_fn)
+                def sync_wrapper(
+                    caller: object,
+                    initial_request: Request,
+                    initial_response: Response,
+                    *args,
+                    **kwargs
+                ):
+                    try:
+                        testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
+                        if testmode:
+                            payload = deepcopy(response) if response is not None else {}
+                            if 'content' not in payload:
+                                from teatype.comms.http.deadpoint import Deadpoint
+                                payload['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
+                            payload.setdefault('headers', {})
+                            payload['headers'].setdefault('Content-Type', 'application/json')
+                            if status is not None:
+                                payload['status_code'] = status
+                            return payload
+                        # real call (sync)
+                        return callable_fn(caller, initial_request, initial_response, *args, **kwargs)
+                    except Exception:
+                        import traceback
+                        traceback.print_exc()
+                        raise
+                return sync_wrapper
         return decorator
+    
+    # TODO: Unify with my web request function to avoid conflicts with requests package or make request compatible with requests
+    # def deadpoint(response:Dict[str,any]=None, status:int=None):
+    #     """ 
+    #     A decorator that checks for 'testmode' query param and delegates 
+    #     the request to the EndpointSimulator with the specified response and status code.
+    #     """
+    #     def decorator(callable:Callable):
+    #         @wraps(callable)
+    #         def wrapper(caller:object,
+    #                     initial_request:Request,
+    #                     initial_response:Response,
+    #                     *args,
+    #                     **kwargs):
+    #             try:
+    #                 # Access the 'testmode' query parameter directly from the request, so that it can
+    #                 # be omitted in the call signature of the route handler
+    #                 testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
+                    
+    #                 # Check if testmode is enabled in the query parameters
+    #                 if testmode:
+    #                     if response is None:
+    #                         # Delegate the request to the singleton instance of the endpoint simulator
+    #                         response['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
+    #                     else:
+    #                         response['content'] = response
+    #                     # Set the response status code
+    #                     response['status_code'] = status
+    #                     # Modify the response body
+    #                     if 'headers' not in response:
+    #                         response['headers'] = {}
+    #                     response['headers']['Content-Type'] = 'application/json'
+    #                     return response
+    #                 # If not testmode, proceed with the actual callable
+    #                 # Ensure to pass all necessary arguments (request, response)
+    #                 return callable(caller, initial_request, initial_response, *args, **kwargs)
+    #             except:
+    #                 import traceback
+    #                 traceback.print_exc()
+    #         return wrapper
+    #     return decorator
+    
 except ImportError:
     fastapi_support = None
