@@ -32,10 +32,12 @@ class Flag:
                 help:str|List[str],
                 required:bool,
                 depends_on:List[str]=None,
-                options:List[any]|type=None):
+                options:List[any]|type=None,
+                secret:bool=False):
         self.help = help
         self.depends_on = depends_on
         self.required = required
+        self.secret = secret
         
         self.short = f'-{short}'
         self.long = f'--{long}'

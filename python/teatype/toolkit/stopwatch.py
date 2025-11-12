@@ -38,7 +38,7 @@ def stopwatch(label:str=None, pad:Union[int,int]=(0,0), tab:int=0):
     If called without a label, it prints the elapsed time since the last labeled call.
     A new stopwatch cannot be started if the previous stopwatch hasn't been closed in the context of the importing module.
     """
-    from teatype.logging import err, log # Avoid circular import by importing here
+    from teatype.logging import err, log
     
     # Check if the stopwatches are disabled
     if GLOBAL_STOPWATCH_CONFIG.DISABLE_STOPWATCHES:

@@ -19,7 +19,7 @@ import sys
 from importlib import util as iutil
 # Third-party imports
 from teatype.cli import BaseCLI, Command
-from teatype.enum import EscapeColor
+from teatype.enum import EscapeColor, Textile
 from teatype.io import clear_shell, file, path
 from teatype.logging import *
 from teatype.io import TemporaryDirectory as TempDir
@@ -103,10 +103,10 @@ class MainCLI(BaseCLI):
         return dict(sorted(module_registry.items())) # Return alphabetically sorted scripts
     
     def discover_scripts(self) -> dict:
-        return self.discover_python_modules('cli-scripts')
+        return self.discover_python_modules('scripts/cli')
     
     def discover_tuis(self) -> dict:
-        return self.discover_python_modules('cli-tuis')
+        return self.discover_python_modules('tuis/cli')
 
     def display_help(self) -> None:
         """
@@ -128,13 +128,19 @@ class MainCLI(BaseCLI):
         for _, script_key in enumerate(self.scripts):
             script = self.scripts[script_key]
             script_name = script.shorthand + ', ' + script.name
-            script_info = f'    {script_name.ljust(max_line_width)}    {script.help}'
+            if script.NOT_AVAILABLE:
+                script_info = f'    {EscapeColor.RED}{Textile.STRIKETHROUGH}{script_name}{Textile.RESET}{"".ljust(max_line_width - len(script_name))}    {EscapeColor.LIGHT_RED}(Not available){EscapeColor.RESET}'
+            else:
+                script_info = f'    {script_name.ljust(max_line_width)}    {script.help}'
             help_message += f'{script_info}\n'
         help_message += f'\nTUIs: {EscapeColor.GRAY}(Terminal User-Interfaces)\n{EscapeColor.RESET}'
         for _, tui_key in enumerate(self.tuis):
             tui = self.tuis[tui_key]
             tui_name = tui.shorthand + ', ' + tui.name
-            tui_info = f'    {tui_name.ljust(max_line_width)}    {tui.help}'
+            if tui.NOT_AVAILABLE:
+                tui_info = f'    {EscapeColor.RED}{Textile.STRIKETHROUGH}{tui_name}{Textile.RESET}{"".ljust(max_line_width - len(tui_name))}    {EscapeColor.LIGHT_RED}(Not available){EscapeColor.RESET}'
+            else:
+                tui_info = f'    {tui_name.ljust(max_line_width)}    {tui.help}'
             help_message += f'{tui_info}\n'
         log(help_message)
         hint(f'Use `$ {self.shorthand} <script> -h, --help` for more details on specific scripts.', pad_after=1)

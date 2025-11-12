@@ -18,6 +18,7 @@ from typing import List
 # Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
+from teatype.enum import EscapeColor
 from teatype.io import merge_dicts
 from teatype.logging import *
 
@@ -66,7 +67,8 @@ class BaseCLI(ABC):
     """
     _parsing_errors:List[str]
     
-    AVAILABLE:bool=True
+    NOT_AVAILABLE:bool=False
+    NOT_AVAILABLE_REASON:str='Not specified'
     
     arguments:List[Argument]
     commands:List[Command]
@@ -196,11 +198,27 @@ class BaseCLI(ABC):
         self.flags = []
         for flag in flags:
             self.flags.append(Flag(**flag))
+        self.secret_flags = [
+            Flag(short='oss',
+                 long='override-security',
+                 help=['A secret global debug option to override any potential security features', 'If you don\'t know what this is, don\'t use it!'],
+                 required=False,
+                 secret=True)
+        ]
             
         # DEPRECATED: Disabled auto adding help flag for now
             # Add the default help flag for all scripts
             # self.flags.append(Flag(short='h', long='help', help='Display the (sometimes more detailed) help message.', required=False))
         self.flags.sort(key=lambda flag: flag.short) # Sort the flags by their short notation
+        
+        if self.NOT_AVAILABLE:
+            def _override_pre_validation():
+                println()
+                err('This CLI is not available.', include_symbol=True, use_prefix=False, verbose=False)
+                log(f'   {EscapeColor.RED}Reason: {EscapeColor.MAGENTA}{self.NOT_AVAILABLE_REASON}.')
+                println()
+                sys.exit(1)
+            self.pre_validate = _override_pre_validation
 
     # TODO: Make positioning of arguments optional
     # TODO: Make flag assignment work with "="
@@ -361,13 +379,14 @@ class BaseCLI(ABC):
                                 argument.value = self.parsed_arguments[argument.position]
 
                 # Validate the presence of only known flags
+                flags = self.flags + self.secret_flags
                 for parsed_flag in self.parsed_flags:
-                    search_result = [flag for flag in self.flags if flag.short == parsed_flag or flag.long == parsed_flag]
+                    search_result = [flag for flag in flags if flag.short == parsed_flag or flag.long == parsed_flag]
                     if len(search_result) == 0:
                         self.add_parsing_error(f'Unknown flag: {parsed_flag}.')
 
                 # Check for required flags and validate flag values
-                for flag in self.flags:
+                for flag in flags:
                     if flag.required:
                         if flag.short not in self.parsed_flags and flag.long not in self.parsed_flags:
                             self.add_parsing_error(f'Missing required flag: {flag.short}, {flag.long}.')
@@ -493,7 +512,7 @@ class BaseCLI(ABC):
         amount_of_commands_greater_0 = len(self.commands)
         # DEPRECATED: Not needed anymore really
             # Filter out the help flag from the list of flags
-            # flags = list(filter(lambda flag: not flag.short == '-h' and not flag.long == '--help', self.flags)) 
+            # flags = list(filter(lambda flag: not flag.short == '-h' and not flag.long == '--help', self.flags))
         amount_of_flags_greater_0 = len(self.flags)
         
         # Set the name to './<name>' by default

@@ -11,6 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # Standard library imports
+from abc import ABC
 from typing import List
 from datetime import datetime as dt
 # Third-party imports

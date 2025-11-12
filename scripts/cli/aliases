@@ -24,6 +24,7 @@ from teatype.enum import EscapeColor
 from teatype.io import env, file, path, shell
 from teatype.logging import *
 
+# FIXME: Missmatched parent paths
 class Aliases(BaseCLI):
     """
     Aliases CLI tool for managing, injecting, ejecting, and listing custom shorthand commands.

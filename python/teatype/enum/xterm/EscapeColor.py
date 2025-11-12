@@ -63,7 +63,7 @@ class EscapeColor(Enum):
         Unfortunately (for good reasons), Python does not support operator overloading and inheritance of enums,
         so this function has to be implemented in every enum class that requires it.
         """
-        return self.value # Retrieve and return the ANSI escape code string for the specific value
+        return self.value
     
     ##############
     # Properties #

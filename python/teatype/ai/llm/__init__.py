@@ -19,12 +19,13 @@ try:
     """
     import llama_cpp
     
-    __all__ = ['AnalyticalAI',
-               'ConversationalAI',
-               'Inferencer',
-               'load_model',
-               'PromptBuilder']
     __GPU_SUPPORT__ = True
+    
+    __all__ = ['AnalyticalAI',
+            'ConversationalAI',
+            'Inferencer',
+            'load_model',
+            'PromptBuilder']
     
     # from .models.analytical import AnalyticalAI
     # from .models.conversational import ConversationalAI

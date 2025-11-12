@@ -14,14 +14,19 @@
 
 # Third-party imports
 from teatype import colorwrap
-from teatype.ai import __GPU_SUPPORT__, LLMEngine
+from teatype.ai import __GPU_SUPPORT__
 from teatype.cli import BaseCLI
 from teatype.io import fetch, file, path, prompt
 from teatype.logging import *
 from teatype.modulo import LaunchPad, Operations
 
+if __GPU_SUPPORT__:
+    from teatype.ai.llm import LLMEngine
+
+# FIXME: Missmatched parent paths
 class Ask(BaseCLI):
-    AVAILABLE = __GPU_SUPPORT__
+    NOT_AVAILABLE=not __GPU_SUPPORT__
+    NOT_AVAILABLE_REASON='no gpu-support'
     
     def meta(self):
         return {
@@ -113,8 +118,7 @@ class Ask(BaseCLI):
         default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
         
         operations = Operations(verbose_logging=False if verbose == None else verbose)
-        # TODO: Fix kebabify to convert words like LLM to llm instead of l-l-m
-        units = operations.list(filters=[('type', 'l-l-m-engine')])
+        units = operations.list(filters=[('type', 'llm-engine')])
         if len(units) == 0:
             LaunchPad.fire(LLMEngine)
             # llm = Inferencer(model=default_model,

@@ -14,16 +14,23 @@
 
 # Third-party imports
 from teatype import colorwrap
-from teatype.ai.llm import ConversationalAI
+from teatype.ai.llm import __GPU_SUPPORT__
 from teatype.cli import BaseTUI
 from teatype.io import fetch, path, prompt
 from teatype.logging import *
+
+if __GPU_SUPPORT__:
+    from teatype.ai.llm import ConversationalAI
 
 DEFAULT_MODEL_PATH = ''
 MANUAL_REFRESH = False # If True, the shell will be cleared automatically after each command
 DEBUG_MODE = False
 
+# FIXME: Missmatched parent paths
 class Chat(BaseTUI):
+    NOT_AVAILABLE=not __GPU_SUPPORT__
+    NOT_AVAILABLE_REASON='no gpu-support'
+    
     def meta(self):
         return {
             'name': 'chat',
