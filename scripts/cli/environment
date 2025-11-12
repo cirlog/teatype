@@ -265,7 +265,7 @@ class Environment(BaseCLI):
     def execute(self):
         println()
         
-        parent_directoy = path.caller_parent(reverse_depth=2, stringify=False)
+        parent_directoy = path.caller_parent(reverse_depth=1, stringify=False)
         grandparent_directory = parent_directoy.parent
         teatype_env_path = path.join(grandparent_directory, '.env')
         teatype_variables = file.read(teatype_env_path)

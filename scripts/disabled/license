@@ -150,8 +150,8 @@ class License(BaseCLI):
         """
         try:
             # Determine the parent directory relative to this script
-            parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            files_directory_path = os.path.join(parent_directory, 'cli-files')
+            parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+            files_directory_path = os.path.join(parent_directory, 'files', 'cli')
 
             # Check if the user requested the long version of the license
             long_version = self.get_flag('long')

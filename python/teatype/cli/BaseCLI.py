@@ -18,6 +18,7 @@ from typing import List
 # Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
+from teatype.enum import EscapeColor
 from teatype.io import merge_dicts
 from teatype.logging import *
 
@@ -66,7 +67,8 @@ class BaseCLI(ABC):
     """
     _parsing_errors:List[str]
     
-    AVAILABLE:bool=True
+    NOT_AVAILABLE:bool=False
+    NOT_AVAILABLE_REASON:str='Not specified'
     
     arguments:List[Argument]
     commands:List[Command]
@@ -208,6 +210,15 @@ class BaseCLI(ABC):
             # Add the default help flag for all scripts
             # self.flags.append(Flag(short='h', long='help', help='Display the (sometimes more detailed) help message.', required=False))
         self.flags.sort(key=lambda flag: flag.short) # Sort the flags by their short notation
+        
+        if self.NOT_AVAILABLE:
+            def _override_pre_validation():
+                println()
+                err('This CLI is not available.', include_symbol=True, use_prefix=False, verbose=False)
+                log(f'   {EscapeColor.RED}Reason: {EscapeColor.MAGENTA}{self.NOT_AVAILABLE_REASON}.')
+                println()
+                sys.exit(1)
+            self.pre_validate = _override_pre_validation
 
     # TODO: Make positioning of arguments optional
     # TODO: Make flag assignment work with "="

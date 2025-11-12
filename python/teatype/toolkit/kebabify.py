@@ -16,6 +16,12 @@ from typing import Union
 # Third-party imports
 from teatype.enum import EscapeColor
 
+KEBAB_STORE = {
+    'CAPITAL': '_',
+    'SPACE': '+',
+    'UPPER': '-'
+}
+
 def kebabify(raw_name:str,
              plural:bool=False,
              preserve_capitals:bool=False,
