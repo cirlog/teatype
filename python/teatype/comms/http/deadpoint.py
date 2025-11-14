@@ -135,11 +135,7 @@ try:
                         payload['headers'].setdefault('Content-Type', 'application/json')
                         tresponse = TResponse(**payload)
                         if fast_api_response and fastapi_support:
-                            return Response(
-                                content=tresponse.data,
-                                status_code=tresponse.status,
-                                headers=tresponse.headers
-                            )
+                            return tresponse.fastapi
                         return tresponse
                     # real call (async)
                     return await function(caller, initial_request, initial_response, *args, **kwargs)
@@ -163,11 +159,7 @@ try:
                         payload['headers'].setdefault('Content-Type', 'application/json')
                         tresponse = TResponse(**payload)
                         if fast_api_response and fastapi_support:
-                            return Response(
-                                content=tresponse.data,
-                                status_code=tresponse.status,
-                                headers=tresponse.headers
-                            )
+                            return tresponse.fastapi
                         return tresponse
                     # real call (sync)
                     return function(caller, initial_request, initial_response, *args, **kwargs)

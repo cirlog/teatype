@@ -44,7 +44,7 @@ def _request(async_client:aiohttp.ClientSession,
              timeout:float,
              url:str|List[str],
              verbose:bool=False,
-             verify_ssl:bool=False) -> requests.Response|aiohttp.ClientResponse|None:
+             verify_ssl:bool=False) -> TResponse|aiohttp.ClientResponse|None:
     """
     Internal helper function to perform HTTP requests based on CRUD methods.
 
@@ -63,7 +63,7 @@ def _request(async_client:aiohttp.ClientSession,
         verify_ssl (bool, optional): Whether to verify SSL certificates. Defaults to True.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     if not isinstance(url, str) and not isinstance(url, list):
         err('Invalid URL type, expected str or list')
@@ -162,7 +162,7 @@ def sync_request(crud_method:str,
                  parse_json:bool=True,
                  timeout:float=10.0,
                  verbose:bool=False,
-                 verify_ssl:bool=True) -> requests.Response:
+                 verify_ssl:bool=True) -> TResponse:
     """
     Perform a synchronous HTTP request based on the specified CRUD method.
     This exists as a wrapper function to call the internal _request function and it allows
@@ -180,7 +180,7 @@ def sync_request(crud_method:str,
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     # Call the internal _request function with the provided parameters to perform the synchronous request
     return _request(async_client=None,
@@ -202,7 +202,7 @@ def get(url:str,
         parse_json:bool=True,
         timeout:float=10.0,
         verbose:bool=False,
-        verify_ssl:bool=True) -> requests.Response:
+        verify_ssl:bool=True) -> TResponse:
     """
     Perform a synchronous GET request.
     
@@ -216,7 +216,7 @@ def get(url:str,
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     return sync_request(_CRUD_METHOD.GET.value,
                         url=url,
@@ -238,7 +238,7 @@ def post(url:str,
          parse_json:bool=True,
          timeout:float=10.0,
          verbose:bool=False,
-         verify_ssl:bool=True) -> requests.Response:
+         verify_ssl:bool=True) -> TResponse:
     """
     Perform a synchronous POST request.
     
@@ -253,7 +253,7 @@ def post(url:str,
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     return sync_request(_CRUD_METHOD.POST.value,
                         url=url,
@@ -275,7 +275,7 @@ def put(url:str,
         parse_json:bool=True,
         timeout:float=10.0,
         verbose:bool=False,
-        verify_ssl:bool=True) -> requests.Response:
+        verify_ssl:bool=True) -> TResponse:
     """
     Perform a synchronous PUT request.
     
@@ -290,7 +290,7 @@ def put(url:str,
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     return sync_request(_CRUD_METHOD.PUT.value,
                         url=url,
@@ -312,7 +312,7 @@ def patch(url:str,
           parse_json:bool=True,
           timeout:float=10.0,
           verbose:bool=False,
-          verify_ssl:bool=True) -> requests.Response:
+          verify_ssl:bool=True) -> TResponse:
     """
     Perform a synchronous PATCH request.
     
@@ -327,7 +327,7 @@ def patch(url:str,
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     return sync_request(_CRUD_METHOD.PATCH.value,
                         url=url,
@@ -349,7 +349,7 @@ def delete(url:str,
            parse_json:bool=True,
            timeout:float=10.0,
            verbose:bool=False,
-           verify_ssl:bool=True) -> requests.Response:
+           verify_ssl:bool=True) -> TResponse:
     """
     Perform a synchronous DELETE request.
     
@@ -364,7 +364,7 @@ def delete(url:str,
         verbose (bool, optional): Whether to enable verbose logging. Defaults to False.
 
     Returns:
-        requests.Response or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
+        TResponse or aiohttp.ClientResponse or None: The HTTP response object or None if an error occurs.
     """
     return sync_request(_CRUD_METHOD.DELETE.value,
                         url=url,

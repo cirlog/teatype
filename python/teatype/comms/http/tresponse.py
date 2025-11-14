@@ -19,6 +19,13 @@ class TResponse:
     Allows both attribute-style and dict-style access to JSON payload.
     Has proxies for response.status_code and response.content, but keeps the originals as well for backwards-compatibility.
     """
+    content:any
+    data:any
+    headers:dict
+    ok:bool
+    status:int
+    status_code:int
+    
     def __init__(self,
                  content:any,
                  headers:dict,
@@ -29,11 +36,13 @@ class TResponse:
         self.status = status_code
         self.status_code = status_code
         
+        self.ok = 200 <= status_code < 300
+        
         if type(content) == bytes or type(content) == bytearray:
             content = content.decode('utf-8')
         if type(content) == str and parse_json:
             content = json_util.loads(content)
-        if isinstance(content, dict):
+        if type(content) == dict:
             self.data = TResponse._AttrDict(content)
         else:
             self.data = content
@@ -57,3 +66,18 @@ class TResponse:
                 del self[name]
             except KeyError:
                 raise AttributeError(f"No such attribute: {name}")
+            
+    @property
+    def fastapi(self):
+        """
+        Converts to FastAPI Response object.
+        """
+        try:
+            from fastapi import Response
+            return Response(
+                content=json_util.dumps(self.data),
+                status_code=self.status,
+                headers=self.headers
+            )
+        except:
+            raise ImportError("FastAPI is not installed.")
