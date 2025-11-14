@@ -10,6 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Local imports
 try:
     from .deadpoint import Deadpoint, deadpoint
 except ImportError:
@@ -20,7 +21,8 @@ try:
 except ImportError:
     fastapi_support = False
     
-from .request import *
+from .trequest import *
+from .tresponse import TResponse
 
 try:
     from .responses import *

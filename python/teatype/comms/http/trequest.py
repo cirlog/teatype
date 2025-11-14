@@ -18,6 +18,7 @@ from typing import List
 import aiohttp
 import requests
 import urllib3
+from teatype.comms.http.tresponse import TResponse
 from teatype.logging import *
 from teatype.toolkit import stopwatch
 from urllib.parse import urlparse
@@ -26,49 +27,11 @@ class _CRUD_METHOD(Enum):
     """
     Enumeration of CRUD HTTP methods.
     """
-    DELETE = 'DELETE'
-    GET = 'GET'
-    PATCH = 'PATCH'
-    POST = 'POST'
-    PUT = 'PUT'
-    
-class _Response:
-    """
-    Conversion class to represent an HTTP response object.
-    Allows both attribute-style and dict-style access to JSON payload.
-    """
-    def __init__(self,
-                 status_code: int,
-                 content: any,
-                 headers: dict,
-                 parse_json: bool = True):
-        self.status = status_code
-        raw = json_util.loads(content) if parse_json else content
-        if isinstance(raw, dict):
-            self.data = _Response._AttrDict(raw)
-        else:
-            self.data = raw
-        self.headers = headers
-
-    class _AttrDict(dict):
-        """
-        A dict subclass that exposes keys as attributes.
-        Falls back to normal dict.get() when needed.
-        """
-        def __getattr__(self, name):
-            try:
-                return self[name]
-            except KeyError:
-                raise AttributeError(f"No such attribute: {name}")
-
-        def __setattr__(self, name, value):
-            self[name] = value
-
-        def __delattr__(self, name):
-            try:
-                del self[name]
-            except KeyError:
-                raise AttributeError(f"No such attribute: {name}")
+    DELETE='DELETE'
+    GET='GET'
+    PATCH='PATCH'
+    POST='POST'
+    PUT='PUT'
     
 def _request(async_client:aiohttp.ClientSession,
              crud_method:str,
@@ -177,17 +140,17 @@ def _request(async_client:aiohttp.ClientSession,
         stopwatch()
 
     # Retrieve the response content based on the json flag
-    _response = _Response(response.status_code,
-                          response.content,
+    tresponse = TResponse(response.content,
                           response.headers,
+                          response.status_code,
                           parse_json)
     # If verbose logging is enabled, log the result of the request
     if verbose:
-        if _response.status >= 400:
-            err(f'Synchronous request failed: [{_response.status}] {_response.data}') # Log failure
+        if tresponse.status >= 400:
+            err(f'Synchronous request failed: [{tresponse.status}] {tresponse.data}') # Log failure
         else:
-            log(f'Synchronous request success: [{_response.status}] {_response.data}') # Log success
-    return _response # Return the HTTP response object
+            log(f'Synchronous request success: [{tresponse.status}] {tresponse.data}') # Log success
+    return tresponse # Return the HTTP response object
 
 def sync_request(crud_method:str,
                  url:str,
