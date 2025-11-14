@@ -18,15 +18,9 @@ from inspect import iscoroutinefunction
 from typing import Any, Callable, Dict, Optional
 # Third-party imports
 from teatype.logging import *
-from teatype.io import probe
-from teatype.comms.http import trequest
+from teatype.comms.http import TResponse
 
 try:
-    fastapi_support = probe.package('fastapi')
-    
-    from fastapi import Request, Response
-    
-    # TODO: Generalize so that you don't need fastapi support
     # TODO: Change testmode to parameter that tells you what should happen instead of simple true/false
     class Deadpoint:
         _instance = None
@@ -35,10 +29,6 @@ try:
             """
             Ensures only one instance of the class exists.
             """
-            if not fastapi_support:
-                err('FastAPI not installed, skipping middleware registration.')
-                return
-            
             if not cls._instance:
                 cls._instance = super(Deadpoint, cls).__new__(cls, *args, **kwargs)
                 cls._instance.fail_conditions = []
@@ -46,7 +36,7 @@ try:
                 cls._instance.randomized_responses = {}
             return cls._instance
 
-        def add_fail_condition(self, condition:Callable[[Request],bool], response:dict) -> None:
+        def add_fail_condition(self, condition:Callable[[object],bool], response:dict) -> None:
             """
             Add a custom fail condition with a predefined response.
             """
@@ -64,7 +54,7 @@ try:
             """
             self.randomized_responses[path] = response_options
 
-        def check_fail_conditions(self, request:Request) -> Optional[dict]:
+        def check_fail_conditions(self, request) -> Optional[dict]:
             """
             Check if any fail conditions apply to the current request.
             """
@@ -81,7 +71,7 @@ try:
                 return random.choice(self.randomized_responses[path])
             return None
 
-        def simulate_endpoint(self, request:Request, path:str) -> dict:
+        def simulate_endpoint(self, request, path:str) -> dict:
             """
             Simulate the endpoint logic with fail conditions, predefined responses, and randomized responses.
             """
@@ -121,8 +111,8 @@ try:
                 @wraps(function)
                 async def async_wrapper(
                     caller:object,
-                    initial_request:Request,
-                    initial_response:Response,
+                    initial_request,
+                    initial_response,
                     *args,
                     **kwargs
                 ):
@@ -135,7 +125,7 @@ try:
                                 'status_code': response_status if response_status is not None else 200
                             }
                             payload['headers'].setdefault('Content-Type', 'application/json')
-                            return requests._Reponse(**payload)
+                            return TResponse(**payload)
                         # real call (async)
                         return await function(caller, initial_request, initial_response, *args, **kwargs)
                     except Exception:
@@ -147,8 +137,8 @@ try:
                 @wraps(function)
                 def sync_wrapper(
                     caller:object,
-                    initial_request:Request,
-                    initial_response:Response,
+                    initial_request,
+                    initial_response,
                     *args,
                     **kwargs
                 ):
@@ -161,7 +151,7 @@ try:
                                 'status_code': response_status if response_status is not None else 200
                             }
                             payload['headers'].setdefault('Content-Type', 'application/json')
-                            return requests._Reponse(**payload)
+                            return TResponse(**payload)
                         # real call (sync)
                         return function(caller, initial_request, initial_response, *args, **kwargs)
                     except Exception as exc:
