@@ -17,10 +17,15 @@ from functools import wraps
 from inspect import iscoroutinefunction
 from typing import Any, Callable, Dict, Optional
 # Third-party imports
-from teatype.logging import *
 from teatype.comms.http import TResponse
+from teatype.logging import *
+from teatype.io import probe
 
 try:
+    fastapi_support = probe.package('fastapi')
+    if fastapi_support:
+        from fastapi import Response
+    
     # TODO: Change testmode to parameter that tells you what should happen instead of simple true/false
     class Deadpoint:
         _instance = None
@@ -94,7 +99,8 @@ try:
     
     def deadpoint(response_data:Optional[Dict[str,Any]]=None,
                   response_headers:Optional[Dict[str,str]]=None,
-                  response_status:Optional[int]=None):
+                  response_status:Optional[int]=None,
+                  fast_api_response:bool=False):
         """
         Decorator that checks for 'testmode' query parameter and delegates
         the request to the EndpointSimulator with the specified response and status code.
@@ -107,6 +113,9 @@ try:
             Callable: The decorated function.
         """
         def decorator(function:Callable):
+            def _testmode_response():
+                pass
+            
             if iscoroutinefunction(function):
                 @wraps(function)
                 async def async_wrapper(
@@ -116,22 +125,24 @@ try:
                     *args,
                     **kwargs
                 ):
-                    try:
-                        testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
-                        if testmode:
-                            payload = {
-                                'content': deepcopy(response_data) if response_data is not None else Deadpoint().simulate_endpoint(initial_request, initial_request.url.path),
-                                'headers': deepcopy(response_headers) if response_headers is not None else {},
-                                'status_code': response_status if response_status is not None else 200
-                            }
-                            payload['headers'].setdefault('Content-Type', 'application/json')
-                            return TResponse(**payload)
-                        # real call (async)
-                        return await function(caller, initial_request, initial_response, *args, **kwargs)
-                    except Exception:
-                        import traceback
-                        traceback.print_exc()
-                        raise
+                    testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
+                    if testmode:
+                        payload = {
+                            'content': deepcopy(response_data) if response_data is not None else Deadpoint().simulate_endpoint(initial_request, initial_request.url.path),
+                            'headers': deepcopy(response_headers) if response_headers is not None else {},
+                            'status_code': response_status if response_status is not None else 200
+                        }
+                        payload['headers'].setdefault('Content-Type', 'application/json')
+                        tresponse = TResponse(**payload)
+                        if fast_api_response and fastapi_support:
+                            return Response(
+                                content=tresponse.data,
+                                status_code=tresponse.status,
+                                headers=tresponse.headers
+                            )
+                        return tresponse
+                    # real call (async)
+                    return await function(caller, initial_request, initial_response, *args, **kwargs)
                 return async_wrapper
             else:
                 @wraps(function)
@@ -142,22 +153,24 @@ try:
                     *args,
                     **kwargs
                 ):
-                    try:
-                        testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
-                        if testmode:
-                            payload = {
-                                'content': deepcopy(response_data) if response_data is not None else Deadpoint().simulate_endpoint(initial_request, initial_request.url.path),
-                                'headers': deepcopy(response_headers) if response_headers is not None else {},
-                                'status_code': response_status if response_status is not None else 200
-                            }
-                            payload['headers'].setdefault('Content-Type', 'application/json')
-                            return TResponse(**payload)
-                        # real call (sync)
-                        return function(caller, initial_request, initial_response, *args, **kwargs)
-                    except Exception as exc:
-                        import traceback
-                        traceback.print_exc()
-                        raise exc
+                    testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
+                    if testmode:
+                        payload = {
+                            'content': deepcopy(response_data) if response_data is not None else Deadpoint().simulate_endpoint(initial_request, initial_request.url.path),
+                            'headers': deepcopy(response_headers) if response_headers is not None else {},
+                            'status_code': response_status if response_status is not None else 200
+                        }
+                        payload['headers'].setdefault('Content-Type', 'application/json')
+                        tresponse = TResponse(**payload)
+                        if fast_api_response and fastapi_support:
+                            return Response(
+                                content=tresponse.data,
+                                status_code=tresponse.status,
+                                headers=tresponse.headers
+                            )
+                        return tresponse
+                    # real call (sync)
+                    return function(caller, initial_request, initial_response, *args, **kwargs)
                 return sync_wrapper
         return decorator
 except ImportError:
