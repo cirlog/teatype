@@ -21,9 +21,8 @@ from teatype.logging import *
 from teatype.modulo import LaunchPad, Operations
 
 if __GPU_SUPPORT__:
-    from teatype.ai.llm import LLMEngine
+    from teatype.ai import LLMEngine
 
-# FIXME: Missmatched parent paths
 class Ask(BaseCLI):
     NOT_AVAILABLE=not __GPU_SUPPORT__
     NOT_AVAILABLE_REASON='no gpu-support'
@@ -81,7 +80,8 @@ class Ask(BaseCLI):
         verbose = self.get_flag('verbose')
         
         parent_directory = path.caller_parent(reverse_depth=2)
-        cli_dist_directory = path.join(parent_directory, 'dist')
+        cli_directory = path.join(parent_directory, 'cli')
+        cli_dist_directory = path.join(cli_directory, 'dist')
         model_directory = path.join(cli_dist_directory, 'llm-models')
         conversational_model_directory = path.join(model_directory, 'conversational')
         if not path.exists(conversational_model_directory):
@@ -117,15 +117,18 @@ class Ask(BaseCLI):
         
         default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
         
+        from teatype.ai.llm import Inferencer
+        llm = Inferencer(model=default_model,
+                         model_directory=conversational_model_directory)
+        response = llm(user_prompt=self.full_prompt,
+                       stream_response=stream)
+        println()
+        return
+        
         operations = Operations(verbose_logging=False if verbose == None else verbose)
         units = operations.list(filters=[('type', 'llm-engine')])
         if len(units) == 0:
             LaunchPad.fire(LLMEngine)
-            # llm = Inferencer(model=default_model,
-            #                  model_directory=conversational_model_directory)
-            
-            # response = llm(user_prompt=self.full_prompt,
-            #                stream_response=stream)
         else:
             if verbose:
                 log('Found existing LLM Engine unit.')
