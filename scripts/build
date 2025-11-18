@@ -20,9 +20,10 @@ from packaging import version
 
 PACKAGE_NAME = 'teatype'
 PARENT_PATH = Path(__file__).parent.parent
-FILES_PATH = PARENT_PATH / 'files'
-VERSION_FILE = FILES_PATH / 'VERSION.txt'
-HISTORY_FILE = FILES_PATH / 'VERSION_HISTORY.txt'
+PACKAGE_PATH = PARENT_PATH / 'py'
+FILES_PATH = PARENT_PATH / 'files' / 'build' / 'py'
+VERSION_FILE = FILES_PATH / 'version.txt'
+HISTORY_FILE = FILES_PATH / 'version_history.txt'
 
 def get_pypi_versions():
     try:
@@ -62,13 +63,13 @@ def main():
     current_dir = os.getcwd()
     
     try:
-        os.chdir(PARENT_PATH)
+        os.chdir(PACKAGE_PATH)
         
         existing_local = load_local_history()
         existing_remote = get_pypi_versions()
         forbidden = existing_local | existing_remote
 
-        print(f'Known versions (local + PyPI): {sorted(forbidden)}')
+        print(f'Known versions: {sorted(forbidden)}')
         desired = input('Enter new version: ').strip()
 
         if desired in forbidden:
@@ -88,13 +89,24 @@ def main():
             if forbidden and desired < max(forbidden):
                 raise SystemExit(f'ERROR: version {desired} appears to be lower than existing versions. Use a higher version.')
 
-        subprocess.run(['python3.11', '-m', 'build'], check=True)        
+        subprocess.run(['python3.11', '-m', 'build'], check=True, capture_output=True, text=True)        
 
         VERSION_FILE.write_text(desired + '\n')
         with HISTORY_FILE.open('a', encoding='utf-8') as f:
             f.write(desired + '\n')
+    except:
+        import traceback
+        traceback.print_exc()
     finally:
         os.chdir(current_dir)
+        
+    # workspace_directory=$(dirname "$(readlink -f "$0")")
+    # parent_directory=$(dirname "$workspace_directory")
+    # . "$parent_directory/util/bash-helper.sh"
+    # . "$parent_directory/teatype-venv/bin/activate"
+    # python3.11 -m twine upload -r test-pypi $parent_directory/py/dist/teatype*
+    # pypi-server run   -i 0.0.0.0   -p 8080   -P ./dist/pypi/htpasswd   -a update,download,list   ./dist/pypi/packages
+    # python3.11 -m pip install --index-url http://test:test@localhost:8080/simple --trusted-host localhost teatype
 
 if __name__ == '__main__':
     main()
