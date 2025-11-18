@@ -179,7 +179,7 @@ dist-ssr
 *~temp*
 
 # Distribution files
-build
+/build/
 *bundle/*
 bundle
 *dist/*
