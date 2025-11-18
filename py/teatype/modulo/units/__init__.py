@@ -11,3 +11,48 @@
 # all copies or substantial portions of the Software.
 
 # Local imports
+from .application import ApplicationUnit
+from .core import CoreUnit, parse_designation, print_designation
+from .backend import BackendUnit
+from .service import ServiceUnit
+from .workhorse import WorkhorseUnit
+
+if __name__ == '__main__':
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Teatype Modulo unit definitions.',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    # TODO: Add launch key, so that only Launchpad can execute this script
+    parser.add_argument('unit_type',
+                        type=str,
+                        choices=['backend', 'service', 'workhorse'],
+                        help='Type of the unit to launch')
+    parser.add_argument('unit_name',
+                        type=str,
+                        help='Name of the unit to launch')
+    parser.add_argument('--host',
+                        type=str,
+                        default=None,
+                        help='Host address for backend units')
+    parser.add_argument('--port',
+                        type=int,
+                        default=None,
+                        help='Port number for backend units')
+    
+    args = parser.parse_args()
+    unit_type = args.unit_type
+    unit_name = args.unit_name
+    
+    try:
+        from teatype.modulo.launchpad import LaunchPad
+        println()
+        unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
+        # Run unit directly (blocking mode)
+        unit.start()
+        unit.join()
+    except KeyboardInterrupt:
+        println()
+        hint('\nInterrupted. Shutting down gracefully...', use_prefix=False)
+    finally:
+        println()
