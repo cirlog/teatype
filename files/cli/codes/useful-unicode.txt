@@ -1,0 +1,17 @@
+©:00A9:copyright sign
+®:00AE:registered sign
+ඞ:0D9E:amogus
+•:2022:bullet
+™:2122:trademark sign
+←:2190:left arrow
+↑:2191:up arrow
+→:2192:right arrow
+↓:2193:down arrow
+⌫:232B:erase to the left (backspace)
+★:2605:black star
+☆:2606:white star
+☐:2610:ballot box
+☑:2611:ballot box with check
+☒:2612:ballot box with X
+✓:2713:check mark
+✗:2717:cross mark

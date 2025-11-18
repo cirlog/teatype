@@ -1,0 +1,63 @@
+100:Informational:Continue:Client should continue the request or ignore if finished.
+101:Informational:Switching Protocols:Server switches protocol per client's request.
+102:Informational:Processing:Request received, no status yet.
+103:Informational:Early Hints:Preload resources while the server prepares a response.
+200:Success:OK:The request succeeded, meaning varies by method.
+201:Success:Created:New resource created as a result of the request.
+202:Success:Accepted:Request received, but not yet processed.
+203:Success:Non-Authoritative Information:Response data is from a local or third-party copy.
+204:Success:No Content:No content to send, headers are updated.
+205:Success:Reset Content:Client should reset the document.
+206:Success:Partial Content:Responds with a part of the resource.
+207:Success:Multi-Status:Information about multiple resources.
+208:Success:Already Reported:Avoids duplicate listing of resources.
+226:Success:IM Used:Represents the result of instance manipulations.
+300:Redirection:Multiple Choices:More than one possible response, user agent chooses.
+301:Redirection:Moved Permanently:Resource permanently moved to a new URL.
+302:Redirection:Found:Resource temporarily moved, same URI for future requests.
+303:Redirection:See Other:Redirects to another URI using GET.
+304:Redirection:Not Modified:Resource not modified, use cached version.
+305:Redirection:Use Proxy:Deprecated; requires proxy for access.
+306:Redirection:unused:No longer used, reserved.
+307:Redirection:Temporary Redirect:Redirect to another URI with the same method.
+308:Redirection:Permanent Redirect:Resource permanently moved, same method used.
+400:Client Error:Bad Request:Server cannot process due to client error.
+401:Client Error:Unauthorized:Authentication required for the requested resource.
+402:Client Error:Payment Required:Reserved for digital payment systems, rarely used.
+403:Client Error:Forbidden:Client lacks permission to access the resource.
+404:Client Error:Not Found:Resource not found, may be hidden from unauthorized clients.
+405:Client Error:Method Not Allowed:Method not supported by the resource.
+406:Client Error:Not Acceptable:No suitable content found after content negotiation.
+407:Client Error:Proxy Authentication Required:Authentication required by a proxy.
+408:Client Error:Request Timeout:Server closes idle connection.
+409:Client Error:Conflict:Request conflicts with current server state.
+410:Client Error:Gone:Resource permanently deleted with no forwarding address.
+411:Client Error:Length Required:Content-Length header missing when required.
+412:Client Error:Precondition Failed:Preconditions in headers not met.
+413:Client Error:Content Too Large:Request body exceeds server's limits.
+414:Client Error:URI Too Long:URI requested is too long.
+415:Client Error:Unsupported Media Type:Media format is unsupported.
+416:Client Error:Range Not Satisfiable:Requested range cannot be fulfilled.
+417:Client Error:Expectation Failed:Expectation in request cannot be met.
+418:Client Error:I'm a teapot:Refuses to brew coffee with a teapot.
+421:Client Error:Misdirected Request:Request sent to the wrong server.
+422:Client Error:Unprocessable Content:Well-formed request but contains semantic errors.
+423:Client Error:Locked:Resource is locked.
+424:Client Error:Failed Dependency:Request failed due to previous failure.
+425:Client Error:Too Early:Server unwilling to risk processing a replayed request.
+426:Client Error:Upgrade Required:Client must upgrade protocol to proceed.
+428:Client Error:Precondition Required:Request must be conditional to prevent lost updates.
+429:Client Error:Too Many Requests:Rate limiting, too many requests sent.
+431:Client Error:Request Header Fields Too Large:Header fields too large to process.
+451:Client Error:Unavailable For Legal Reasons:Resource unavailable due to legal reasons.
+500:Server Error:Internal Server Error:Generic error, server can't handle request.
+501:Server Error:Not Implemented:Method not supported by the server.
+502:Server Error:Bad Gateway:Invalid response received while acting as a gateway.
+503:Server Error:Service Unavailable:Server temporarily unable to handle request.
+504:Server Error:Gateway Timeout:Timeout while waiting for a response as a gateway.
+505:Server Error:HTTP Version Not Supported:Requested HTTP version is unsupported.
+506:Server Error:Variant Also Negotiates:Internal error due to circular content negotiation.
+507:Server Error:Insufficient Storage:Server cannot store the needed representation.
+508:Server Error:Loop Detected:Infinite loop detected while processing the request.
+510:Server Error:Not Extended:Required HTTP extension not supported.
+511:Server Error:Network Authentication Required:Client must authenticate for network access.

@@ -12,19 +12,20 @@
 
 # Standard library imports
 import random
+from copy import deepcopy
 from functools import wraps
-from typing import Callable, Dict, Optional
+from inspect import iscoroutinefunction
+from typing import Any, Callable, Dict, Optional
 # Third-party imports
+from teatype.comms.http import TResponse
 from teatype.logging import *
+from teatype.io import probe
 
 try:
-    from teatype.io import probe
-    
     fastapi_support = probe.package('fastapi')
+    if fastapi_support:
+        from fastapi import Response
     
-    from fastapi import Request, Response
-    
-    # TODO: Generalize so that you don't need fastapi support
     # TODO: Change testmode to parameter that tells you what should happen instead of simple true/false
     class Deadpoint:
         _instance = None
@@ -33,10 +34,6 @@ try:
             """
             Ensures only one instance of the class exists.
             """
-            if not fastapi_support:
-                err('FastAPI not installed, skipping middleware registration.')
-                return
-            
             if not cls._instance:
                 cls._instance = super(Deadpoint, cls).__new__(cls, *args, **kwargs)
                 cls._instance.fail_conditions = []
@@ -44,7 +41,7 @@ try:
                 cls._instance.randomized_responses = {}
             return cls._instance
 
-        def add_fail_condition(self, condition:Callable[[Request],bool], response:dict) -> None:
+        def add_fail_condition(self, condition:Callable[[object],bool], response:dict) -> None:
             """
             Add a custom fail condition with a predefined response.
             """
@@ -62,7 +59,7 @@ try:
             """
             self.randomized_responses[path] = response_options
 
-        def check_fail_conditions(self, request:Request) -> Optional[dict]:
+        def check_fail_conditions(self, request) -> Optional[dict]:
             """
             Check if any fail conditions apply to the current request.
             """
@@ -79,7 +76,7 @@ try:
                 return random.choice(self.randomized_responses[path])
             return None
 
-        def simulate_endpoint(self, request:Request, path:str) -> dict:
+        def simulate_endpoint(self, request, path:str) -> dict:
             """
             Simulate the endpoint logic with fail conditions, predefined responses, and randomized responses.
             """
@@ -99,46 +96,74 @@ try:
 
             # Default response if nothing matches
             return {'message': f'Default response for {path}'}
-
-    # TODO: Unify with my web request function to avoid conflicts with requests package or make request compatible with requests
-    def deadpoint(response:Dict[str,any]=None, status:int=None):
-        """ 
-        A decorator that checks for 'testmode' query param and delegates 
-        the request to the EndpointSimulator with the specified response and status code.
+    
+    def deadpoint(response_data:Optional[Dict[str,Any]]=None,
+                  response_headers:Optional[Dict[str,str]]=None,
+                  response_status:Optional[int]=None,
+                  fast_api_response:bool=False):
         """
-        def decorator(callable:Callable):
-            @wraps(callable)
-            def wrapper(caller:object,
-                        initial_request:Request,
-                        initial_response:Response,
-                        *args,
-                        **kwargs):
-                try:
-                    # Access the 'testmode' query parameter directly from the request, so that it can
-                    # be omitted in the call signature of the route handler
+        Decorator that checks for 'testmode' query parameter and delegates
+        the request to the EndpointSimulator with the specified response and status code.
+        
+        Args:
+            response (Optional[Dict[str, Any]]): The predefined response to return in test mode.
+            status (Optional[int]): The HTTP status code to return in test mode.
+            
+        Returns:
+            Callable: The decorated function.
+        """
+        def decorator(function:Callable):
+            def _testmode_response():
+                pass
+            
+            if iscoroutinefunction(function):
+                @wraps(function)
+                async def async_wrapper(
+                    caller:object,
+                    initial_request,
+                    initial_response,
+                    *args,
+                    **kwargs
+                ):
                     testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
-                    
-                    # Check if testmode is enabled in the query parameters
                     if testmode:
-                        if response is None:
-                            # Delegate the request to the singleton instance of the endpoint simulator
-                            response['content'] = Deadpoint().simulate_endpoint(initial_request, initial_request.url.path)
-                        else:
-                            response['content'] = response
-                        # Set the response status code
-                        response['status_code'] = status
-                        # Modify the response body
-                        if 'headers' not in response:
-                            response['headers'] = {}
-                        response['headers']['Content-Type'] = 'application/json'
-                        return response
-                    # If not testmode, proceed with the actual callable
-                    # Ensure to pass all necessary arguments (request, response)
-                    return callable(caller, initial_request, initial_response, *args, **kwargs)
-                except:
-                    import traceback
-                    traceback.print_exc()
-            return wrapper
+                        payload = {
+                            'content': deepcopy(response_data) if response_data is not None else Deadpoint().simulate_endpoint(initial_request, initial_request.url.path),
+                            'headers': deepcopy(response_headers) if response_headers is not None else {},
+                            'status_code': response_status if response_status is not None else 200
+                        }
+                        payload['headers'].setdefault('Content-Type', 'application/json')
+                        tresponse = TResponse(**payload)
+                        if fast_api_response and fastapi_support:
+                            return tresponse.fastapi
+                        return tresponse
+                    # real call (async)
+                    return await function(caller, initial_request, initial_response, *args, **kwargs)
+                return async_wrapper
+            else:
+                @wraps(function)
+                def sync_wrapper(
+                    caller:object,
+                    initial_request,
+                    initial_response,
+                    *args,
+                    **kwargs
+                ):
+                    testmode = initial_request.query_params.get('testmode', 'false').lower() == 'true'
+                    if testmode:
+                        payload = {
+                            'content': deepcopy(response_data) if response_data is not None else Deadpoint().simulate_endpoint(initial_request, initial_request.url.path),
+                            'headers': deepcopy(response_headers) if response_headers is not None else {},
+                            'status_code': response_status if response_status is not None else 200
+                        }
+                        payload['headers'].setdefault('Content-Type', 'application/json')
+                        tresponse = TResponse(**payload)
+                        if fast_api_response and fastapi_support:
+                            return tresponse.fastapi
+                        return tresponse
+                    # real call (sync)
+                    return function(caller, initial_request, initial_response, *args, **kwargs)
+                return sync_wrapper
         return decorator
 except ImportError:
     fastapi_support = None

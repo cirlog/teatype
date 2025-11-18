@@ -21,9 +21,6 @@ def ip(ip: str) -> bool:
 def port(port: int) -> bool:
     pass
 
-def package() -> None:
-    pass
-
 def package(package_name:str, silent:bool=True) -> bool:
     try:
         importlib.import_module(package_name)
