@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools==80.9.0", "twine==6.1.0", "wheel==0.45.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teatype"
+version = "0.1.0" # maintained by your release script or manually
+description = "Useful utility classes & more (there isn't more). TypeScript and Python support."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "arsonite", email = "notarson@gmail.com" }
+]
+license = { file = "LICENSE" }
+urls = { Homepage = "https://github.com/arsonite/teatype" }
+dependencies = [
+    "aiohappyeyeballs==2.6.1",
+    "aiohttp==3.12.15",
+    "aiosignal==1.4.0",
+    "attrs==25.3.0",
+    "certifi==2025.7.14",
+    "celery==5.5.3",
+    "cffi==1.17.1",
+    "charset-normalizer==3.4.2",
+    "coverage==7.10.1",
+    "cryptography==45.0.5",
+    "docutils==0.22",
+    "execnet==2.1.1",
+    "frozenlist==1.7.0",
+    "id==1.5.0",
+    "idna==3.10",
+    "iniconfig==2.1.0",
+    "jaraco.classes==3.4.0",
+    "jaraco.context==6.0.1",
+    "jaraco.functools==4.2.1",
+    "jeepney==0.9.0",
+    "keyring==25.6.0",
+    "markdown-it-py==3.0.0",
+    "mdurl==0.1.2",
+    "more-itertools==10.7.0",
+    "multidict==6.6.3",
+    "nh3==0.3.0",
+    "orjson==3.10.18",
+    "packaging==25.0",
+    "pandas==2.3.0",
+    "pip==24.3.1",
+    "pluggy==1.6.0",
+    "prompt_toolkit==3.0.52",
+    "propcache==0.3.2",
+    "psutil==7.0.0",
+    "pycparser==2.22",
+    "Pygments==2.19.2",
+    "Pympler==1.1",
+    "pyperclip==1.9.0",
+    "pysimdjson==7.0.1",
+    "readme_renderer==44.0",
+    "redis==5.2.1",
+    "requests==2.32.4",
+    "requests-toolbelt==1.0.0",
+    "rfc3986==2.0.0",
+    "rich==14.1.0",
+    "SecretStorage==3.3.3",
+    "termcolor==3.1.0",
+    "tqdm==4.67.1",
+    "urllib3==2.5.0",
+    "yarl==1.20.1",
+
+    "setuptools==80.9.0",
+    "twine==6.1.0",
+    "wheel==0.45.1",
+
+    "pytest==8.4.1",
+    "pytest-asyncio==1.1.0",
+    "pytest-cov==6.2.1",
+    "pytest-sugar==1.0.0",
+    "pytest-timeout==2.4.0",
+    "pytest-xdist==3.8.0"
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "License :: MIT License",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["teatype*"]
+exclude = ["tests", "requirements"]
