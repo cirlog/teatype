@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python3.11
 
 # Copyright (C) 2024-2025 Burak Günaydin
 #
@@ -12,9 +12,101 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-set -e
+# Standard library imports
+import os
+import subprocess
+from pathlib import Path
+from packaging import version
 
-sudo -v >/dev/null 2>&1
+PACKAGE_NAME = 'teatype'
+PARENT_PATH = Path(__file__).parent.parent
+PACKAGE_PATH = PARENT_PATH / 'py'
+FILES_PATH = PARENT_PATH / 'files' / 'build' / 'py'
+VERSION_FILE = FILES_PATH / 'version.txt'
+HISTORY_FILE = FILES_PATH / 'version_history.txt'
 
-python setup.py bdist_wheel --llm
-pip install dist/teatype-llm-0.0.1-py3-none-any.whl
+def get_pypi_versions():
+    try:
+        result = subprocess.run(
+            ['python3.11', '-m', 'pip', 'index', 'versions', PACKAGE_NAME],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except Exception:
+        return set()
+
+    lines = result.stdout.splitlines()
+    versions = set()
+    for line in lines:
+        if "Available versions:" in line:
+            # crude parse: "Available versions: 2025.1.0.3, 2025.1.0.2, ..."
+            part = line.split("Available versions:")[-1]
+            for v in part.split(","):
+                v = v.strip()
+                if v:
+                    versions.add(v)
+    return versions
+
+def load_local_history():
+    versions = set()
+    if HISTORY_FILE.exists():
+        for line in HISTORY_FILE.read_text().splitlines():
+            v = line.strip()
+            if v:
+                versions.add(v)
+    if VERSION_FILE.exists():
+        versions.add(VERSION_FILE.read_text().strip())
+    return versions
+
+def main():
+    current_dir = os.getcwd()
+    
+    try:
+        os.chdir(PACKAGE_PATH)
+        
+        existing_local = load_local_history()
+        existing_remote = get_pypi_versions()
+        forbidden = existing_local | existing_remote
+
+        print(f'Known versions: {sorted(forbidden)}')
+        desired = input('Enter new version: ').strip()
+
+        if desired in forbidden:
+            raise SystemExit(f'ERROR: version {desired} already exists. Pick another.')
+
+        # Check if new version is lower than any existing version
+        try:
+            desired_ver = version.parse(desired)
+            for existing in forbidden:
+                try:
+                    if desired_ver < version.parse(existing):
+                        raise SystemExit(f'ERROR: version {desired} is lower than existing version {existing}. Use a higher version.')
+                except Exception:
+                    pass  # Skip invalid version formats
+        except ImportError:
+            # Fallback: simple string comparison if packaging is not available
+            if forbidden and desired < max(forbidden):
+                raise SystemExit(f'ERROR: version {desired} appears to be lower than existing versions. Use a higher version.')
+
+        subprocess.run(['python3.11', '-m', 'build'], check=True, capture_output=True, text=True)        
+
+        VERSION_FILE.write_text(desired + '\n')
+        with HISTORY_FILE.open('a', encoding='utf-8') as f:
+            f.write(desired + '\n')
+    except:
+        import traceback
+        traceback.print_exc()
+    finally:
+        os.chdir(current_dir)
+        
+    # workspace_directory=$(dirname "$(readlink -f "$0")")
+    # parent_directory=$(dirname "$workspace_directory")
+    # . "$parent_directory/util/bash-helper.sh"
+    # . "$parent_directory/teatype-venv/bin/activate"
+    # python3.11 -m twine upload -r test-pypi $parent_directory/py/dist/teatype*
+    # pypi-server run   -i 0.0.0.0   -p 8080   -P ./dist/pypi/htpasswd   -a update,download,list   ./dist/pypi/packages
+    # python3.11 -m pip install --index-url http://test:test@localhost:8080/simple --trusted-host localhost teatype
+
+if __name__ == '__main__':
+    main()

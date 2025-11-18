@@ -32,8 +32,8 @@ else
 fi
 
 cli_path="$grandparent_directory/cli"
-python_path="$grandparent_directory/python"
-typescript_path="$grandparent_directory/typescript"
+python_path="$grandparent_directory/py"
+typescript_path="$grandparent_directory/ts"
 
 write_env_variable "$env_path" "TEATYPE_CLI_PATH" "$cli_path" 
 write_env_variable "$env_path" "TEATYPE_PYTHON_PATH" "$python_path" 

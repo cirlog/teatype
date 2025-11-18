@@ -9,3 +9,7 @@
 # - Memory (short-term and long-term)
 # - Tool use (web search, calculator, etc)
 # - Agent capabilities (reasoning, planning, etc)
+
+class OpenGPT:
+    def __init__(self):
+        pass

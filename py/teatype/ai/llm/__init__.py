@@ -22,10 +22,10 @@ try:
     __GPU_SUPPORT__ = True
     
     __all__ = ['AnalyticalAI',
-            'ConversationalAI',
-            'Inferencer',
-            'load_model',
-            'PromptBuilder']
+               'ConversationalAI',
+               'Inferencer',
+               'load_model',
+               'PromptBuilder']
     
     # from .models.analytical import AnalyticalAI
     # from .models.conversational import ConversationalAI

@@ -35,7 +35,7 @@ sudo rm -rf "$grandparent_directory/teatype-venv" || true
 python3.11 -m venv $grandparent_directory/teatype-venv
 . $grandparent_directory/teatype-venv/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
 
-python_directory="$grandparent_directory/python"
+python_directory="$grandparent_directory/py"
 python3.11 -m pip install --upgrade pip
 python3.11 -m pip install -e "$python_directory" --
 python3.11 -m pip install -r "$python_directory/requirements/base.txt"

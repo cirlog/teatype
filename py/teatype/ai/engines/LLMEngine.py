@@ -23,8 +23,7 @@ class LLMEngine(BaseAIEngine):
     
     @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
-        if dispatch.command == 'load-model':
-            print(dispatch)
+        print(dispatch)
 
 if __name__ == '__main__':
     try:
