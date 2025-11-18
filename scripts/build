@@ -12,15 +12,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard library imports
 import os
 import subprocess
-
-# From system imports
 from pathlib import Path
 from packaging import version
 
-PACKAGE_NAME = 'CirlogToolkit'
+PACKAGE_NAME = 'teatype'
 PARENT_PATH = Path(__file__).parent.parent
 FILES_PATH = PARENT_PATH / 'files'
 VERSION_FILE = FILES_PATH / 'VERSION.txt'
