@@ -10,14 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 import threading
 from multiprocessing import Queue
 from typing import List
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.hsdb import IndexDatabase, RawFileHandler
-from teatype.hsdb.util import parse_fixtures, parse_index_files
+from teatypedb.hsdb.util import parse_fixtures, parse_index_files
 from teatype.io import env
 from teatype.logging import *
 from teatype.toolkit import SingletonMeta

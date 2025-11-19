@@ -14,8 +14,8 @@
 from teatype.hsdb import HybridStorage
 from teatype.modulo.units.application import ApplicationUnit
 
-class HSDB(ApplicationUnit):
-    def __init__(self) -> None:
+class HybridStorageDB(ApplicationUnit):
+    def __init__(self, cold_mode:bool) -> None:
         super().__init__()
         
-        self.hybrid_storage = HybridStorage()
+        self.hybrid_storage = HybridStorage(cold_mode=cold_mode)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.11
-
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,18 +10,5 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Third-party imports
-from teatype.cli import MainCLI
-from teatype.enum import EscapeColor
-from teatype.io import path
-
-class TeaTypeCLI(MainCLI):
-    def meta(self):
-        return {
-            'name': 'teatype-cli',
-            'shorthand': 'tt',
-            'help': f'{EscapeColor.GRAY}TeaType CLI - Command Line Interface for the TeaType package\n (c) 2024-2026 @arsonite\n{EscapeColor.RESET}',
-        }
-
-if __name__ == '__main__':
-    TeaTypeCLI(auto_parse=False, auto_validate=False, parent_path=path.caller_parent(reverse_depth=2))
+# Local imports
+from .hsdb import *

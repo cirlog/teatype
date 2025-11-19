@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
@@ -93,6 +93,21 @@ def merge(dict1, dict2):
             dict1[key] = value
     # Return the updated dict1
     return dict1
+
+def to_object(d:Dict[str,Any]) -> object:
+    """
+    Convert a nested dict to an object with attribute-style access (recursively).
+    """
+    class _DictObject:
+        def __init__(self, data: Dict[str, Any]):
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    setattr(self, key, to_object(value))
+                else:
+                    setattr(self, key, value)
+        def __repr__(self):
+            return f'DictObject({self.__dict__})'
+    return _DictObject(d)
 
 def _autonest() -> defaultdict:
     return defaultdict(_autonest)

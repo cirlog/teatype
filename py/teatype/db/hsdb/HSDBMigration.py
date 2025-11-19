@@ -10,14 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 import json
 import re
 from abc import ABC, abstractmethod
 from typing import List
 from datetime import datetime as dt
 # Third-party imports
-from teatype.hsdb.util import parse_index_files
+from teatypedb.hsdb.util import parse_index_files
 from teatype.io import file, path
 from teatype.logging import *
 

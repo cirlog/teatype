@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 import time
 from enum import Enum
 from typing import Callable, Dict, List, Optional, Union

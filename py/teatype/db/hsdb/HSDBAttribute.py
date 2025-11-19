@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 import sys
 from typing import Generic, Type, TypeVar
 # Third-party imports
-from teatype.hsdb.HSDBField import HSDBField
+from teatypedb.hsdb.HSDBField import HSDBField
 from teatype.toolkit import dt
 
 # Supported attribute types

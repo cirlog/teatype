@@ -10,13 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 import json
 from typing import List
 # Third-party imports
 from pympler import asizeof
 from teatype.enum import EscapeColor
-from teatype.hsdb.indices import Index, RelationalIndex
+from teatypedb.hsdb.indices import Index, RelationalIndex
 from teatype.logging import *
 
 class _MemoryFootprint:

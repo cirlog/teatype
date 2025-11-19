@@ -10,11 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 from typing import TypeVar
 # Third-party imports
-from teatype.hsdb.HSDBAttribute import HSDBAttribute as HSDBAttributeClass
-from teatype.hsdb.HSDBField import HSDBField as HSDBFieldClass
+from teatypedb.hsdb.HSDBAttribute import HSDBAttribute as HSDBAttributeClass
+from teatypedb.hsdb.HSDBField import HSDBField as HSDBFieldClass
 
 HSDBAttribute = TypeVar(HSDBAttributeClass)
 HSDBField = TypeVar(HSDBFieldClass)
