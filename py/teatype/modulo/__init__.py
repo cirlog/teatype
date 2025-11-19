@@ -11,7 +11,11 @@
 # all copies or substantial portions of the Software.
 
 # Local imports
-from .base_units import ApplicationUnit, BackendUnit, CoreUnit, ServiceUnit, WorkhorseUnit, parse_designation, print_designation
 from .launchpad import LaunchPad
 from .operations import Operations
 from .operations import Operations as ModuloOperations
+from .units.application import ApplicationUnit
+from .units.backend import BackendUnit
+from .units.core import CoreUnit, parse_designation, print_designation
+from .units.service import ServiceUnit
+from .units.workhorse import WorkhorseUnit

@@ -7,7 +7,7 @@ name = "teatype"
 version = "0.1.0" # maintained by your release script or manually
 description = "Useful utility classes & more (there isn't more). TypeScript and Python support."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10.2"
 authors = [
   { name = "arsonite", email = "notarson@gmail.com" }
 ]

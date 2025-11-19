@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+set -e
+
+workspace_directory=$(dirname "$(readlink -f "$0")")
+parent_directory=$(dirname "$workspace_directory")
+grandparent_directory=$(dirname "$parent_directory")
+. "$grandparent_directory/util/bash-helper.sh"
+. "$grandparent_directory/teatype-venv/bin/activate"
+
+pypirc_path="$HOME/.pypirc"
+
+if [ ! -f "$pypirc_path" ]; then
+    echo "Creating $pypirc_path..."
+    
+    prompt server "Enter PyPI server name"
+    prompt host "Enter PyPI server host"
+    prompt port "Enter PyPI server port"
+    prompt user "Enter PyPI username"
+    prompt pass "Enter PyPI password/token"
+    
+    cat > "$pypirc_path" << EOF
+[distutils]
+index-servers =
+    $server
+
+[$server]
+repository = http://$host:$port
+username = $user
+password = $pass
+EOF
+    chmod 600 "$pypirc_path"
+    echo "Created $pypirc_path"
+fi
+
+# 1. Use sed to extract the line that contains the server name.
+# 2. Use tr to delete ALL whitespace characters (spaces, tabs, newlines, etc.).
+# 3. The result is just the server name with no surrounding characters.
+server_name=$(
+    sed -n '/^\[distutils\]/,/^\[.*\]/ {
+        /^\s*index-servers\s*=/ {
+            # Print the next line (N) and then substitute everything up to the next bracket [
+            N
+            s/.*index-servers\s*=\n\s*//p
+            q
+        }
+    }' "$pypirc_path" | tr -d '[:space:]'
+)
+# --- Execution Block ---
+if [ -n "$server_name" ]; then
+    echo "✅ Found server name: **$server_name**"
+    echo "Running twine upload..."
+    # Ensure $grandparent_directory is defined elsewhere in your script!
+    python3.11 -m twine upload -r "$server_name" "$grandparent_directory"/py/dist/teatype*
+else
+    echo "❌ Error: Could not read 'index-servers' value from [distutils] section."
+    echo "Please confirm your file format and path ($CONFIG_FILE) is correct."
+    exit 1
+fi

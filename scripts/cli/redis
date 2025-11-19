@@ -51,9 +51,8 @@ class Redis(BaseCLI):
         }
     
     def install(self, parent_directory:str) -> bool:
-        # Determine the script's parent directory
-        redis_installed_flag_path = path.join(parent_directory, 'dist', 'redis-installed.txt')
-        if file.exists(redis_installed_flag_path):
+        redis_installed = shell('which redis-server', mute=True)
+        if redis_installed == 0:
             return
         
         install_redis = prompt('Redis server is not installed. Proceed with installation?',

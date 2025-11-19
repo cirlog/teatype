@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (C) 2024-2025 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -10,14 +12,17 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
-from teatype.modulo import ServiceUnit
+set -e
 
-# TODO: on first import, deploys, installs and launches the engine in the background (launches itself somehow)
-#       then, on subsequent imports, connects to the already running engine instance
-#       and provides a client interface to interact with it
-#       this way, the engine is only started once and can be reused across multiple scripts or sessions
-#       communicate via redis messages
-class BaseAIEngine(ServiceUnit):
-    def __init__(self):
-        super().__init__(name='ai-engine')
+workspace_directory=$(dirname "$(readlink -f "$0")")
+parent_directory=$(dirname "$workspace_directory")
+grandparent_directory=$(dirname "$parent_directory")
+. "$grandparent_directory/util/bash-helper.sh"
+. "$grandparent_directory/teatype-venv/bin/activate"
+
+prompt user "Enter PyPI username"
+prompt pass "Enter PyPI password/token"
+prompt host "Enter PyPI host"
+prompt port "Enter PyPI port"
+
+python3.11 -m pip install --index-url http://$user:$pass@$host:$port/simple --trusted-host $host teatype
