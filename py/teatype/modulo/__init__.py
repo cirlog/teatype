@@ -15,7 +15,7 @@ from .launchpad import LaunchPad
 from .operations import Operations
 from .operations import Operations as ModuloOperations
 from .units.application import ApplicationUnit
-from .units.core import CoreUnit, parse_designation, print_designation
 from .units.backend import BackendUnit
+from .units.core import CoreUnit, parse_designation, print_designation
 from .units.service import ServiceUnit
 from .units.workhorse import WorkhorseUnit

@@ -4,10 +4,10 @@
 <br />
 <div align="center">
   <a href="https://github.com/arsonite/teatype">
-    <img src="https://avatars.githubusercontent.com/u/177637833?s=200&v=4" alt="teatype icon" width="80" height="80">
+    <img src="./files/media/teatype-logo-color.svg" alt="teatype icon" width="80" height="80">
   </a>
 
-<h3 align="center">teatype</i></h3>
+<h3 align="center"><b>teatype</b></h3>
 
   <p align="center">
     Useful utility classes & more <i>(there isn't more)</i>. TypeScript and Python support.
@@ -21,6 +21,7 @@
 <!-- TABLE OF CONTENTS -->
 <summary>Table of Contents</summary>
 <ol>
+  <li><a href="#high-priority-to-dos">High-Priority TO-DOs</a></li>
   <li><a href="#contributing">Contributing</a></li>
   <li><a href="#license">License</a></li>
   <li><a href="#contact">Contact</a></li>
@@ -32,6 +33,15 @@
 
 -   [![Python][Python]][Python-url]
 -   [![TypeScript][TypeScript]][TypeScript-url]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- PRIORITY TO-DO -->
+
+## High-Priority TO-DOs
+
+<li>Use 1 global dist folder</li>
+<li>Customize build path for python wheels</li>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

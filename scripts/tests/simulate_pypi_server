@@ -12,7 +12,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.import os
 
-# Standard library imports
+# Standard-library imports
 import subprocess
 import sys
 from pathlib import Path

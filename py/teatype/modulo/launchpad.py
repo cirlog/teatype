@@ -10,13 +10,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 import sys
 import inspect
 from typing import Literal
 # Local imports
 from teatype.io import path, shell
-from teatype.modulo import *
+from teatype.logging import *
+from teatype.modulo.units import *
 from teatype.toolkit import dt
 
 class LaunchPad:

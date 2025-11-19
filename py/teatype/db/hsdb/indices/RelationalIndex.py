@@ -10,12 +10,12 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard library imports
+# Standard-library imports
 from typing import List
 # Third-party imports
 from teatype.hsdb import HSDBField
-from teatype.hsdb.indices import Index
-from teatype.hsdb.util import transmute_id
+from teatypedb.hsdb.indices import Index
+from teatypedb.hsdb.util import transmute_id
 
 """
 Following structure for different relation types:
