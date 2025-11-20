@@ -16,7 +16,7 @@ import pprint
 from abc import ABC
 from typing import List
 # Third-party imports
-from teatype.hsdb import HSDBAttribute, HSDBField, HSDBMeta, HSDBQuery, HSDBRelation
+from teatype.db.hsdb import HSDBAttribute, HSDBField, HSDBMeta, HSDBQuery, HSDBRelation
 from teatype.toolkit import dt, staticproperty
 from teatype.toolkit import generate_id, kebabify
 

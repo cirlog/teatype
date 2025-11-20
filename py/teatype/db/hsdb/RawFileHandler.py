@@ -12,7 +12,7 @@
 
 # Third-party imports
 from teatype.io import env, file, path
-from teatype.hsdb import RawFileStructure
+from teatype.db.hsdb import RawFileStructure
 
 class RawFileHandler:
     _raw_file_structure:RawFileStructure

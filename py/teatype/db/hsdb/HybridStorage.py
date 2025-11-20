@@ -16,8 +16,8 @@ from multiprocessing import Queue
 from typing import List
 # Third-party imports
 from teatype.enum import EscapeColor
-from teatype.hsdb import IndexDatabase, RawFileHandler
-from teatypedb.hsdb.util import parse_fixtures, parse_index_files
+from teatype.db.hsdb import IndexDatabase, RawFileHandler
+from teatype.db.hsdb.util import parse_fixtures, parse_index_files
 from teatype.io import env
 from teatype.logging import *
 from teatype.toolkit import SingletonMeta

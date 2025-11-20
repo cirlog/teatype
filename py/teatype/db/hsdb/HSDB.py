@@ -11,7 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
-from teatype.hsdb import HybridStorage
+from teatype.db.hsdb import HybridStorage
 from teatype.modulo.units.application import ApplicationUnit
 
 class HybridStorageDB(ApplicationUnit):
