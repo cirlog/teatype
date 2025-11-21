@@ -14,7 +14,7 @@
 from abc import ABC
 from typing import Generic, List, Type, TypeVar
 # Third-party imports
-from teatype.hsdb import HSDBField, HSDBQuery, HybridStorage
+from teatype.db.hsdb import HSDBField, HSDBQuery, HybridStorage
 from teatype.toolkit import generate_id, kebabify
 
 _AVAILABLE_FUNCTIONS = [

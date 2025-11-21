@@ -275,12 +275,13 @@ class Aliases(BaseCLI):
         """
         bashrc_path = os.path.expanduser('~/.bashrc') # Expand the user's home directory and get the .bashrc path
 
+        parent_directory = path.caller_parent(reverse_depth=2)
         # Read the CLI configuration file to obtain backup settings
-        aliases_config = file.read(path.join(path.caller_parent(reverse_depth=2), 'config', 'aliases.ini'))
+        aliases_config = file.read(path.join(parent_directory, 'config', 'cli', 'aliases.ini'))
         bashrc_max_backups = int(aliases_config.get('BACKUP', 'bashrc_max_backups')) # Maximum number of backups to keep
         keep_original_bashrc_backup = aliases_config.get('BACKUP', 'keep_original_bashrc_backup') # Flag to keep the original .bashrc backup
 
-        dist_directory = path.join(path.caller_parent(reverse_depth=2), 'dist') # Path to the distribution directory for backups
+        dist_directory = path.join(parent_directory, 'dist') # Path to the distribution directory for backups
         os.makedirs(dist_directory, exist_ok=True) # Create the dist directory if it doesn't exist
 
         if keep_original_bashrc_backup:
@@ -290,7 +291,7 @@ class Aliases(BaseCLI):
                     file.copy(bashrc_path, original_backup_path) # Create a backup of the original .bashrc
                     log(f'Created backup of original .bashrc at {original_backup_path}.') # Log successful backup creation
                 except Exception as e:
-                    err(f"Failed to create backup of original .bashrc: {e}", exit=True, pad_after=1, traceback=True) # Handle copy failure
+                    err(f'Failed to create backup of original .bashrc: {e}', exit=True, pad_after=1, traceback=True) # Handle copy failure
 
         # Define the pattern to identify existing backup files
         backup_pattern = path.join(dist_directory, 'bashrc.bak.*') # Pattern to match backup files like bashrc.bak.1, bashrc.bak.2, etc.
@@ -330,12 +331,13 @@ class Aliases(BaseCLI):
         """
         command = self.get_command() # Retrieve the user command
         
-        TEATYPE_CLI_PATH = env.get('TEATYPE_CLI_PATH', None)
-        if TEATYPE_CLI_PATH is None:
-            err('Environment variable TEATYPE_CLI_PATH is not set. Please inject env variables with `tt env inject` first.',
+        TEATYPE_WORKSPACE_PATH = env.get('TEATYPE_WORKSPACE_PATH', None)
+        if TEATYPE_WORKSPACE_PATH is None:
+            err('Environment variable TEATYPE_WORKSPACE_PATH is not set. Please inject env variables with `tt env inject` first.',
                 exit=True)
 
-        aliases_path_default = path.join(TEATYPE_CLI_PATH, 'files', 'aliases') # Default aliases path
+        aliases_path_default = path.join(TEATYPE_WORKSPACE_PATH, 'files', 'cli', 'aliases') # Default aliases path
+        print(aliases_path_default)
 
         try:
             self.create_bashrc_backup() # Create a backup of the user's .bashrc file

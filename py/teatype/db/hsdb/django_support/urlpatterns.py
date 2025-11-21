@@ -17,7 +17,7 @@ import pkgutil
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 # Local imports
-from teatypedb.hsdb.django_support.views import HSDBDjangoCollection, HSDBDjangoResource, HSDBDjangoView
+from teatype.db.hsdb.django_support.views import HSDBDjangoCollection, HSDBDjangoResource, HSDBDjangoView
 
 # TODO: Create a seperate base class without hsdb support
 def parse_dynamic_routes(app_name:str, search_path:str, verbose:bool=False):

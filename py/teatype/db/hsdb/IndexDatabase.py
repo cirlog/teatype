@@ -16,7 +16,7 @@ from typing import List
 # Third-party imports
 from pympler import asizeof
 from teatype.enum import EscapeColor
-from teatypedb.hsdb.indices import Index, RelationalIndex
+from teatype.db.hsdb.indices import Index, RelationalIndex
 from teatype.logging import *
 
 class _MemoryFootprint:
