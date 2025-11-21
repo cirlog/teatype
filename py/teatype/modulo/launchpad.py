@@ -39,7 +39,8 @@ class LaunchPad:
                unit_type:Literal['backend','service','workhorse']|type,
                unit_name:str=None,
                host:str|None=None,
-               port:int|None=None) -> BackendUnit|ServiceUnit|WorkhorseUnit:
+               port:int|None=None,
+               **kwargs) -> BackendUnit|ServiceUnit|WorkhorseUnit:
         """
         Launch a Teatype Modulo unit.
         
@@ -57,11 +58,11 @@ class LaunchPad:
                 if host is None or port is None:
                     raise err('Host and port must be specified for backend units.',
                             raise_exception=ValueError)
-                unit = BackendUnit.create(name=unit_name, host=host, port=port)
+                unit = BackendUnit.create(name=unit_name, host=host, port=port, **kwargs)
             elif unit_type == 'service':
-                unit = ServiceUnit.create(name=unit_name)
+                unit = ServiceUnit.create(name=unit_name, **kwargs)
             elif unit_type == 'workhorse':
-                unit = WorkhorseUnit.create(name=unit_name)
+                unit = WorkhorseUnit.create(name=unit_name, **kwargs)
             else:
                 raise err(f'Invalid unit type: {unit_type}',
                         raise_exception=ValueError)
@@ -69,7 +70,9 @@ class LaunchPad:
             if unit_name is None:
                 unit = unit_type.create()
             else:
-                unit = unit_type.create(name=unit_name)
+                # TODO: Build in check, that verifies its a subclass of CoreUnit
+                unit = unit_type(unit_name, **kwargs)
+                unit = unit_type.create(name=unit_name, **kwargs)
         return unit
     
     @classmethod

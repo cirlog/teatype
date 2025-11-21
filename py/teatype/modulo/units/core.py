@@ -87,7 +87,7 @@ class CoreUnit(threading.Thread):
         super().__init__()
         
         self.name = name
-        self.type = kebabify(self.__class__.__name__.replace('Unit', ''), preserve_capitals=True)
+        self.type = kebabify(self.__class__.__name__.replace('Unit', ''))
         self._verbose_logging = verbose_logging
         
         self.id = generate_id(truncate=16)

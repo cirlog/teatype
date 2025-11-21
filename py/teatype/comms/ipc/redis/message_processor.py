@@ -76,6 +76,7 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                         listen_channels=listen_channels,
                     )
                     if ok:
+                        log(f'Autowired redis handler "{name}" for message class "{message_class.__name__}"')
                         registered += 1
                 log(f'Autowired {registered} redis handler(s) from owner {owner.__class__.__name__}')
             except Exception:
@@ -185,7 +186,8 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
         Main message processing loop.
         """
         self._is_active = True
-        log('Message processor started')
+        if self.verbose_logging:
+            log('Message processor started')
         try:
             for message in self._pubsub_instance.listen():
                 if self._shutdown_event.is_set():
@@ -205,6 +207,7 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
             warn('Message processor stopped')
             self._is_active = False
 
+# TODO: Convert a duplicate key that uses '-' instead of '_' so have options
 def dispatch_handler(function:callable):
     """
     Marks an instance method as a dispatch handler.

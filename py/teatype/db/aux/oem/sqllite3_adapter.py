@@ -48,10 +48,10 @@ class AuxilliarySQLite3Adapter(BaseAuxilliaryAdapter):
             self.cursor = self.db_connection.cursor()
             
              # Performance PRAGMAs for read-heavy queries
-            self.db_connection.execute("PRAGMA journal_mode = OFF;")
-            self.db_connection.execute("PRAGMA synchronous = OFF;")
-            self.db_connection.execute("PRAGMA temp_store = MEMORY;")
-            self.db_connection.execute("PRAGMA mmap_size = 268435456;")  # 256MB memory map
+            self.db_connection.execute('PRAGMA journal_mode = OFF;')
+            self.db_connection.execute('PRAGMA synchronous = OFF;')
+            self.db_connection.execute('PRAGMA temp_store = MEMORY;')
+            self.db_connection.execute('PRAGMA mmap_size = 268435456;')  # 256MB memory map
             
             success(f'Successfully connected to the database at "{database_path}".')
         except sqlite3.Error as e:

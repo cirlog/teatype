@@ -181,3 +181,53 @@ class Inferencer():
     
     def on_init(self):
         pass
+    
+if __name__ == '__main__':
+        from teatype.io import prompt
+        
+        verbose = True
+        
+        parent_directory = path.caller_parent(reverse_depth=2)
+        cli_directory = path.join(parent_directory, 'cli')
+        cli_dist_directory = path.join(cli_directory, 'dist')
+        model_directory = path.join(cli_dist_directory, 'llm-models')
+        conversational_model_directory = path.join(model_directory, 'conversational')
+        if not path.exists(conversational_model_directory):
+            warn(f'Conversational model directory not found at {conversational_model_directory}. Creating it. Please re-run this script after placing your model there.',
+                 use_prefix=False)
+            path.create(conversational_model_directory)
+            println()
+            exit(1)
+
+        stream = True
+        
+        default_model_file_path = path.join(conversational_model_directory, 'default-model.txt')
+        if not file.exists(default_model_file_path):
+            file.write(default_model_file_path, '')
+        
+        default_model = file.read(default_model_file_path).strip()
+        if default_model == '' or default_model is None:
+            hint('No default model set. Select one of these available local models:',
+                 use_prefix=False)
+            available_local_models = [f.name.split('.gguf')[0] for f in file.list(conversational_model_directory, only_include='.gguf')]
+            prompt_options = {str(i+1): model_name for i, model_name in enumerate(available_local_models)}
+            for available_model_index, available_model_name in prompt_options.items():
+                model_file_path = path.join(conversational_model_directory, f'{available_model_name}.gguf')
+                file_size = file.size(model_file_path, human_readable=True)
+                log(f'  [{available_model_index}] {available_model_name} ({file_size})')
+            selection = prompt('Please enter the number corresponding to your choice:',
+                               options=prompt_options,
+                               return_bool=False)
+            default_model = available_local_models[int(selection)-1]
+            file.write(default_model_file_path, default_model)
+        
+        default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
+        
+        user_prompt = prompt('Enter your prompt:', return_bool=False)
+        
+        from teatype.ai.llm import Inferencer
+        llm = Inferencer(model=default_model,
+                         model_directory=conversational_model_directory)
+        response = llm(user_prompt=user_prompt,
+                       stream_response=stream)
+        println()

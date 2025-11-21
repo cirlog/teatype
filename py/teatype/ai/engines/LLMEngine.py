@@ -17,12 +17,13 @@ from teatype.ai.engines.BaseAIEngine import BaseAIEngine
 class LLMEngine(BaseAIEngine):
     def __init__(self):
         super().__init__()
-        
-        self.redis_service.message_processor.register_handler(message_class=RedisDispatch,
-                                                              callable=self.load_model)
     
     @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
+        print(dispatch)
+        
+    @dispatch_handler
+    def prompt(self, dispatch:RedisDispatch) -> None:
         print(dispatch)
 
 if __name__ == '__main__':

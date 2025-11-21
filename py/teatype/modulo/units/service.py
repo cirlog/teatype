@@ -14,7 +14,6 @@
 from teatype.logging import *
 from teatype.comms.ipc.redis import *
 from teatype.modulo.units.core import CoreUnit
-from teatype.toolkit import generate_id, kebabify
 
 class ServiceUnit(CoreUnit):
     """
@@ -139,13 +138,30 @@ class ServiceUnit(CoreUnit):
                   value:any=None,
                   **kwargs) -> None:
         pass
-        
-    def dispatch(self, 
+            
+    def dispatch(self,
                  command:str,
                  receiver:str,
+                 is_async:bool=True,
                  payload:any=None,
+                 receiver_target:str=None,
                  **kwargs) -> None:
-        pass
+        """
+        Dispatch command to a Modulo unit.
+        
+        Args:
+            id (str): ID of the Modulo unit.
+            command (str): Command to dispatch.
+            is_async (bool): Whether to dispatch asynchronously.
+            payload (any): Additional payload data.
+        """
+        dispatch = RedisDispatch(RedisChannel.COMMANDS.value,
+                                 'modulo.operations.dispatch',
+                                 command,
+                                 receiver,
+                                 payload)
+        if is_async:
+            self.redis_service.send_message(dispatch)
         
     def updateStatus(self, new_status:str, broadcast:bool=True) -> None:
         """

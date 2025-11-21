@@ -61,14 +61,15 @@ class RedisServiceManager(RedisBaseInterface):
         # Start message processing
         self.message_processor.start()
         
-        success('Redis service manager initialized.')
+        if self.verbose_logging:
+            success('Redis service manager initialized.')
         
     def send_message(self,
                      message:object,
                      channel:Optional[str]=None,
                      is_async:bool=True,
                      timeout:float=10.0) -> dict|None:
-        self.pool.publish_message(message, channel)
+        self.pool.send_message(message, channel)
         if not is_async:
             message_id = message.id
             # Wait for response
