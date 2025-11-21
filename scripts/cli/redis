@@ -88,8 +88,6 @@ class Redis(BaseCLI):
         # Clean up temporary files and directories
         path.delete(work_directory)
 
-        file.write(redis_installed_flag_path, f'Installed successfully at {dt.now()}')
-        
     def is_running(self) -> tuple[bool, None|int]:
         found = False
         process_pid = None
