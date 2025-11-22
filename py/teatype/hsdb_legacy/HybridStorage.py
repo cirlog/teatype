@@ -55,8 +55,8 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             
             log('HybridStorage finished initialization')
     
-    @staticmethod
-    def instance():
+    @classmethod
+    def instance(cls):
         if not hasattr(HybridStorage, '__instance'):
             HybridStorage.__instance = HybridStorage(init=True)
         return HybridStorage.__instance

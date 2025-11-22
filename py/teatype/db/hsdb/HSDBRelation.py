@@ -114,8 +114,8 @@ class HSDBRelation(HSDBField, Generic[T]):
             self._wrapper = self._RelationWrapper(self._value, self, instance)
         return self._wrapper
     
-    @staticmethod
-    def _stitch_relation_name(primary_model, secondary_model, relation_type):
+    @classmethod
+    def _stitch_relation_name(cls, primary_model, secondary_model, relation_type):
         return f'{primary_model.__name__}_{relation_type}_{secondary_model.__name__}'
             
     def _validate_key(self, key:HSDBField) -> None:

@@ -127,19 +127,19 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
             
             # Parse JSON
             try:
-                message_data = json.loads(raw_message)
+                message = json.loads(raw_message)
             except json.JSONDecodeError:
                 err(f'JSON decode error', traceback=True)
                 return
             
             # Extract message type
-            message_type = message_data.get('type')
+            message_type = message.get('type')
             if not message_type:
                 err('Message missing "type" field')
                 return
             
-            message_data = self._preprocess_function(message_data) if self._preprocess_function else message_data
-            if message_data is None:
+            message = self._preprocess_function(message) if self._preprocess_function else message
+            if message is None:
                 return
             
             # Route to handler
@@ -151,7 +151,7 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                     return
                     
                 if message_type == 'dispatch':
-                    command = message_data.get('command', None)
+                    command = message.get('command', None)
                     print(command)
                     if command is None:
                         err('Dispatch message missing "command" field')
@@ -161,9 +161,9 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                         warn(f'No handler for dispatch command: {command}')
                         return
                     # Execute the matching handler
-                    matching_handlers[0]['callable'](message_data)
+                    matching_handlers[0]['callable'](message)
                 else:
-                    channel = message_data.get('channel', None)
+                    channel = message.get('channel', None)
                     # Execute handlers
                     for handler in handlers:
                         # Channel filtering
@@ -171,7 +171,7 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                             if channel not in handler['listen_channels']:
                                 continue
             
-                        handler['callable'](message_data)
+                        handler['callable'](message)
         except Exception as exc:
             err(f'Message dispatch error', traceback=True)
     
@@ -214,8 +214,8 @@ def dispatch_handler(function:callable):
     The processor will discover and register it via .autowire(owner).
     Ensures the decorated function has the signature (self, dispatch:object).
     """
-    sig = inspect.signature(function)
-    params = list(sig.parameters.values())
+    signature = inspect.signature(function)
+    params = list(signature.parameters.values())
     if len(params) != 2 or params[0].name != 'self' or params[1].name != 'dispatch':
         raise TypeError(
             f"@dispatch_handler-decorated function '{function.__qualname__}' must have signature (self, dispatch:object)"
@@ -233,8 +233,8 @@ def redis_handler(message_class:type, listen_channels:list[str]|None=None):
     Ensures the decorated function has the signature (self, message:object).
     """
     def decorator(function:callable):
-        sig = inspect.signature(function)
-        params = list(sig.parameters.values())
+        signature = inspect.signature(function)
+        params = list(signature.parameters.values())
         if len(params) != 2 or params[0].name != 'self' or params[1].name != 'message':
             raise TypeError(
                 f"@redis_handler-decorated function '{function.__qualname__}' must have signature (self, message:object)"

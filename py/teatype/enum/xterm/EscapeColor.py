@@ -69,8 +69,8 @@ class EscapeColor(Enum):
     # Properties #
     ##############
     
-    @staticmethod
-    def COLORS(exclude_black:bool=False, exclude_gray:bool=False) -> list[str]:
+    @classmethod
+    def COLORS(cls, exclude_black:bool=False, exclude_gray:bool=False) -> list[str]:
         """
         Returns a list of all color codes from the EscapeColor enum.
 
@@ -84,8 +84,8 @@ class EscapeColor(Enum):
         colors.sort(key=lambda c: c.name)  # Sort colors by name for consistent ordering
         return colors
     
-    @staticmethod
-    def LIGHT_COLORS(exclude_black:bool=False) -> list[str]:
+    @classmethod
+    def LIGHT_COLORS(cls, exclude_black:bool=False) -> list[str]:
         """
         Returns a list of light color codes from the EscapeColor enum.
 
@@ -105,8 +105,8 @@ class EscapeColor(Enum):
         """
         return len(EscapeColor.COLORS(exclude_black, exclude_gray))
     
-    @staticmethod
-    def N_LIGHT(exclude_black:bool=False) -> int:
+    @classmethod
+    def N_LIGHT(cls, exclude_black:bool=False) -> int:
         """
         Returns the number of light colors defined in the EscapeColor enum.
 
@@ -114,8 +114,8 @@ class EscapeColor(Enum):
         """
         return len(EscapeColor.LIGHT_COLORS(exclude_black))
     
-    @staticmethod
-    def lighten(color:'EscapeColor.Colors') -> str:
+    @classmethod
+    def lighten(cls, color:'EscapeColor.Colors') -> str:
         """
         Returns the light version of a given color.
 

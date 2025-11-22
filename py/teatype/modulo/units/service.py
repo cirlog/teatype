@@ -11,8 +11,8 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
+from teatype.comms.ipc.redis import RedisChannel, RedisDispatch, RedisServiceManager, dispatch_handler
 from teatype.logging import *
-from teatype.comms.ipc.redis import *
 from teatype.modulo.units.core import CoreUnit
 
 class ServiceUnit(CoreUnit):
@@ -65,11 +65,10 @@ class ServiceUnit(CoreUnit):
             sender = message.get('sender')
             receiver = message.get('receiver')
             
-            # TODO: Or use designation instead? dont know yet
-            if sender == self.id:
+            if sender == self.id or sender == self.designation:
                 return None
                 
-            if receiver and receiver != 'all' and receiver != self.id:
+            if receiver and receiver != 'all' and receiver != self.id and receiver != self.designation:
                 return None
                 
             return message
@@ -124,8 +123,8 @@ class ServiceUnit(CoreUnit):
     # Redis handlers #
     ##################
     
-    @redis_handler(message_class=RedisDispatch)
-    def kill(self, message:object) -> None:
+    @dispatch_handler
+    def kill(self, dispatch:RedisDispatch) -> None:
         hint(f'Received "kill" command. Initiating shutdown ...')
         self.shutdown()
     

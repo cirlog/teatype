@@ -28,7 +28,7 @@ class _BaseRedisMessage(ABC):
         self.source = source
 
         # Sets the message type based on the subclass name
-        self.id = generate_id()
+        self.id = generate_id(truncate=16)
         self.type = self.__class__.__name__.replace('Redis','').lower()
         
     #################

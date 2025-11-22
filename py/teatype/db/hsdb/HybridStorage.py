@@ -77,8 +77,8 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             else:
                 success(f'HybridStorage initialized in {EscapeColor.CYAN}cold mode{EscapeColor.RESET}')
     
-    @staticmethod
-    def instance() -> 'HybridStorage':
+    @classmethod
+    def instance(cls) -> 'HybridStorage':
         """
         Return or create the HybridStorage singleton instance.
         """

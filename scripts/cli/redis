@@ -68,7 +68,7 @@ class Redis(BaseCLI):
         shell('apt-get install -y build-essential pkg-config tcl', sudo=True)
 
         # Create a temporary directory for the Redis source code
-        work_directory = path.join(parent_directory, '~temp')
+        work_directory = path.join(parent_directory, 'dist')
         path.create(work_directory)
         path.cd(work_directory)
 

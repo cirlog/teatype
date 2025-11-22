@@ -12,7 +12,6 @@
 
 # Third-party imports
 from teatype.ai.clients.BaseAIClient import BaseAIClient
-from teatype.comms.ipc.redis import RedisChannel, RedisDispatch
 from teatype.modulo.operations import Operations
 from teatype.logging import *
 
@@ -20,8 +19,10 @@ class LLMClient(BaseAIClient):
     def __init__(self, auto_fire:bool=False, verbose:bool=None):
         super().__init__(name='l-l-m-client')
         
+        # Discover LLM Engine unit and store its designation
         operations = Operations(verbose_logging=False if verbose == None else verbose)
         units = operations.list(filters=[('type', 'l-l-m-engine')])
+        del operations
         if len(units) == 0:
             if auto_fire:
                 import time
@@ -31,13 +32,11 @@ class LLMClient(BaseAIClient):
                 time.sleep(2.0)
             else:
                 raise RuntimeError('No LLM Engine unit found. Please start the LLM Engine first.')
-            
-        self.llm_engine_designation = units[0]
-        del operations
+        self.model_designation = units[0].get('designation')
         
     def dispatch(self, command:str, payload:dict=None) -> None:
         super().dispatch(command=command,
-                         receiver=self.llm_engine_designation,
+                         receiver=self.model_designation,
                          is_async=True,
                          payload=payload)
         

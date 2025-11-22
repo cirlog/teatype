@@ -236,8 +236,9 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     
     # TODO: Optimization
     # TODO: Group data with key and base data into index data
-    @staticmethod
-    def serialize(object:object,
+    @classmethod
+    def serialize(cls,
+                  object:object,
                   fuse_data:bool=False,
                   include_migration:bool=True,
                   include_model:bool=True,
@@ -300,6 +301,6 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     # Static methods #
     ##################
     
-    @staticmethod
-    def load(self, dict_data:dict):
+    @classmethod
+    def load(cls, dict_data:dict):
         pass

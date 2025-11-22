@@ -94,8 +94,8 @@ class RedisConnectionPool(RedisBaseInterface):
             return False
         return True
     
-    @staticmethod
-    def _normalize_channels(channels:List[Union[str,Enum]]) -> List[str]:
+    @classmethod
+    def _normalize_channels(cls, channels:List[Union[str,Enum]]) -> List[str]:
         """
         Convert channel enums to string values.
         """

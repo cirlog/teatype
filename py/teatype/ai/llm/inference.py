@@ -34,6 +34,9 @@ MODELS_PATH = path.join(ROOT_PATH, 'cli', 'dist', 'llm-models')
 class Inferencer():
     max_tokens:int
     model:Optional[Llama]
+    model_directory:str
+    model_loaded:bool
+    model_name:str
     temperature:float
     top_p:float
     unlock_full_potential:bool
@@ -173,6 +176,7 @@ class Inferencer():
                                     gpu_layers=gpu_layers,
                                     surpress_output=surpress_output,
                                     verbose=verbose)
+            model_loaded = True
             self.on_init()
     
     #########

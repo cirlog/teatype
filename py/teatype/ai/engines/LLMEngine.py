@@ -11,12 +11,15 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
-from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 from teatype.ai.engines.BaseAIEngine import BaseAIEngine
+from teatype.ai.llm.inference import Inferencer
+from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 
 class LLMEngine(BaseAIEngine):
     def __init__(self):
         super().__init__()
+        
+        self.model = Inferencer()
     
     @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
