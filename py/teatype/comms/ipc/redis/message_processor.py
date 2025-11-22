@@ -76,9 +76,11 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                         listen_channels=listen_channels,
                     )
                     if ok:
-                        log(f'Autowired redis handler "{name}" for message class "{message_class.__name__}"')
+                        if self.verbose_logging:
+                            log(f'Autowired redis handler "{name}" for message class "{message_class.__name__}"')
                         registered += 1
-                log(f'Autowired {registered} redis handler(s) from owner {owner.__class__.__name__}')
+                if self.verbose_logging:
+                    log(f'Autowired {registered} redis handler(s) from owner {owner.__class__.__name__}')
             except Exception:
                 pass
         

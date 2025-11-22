@@ -134,7 +134,8 @@ class CoreUnit(threading.Thread):
         self.on_loop_start()
         
         println()
-        log('Running main loop')
+        if self._verbose_logging:
+            log('Running main loop')
         while not self._shutdown_in_progress:
             self.on_loop_run()
             time.sleep(self.loop_idle_time)
