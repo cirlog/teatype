@@ -35,10 +35,10 @@ try:
 
     def __getattr__(name):
         if name == 'AnalyticalAI':
-            from .models.analytical import AnalyticalAI
+            from .flavors.analytical import AnalyticalAI
             return AnalyticalAI
         if name == 'ConversationalAI':
-            from .models.conversational import ConversationalAI
+            from .flavors.conversational import ConversationalAI
             return ConversationalAI
         if name == 'load_model':
             from .loader import load_model

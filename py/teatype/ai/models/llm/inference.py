@@ -21,7 +21,7 @@ from collections import deque
 from typing import List, Dict, Optional
 # Third-party imports
 from llama_cpp import Llama
-from teatype.ai.llm import load_model, PromptBuilder
+from teatype.ai.models.llm import load_model, PromptBuilder
 from teatype.enum import EscapeColor
 from teatype.io import env, file, path
 from teatype.logging import *
@@ -254,7 +254,7 @@ if __name__ == '__main__':
         
         user_prompt = prompt('Enter your prompt:', return_bool=False)
         
-        from teatype.ai.llm import Inferencer
+        from teatype.ai.models.llm import Inferencer
         llm = Inferencer(model=default_model,
                          model_directory=conversational_model_directory)
         response = llm(user_prompt=user_prompt,

@@ -14,7 +14,7 @@
 
 # Third-party imports
 from teatype import colorwrap
-from teatype.ai.llm import ConversationalAI
+from teatype.ai.models.llm import ConversationalAI
 from teatype.cli import BaseTUI
 from teatype.io import fetch, path, prompt
 from teatype.logging import *

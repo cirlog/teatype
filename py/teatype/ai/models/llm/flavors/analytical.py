@@ -11,8 +11,8 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
-from teatype.ai.llm.inference import Inferencer
-        
-class EnrichingAI(Inferencer):
+from teatype.ai.models.llm.inference import Inferencer
+
+class AnalyticalAI(Inferencer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

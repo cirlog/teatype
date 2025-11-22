@@ -17,7 +17,7 @@ from collections import deque
 from typing import List, Dict, Optional
 # Third-party imports
 from llama_cpp import Llama
-from teatype.ai.llm import Inferencer, PromptBuilder
+from teatype.ai.models.llm import Inferencer, PromptBuilder
 from teatype.enum import EscapeColor
 from teatype.io import env, path
 from teatype.logging import *

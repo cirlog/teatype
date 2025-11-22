@@ -12,7 +12,7 @@
 
 # Third-party imports
 from teatype.ai.engines.BaseAIEngine import BaseAIEngine
-from teatype.ai.llm.inference import Inferencer
+from teatype.ai.models.llm.inference import Inferencer
 from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 
 class LLMEngine(BaseAIEngine):
