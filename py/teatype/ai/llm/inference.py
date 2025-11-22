@@ -28,22 +28,21 @@ from teatype.logging import *
 from teatype.toolkit import colorwrap
 
 APPLY_WHITESPACE_PATCH = True
-ROOT_PATH = env.get('TEATYPE_WORKSPACE_PATH', path.caller_parent(reverse_depth=5))
-MODELS_PATH = path.join(ROOT_PATH, 'cli', 'dist', 'llm-models')
 
 class Inferencer():
     max_tokens:int
     model:Optional[Llama]
     model_directory:str
+    model_extension:str
     model_loaded:bool
     model_name:str
+    model_path:str
     temperature:float
     top_p:float
     unlock_full_potential:bool
     
     def __init__(self,
-                 model:str,
-                 model_directory:str=None,
+                 model_path:str,
                  max_tokens:int=2048, # The maximum number of tokens to generate in the output - affects length of responses
                  context_size:int=4096, # The context window size of the model - Affects how much text the model can "see" at once
                  temperature:float=0.7, # Affects randomness. Lowering results in less random completions
@@ -59,20 +58,17 @@ class Inferencer():
         """
         env.set('LLAMA_SET_ROWS', '1')
 
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.top_p = top_p
-        self.unlock_full_potential = unlock_full_potential
-        
-        self.model_name = model
-        self.model_directory = model_directory if model_directory else MODELS_PATH
-        
-        if auto_init:
-            self.initialize_model(context_size=context_size,
-                                  cpu_cores=cpu_cores,
-                                  gpu_layers=gpu_layers,
-                                  surpress_output=surpress_output,
-                                  verbose=verbose)
+        self.reload(model_path=model_path,
+                    max_tokens=max_tokens,
+                    context_size=context_size,
+                    temperature=temperature,
+                    cpu_cores=cpu_cores,
+                    gpu_layers=gpu_layers,
+                    auto_init=auto_init,
+                    surpress_output=surpress_output,
+                    top_p=top_p,
+                    unlock_full_potential=unlock_full_potential,
+                    verbose=verbose)
     
     def __call__(self,
                  user_prompt:str,
@@ -154,6 +150,35 @@ class Inferencer():
 
         # Strip leading newlines/whitespace only once at the start
         return response.lstrip()
+    
+    def reload(self,
+               model_path:str,
+               max_tokens:int=2048,
+               context_size:int=4096,
+               temperature:float=0.7,
+               cpu_cores:int=os.cpu_count(),
+               gpu_layers:int=-1,
+               auto_init:bool=True,
+               surpress_output:bool=True,
+               top_p:float=0.9,
+               unlock_full_potential:bool=False,
+               verbose:bool=False):
+        self.model_path = model_path
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.top_p = top_p
+        self.unlock_full_potential = unlock_full_potential
+        
+        self.model_directory = self.model_path.rsplit('/', 1)[0]
+        self.model_extension = self.model_path.rsplit('.', 1)[-1]
+        self.model_name = self.model_path.rsplit('/', 1)[-1].rsplit('.', 1)[0]
+        
+        if auto_init:
+            self.initialize_model(context_size=context_size,
+                                  cpu_cores=cpu_cores,
+                                  gpu_layers=gpu_layers,
+                                  surpress_output=surpress_output,
+                                  verbose=verbose)
             
     def initialize_model(self,
                          context_size:int=4096,

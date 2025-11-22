@@ -18,12 +18,19 @@ from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 class LLMEngine(BaseAIEngine):
     def __init__(self):
         super().__init__()
-        
-        self.model = Inferencer()
     
     @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
-        print(dispatch)
+        payload = dispatch.payload
+        model_path = payload.get('model_path', None)
+        if model_path is None:
+            err('No model path provided in the payload.', verbose=False)
+            return
+        
+        if self.model is None:
+            self.model = Inferencer()
+        else:
+            warn('Model is already loaded.')
         
     @dispatch_handler
     def prompt(self, dispatch:RedisDispatch) -> None:

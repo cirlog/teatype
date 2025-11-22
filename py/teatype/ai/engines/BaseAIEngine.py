@@ -18,3 +18,5 @@ class BaseAIEngine(ServiceUnit):
     
     def __init__(self):
         super().__init__(name='ai-engine')
+        
+        self.model = None
