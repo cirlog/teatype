@@ -42,7 +42,7 @@ class RedisConnectionPool(RedisBaseInterface):
     def __init__(self,
                  client_name:Optional[str]=None,
                  max_buffer_size:int=100,
-                 verbose_logging:Optional[bool]=True):
+                 verbose_logging:Optional[bool]=False):
         super().__init__(max_buffer_size=max_buffer_size,
                          verbose_logging=verbose_logging)
         

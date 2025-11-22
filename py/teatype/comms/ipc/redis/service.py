@@ -36,7 +36,7 @@ class RedisServiceManager(RedisBaseInterface):
                  on_shutdown:Optional[Callable]=None,
                  owner:Optional[object]=None,
                  preprocess_function:Optional[Callable]=None,
-                 verbose_logging:Optional[bool]=True) -> None:
+                 verbose_logging:Optional[bool]=False) -> None:
         super().__init__(max_buffer_size=max_buffer_size,
                          verbose_logging=verbose_logging)
         

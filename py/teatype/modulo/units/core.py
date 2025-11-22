@@ -14,7 +14,7 @@
 import threading
 import time
 from queue import LifoQueue
-from typing import List, Union
+from typing import Optional, Union
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
@@ -76,7 +76,7 @@ class CoreUnit(threading.Thread):
     loop_iter:int
     type:str
     
-    def __init__(self, name:str, verbose_logging:bool=True) -> None:
+    def __init__(self, name:str, verbose_logging:Optional[bool]=True) -> None:
         """
         Initialize the service unit with configuration and communication infrastructure.
         
@@ -102,8 +102,9 @@ class CoreUnit(threading.Thread):
         self._status = None
         self._shutdown_in_progress = False
         
-        log(f'Initialized unit:')
-        print_designation(self.designation)
+        if self._verbose_logging:
+            log(f'Initialized unit:')
+            print_designation(self.designation)
         
     def __new__(cls, *args, **kwargs):
         if not cls._ALLOW_DIRECT_INSTANTIATION:

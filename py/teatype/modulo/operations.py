@@ -11,7 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # System imports
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # Local imports
 from teatype.logging import *
@@ -19,7 +19,7 @@ from teatype.modulo.units import parse_designation, print_designation
 from teatype.comms.ipc.redis import RedisServiceManager, RedisDispatch, RedisChannel
 
 class Operations:
-    def __init__(self, verbose_logging:bool=True):
+    def __init__(self, verbose_logging:Optional[bool]=False):
         self.redis_service = RedisServiceManager(client_name='teatype.modulo.operations',
                                                  verbose_logging=verbose_logging)
         
