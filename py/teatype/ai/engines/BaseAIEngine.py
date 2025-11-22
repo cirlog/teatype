@@ -10,13 +10,15 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
+# Standard-library imports
+from typing import Optional
+# Third-party imports
 from teatype.modulo import ServiceUnit
 
 class BaseAIEngine(ServiceUnit):
     model:object
     
-    def __init__(self):
-        super().__init__(name='ai-engine')
+    def __init__(self, verbose_logging:Optional[bool]=False):
+        super().__init__(name='ai-engine', verbose_logging=verbose_logging)
         
         self.model = None

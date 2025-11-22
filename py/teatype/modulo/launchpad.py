@@ -45,8 +45,8 @@ class LaunchPad:
         Launch a Teatype Modulo unit.
         
         Args:
-            unit_name: Name of the unit to launch
             unit_type: Type of the unit ('backend', 'service', 'workhorse')
+            unit_name: Name of the unit to launch
             host: Optional server host
             port: Optional server port
         
@@ -67,11 +67,10 @@ class LaunchPad:
                 raise err(f'Invalid unit type: {unit_type}',
                         raise_exception=ValueError)
         else:
+            # TODO: Build in check, that verifies its a subclass of CoreUnit
             if unit_name is None:
-                unit = unit_type.create()
+                unit = unit_type.create(**kwargs)
             else:
-                # TODO: Build in check, that verifies its a subclass of CoreUnit
-                unit = unit_type(unit_name, **kwargs)
                 unit = unit_type.create(name=unit_name, **kwargs)
         return unit
     
@@ -149,10 +148,10 @@ if __name__ == "__main__":
     
     # Launch the unit
     if args.detached:
-        LaunchPad.fire(args.unit_name, args.unit_type, host=args.host, port=args.port)
+        LaunchPad.fire(args.unit_type, args.unit_name, host=args.host, port=args.port)
     else:
         try:
-            unit = LaunchPad.create(args.unit_name, args.unit_type, host=args.host, port=args.port)
+            unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
             # Run unit directly (blocking mode)
             unit.start()
             unit.join()

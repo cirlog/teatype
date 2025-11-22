@@ -10,11 +10,13 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Package imports
+# Standard-library imports
+from typing import Optional
+# Third-party imports
 from teatype.modulo import ServiceUnit
 
 class BaseAIClient(ServiceUnit):
     model_designation:str
     
-    def __init__(self, name:str='ai-client'):
-        super().__init__(name=name)
+    def __init__(self, name:str, verbose_logging:Optional[bool]=None):
+        super().__init__(name=name, verbose_logging=verbose_logging)

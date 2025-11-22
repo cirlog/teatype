@@ -118,8 +118,9 @@ class Ask(BaseCLI):
         
         llm_client = LaunchPad.create(LLMClient,
                                       auto_fire=True,
-                                      verbose=verbose)
+                                      verbose_logging=verbose)
         llm_client.load_model(model_path=path.join(conversational_model_directory, f'{default_model}.gguf'))
+        llm_client.chat(message=self.full_prompt)
         
         println()
 if __name__ == '__main__':

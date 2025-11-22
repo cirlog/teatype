@@ -10,17 +10,19 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Standard-library imports
+from typing import Optional
 # Third-party imports
 from teatype.ai.clients.BaseAIClient import BaseAIClient
 from teatype.modulo.operations import Operations
 from teatype.logging import *
 
 class LLMClient(BaseAIClient):
-    def __init__(self, auto_fire:bool=False, verbose:bool=None):
-        super().__init__(name='l-l-m-client')
+    def __init__(self, auto_fire:bool=False, verbose_logging:Optional[bool]=False):
+        super().__init__(name='l-l-m-client', verbose_logging=verbose_logging)
         
         # Discover LLM Engine unit and store its designation
-        operations = Operations(verbose_logging=False if verbose == None else verbose)
+        operations = Operations(verbose_logging=False if verbose_logging == None else verbose_logging)
         units = operations.list(filters=[('type', 'l-l-m-engine')])
         del operations
         if len(units) == 0:
@@ -45,4 +47,5 @@ class LLMClient(BaseAIClient):
                       payload={'model_path': model_path})
         
     def chat(self, message:str):
-        pass
+        self.dispatch(command='prompt',
+                      payload={'user_prompt': message})

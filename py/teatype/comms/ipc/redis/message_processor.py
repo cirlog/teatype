@@ -20,7 +20,7 @@ from typing import Callable, Dict, List, Optional, Union
 import redis
 from teatype.logging import *
 # Local imports
-from teatype.comms.ipc.redis.messages import RedisDispatch
+from teatype.comms.ipc.redis.messages import RedisDispatch, RedisBroadcast
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
 
 class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
@@ -154,7 +154,6 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                     
                 if message_type == 'dispatch':
                     command = message.get('command', None)
-                    print(command)
                     if command is None:
                         err('Dispatch message missing "command" field')
                         return
@@ -163,17 +162,21 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                         warn(f'No handler for dispatch command: {command}')
                         return
                     # Execute the matching handler
-                    matching_handlers[0]['callable'](message)
-                else:
+                    matching_handlers[0]['callable'](RedisDispatch.from_dict(message))
+                elif message_type == 'broadcast':
                     channel = message.get('channel', None)
-                    # Execute handlers
                     for handler in handlers:
                         # Channel filtering
                         if handler['listen_channels'] is not None:
                             if channel not in handler['listen_channels']:
                                 continue
             
-                        handler['callable'](message)
+                        handler['callable'](RedisBroadcast.from_dict(message))
+                elif message_type == 'response':
+                    # Responses are handled internally; ignore here
+                    return
+                else:
+                    raise ValueError(f'Unknown message type: {message_type}')
         except Exception as exc:
             err(f'Message dispatch error', traceback=True)
     
@@ -181,6 +184,7 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
         """
         Signal thread to stop processing.
         """
+        self._is_active = False
         self._shutdown_event.set()
     
     def run(self) -> None:
@@ -200,7 +204,7 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                     self.receive(data)
                 except Exception:
                     err(f'Processing error', traceback=True)
-        except (ValueError, redis.ConnectionError):
+        except (ValueError, redis.ConnectionError) as e:
             if self._is_active:
                 err(f'Connection error')
         except Exception:

@@ -10,14 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Standard-library imports
+from typing import Optional
 # Third-party imports
 from teatype.ai.engines.BaseAIEngine import BaseAIEngine
 from teatype.ai.models.llm.inference import Inferencer
 from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 
 class LLMEngine(BaseAIEngine):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, verbose_logging:Optional[bool]=False):
+        super().__init__(verbose_logging=verbose_logging)
     
     @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
@@ -28,13 +30,24 @@ class LLMEngine(BaseAIEngine):
             return
         
         if self.model is None:
-            self.model = Inferencer()
-        else:
-            warn('Model is already loaded.')
+            self.model = Inferencer(model_path=model_path,
+                                    verbose=self._verbose_logging)
         
     @dispatch_handler
     def prompt(self, dispatch:RedisDispatch) -> None:
-        print(dispatch)
+        payload = dispatch.payload
+        user_prompt = payload.get('user_prompt', None)
+        if user_prompt is None:
+            err('No user prompt provided in the payload.', verbose=False)
+            return
+        
+        self.model.model.reset()
+        generator = self.model(user_prompt=user_prompt,
+                               stream_response=True,
+                               yield_token=True)
+        for token in generator:
+            print(token, end='', flush=True)
+            # redis.publish("llm_output", token))
 
 if __name__ == '__main__':
     try:
@@ -43,7 +56,7 @@ if __name__ == '__main__':
         # Local imports
         from teatype.modulo.launchpad import LaunchPad
         
-        unit = LaunchPad.create(LLMEngine)
+        unit = LaunchPad.create(LLMEngine, verbose_logging=True)
         # Run unit directly (blocking mode)
         unit.start()
         unit.join()

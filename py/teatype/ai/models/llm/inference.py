@@ -16,9 +16,7 @@ import os
 import sys
 import threading
 import time
-from abc import ABC
-from collections import deque
-from typing import List, Dict, Optional
+from typing import Generator, Optional
 # Third-party imports
 from llama_cpp import Llama
 from teatype.ai.models.llm import load_model, PromptBuilder
@@ -77,7 +75,8 @@ class Inferencer():
                  decorator:str=None,
                  show_thinking:bool=True,
                  stream_response:bool=True,
-                 use_prompt_builder:bool=True) -> str:
+                 use_prompt_builder:bool=True,
+                 yield_token:bool=False) -> str|Generator[str, None, None]:
         """
         Generate text from LLaMA model with optional streaming.
         Shows a spinner until the first token or response is available.
@@ -128,11 +127,14 @@ class Inferencer():
                         if APPLY_WHITESPACE_PATCH:
                             token = token.lstrip() # Strip leading whitespace only once at the start
 
-                if colorized_output:
-                    print(colorwrap(token, colorized_output), end='', flush=True)
+                if yield_token:
+                    yield token
                 else:
-                    print(token, end='', flush=True)
-                response += token
+                    if colorized_output:
+                        print(colorwrap(token, colorized_output), end='', flush=True)
+                    else:
+                        print(token, end='', flush=True)
+                    response += token
             println()
         else:
             raw_output = self.model(

@@ -44,7 +44,13 @@ class _BaseRedisMessage(ABC):
         :return: An instance of RedisMessage with the loaded data.
         """
         init_data = {key: value for key, value in data.items()}
-        return cls(**init_data)
+        id = init_data.pop('id', None)
+        type = init_data.pop('type')
+        instance = cls(**init_data)
+        if id is not None:
+            instance.id = id
+        instance.type = type
+        return instance
         
     ##############
     # Public API #

@@ -10,6 +10,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Standard-library imports
+from typing import Optional
 # Third-party imports
 from teatype.comms.ipc.redis import RedisChannel, RedisDispatch, RedisServiceManager, dispatch_handler
 from teatype.logging import *
@@ -22,14 +24,14 @@ class ServiceUnit(CoreUnit):
     This class implements a robust framework for inter-process communication via Redis,
     shared memory management, state tracking, and unit lifecycle handling.
     """
-    def __init__(self, name:str) -> None:
+    def __init__(self, name:str, verbose_logging:Optional[bool]=False) -> None:
         """
         Initialize the service unit with configuration and communication infrastructure.
         
         Args:
             name: Name of the service unit
         """
-        super().__init__(name=name)
+        super().__init__(name=name, verbose_logging=verbose_logging)
         
         self._setup_redis_infrastructure()
         self._register()
