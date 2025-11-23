@@ -20,6 +20,10 @@ from teatype.comms.ipc.redis import dispatch_handler, RedisDispatch
 class LLMEngine(BaseAIEngine):
     def __init__(self, verbose_logging:Optional[bool]=False):
         super().__init__(verbose_logging=verbose_logging)
+        
+    ############
+    # Handlers #
+    ############
     
     @dispatch_handler
     def load_model(self, dispatch:RedisDispatch) -> None:
@@ -45,9 +49,14 @@ class LLMEngine(BaseAIEngine):
         generator = self.model(user_prompt=user_prompt,
                                stream_response=True,
                                yield_token=True)
+        
+        self.prompt_response(command='prompt_response',
+                             payload={'message': '/startllm'})
         for token in generator:
-            print(token, end='', flush=True)
-            # redis.publish("llm_output", token))
+            self.prompt_response(command='prompt_response',
+                                 payload={'message': token})
+        self.prompt_response(command='prompt_response',
+                             payload={'message': '/endllm'})
 
 if __name__ == '__main__':
     try:

@@ -20,7 +20,7 @@ from typing import Callable, Dict, List, Optional, Union
 import redis
 from teatype.logging import *
 # Local imports
-from teatype.comms.ipc.redis.messages import RedisDispatch, RedisBroadcast
+from teatype.comms.ipc.redis.messages import RedisBroadcast, RedisDispatch, RedisResponse
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
 
 class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
@@ -232,7 +232,7 @@ def dispatch_handler(function:callable):
     })
     return function
 
-def redis_handler(message_class:type, listen_channels:list[str]|None=None):
+def message_handler(message_class:type, listen_channels:list[str]|None=None):
     """
     Marks an instance method as a Redis handler.
     The processor will discover and register it via .autowire(owner).
@@ -243,7 +243,7 @@ def redis_handler(message_class:type, listen_channels:list[str]|None=None):
         params = list(signature.parameters.values())
         if len(params) != 2 or params[0].name != 'self' or params[1].name != 'message':
             raise TypeError(
-                f"@redis_handler-decorated function '{function.__qualname__}' must have signature (self, message:object)"
+                f"@message_handler-decorated function '{function.__qualname__}' must have signature (self, message:object)"
             )
         setattr(function, '_redis_handler_info', {
             'message_class': message_class,
@@ -251,3 +251,21 @@ def redis_handler(message_class:type, listen_channels:list[str]|None=None):
         })
         return function
     return decorator
+
+def response_handler(function:callable):
+    """
+    Marks an instance method as a response handler.
+    The processor will discover and register it via .autowire(owner).
+    Ensures the decorated function has the signature (self, response:object).
+    """
+    signature = inspect.signature(function)
+    params = list(signature.parameters.values())
+    if len(params) != 2 or params[0].name != 'self' or params[1].name != 'response':
+        raise TypeError(
+            f"@response_handler-decorated function '{function.__qualname__}' must have signature (self, response:object)"
+        )
+    setattr(function, '_redis_handler_info', {
+        'message_class': RedisResponse,
+        'listen_channels': None
+    })
+    return function

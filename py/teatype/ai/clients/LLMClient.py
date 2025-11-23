@@ -14,10 +14,13 @@
 from typing import Optional
 # Third-party imports
 from teatype.ai.clients.BaseAIClient import BaseAIClient
+from teatype.comms.ipc.redis import RedisDispatch, dispatch_handler
 from teatype.modulo.operations import Operations
 from teatype.logging import *
 
 class LLMClient(BaseAIClient):
+    receiving_response:bool
+    
     def __init__(self, auto_fire:bool=False, verbose_logging:Optional[bool]=False):
         super().__init__(name='l-l-m-client', verbose_logging=verbose_logging)
         
@@ -35,17 +38,29 @@ class LLMClient(BaseAIClient):
             else:
                 raise RuntimeError('No LLM Engine unit found. Please start the LLM Engine first.')
         self.model_designation = units[0].get('designation')
+        self.register_with_engine()
         
-    def dispatch(self, command:str, payload:dict=None) -> None:
-        super().dispatch(command=command,
-                         receiver=self.model_designation,
-                         is_async=True,
-                         payload=payload)
+        self.receiving_response = False
         
-    def load_model(self, model_path:str):
-        self.dispatch(command='load_model',
-                      payload={'model_path': model_path})
+    ############
+    # Handlers #
+    ############
+    
+    # TODO: Replace with proper response handling
+    @dispatch_handler
+    def prompt_response(self, dispatch:RedisDispatch) -> None:
+        message = dispatch.payload.get('message')
+        if message == '/startllm':
+            self.receiving_response = True
+        elif message == '/endllm':
+            self.receiving_response = False
+        else:
+            print(message, end='', flush=True)
+    
+    ##############
+    # Public API #
+    ##############
         
     def chat(self, message:str):
-        self.dispatch(command='prompt',
-                      payload={'user_prompt': message})
+        self.dispatch_to_engine(command='prompt',
+                                payload={'user_prompt': message})

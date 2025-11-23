@@ -13,6 +13,7 @@
 # Standard-library imports
 from typing import Optional
 # Third-party imports
+from teatype.comms.ipc.redis import RedisDispatch, dispatch_handler
 from teatype.modulo import ServiceUnit
 
 class BaseAIClient(ServiceUnit):
@@ -20,3 +21,34 @@ class BaseAIClient(ServiceUnit):
     
     def __init__(self, name:str, verbose_logging:Optional[bool]=None):
         super().__init__(name=name, verbose_logging=verbose_logging)
+        
+        self.model_designation = None
+    
+    ##############
+    # Public API #
+    ##############
+        
+    def dispatch_to_engine(self, command:str, payload:dict=None) -> None:
+        self.dispatch(command=command,
+                      receiver=self.model_designation,
+                      is_async=True,
+                      payload=payload)
+        
+    def load_model(self, model_path:str):
+        self.dispatch_to_engine(command='load_model',
+                                payload={'model_path': model_path})
+        
+    def register_with_engine(self) -> None:
+        self.dispatch_to_engine(command='register_client',
+                                payload={'client_designation': self.designation})
+        
+    def unregister_from_engine(self) -> None:
+        self.dispatch_to_engine(command='unregister_client',
+                                payload={'client_designation': self.designation})
+        
+    #########
+    # Hooks #
+    #########
+        
+    def on_redis_shutdown_before(self) -> None:
+        self.unregister_from_engine()

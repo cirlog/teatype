@@ -13,6 +13,7 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
+import time
 from teatype import colorwrap
 from teatype.ai import __GPU_SUPPORT__
 from teatype.cli import BaseCLI
@@ -121,6 +122,13 @@ class Ask(BaseCLI):
                                       verbose_logging=verbose)
         llm_client.load_model(model_path=path.join(conversational_model_directory, f'{default_model}.gguf'))
         llm_client.chat(message=self.full_prompt)
+        
+        while True:
+            time.sleep(0.01)
+            if not llm_client.receiving_response:
+                break
+            
+        llm_client.join()
         
         println()
 if __name__ == '__main__':
