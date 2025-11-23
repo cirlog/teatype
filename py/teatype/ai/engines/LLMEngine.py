@@ -34,7 +34,8 @@ class LLMEngine(BaseAIEngine):
             return
         
         if self.model is None:
-            self.model = Inferencer(model_path=model_path,
+            self.model = Inferencer(enable_kv_cache=False,
+                                    model_path=model_path,
                                     verbose=self._verbose_logging)
         
     @dispatch_handler
@@ -45,9 +46,9 @@ class LLMEngine(BaseAIEngine):
             err('No user prompt provided in the payload.', verbose=False)
             return
         
-        self.model.model.reset()
-        generator = self.model(user_prompt=user_prompt,
+        generator = self.model(show_thinking=False,
                                stream_response=True,
+                               user_prompt=user_prompt,
                                yield_token=True)
         
         self.dispatch_to_clients(command='prompt_response',
@@ -55,6 +56,7 @@ class LLMEngine(BaseAIEngine):
         for token in generator:
             self.dispatch_to_clients(command='prompt_response',
                                      payload={'message': token})
+        print('end')
         self.dispatch_to_clients(command='prompt_response',
                                  payload={'message': '/endllm'})
 

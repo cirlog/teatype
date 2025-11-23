@@ -28,6 +28,7 @@ from teatype.toolkit import colorwrap
 APPLY_WHITESPACE_PATCH = True
 
 class Inferencer():
+    enable_kv_cache:bool
     max_tokens:int
     model:Optional[Llama]
     model_directory:str
@@ -47,6 +48,7 @@ class Inferencer():
                  cpu_cores:int=os.cpu_count(),
                  gpu_layers:int=-1,
                  auto_init:bool=True,
+                 enable_kv_cache:bool=True,
                  surpress_output:bool=True,
                  top_p:float=0.9, # nucleus sampling - Affects diversity. Lower values makes output more focused
                  unlock_full_potential:bool=False,
@@ -63,6 +65,7 @@ class Inferencer():
                     cpu_cores=cpu_cores,
                     gpu_layers=gpu_layers,
                     auto_init=auto_init,
+                    enable_kv_cache=enable_kv_cache,
                     surpress_output=surpress_output,
                     top_p=top_p,
                     unlock_full_potential=unlock_full_potential,
@@ -96,9 +99,9 @@ class Inferencer():
         else:
             input = user_prompt
 
+        first_token = True
         if show_thinking:
             # Spinner setup
-            first_token = True
             stop_event = threading.Event()
             spinner_thread = threading.Thread(target=_spinner, args=(stop_event,))
             spinner_thread.start()
@@ -106,6 +109,8 @@ class Inferencer():
         if artificial_delay > 0:
             time.sleep(artificial_delay)
 
+        if not self.enable_kv_cache:
+            self.model.reset()
         if decorator:
             print(decorator + ':', end=' ', flush=True)
         if stream_response:
@@ -118,14 +123,15 @@ class Inferencer():
                 top_p=self.top_p
             ):
                 token = output['choices'][0]['text']
-
-                if show_thinking:
-                    if first_token: # stop spinner when first token arrives
-                        stop_event.set()
+                    
+                if first_token: 
+                    if show_thinking:
+                        stop_event.set() # stop spinner when first token arrives
                         spinner_thread.join()
-                        first_token = False
-                        if APPLY_WHITESPACE_PATCH:
-                            token = token.lstrip() # Strip leading whitespace only once at the start
+                        
+                    first_token = False
+                    if APPLY_WHITESPACE_PATCH:
+                        token = token.lstrip() # Strip leading whitespace only once at the start
 
                 if yield_token:
                     yield token
@@ -161,10 +167,12 @@ class Inferencer():
                cpu_cores:int=os.cpu_count(),
                gpu_layers:int=-1,
                auto_init:bool=True,
+               enable_kv_cache:bool=True,
                surpress_output:bool=True,
                top_p:float=0.9,
                unlock_full_potential:bool=False,
                verbose:bool=False):
+        self.enable_kv_cache = enable_kv_cache
         self.model_path = model_path
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -173,6 +181,7 @@ class Inferencer():
         
         self.model_directory = self.model_path.rsplit('/', 1)[0]
         self.model_extension = self.model_path.rsplit('.', 1)[-1]
+        self.model_loaded = False
         self.model_name = self.model_path.rsplit('/', 1)[-1].rsplit('.', 1)[0]
         
         if auto_init:
@@ -195,7 +204,7 @@ class Inferencer():
             found_model_files = file.list(self.model_directory)
             matching_model = [f for f in found_model_files if self.model_name in f.name][0]
             if not matching_model:
-                raise ValueError(f'Model {self.model_name} not found in {MODELS_PATH}. Please place the model file there or specify a different `model_directory`.')
+                raise ValueError(f'Model {self.model_name} not found in {self.model_path}. Please place the model file there or specify a different `model_path`.')
 
             self.model = load_model(model_path=matching_model.path,
                                     context_size=context_size,
@@ -203,7 +212,7 @@ class Inferencer():
                                     gpu_layers=gpu_layers,
                                     surpress_output=surpress_output,
                                     verbose=verbose)
-            model_loaded = True
+            self.model_loaded = True
             self.on_init()
     
     #########

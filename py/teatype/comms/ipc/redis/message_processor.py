@@ -149,7 +149,8 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                 handlers = self._message_handlers.get(message_type)
                 
                 if not handlers:
-                    err(f'No handler for message type: {message_type}')
+                    if self.verbose_logging:
+                        err(f'No handler for message type: {message_type}')
                     return
                     
                 if message_type == 'dispatch':

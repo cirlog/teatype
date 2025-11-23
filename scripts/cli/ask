@@ -13,6 +13,9 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
+import itertools
+import sys
+import threading
 import time
 from teatype import colorwrap
 from teatype.ai import __GPU_SUPPORT__
@@ -117,20 +120,33 @@ class Ask(BaseCLI):
         
         default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
         
+        def _spinner(stop_event):
+            for symbol in itertools.cycle('|/-\\'):
+                if stop_event.is_set():
+                    break
+                sys.stdout.write('\rThinking ' + symbol)
+                sys.stdout.flush()
+                time.sleep(0.1)
+            sys.stdout.write('\r' + ' ' * 20 + '\r') # clear line
+        stop_event = threading.Event()
+        spinner_thread = threading.Thread(target=_spinner, args=(stop_event,))
+        spinner_thread.start()
+        
         llm_client = LaunchPad.create(LLMClient,
                                       auto_fire=True,
                                       verbose_logging=verbose)
         llm_client.load_model(model_path=path.join(conversational_model_directory, f'{default_model}.gguf'))
         llm_client.chat(message=self.full_prompt)
-        # llm_client.start()
         
         while True:
             time.sleep(0.01)
-            if not llm_client.receiving_response:
+            if llm_client.first_token.is_set():
+                stop_event.set()
+                spinner_thread.join()
+            if not llm_client.receiving_response.is_set():
                 break
-            
-        # llm_client.join()
         
+        println()
         println()
 if __name__ == '__main__':
     Ask()

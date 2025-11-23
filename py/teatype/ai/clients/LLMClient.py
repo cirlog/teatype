@@ -11,6 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+from threading import Event
 from typing import Optional
 # Third-party imports
 from teatype.ai.clients.BaseAIClient import BaseAIClient
@@ -19,7 +20,8 @@ from teatype.modulo.operations import Operations
 from teatype.logging import *
 
 class LLMClient(BaseAIClient):
-    receiving_response:bool
+    first_token:Event
+    receiving_response:Event
     
     def __init__(self, auto_fire:bool=False, verbose_logging:Optional[bool]=False):
         super().__init__(name='l-l-m-client', verbose_logging=verbose_logging)
@@ -40,7 +42,8 @@ class LLMClient(BaseAIClient):
         self.model_designation = units[0].get('designation')
         self.register_with_engine()
         
-        self.receiving_response = False
+        self.first_token = Event()
+        self.receiving_response = Event()
         
     ############
     # Handlers #
@@ -51,9 +54,9 @@ class LLMClient(BaseAIClient):
     def prompt_response(self, dispatch:RedisDispatch) -> None:
         message = dispatch.payload.get('message')
         if message == '/startllm':
-            self.receiving_response = True
+            self.first_token.set()
         elif message == '/endllm':
-            self.receiving_response = False
+            self.receiving_response.clear()
         else:
             print(message, end='', flush=True)
     
@@ -62,5 +65,6 @@ class LLMClient(BaseAIClient):
     ##############
         
     def chat(self, message:str):
+        self.receiving_response.set()
         self.dispatch_to_engine(command='prompt',
                                 payload={'user_prompt': message})
