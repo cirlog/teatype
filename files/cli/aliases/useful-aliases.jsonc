@@ -132,5 +132,10 @@
         "name": "ttt",
         "description": "Change directory to teatype typescript source path",
         "command": "cd $TEATYPE_TYPESCRIPT_PATH"
+    },
+    {
+        "name": "ttv",
+        "description": "Activate the teatype virtual environment",
+        "command": ". $TEATYPE_WORKSPACE_PATH/teatype-venv/bin/activate"
     }
 ]
