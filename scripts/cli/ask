@@ -122,13 +122,14 @@ class Ask(BaseCLI):
                                       verbose_logging=verbose)
         llm_client.load_model(model_path=path.join(conversational_model_directory, f'{default_model}.gguf'))
         llm_client.chat(message=self.full_prompt)
+        # llm_client.start()
         
         while True:
             time.sleep(0.01)
             if not llm_client.receiving_response:
                 break
             
-        llm_client.join()
+        # llm_client.join()
         
         println()
 if __name__ == '__main__':

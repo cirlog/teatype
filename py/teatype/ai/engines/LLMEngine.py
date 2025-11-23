@@ -50,13 +50,13 @@ class LLMEngine(BaseAIEngine):
                                stream_response=True,
                                yield_token=True)
         
-        self.prompt_response(command='prompt_response',
-                             payload={'message': '/startllm'})
+        self.dispatch_to_clients(command='prompt_response',
+                                 payload={'message': '/startllm'})
         for token in generator:
-            self.prompt_response(command='prompt_response',
-                                 payload={'message': token})
-        self.prompt_response(command='prompt_response',
-                             payload={'message': '/endllm'})
+            self.dispatch_to_clients(command='prompt_response',
+                                     payload={'message': token})
+        self.dispatch_to_clients(command='prompt_response',
+                                 payload={'message': '/endllm'})
 
 if __name__ == '__main__':
     try:
