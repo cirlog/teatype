@@ -27,11 +27,16 @@ from teatype.io import TemporaryDirectory as TempDir
 # TODO: Time the execution of the CLI with stopwatch
 # TODO: Increase performance of CLI execution by using a single instance of the CLI loaded in memory
 class MainCLI(BaseCLI):
+    include_default_scripts:bool
     parent_path:str
     scripts:dict
     tuis:dict
     
-    def __init__(self, auto_parse:bool=False, auto_validate:bool=False, parent_path:str=None) -> None:
+    def __init__(self,
+                 include_default_scripts:bool=True,
+                 parent_path:str=None,
+                 scripts_path:str=None,
+                 tuis_path:str=None) -> None:
         """
         Initializes the MainCLI instance, setting up the CLI environment.
         
@@ -41,12 +46,16 @@ class MainCLI(BaseCLI):
             auto_parse (bool, optional): If True, automatically parses command-line arguments upon initialization.
             auto_validate (bool, optional): If True, automatically validates parsed arguments upon initialization.
         """
-        if parent_path == None:
-            self.parent_path = path.caller_parent(reverse_depth=2)
-        else:
+        self.include_default_scripts = include_default_scripts
+        self.scripts_path = scripts_path
+        self.tuis_path = tuis_path
+        
+        if parent_path is not None:
             self.parent_path = parent_path
+        else:
+            self.parent_path = path.caller_parent(reverse_depth=2, skip_call_stacks=2)
             
-        super().__init__(auto_parse=auto_parse, auto_validate=auto_validate)
+        super().__init__(auto_parse=False, auto_validate=False)
         
         self.scripts = {}
         self.tuis = {}
@@ -103,10 +112,22 @@ class MainCLI(BaseCLI):
         return dict(sorted(module_registry.items())) # Return alphabetically sorted scripts
     
     def discover_scripts(self) -> dict:
-        return self.discover_python_modules('scripts/cli')
+        if self.include_default_scripts:
+            return self.discover_python_modules('scripts/cli')
+        else:
+            if self.scripts_path is not None:
+                return self.discover_python_modules(self.scripts_path)
+            else:
+                raise ValueError('scripts_path must be provided if include_default_scripts is False.')
     
     def discover_tuis(self) -> dict:
-        return self.discover_python_modules('tuis/cli')
+        if self.include_default_scripts:
+            return self.discover_python_modules('tuis/cli')
+        else:
+            if self.tuis_path is not None:
+                return self.discover_python_modules(self.tuis_path)
+            else:
+                raise ValueError('tuis_path must be provided if include_default_scripts is False.')
 
     def display_help(self) -> None:
         """

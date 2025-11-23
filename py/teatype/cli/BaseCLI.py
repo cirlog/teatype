@@ -775,15 +775,19 @@ class BaseCLI(ABC):
             if command.value:
                 return command.name
         return None
-        
-    def get_flag(self, name:str) -> any:
+    
+    def get_flag(self, name:str, default:any=None) -> any:
         """
         Returns the flag value with the given name.
         """
+        flag_value = None
         for flag in self.flags:
             if flag.short == f'-{name}' or flag.long == f'--{name}':
-                return flag.value
-        return None
+                flag_value = flag.value
+                break
+        if default is not None and flag_value is None:
+            return default
+        return flag_value
         
     ###########
     # Setters #

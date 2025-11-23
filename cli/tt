@@ -15,7 +15,6 @@
 # Third-party imports
 from teatype.cli import MainCLI
 from teatype.enum import EscapeColor
-from teatype.io import path
 
 class TeaTypeCLI(MainCLI):
     def meta(self):
@@ -26,4 +25,4 @@ class TeaTypeCLI(MainCLI):
         }
 
 if __name__ == '__main__':
-    TeaTypeCLI(auto_parse=False, auto_validate=False, parent_path=path.caller_parent(reverse_depth=2))
+    TeaTypeCLI()
