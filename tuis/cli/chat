@@ -61,26 +61,54 @@ class Chat(BaseTUI):
         stream = self.get_flag('stream')
         if not stream:
             stream = True
-            
-        llm = ConversationalAI(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
-                               model_directory=conversational_model_directory,
-                               temperature=0.9,
-                               top_p=0.9,
-                               verbose=True)
-        println()
-        log(colorwrap('[LLM]:', 'cyan'))
-        response = llm.chat('Instruction: Greet the user.', stream_response=stream)
-        try:
-            while True:
-                user_input = prompt('[You]:', return_bool=False)
-                if user_input.lower() in ['exit', 'quit', 'q', 'bye']:
-                    println()
+        def _spinner(stop_event):
+            for symbol in itertools.cycle('|/-\\'):
+                if stop_event.is_set():
                     break
-                println()
-                log(colorwrap('[LLM]:', 'cyan'))
-                response = llm.chat(user_input, stream_response=stream)
-                if not stream:
-                    print(response)
+                sys.stdout.write('\rThinking ' + symbol)
+                sys.stdout.flush()
+                time.sleep(0.1)
+            sys.stdout.write('\r' + ' ' * 20 + '\r') # clear line
+        stop_event = threading.Event()
+        spinner_thread = threading.Thread(target=_spinner, args=(stop_event,))
+        spinner_thread.start()
+        
+        llm_client = LaunchPad.create(LLMClient,
+                                      auto_fire=True,
+                                      verbose_logging=verbose)
+        llm_client.load_model(model_path=path.join(conversational_model_directory, f'{default_model}.gguf'))
+        llm_client.chat(message=self.full_prompt)
+        
+        while True:
+            time.sleep(0.01)
+            if llm_client.first_token.is_set():
+                stop_event.set()
+                spinner_thread.join()
+            if not llm_client.receiving_response.is_set():
+                break
+        
+        println()
+        println()
+            
+        # llm = ConversationalAI(model='Nous-Hermes-2-Mistral-7B-DPO.Q6_K',
+        #                        model_directory=conversational_model_directory,
+        #                        temperature=0.9,
+        #                        top_p=0.9,
+        #                        verbose=True)
+        # println()
+        # log(colorwrap('[LLM]:', 'cyan'))
+        # response = llm.chat('Instruction: Greet the user.', stream_response=stream)
+        # try:
+        #     while True:
+        #         user_input = prompt('[You]:', return_bool=False)
+        #         if user_input.lower() in ['exit', 'quit', 'q', 'bye']:
+        #             println()
+        #             break
+        #         println()
+        #         log(colorwrap('[LLM]:', 'cyan'))
+        #         response = llm.chat(user_input, stream_response=stream)
+        #         if not stream:
+        #             print(response)
         except KeyboardInterrupt:
             println()
         

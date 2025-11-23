@@ -56,7 +56,6 @@ class LLMEngine(BaseAIEngine):
         for token in generator:
             self.dispatch_to_clients(command='prompt_response',
                                      payload={'message': token})
-        print('end')
         self.dispatch_to_clients(command='prompt_response',
                                  payload={'message': '/endllm'})
 
