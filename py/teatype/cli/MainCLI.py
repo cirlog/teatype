@@ -34,6 +34,7 @@ class MainCLI(BaseCLI):
     
     def __init__(self,
                  include_default_scripts:bool=True,
+                 include_default_tuis:bool=True,
                  parent_path:str=None,
                  scripts_path:str=None,
                  tuis_path:str=None) -> None:
@@ -47,6 +48,7 @@ class MainCLI(BaseCLI):
             auto_validate (bool, optional): If True, automatically validates parsed arguments upon initialization.
         """
         self.include_default_scripts = include_default_scripts
+        self.include_default_tuis = include_default_tuis
         self.scripts_path = scripts_path
         self.tuis_path = tuis_path
         
@@ -121,13 +123,13 @@ class MainCLI(BaseCLI):
                 raise ValueError('scripts_path must be provided if include_default_scripts is False.')
     
     def discover_tuis(self) -> dict:
-        if self.include_default_scripts:
+        if self.include_default_tuis:
             return self.discover_python_modules('tuis/cli')
         else:
             if self.tuis_path is not None:
                 return self.discover_python_modules(self.tuis_path)
             else:
-                raise ValueError('tuis_path must be provided if include_default_scripts is False.')
+                raise ValueError('tuis_path must be provided if include_default_tuis is False.')
 
     def display_help(self) -> None:
         """

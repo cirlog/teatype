@@ -1,0 +1,90 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# Standard-library imports
+import argparse
+import os
+import shutil
+import sys
+
+# Local imports
+from .compare_forks import compare_forks, DEFAULT_EXCLUDES  # adjust module name if needed
+
+def sync_repos(path_a:str, path_b:str, dry_run:bool=True) -> int:
+    result = compare_repos(path_a, path_b, DEFAULT_EXCLUDES)
+    actions = result['sync_actions']
+    base_a = result['path_a']
+    base_b = result['path_b']
+
+    if not actions:
+        print('Repos are already in sync (according to rules).')
+        return 0
+
+    for action in actions:
+        if action['op'] != 'copy':
+            # future-proof: ignore unknown ops
+            continue
+
+        rel = action['path']
+        src_root = base_a if action['src'] == 'a' else base_b
+        dst_root = base_a if action['dst'] == 'a' else base_b
+
+        src_path = os.path.join(src_root, rel)
+        dst_path = os.path.join(dst_root, rel)
+
+        if not os.path.exists(src_path):
+            # something changed between compare and sync; skip
+            print(f'[WARN] source missing, skipping: {src_path}', file=sys.stderr)
+            continue
+
+        dst_dir = os.path.dirname(dst_path)
+        if not os.path.isdir(dst_dir) and not dry_run:
+            os.makedirs(dst_dir, exist_ok=True)
+
+        if dry_run:
+            print(f'[DRY-RUN] copy {src_path} -> {dst_path}')
+        else:
+            shutil.copy2(src_path, dst_path)
+            print(f'copied {src_path} -> {dst_path}')
+
+    return 0
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description='Synchronize two repos (newer always wins).',
+    )
+    parser.add_argument('path_a', help='First repo path')
+    parser.add_argument('path_b', help='Second repo path')
+    parser.add_argument(
+        '--apply',
+        action='store_true',
+        help='Actually apply changes (default is dry-run).',
+    )
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_args()
+
+    if not os.path.isdir(args.path_a):
+        print(f'ERROR: {args.path_a!r} is not a directory', file=sys.stderr)
+        raise SystemExit(1)
+
+    if not os.path.isdir(args.path_b):
+        print(f'ERROR: {args.path_b!r} is not a directory', file=sys.stderr)
+        raise SystemExit(1)
+
+    rc = sync_repos(args.path_a, args.path_b, dry_run=not args.apply)
+    raise SystemExit(rc)

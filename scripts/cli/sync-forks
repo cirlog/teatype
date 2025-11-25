@@ -1,0 +1,421 @@
+#!/usr/bin/env python3.11
+
+# Copyright (C) 2024-2025 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# Standard-library imports
+import fnmatch
+import hashlib
+import os
+import sys
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Any
+
+# Third-party imports
+from teatype.enum import EscapeColor
+from teatype.cli import BaseCLI
+from teatype.io import path, shell
+from teatype.logging import *
+
+class SyncForks(BaseCLI):
+    # Default excludes for repo junk
+    DEFAULT_EXCLUDES = [
+        '.git',
+        '.pytest_cache',
+        '__pycache__',
+        '*-venv',
+        '*.venv',
+        '.venv',
+        '.vscode',
+        '*dist',
+        '*.log',
+        '~temp*',
+        '.env',
+    ]
+        
+    def meta(self):
+        return {
+            'name': 'sync-forks',
+            'shorthand': 'sf',
+            'help': 'Synchronize all your forks with their upstream repositories.',
+            'flags': [
+                {
+                    'short': 'a',
+                    'long': 'a-repo',
+                    'help': 'Path to first repository.',
+                    'options': str,
+                    'required': True
+                },
+                {
+                    'short': 'b',
+                    'long': 'b-repo',
+                    'help': 'Path to second repository.',
+                    'options': str,
+                    'required': True
+                },
+                {
+                    'short': 'e',
+                    'long': 'exclude',
+                    'help': 'Additional exclude pattern (can be used multiple times).',
+                    # 'options': List[str], # TODO: Add support for list type for options
+                    'options': str,
+                    'required': False
+                }
+            ]
+        }
+
+    @dataclass
+    class _FileInfo:
+        full_path:str
+        size:int
+        mtime:float
+        hash:Optional[str]=None
+
+    def should_exclude(self, name:str, patterns:List[str]) -> bool:
+        return any(fnmatch.fnmatch(name, p) for p in patterns)
+
+    def build_file_index(self, root:str, exclude_patterns:List[str]) -> Dict[str,_FileInfo]:
+        root = os.path.abspath(root)
+        index:Dict[str,SyncForks._FileInfo] = {}
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [d for d in dirnames if not self.should_exclude(d, exclude_patterns)]
+            rel_dir = os.path.relpath(dirpath, root)
+            rel_dir = '' if rel_dir == '.' else rel_dir
+            for fname in filenames:
+                if self.should_exclude(fname, exclude_patterns):
+                    continue
+
+                rel_path = os.path.join(rel_dir, fname) if rel_dir else fname
+                full_path = os.path.join(root, rel_path)
+
+                try:
+                    st = os.stat(full_path)
+                except FileNotFoundError:
+                    continue
+
+                index[rel_path.replace(os.sep, '/')] = SyncForks._FileInfo(
+                    full_path=full_path,
+                    size=st.st_size,
+                    mtime=st.st_mtime,
+                )
+        return index
+
+    def sha256(self, path:str) -> str:
+        h = hashlib.sha256()
+        with open(path, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b''):
+                h.update(chunk)
+        return h.hexdigest()
+
+    def compare_indexes(self,
+                        a:Dict[str,_FileInfo],
+                        b:Dict[str,_FileInfo]) -> Tuple[List[str],List[str],List[Tuple[str,str]]]:
+        """
+        Return:
+        only_in_a: paths only in A
+        only_in_b: paths only in B
+        diff: list of (path, newer_side) where newer_side in {'a','b','same'}
+        """
+        only_in_a = sorted(set(a.keys()) - set(b.keys()))
+        only_in_b = sorted(set(b.keys()) - set(a.keys()))
+        common = sorted(set(a.keys()) & set(b.keys()))
+
+        diff = []
+        for path in common:
+            fa, fb = a[path], b[path]
+
+            # size differs -> definitely different
+            if fa.size != fb.size:
+                if fa.mtime > fb.mtime:
+                    newer = 'a'
+                elif fb.mtime > fa.mtime:
+                    newer = 'b'
+                else:
+                    newer = 'same'
+                diff.append((path, newer))
+                continue
+
+            # same size -> compare hash
+            if fa.hash is None:
+                fa.hash = self.sha256(fa.full_path)
+            if fb.hash is None:
+                fb.hash = self.sha256(fb.full_path)
+
+            if fa.hash != fb.hash:
+                if fa.mtime > fb.mtime:
+                    newer = 'a'
+                elif fb.mtime > fa.mtime:
+                    newer = 'b'
+                else:
+                    newer = 'same'
+                diff.append((path, newer))
+        return only_in_a, only_in_b, diff
+
+    def build_sync_actions_newer_wins(self, 
+                                      only_in_a:List[str],
+                                      only_in_b:List[str],
+                                      diff:List[Tuple[str,str]]) -> List[dict]:
+        """
+        Build a single sync plan where 'newer always wins'.
+
+        Each action:
+        {
+            "op": "copy",
+            "src": "a"|"b",
+            "dst": "a"|"b",
+            "path": str,
+            "reason": "only_in_a"|"only_in_b"|"modified",
+            "newer": "a"|"b"|"same"
+        }
+
+        Notes:
+        - For paths only in A: copy A -> B (we treat existence as winner).
+        - For paths only in B: copy B -> A.
+        - For modified paths: copy from newer side; if mtime is equal ("same"),
+        we break ties towards A -> B (deterministic).
+        """
+        actions:List[dict] = []
+
+        for p in only_in_a:
+            actions.append(
+                {
+                    'op': 'copy',
+                    'src': 'a',
+                    'dst': 'b',
+                    'path': p,
+                    'reason': 'only_in_a',
+                    'newer': 'a',
+                }
+            )
+
+        for p in only_in_b:
+            actions.append(
+                {
+                    'op': 'copy',
+                    'src': 'b',
+                    'dst': 'a',
+                    'path': p,
+                    'reason': 'only_in_b',
+                    'newer': 'b',
+                }
+            )
+
+        for p, newer in diff:
+            if newer == 'a':
+                src, dst = 'a', 'b'
+            elif newer == 'b':
+                src, dst = 'b', 'a'
+            else:
+                # same mtime -> prefer A as source (deterministic)
+                src, dst = 'a', 'b'
+            actions.append(
+                {
+                    'op': 'copy',
+                    'src': src,
+                    'dst': dst,
+                    'path': p,
+                    'reason': 'modified',
+                    'newer': newer,
+                }
+            )
+
+        # Stable ordering by path then dst
+        actions.sort(key=lambda a: (a['path'], a['dst']))
+        return actions
+
+    def ensure_config(self) -> tuple[str,Optional[str],Optional[str],bool]:
+        """
+        Ensure ROOT/dist/sync_repos.txt exists.
+
+        ROOT is two levels above this script: ROOT/scripts/build/this_script.py
+        Returns: (config_path, A_value, B_value, show_hint)
+        """
+        parent_directory = path.caller_parent(reverse_depth=2)
+        dist_dir = path.join(parent_directory, 'dist')
+        config_path = path.join(dist_dir, 'sync_repos.txt')
+
+        created = False
+
+        if not os.path.isdir(dist_dir):
+            os.makedirs(dist_dir, exist_ok=True)
+            created = True
+
+        if not os.path.exists(config_path):
+            # create empty file
+            open(config_path, 'a', encoding='utf-8').close()
+            created = True
+
+        a_val:Optional[str] = None
+        b_val:Optional[str] = None
+
+        try:
+            with open(config_path, encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    if line.startswith('A='):
+                        a_val = line[2:].strip()
+                    elif line.startswith('B='):
+                        b_val = line[2:].strip()
+        except OSError:
+            # if reading fails, just treat as no config
+            pass
+
+        # show hint if file was just created or incomplete (missing A or B)
+        show_hint = created or not (a_val and b_val)
+        return config_path, a_val, b_val, show_hint
+
+    def compare_repos(self, path_a:str, path_b:str, exclude_patterns:Optional[List[str]]=None) -> Dict[str,Any]:
+        """
+        Public API: compare two repos and return a machine-usable diff structure.
+
+        Returns dict:
+        {
+            "path_a": abs path,
+            "path_b": abs path,
+            "only_in_a": [...],
+            "only_in_b": [...],
+            "diff": [(path, newer)],
+            "sync_actions": [ {op, src, dst, path, reason, newer} ],
+        }
+        """
+        if exclude_patterns is None:
+            exclude_patterns = list(self.DEFAULT_EXCLUDES)
+
+        a_index = self.build_file_index(path_a, exclude_patterns)
+        b_index = self.build_file_index(path_b, exclude_patterns)
+
+        only_in_a, only_in_b, diff = self.compare_indexes(a_index, b_index)
+        sync_actions = self.build_sync_actions_newer_wins(only_in_a, only_in_b, diff)
+
+        return {
+            'path_a': os.path.abspath(path_a),
+            'path_b': os.path.abspath(path_b),
+            'only_in_a': only_in_a,
+            'only_in_b': only_in_b,
+            'diff': diff,
+            'sync_actions': sync_actions,
+        }
+        
+    #########
+    # Hooks #
+    #########
+        
+    def post_validate(self):
+        path_a = self.get_flag('a_repo', default=None)
+        path_b = self.get_flag('b_repo', default=None)
+
+        self.config_path, cfg_a, cfg_b, show_hint = self.ensure_config()
+        
+        # Decide which paths to use:
+        # 1. CLI args override config if both provided.
+        # 2. If CLI args missing, fall back to config A/B.
+        self.path_a = path_a if show_hint else cfg_a
+        self.path_b = path_b if show_hint else cfg_b
+        
+        if show_hint and not (cfg_a and cfg_b):
+            print()
+            # Only show this until both A and B are filled in
+            print(f'{EscapeColor.LIGHT_CYAN}HINT - {EscapeColor.RESET}config file at "{self.commandsconfig_path}"')
+            print('You can store your repo paths there so you don\'t need arguments:')
+            print('  A=/absolute/path/to/repo1')
+            print('  B=/absolute/path/to/repo2')
+        
+        if 'Missing required flag: -a, --a-repo.' in self._parsing_errors or \
+           'Missing required flag: -b, --b-repo.' in self._parsing_errors:
+            # Clear parsing errors if we have config values
+            if self.path_a and self.path_b:
+                self._parsing_errors = [
+                    e for e in self._parsing_errors
+                    if e not in (
+                        'Missing required flag: -a, --a-repo.',
+                        'Missing required flag: -b, --b-repo.'
+                    )
+                ]
+
+    def execute(self):
+        exclude = self.get_flag('exclude', default=[])
+        excludes = self.DEFAULT_EXCLUDES + exclude
+
+        if not self.path_a or not self.path_b:
+            print(
+                f'{EscapeColor.RED}ERROR:{EscapeColor.RESET} Provide both repo paths as arguments '
+                f'or set A= and B= in {self.config_path}',
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+
+        if not os.path.isdir(self.path_a):
+            print(f'{EscapeColor.RED}ERROR:{EscapeColor.RESET} {self.path_a!r} is not a directory', file=sys.stderr)
+            raise SystemExit(1)
+
+        if not os.path.isdir(self.path_b):
+            print(f'{EscapeColor.RED}ERROR:{EscapeColor.RESET} {self.path_b!r} is not a directory', file=sys.stderr)
+            raise SystemExit(1)
+
+        result = self.compare_repos(self.path_a, self.path_b, excludes)
+
+        abs_a = result['path_a']
+        abs_b = result['path_b']
+        label_a = os.path.basename(abs_a) or abs_a
+        label_b = os.path.basename(abs_b) or abs_b
+
+        only_in_a = result['only_in_a']
+        only_in_b = result['only_in_b']
+        diff = result['diff']
+        sync_actions = result['sync_actions']
+
+        print()
+        print(f'Repo A: {abs_a}')
+        print(f'Repo B: {abs_b}\n')
+
+        print('Summary:')
+        print(f'  Only in A: {EscapeColor.CYAN}{len(only_in_a)}{EscapeColor.RESET}')
+        print(f'  Only in B: {EscapeColor.CYAN}{len(only_in_b)}{EscapeColor.RESET}')
+        print(f'  Different in both: {EscapeColor.CYAN}{len(diff)}\n{EscapeColor.RESET}')
+
+        print('Legend:')
+        print(f'  {EscapeColor.GREEN}+{EscapeColor.RESET} copy (file missing on target)')
+        print(f'  {EscapeColor.YELLOW}~{EscapeColor.RESET} overwrite (newer wins)\n')
+
+        print(f'Sync plan {EscapeColor.GRAY}(newer always wins){EscapeColor.RESET}:')
+        if not sync_actions:
+            print('  (nothing to do)')
+        else:
+            for action in sync_actions:
+                path = action['path']
+                src = action['src']
+                SRC = src.upper()
+                dst = action['dst']
+                DST = dst.upper()
+                reason = action['reason']
+                newer = action['newer']
+
+                if reason in ('only_in_a', 'only_in_b'):
+                    # file only exists on one side -> copy to other
+                    print(f'  {EscapeColor.GREEN}+ {path}{EscapeColor.RESET} (copy {SRC} -> {DST})')
+                else:
+                    if newer == 'a':
+                        newer_str = f'{label_a} newer'
+                    elif newer == 'b':
+                        newer_str = f'{label_b} newer'
+                    else:
+                        newer_str = 'same mtime (tie -> A wins)'
+                    print(f'  {EscapeColor.YELLOW}~ {path}{EscapeColor.RESET} (copy {SRC} -> {DST}, {newer_str})')
+        print()
+
+        if not (only_in_a or only_in_b or diff):
+            print('No differences found.')
+
+if __name__ == '__main__':
+    SyncForks()
