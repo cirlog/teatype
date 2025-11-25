@@ -416,6 +416,7 @@ class SyncForks(BaseCLI):
 
         if not (only_in_a or only_in_b or diff):
             print('No differences found.')
+            print()
 
 if __name__ == '__main__':
     SyncForks()
