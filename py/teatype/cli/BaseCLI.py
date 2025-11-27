@@ -38,10 +38,9 @@ class GLOBAL_CLI_CONFIG:
     TAB = ' ' * 4
     USE_HELP_MESSAGE_ON_FAIL = True
 
-# TODO: Allow setting a default value for flags
+# TODO: Non-existing flags not throwing error?
 # TODO: Write hooks with proper sysntax to make hooks more obvious
 # TODO: Use class member variables with appending on base class, instead of this weird meta stuff
-# TODO: Implement default values to flags etc.
 # TODO: Make relations and depedencies between flags algorithmic
 #       depends_on: 'flag_name' -> 'flag_name' must be set before this flag can be set
 # TODO: Use log instead of print and println instead of pad_before and pad_after

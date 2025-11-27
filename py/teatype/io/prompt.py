@@ -24,7 +24,8 @@ def prompt(prompt_text:str,
            options:List[str]=None,
            return_bool:bool=True,
            colorize:bool=True,
-           exit_on_error:bool=False) -> any:
+           exit_on_error:bool=False,
+           print_padding:bool=True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
     Supports arrow-key navigation for option selection via prompt_toolkit.
@@ -59,7 +60,7 @@ def prompt(prompt_text:str,
                 display_text += ' ' + options_string
 
             # Log the prompt
-            log(display_text, pad_before=1)
+            log(display_text, pad_before=1 if print_padding else 0)
 
             # Use prompt_toolkit with arrow-key selection
             if options:
@@ -73,7 +74,7 @@ def prompt(prompt_text:str,
                 if prompt_answer not in options:
                     error_message = 'Invalid input. Available options are: ' + ', '.join(options)
                     err(error_message,
-                        pad_after=1,
+                        pad_after=1 if print_padding else 0,
                         exit=exit_on_error,
                         raise_exception=not exit_on_error,
                         use_prefix=False,

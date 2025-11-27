@@ -16,6 +16,7 @@ import subprocess
 import sys
 import termios
 import tty
+
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
@@ -36,7 +37,7 @@ def clear(use_ansi:bool=False) -> None:
     else:
         subprocess.run('clear', shell=True)
 
-def enable_sudo(max_fail_count: int = 3) -> None:
+def enable_sudo(max_fail_count:int=3, print_padding:bool=True) -> None:
     try:
         """
         Prompts for sudo password up to max_fail_count times, masking input with asterisks.
@@ -49,11 +50,13 @@ def enable_sudo(max_fail_count: int = 3) -> None:
         ).returncode == 0
 
         if no_pass:
-            println()
+            if print_padding:
+                println()
             hint('No sudo password required; privileges already granted.', use_prefix=False)
             return
         
-        println()
+        if print_padding:
+            println()
 
         def _getpass_masked(prompt: str) -> str:
             sys.stdout.write(prompt)
@@ -116,6 +119,9 @@ def enable_sudo(max_fail_count: int = 3) -> None:
                 log(f'Automatic sudo elevation failed.', pad_before=1, pad_after=1)
         except Exception as exc:
             err(f'Error enabling sudo: {exc}', pad_before=1, pad_after=1)
+    finally:
+        if print_padding:
+            println()
 
 def shell(command:str,
           cwd:str=False,
