@@ -15,11 +15,12 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from typing import List
+
 # Third-party imports
 from pathlib import Path
 from teatype.cli import Argument, Command, Flag
 from teatype.enum import EscapeColor
-from teatype.io import merge_dicts
+from teatype.io import clear_shell, merge_dicts
 from teatype.logging import *
 
 class GLOBAL_CLI_CONFIG:
@@ -131,7 +132,7 @@ class BaseCLI(ABC):
 
             if auto_validate:
                 self.validate()
-        
+                
         if auto_execute:
             # This check is not really necessary, since hooks are present in code, but maybe using this
             # later to comment out the hooks and make them entirely optional and not available at runtime
@@ -198,8 +199,13 @@ class BaseCLI(ABC):
         for flag in flags:
             self.flags.append(Flag(**flag))
         self.secret_flags = [
-            Flag(short='oss',
-                 long='override-security',
+            Flag(short='0ct',
+                 long='0-clear-terminal',
+                 help=['A secret global debug option to clear the shell terminal before executing the script', 'If you don\'t know what this is, don\'t use it!'],
+                 required=False,
+                 secret=True),
+            Flag(short='0oss',
+                 long='0-override-security',
                  help=['A secret global debug option to override any potential security features', 'If you don\'t know what this is, don\'t use it!'],
                  required=False,
                  secret=True)
@@ -458,6 +464,9 @@ class BaseCLI(ABC):
                 err('An error occured during validation.', exit=True, traceback=True)
         else:
             _validate_args()
+        
+        if self.get_flag('0-clear-terminal'):
+            clear_shell()
     
     # TODO: Reduce code repetition, use more inline functions
     def format_str(self,
@@ -780,7 +789,7 @@ class BaseCLI(ABC):
         Returns the flag value with the given name.
         """
         flag_value = None
-        for flag in self.flags:
+        for flag in self.flags + self.secret_flags:
             if flag.short == f'-{name}' or flag.long == f'--{name}':
                 flag_value = flag.value
                 break
@@ -796,7 +805,7 @@ class BaseCLI(ABC):
         """
         Sets the flag value with the given name.
         """
-        for flag in self.flags:
+        for flag in self.flags + self.secret_flags:
             if flag.short == f'-{name}' or flag.long == f'--{name}':
                 flag.value = value
                 return True
