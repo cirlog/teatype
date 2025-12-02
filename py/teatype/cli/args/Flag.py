@@ -15,6 +15,7 @@ from typing import List
 # Third-party imports
 from teatype.logging import *
 
+# TODO: Allow to set an option name
 class Flag:
     """
     Represents a command-line flag.
