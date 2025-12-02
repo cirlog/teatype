@@ -12,11 +12,47 @@
 
 # Standard-library imports
 import importlib
+import sys
+
 # Third-party imports
 from teatype.logging import *
 
 def ip(ip: str) -> bool:
     pass
+
+def memory(obj:object, print_results:bool=False) -> int:
+    def _get_size(obj, seen=None):
+        """
+        Recursively finds size of objects in bytes
+        """
+        size = sys.getsizeof(obj)
+        if seen is None:
+            seen = set()
+        
+        target_id = id(obj)
+        if target_id in seen:
+            return 0
+        
+        seen.add(target_id)
+        
+        if isinstance(obj, dict):
+            size += sum([_get_size(v, seen) for v in obj.values()])
+            size += sum([_get_size(k, seen) for k in obj.keys()])
+        elif hasattr(obj, '__dict__'):
+            size += _get_size(obj.__dict__, seen)
+        elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+            size += sum([_get_size(i, seen) for i in obj])
+        return size
+            
+    memory_bytes = _get_size(obj)
+    if print_results:
+        memory_kb = memory_bytes / 1024
+        memory_mb = memory_kb / 1024
+        print(f'\nMemory footprint of {obj.__class__.__name__}:')
+        print(f'  {memory_bytes:,} bytes')
+        print(f'  {memory_kb:.2f} KB')
+        print(f'  {memory_mb:.4f} MB')
+    return memory_bytes
 
 def port(port: int) -> bool:
     pass
