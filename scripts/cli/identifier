@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.11
 
-# Copyright (C) 2024-2025 Burak Günaydin
+# Copyright (C) 2024-2026 Burak Günaydin
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -14,12 +14,13 @@
 
 # Standard-library imports
 import time
+
 # Third-party imports
 from teatype.cli import BaseCLI
 from teatype.enum import EscapeColor
-from teatype.io import file
+from teatype.io import file, path, clear_shell
 from teatype.logging import *
-from teatype import generate_id
+from teatype.toolkit import generate_id as proto_generate_id
 
 try:
     import pyperclip
@@ -55,13 +56,13 @@ class Identifier(BaseCLI):
                     'options': ['burst', 'continous', 'single'],
                     'required': False
                 },
-                {
-                    'short': 'o',
-                    'long': 'output',
-                    'help': ['Save the generated identifier/s to the specified file', '(Only works in `single` and `burst` mode)'],
-                    'options': str,
-                    'required': False
-                }
+                # {
+                #     'short': 'o',
+                #     'long': 'output',
+                #     'help': ['Save the generated identifier/s to the specified file', '(Only works in `single` and `burst` mode)'],
+                #     'options': str,
+                #     'required': False
+                # }
             ]
         }
         
@@ -70,99 +71,99 @@ class Identifier(BaseCLI):
     #########
     
     def execute(self):
-        # Determine the length (default to 60)
-        length = self.get_flag('length')
-        if length is None:
-            length = 60
+        """
+        Generate a unique identifier using the teatype library.
 
-        # generate() will always call generate_id with the fixed `length`
-        def generate():
-            if length > 60:
-                id_string = ''
-                while len(id_string) < length:
-                    id_string += generate_id(truncate=60)
-                return id_string[:length]
-            return generate_id(truncate=length)
+            str: A unique identifier string.
+        """
+        length = self.get_flag('length', default=60)
+        # _generate() will always call generate_id with the fixed `length`
+        def _generate():
+            generated_id = proto_generate_id(truncate=length)
+            return generated_id
         
         println()
-        
-        mode = self.get_flag('mode')
-        has_defaulted = False
-        if mode is None:
-            mode = 'single'
-            has_defaulted = True
             
+        mode = self.get_flag('mode', default='single')
+        number = self.get_flag('count', default=1 if mode != 'burst' else 100)
         if mode == 'continous':
             try:
-                if not PYPERCLIP_AVAILABLE:
-                    hint('Pyperclip is not available. Please install it to use continous mode.')
-                else:
-                    hint('Pyperclip is enabled. The generated IDs will be copied to your clipboard.')
-                    
-                println()
-                hint('Press CTRL+C to stop', use_prefix=False)
-                println()
-                i = 0
+                history = []
+                last_copied = None
+                color_cycle = [EscapeColor.MAGENTA, EscapeColor.BLUE]
+                color_index = 0
                 while True:
-                    id = generate()
-                    color = EscapeColor.MAGENTA if i % 2 == 0 else EscapeColor.BLUE
-                    log(f'{color}  {id}')
-                    i += 1
+                    new_id = _generate()
+                    history.append(new_id)
+
                     if PYPERCLIP_AVAILABLE:
-                        pyperclip.copy(id)
+                        pyperclip.copy(new_id)
+                        last_copied = new_id
+
+                    clear_shell()
                     
-                    time.sleep(0.1)
+                    println()
+                    if PYPERCLIP_AVAILABLE:
+                        hint('Pyperclip is enabled. The generated IDs will be copied to your clipboard.')
+                        println()
                         
+                    hint('Press CTRL+C to stop', use_prefix=False)
+                    println()
+                    
+                    log('Generated IDs:')
+                    # Print all but last in gray
+                    for item in history[:-1]:
+                        marker = ' (copied)' if item == last_copied else ''
+                        log(f'    {EscapeColor.GRAY}{item}{marker}{EscapeColor.RESET}')
+
+                    # Print the current ID in color
+                    current_color = color_cycle[color_index]
+                    color_index = (color_index + 1) % len(color_cycle)
+
+                    marker = f' {EscapeColor.YELLOW}(last copied){EscapeColor.RESET}' if history[-1] == last_copied else ''
+                    log(f'    {current_color}{history[-1]}{EscapeColor.RESET}{marker}')
+
+                    time.sleep(0.1)
             except KeyboardInterrupt:
                 println()
                 println()
                 err('Continous mode stopped.', use_prefix=False, verbose=False)
                 println()
                 return
-        elif mode == 'burst':
-            count = self.get_flag('count')
-            if count is None:
-                count = 100
-                has_defaulted = True
-                
-            if not isinstance(count, int) or count <= 0:
-                err('Count must be a positive integer.', raise_exception=True)
+        else:
+            generated_ids = []
+            if not isinstance(number, int) or number <= 0:
+                err('number must be a positive integer.', raise_exception=True)
                 return
             
-            generated_ids = []
-            for _ in range(count):
-                generated_ids.append(generate())
-        elif mode == 'single':
-            generated_ids = [generate()]
+            for _ in range(number):
+                generated_ids.append(_generate())
         
-        if len(generated_ids) == 0:
-            err('Failed to generate ID, please try again.', raise_exception=False)
-            return
-        
-        if len(generated_ids) > 1:
-            log('Generated IDs:')
-        else:
-            log('Generated ID:')
-        for generated_id in generated_ids:
-            log(f'{EscapeColor.MAGENTA}  {generated_id}')
-        
-        output = self.get_flag('output')
-        if output:
-            file.write(output, generated_ids)
+            if len(generated_ids) == 0:
+                err('Failed to generate ID, please try again.', raise_exception=False)
+                return
             
-        if PYPERCLIP_AVAILABLE:
-            println()
             if len(generated_ids) > 1:
-                hint('Results copied to clipboard', use_prefix=False)
+                log('Generated IDs:')
             else:
-                hint('Result copied to clipboard', use_prefix=False)
-            pyperclip.copy('\n'.join(generated_ids).strip())
+                log('Generated ID:')
+            printed = 0
+            for generated_id in generated_ids:
+                log(f'{EscapeColor.MAGENTA}  {generated_id}')
+                printed += 1
+                if printed == 10:
+                    log(f'{EscapeColor.GRAY}  ... and {len(generated_ids) - printed} more.{EscapeColor.RESET}')
+                    break
             
-        if has_defaulted:
+            if PYPERCLIP_AVAILABLE:
+                println()
+                if len(generated_ids) > 1:
+                    hint('Results copied to clipboard', use_prefix=False)
+                else:
+                    hint('Result copied to clipboard', use_prefix=False)
+                pyperclip.copy('\n'.join(generated_ids).strip())
+                
             println()
-            hint('More options available, use `-h, --help` for more information')
-            
-        println()
 
 if __name__ == '__main__':
     Identifier()
