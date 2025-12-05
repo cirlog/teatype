@@ -31,7 +31,6 @@ class TResponse:
                  headers:dict,
                  status_code:int,
                  parse_json:bool=True):
-        self.content = content
         self.headers = headers
         self.status = status_code
         self.status_code = status_code
@@ -41,11 +40,15 @@ class TResponse:
         if type(content) == bytes or type(content) == bytearray:
             content = content.decode('utf-8')
         if type(content) == str and parse_json:
-            content = json_util.loads(content)
+            try:
+                content = json_util.loads(content)
+            except:
+                pass
         if type(content) == dict:
             self.data = TResponse._AttrDict(content)
         else:
             self.data = content
+        self.content = content
 
     class _AttrDict(dict):
         """
