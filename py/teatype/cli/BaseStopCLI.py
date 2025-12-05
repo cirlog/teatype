@@ -253,6 +253,7 @@ class BaseStopCLI(BaseCLI):
                 else:
                     # Log an error if the process could not be stopped
                     err(f'Process (PID: "{process_pids}") could not be stopped. Manual intervention required.')
+                    sys.exit(1)
             else:
                 # Log if the process is not running
                 log(f'Process (PID: "{process_pids}") is not running.')
@@ -287,6 +288,7 @@ class BaseStopCLI(BaseCLI):
             self.recursive_kill()
         
         println()
+        sys.exit(0)
 
 if __name__ == '__main__':
     BaseStopCLI()

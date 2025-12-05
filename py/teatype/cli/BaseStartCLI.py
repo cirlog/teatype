@@ -15,22 +15,26 @@ import inspect
 import os
 import signal
 import shutil
+import subprocess
 import sys
+import threading
 from abc import abstractmethod
 from importlib import util as iutil
+
 # Third-party imports
 from teatype.cli import BaseCLI, BaseStopCLI
 from teatype.io import env, file, path, shell
 from teatype.logging import *
 from teatype.io import TemporaryDirectory as TempDir
+from watchfiles import watch
 
 class BaseStartCLI(BaseCLI):
     def __init__(self, 
-                 auto_init:bool=True,
-                 auto_parse:bool=True,
-                 auto_validate:bool=True,
-                 auto_execute:bool=True,
-                 auto_parent_path:bool=True):
+                 auto_init: bool = True,
+                 auto_parse: bool = True,
+                 auto_validate: bool = True,
+                 auto_execute: bool = True,
+                 auto_parent_path: bool = True):
         
         if auto_parent_path:
             # TODO: Put this into BaseCLI instead, but with call_stack=2
@@ -72,6 +76,12 @@ class BaseStartCLI(BaseCLI):
                     'required': False
                 },
                 {
+                    'short': 'ht',
+                    'long': 'hot-reloading',
+                    'help': 'Hot-reload on file changes',
+                    'required': False
+                },
+                {
                     'short': 's',
                     'long': 'silent',
                     'help': 'Silent mode (no output)',
@@ -86,8 +96,8 @@ class BaseStartCLI(BaseCLI):
             ]
         }
         
-   # TODO: Decouple this class from Start into BaseCLI to prevent DRY
-    def load_compatible_scripts(self, silent_mode:bool=False):
+    # TODO: Decouple this class from Start into BaseCLI to prevent DRY
+    def load_compatible_scripts(self, silent_mode: bool = False):
         """
         Discover and import all Python scripts in the `scripts/` directory, skipping __init__.py and non-Python files.
         """
@@ -185,6 +195,87 @@ class BaseStartCLI(BaseCLI):
         # Sort the scripts dictionary by keys for consistent ordering
         scripts = dict(sorted(scripts.items()))
         return scripts
+
+    # TODO: Implement exclude paths from reloader
+    def _run_with_reloader(self, full_cmd:str, watch_paths:list[str], silent_mode:bool=False, detached:bool=False):
+        restarting = False
+        lock = threading.Lock()
+        proc: subprocess.Popen | None = None
+
+        # def start_proc():
+        #     nonlocal proc
+        #     if proc is not None and proc.poll() is None:
+        #         # already running
+        #         return
+        #     if not silent_mode:
+        #         log(f'[reloader] starting process: {cmd}')
+        #     proc = subprocess.Popen(
+        #         cmd,
+        #         shell=True,
+        #         preexec_fn=os.setsid  # separate process group; easier to kill
+        #     )
+
+        # def stop_proc():
+        #     nonlocal proc
+        #     if proc is None:
+        #         return
+        #     if proc.poll() is not None:
+        #         return
+
+        #     if not silent_mode:
+        #         warn('[reloader] stopping process ...')
+
+        #     try:
+        #         proc.terminate()
+        #         try:
+        #             proc.wait(timeout=5)
+        #         except subprocess.TimeoutExpired:
+        #             if not silent_mode:
+        #                 warn('[reloader] process did not exit, killing ...')
+        #             proc.kill()
+        #     finally:
+        #         proc = None
+
+        # # initial start
+        # start_proc()
+        shell(full_cmd,
+              combine_stdout_and_stderr=True,
+              detached=True if detached else False)
+
+        try:
+            if not silent_mode:
+                log(f'[reloader] watching for changes in: {", ".join(watch_paths)}')
+
+            for changes in watch(*watch_paths, recursive=True):
+                # Filter only .py changes and ignore obvious noise
+                py_changes = [
+                    (change, path_str)
+                    for (change, path_str) in changes
+                    if path_str.endswith('.py')
+                    and '/venv/' not in path_str
+                    and '/.venv/' not in path_str
+                    and '/logs/' not in path_str
+                ]
+                if not py_changes:
+                    continue
+
+                with lock:
+                    if restarting:
+                        if not silent_mode:
+                            log('[reloader] change detected but restart already in progress, skipping.')
+                        continue
+                    restarting = True
+
+                if not silent_mode:
+                    log(f'[reloader] {len(py_changes)} .py change(s) detected. Restarting ...')
+
+                stop_proc()
+                start_proc()
+
+                with lock:
+                    restarting = False
+        finally:
+            stop_proc()
     
     #########
     # Hooks #
@@ -216,7 +307,7 @@ class BaseStartCLI(BaseCLI):
             # Notify user that auto configuration discovery is initiated
             hint('"auto_find_config" automatically set to "True". Auto-finding module configuration...', pad_before=1)
 
-        if self.module_config == None:
+        if self.module_config is None:
             if not silent_mode:
                 warn('No module configuration found. Limited functionality available.')
         else:
@@ -228,51 +319,38 @@ class BaseStartCLI(BaseCLI):
         if not ignore_running:
             self.load_compatible_scripts(silent_mode=silent_mode)
             
-        # Auto-nativaging after loading compatible scripts, to not mess with the functionality of the algorithm
-        # Determine the parent directory of the current script
-        # Change the working directory to the parent directory
+        # Auto-navigating after loading compatible scripts, to not mess with the functionality of the algorithm
         os.chdir(self.parent_path)
         
         # If the 'detached' flag is set, run the command in the background
         detached = self.get_flag('detached')
         if detached:
-            path.create('./logs') # Create a logs directory if it does not exist
+            path.create('./logs')  # Create a logs directory if it does not exist
             # Append shell redirection to merge stderr with stdout
             stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
             self.start_command = f'{self.start_command} > {stdout_path}'
-            # self.start_command += f' > {stdout_path} 2>&1 &'
+            # FIXME: Why did I comment this out again?
+            # self.start_command += f' > {stdout_path} 2>&1 &' 
         
         if file.exists('./.env'):
-            env.load() # Load the environment variables
+            env.load()  # Load the environment variables
         else:
             warn('No ".env" file found. Limited functionality available.')
         
         def signal_handler(signum, _):
             """
             Handle incoming signals and perform appropriate actions based on the signal type.
-
-            Args:
-                signum (int): The signal number received.
-                _ (Any): Additional arguments (unused).
-
-            This function is designed to handle various signals sent to the process.
-            It logs a warning message indicating which signal was received and then exits
-            the process gracefully or forcefully based on the signal type.
             """
             try:
-                # Attempt to retrieve the name of the received signal
                 signal_name = signal.Signals(signum).name
             except ValueError:
-                # If the signal number is unrecognized, assign a default message
                 signal_name = f'Unknown signal ({signum})'
             
             warning_addendum = ''
-            # Check if the signal is SIGSTOP or SIGINT to provide additional context
             if signum == signal.SIGSTOP or signum == signal.SIGINT:
                 warning_addendum = ' (possibly user keyboard interrupt)'
             
             if not silent_mode:
-                # Log a warning indicating that the process was killed by a specific signal
                 warn(f'Process killed by {signal_name} signal{warning_addendum}.', pad_before=2)
             
             try:
@@ -284,17 +362,13 @@ class BaseStartCLI(BaseCLI):
                 if not silent_mode:
                     warn('No implemented trap found.', pad_after=1)
             
-            # Determine the exit code based on the signal type
             # WARNING: Doubly making sure that the process is killed (maybe a bad idea)?
             if signum == signal.SIGSTOP or signum == signal.SIGINT:
-                # Exit with code 0 for graceful termination on interrupt signals
                 exit(0)
             else:
-                # Exit with code 1 for other signals indicating abnormal termination
                 exit(1)
 
-        # WARNING: You cannot catch the SIGKILL signal, it is a kernel-level signal and cannot be caught
-        #          by the process, so do NOT even bother to try to catch it, it is a waste of time
+        # WARNING: You cannot catch SIGKILL.
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
         signal.signal(signal.SIGHUP, signal_handler)
@@ -303,11 +377,13 @@ class BaseStartCLI(BaseCLI):
         signal.signal(signal.SIGUSR2, signal_handler)
     
         if not silent_mode:
-            # Notify user that auto activation is attempted
             hint('"auto_activate_venv" automatically set to "True". Trying to activate a possibly present virtual environment ...',
-                pad_before=1)
+                 pad_before=1)
         
         venv_name = None
+        venv_path = ''
+        venv_found = False
+
         if hasattr(self, 'venv_name'):
             venv_name = self.venv_name
             venv_path = path.join(self.parent_path, venv_name)
@@ -319,36 +395,47 @@ class BaseStartCLI(BaseCLI):
         
         if not venv_name:
             if not silent_mode:
-                warn(f'No self.venv_name in start-script specified, trying to locate venv automatically instead ...') # Log the discovery of the virtual environment
-            venv_path = ''
-            venv_found = False # Initialize flag to track if a virtual environment is found
+                warn('No self.venv_name in start-script specified, trying to locate venv automatically instead ...')
             # Iterate through all files in the parent directory to locate a virtual environment
             for f in file.list(self.parent_path):
                 if 'venv' in f.name:
-                    venv_path = f.path # Store the path of the found virtual environment
+                    venv_path = f.path
                     if not silent_mode:
-                        log(f'Virtual environment {f.name} found.') # Log the discovery of the virtual environment
-                    venv_found = True # Update the flag as a virtual environment is found
-                    break # Exit the loop since the virtual environment has been found
-            
-        env.set('VIRTUAL_ENV', venv_path) # Set the VIRTUAL_ENV environment variable to an empty string
-        env.set('PYTHONUNBUFFERED', '1') # Set the PYTHONUNBUFFERED environment variable to '1'
-        env.set('PYTHONDONTWRITEBYTECODE', '1') # Set the PYTHONDONTWRITEBYTECODE environment variable to '1'
+                        log(f'Virtual environment {f.name} found.')
+                    venv_found = True
+                    break
+
+        # -------- env + reload handling --------
+        env.set('VIRTUAL_ENV', venv_path)
+        env.set('PYTHONUNBUFFERED', '1')
+        env.set('PYTHONDONTWRITEBYTECODE', '1')
+
         if not venv_found:
             if not silent_mode:
-                # Warn the user if no virtual environment is found, indicating limited functionality
                 warn('No virtual environment found. Script functionality may be limited.', pad_after=1)
-            shell(self.start_command, combine_stdout_and_stderr=True, detached=True if detached == True else False)
+            full_cmd = self.start_command
         else:
-            try:
-                # Attempt to activate the found virtual environment
-                if not silent_mode:
-                    log('Virtual environment activated.') # Log successful activation
-                shell(f'. {venv_path}/bin/activate && {self.start_command}', combine_stdout_and_stderr=True, detached=True if detached == True else False)
-            except Exception as e:
-                if not silent_mode:
-                    # Log an error if activation fails, providing the exception details
-                    err('An error occurred while trying to activate the virtual environment:', e)
+            if not silent_mode:
+                log('Virtual environment activated.')
+            full_cmd = f'. {venv_path}/bin/activate && {self.start_command}'
+
+        reload_enabled = self.get_flag('hot-reloading')
+        if reload_enabled:
+            # Watch the module directory for changes and restart on .py edits
+            watch_paths = [self.parent_path]
+            self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode, detached=detached)
+            # When reloader exits (e.g. Ctrl+C), clean up and exit gracefully
+            signal_handler(signal.SIGSTOP, None)
+            return
+
+        # Normal (non-reload) behaviour
+        try:
+            shell(full_cmd,
+                  combine_stdout_and_stderr=True,
+                  detached=True if detached else False)
+        except Exception as e:
+            if not silent_mode:
+                err('An error occurred while trying to start the process:', e)
         
         if detached:
             if self.get_flag('tail'):

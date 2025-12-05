@@ -73,8 +73,8 @@ class RawFileStructure:
     _fs:_FSProxy
     _root_path:str
     
-    def __init__(self, root_path:str, auto_create_folders:bool=True):
-        self._root_path = root_path
+    def __init__(self, root_path:str=None, auto_create_folders:bool=True):
+        self._root_path = root_path if root_path else _DEFAULT_ROOT_PATH
         
         self._fs = _FSProxy(_FS, root_path)
         
