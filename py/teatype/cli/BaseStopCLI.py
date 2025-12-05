@@ -26,6 +26,7 @@ from teatype.io import TemporaryDirectory as TempDir
 
 # TODO: Redis adapter to remove entries from a redis db?
 class BaseStopCLI(BaseCLI):
+    # TODO: Add flag that uses exit codes instead of returning boolean
     def meta(self):
         return {
             'name': 'stop',
@@ -125,10 +126,12 @@ class BaseStopCLI(BaseCLI):
                             if formatted_module_name == 'is_running':
                                 # Log an error if loading the script fails
                                 err(f'Error loading script "{filename}": {exc}')
-
             finally:
-                # Ensure the temporary directory is removed from sys.path after import
-                sys.path.pop(0)
+                try:
+                    # Ensure the temporary directory is removed from sys.path after import
+                    sys.path.pop(0)
+                except:
+                    pass
 
         # Sort the scripts dictionary by keys for consistent ordering
         scripts = dict(sorted(scripts.items()))
@@ -154,7 +157,7 @@ class BaseStopCLI(BaseCLI):
                 err('OS denied permission access for process. Please run the script with sudo.', pad_after=1, exit=True, verbose=False)
             return False
 
-    def attempt_stop(self, pid, signal_type, max_attempts, signal_name):
+    def attempt_stop(self, pid, signal_type, max_attempts, signal_name, sleep, silent):
         """
         Attempt to stop a process by sending a specific signal, retrying up to a maximum number of attempts.
 
@@ -171,28 +174,29 @@ class BaseStopCLI(BaseCLI):
         while self.is_process_running(pid):
             if attempts >= max_attempts:
                 # Warn if maximum attempts have been reached without success
-                warn(f'Failed to stop process (PID: {pid}) after {max_attempts} attempts with {signal_name}.')
+                if not silent:
+                    warn(f'Failed to stop process (PID: {pid}) after {max_attempts} attempts with {signal_name}.')
                 return False
             # Log the attempt to stop the process
-            log(f'Attempt {attempts + 1} to stop process (PID: {pid}) with {signal_name}...')
+            if not silent:
+                log(f'Attempt {attempts + 1} to stop process (PID: {pid}) with {signal_name}...')
             try:
                 # Send the specified signal to the process
                 os.kill(pid, signal_type)
             except OSError as e:
-                # Log an error if sending the signal fails
-                err(f'Error sending signal {signal_name} to PID {pid}: {e}')
+                if not silent:
+                    # Log an error if sending the signal fails
+                    err(f'Error sending signal {signal_name} to PID {pid}: {e}')
                 return False
             attempts += 1
             # Wait for a short period before the next attempt
-            sleep = 1
-            if self.get_flag('sleep'):
-                sleep = self.get_flag('sleep')
             time.sleep(sleep)
-        # Log success if the process has been stopped
-        log(f'Process (PID: {pid}) stopped using {signal_name}.')
+        if not silent:
+            # Log success if the process has been stopped
+            log(f'Process (PID: {pid}) stopped using {signal_name}.')
         return True
 
-    def stop_process(self, pid):
+    def stop_process(self, pid, sleep, silent):
         """
         Attempt to stop a process using SIGINT, then SIGTERM, and finally SIGKILL if necessary.
 
@@ -210,29 +214,32 @@ class BaseStopCLI(BaseCLI):
         if force_signal:
             match force_signal:
                 case 'SIGINT':
-                    if not self.attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, "SIGINT"):
+                    if not self.attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, "SIGINT", sleep, silent):
                         return False
                 case 'SIGTERM':
-                    if not self.attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, "SIGTERM"):
+                    if not self.attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, "SIGTERM", sleep, silent):
                         return False
                 case 'SIGKILL':
-                    if not self.attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, "SIGKILL"):
+                    if not self.attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, "SIGKILL", sleep, silent):
                         return False
         else:
             # Attempt to stop the process using SIGINT
-            if not self.attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, "SIGINT"):
-                # Warn and attempt to stop using SIGTERM if SIGINT fails
-                warn("SIGINT attempts failed. Trying with SIGTERM...")
-                if not self.attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, "SIGTERM"):
-                    # Warn and attempt to stop using SIGKILL if SIGTERM fails
-                    warn("SIGTERM attempts failed. Trying with SIGKILL...")
-                    if not self.attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, "SIGKILL"):
-                        # Log an error if all attempts fail
-                        err("SIGKILL failed. Manual intervention required.")
+            if not self.attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, "SIGINT", sleep, silent):
+                if not silent:
+                    # Warn and attempt to stop using SIGTERM if SIGINT fails
+                    warn("SIGINT attempts failed. Trying with SIGTERM...")
+                if not self.attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, "SIGTERM", sleep, silent):
+                    if not silent:
+                        # Warn and attempt to stop using SIGKILL if SIGTERM fails
+                        warn("SIGTERM attempts failed. Trying with SIGKILL...")
+                    if not self.attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, "SIGKILL", sleep, silent):
+                        if not silent:
+                            # Log an error if all attempts fail
+                            err("SIGKILL failed. Manual intervention required.")
                         return False
         return True
     
-    def recursive_kill(self):
+    def recursive_kill(self, sleep:float, silent:bool) -> bool:
         """
         Recursively attempt to kill all processes in the process_pids list until no processes remain.
         """
@@ -240,28 +247,34 @@ class BaseStopCLI(BaseCLI):
         # Execute the is_running to update the list of process PIDs
         self.process_pids = self.is_running.execute()
         if len(self.process_pids) == 0:
-            # Inform the user if there are no more processes to stop
-            log('No more processes alive.')
-            return
+            if not silent:
+                # Inform the user if there are no more processes to stop
+                log('No more processes alive.')
+            return True
         
         # Iterate over each PID in the process_pids list
         for process_pids in self.process_pids:
             if self.is_process_running(process_pids):
                 # Attempt to stop the process and log the result
-                if self.stop_process(process_pids):
-                    log(f'Process (PID: "{process_pids}") has been stopped.')
+                if self.stop_process(process_pids, sleep, silent):
+                    if not silent:
+                        log(f'Process (PID: "{process_pids}") has been stopped.')
+                    return True
                 else:
-                    # Log an error if the process could not be stopped
-                    err(f'Process (PID: "{process_pids}") could not be stopped. Manual intervention required.')
-                    sys.exit(1)
+                    if not silent:
+                        # Log an error if the process could not be stopped
+                        err(f'Process (PID: "{process_pids}") could not be stopped. Manual intervention required.')
+                    return False
             else:
-                # Log if the process is not running
-                log(f'Process (PID: "{process_pids}") is not running.')
-            println()
+                if not silent:
+                    # Log if the process is not running
+                    log(f'Process (PID: "{process_pids}") is not running.')
+                return True
                 
         if len(self.process_pids) > 0:
             # Recursively call itself to handle any remaining processes
             self.recursive_kill()
+        return True
 
     def execute(self):
         """
@@ -270,25 +283,29 @@ class BaseStopCLI(BaseCLI):
         # Load and import all relevant scripts
         self.load_script()
         
+        silent = self.get_flag('silent', False)
         if len(self.process_pids) == 0:
-            println()
-            # Inform the user if there are no processes to stop
-            log('No processes to stop.')
+            if not silent:
+                println()
+                # Inform the user if there are no processes to stop
+                log('No processes to stop.')
+                println()
+            return True
         else:
-            println()
+            if not silent:
+                println()
             force_signal = self.get_flag('force-signal')
-            if force_signal:
-                hint(f'Forcing signal: {force_signal}')
-            sleep = self.get_flag('sleep')
-            if sleep:
+            if not silent:
+                if force_signal:
+                    hint(f'Forcing signal: {force_signal}')
+            sleep = self.get_flag('sleep', 1)
+            if not silent:
                 hint(f'Only sleeping {sleep}s seconds between attempts')
-            if force_signal or sleep:
+                if force_signal or sleep:
+                    println()
                 println()
             # Begin the recursive kill process
-            self.recursive_kill()
-        
-        println()
-        sys.exit(0)
+            return self.recursive_kill(sleep, silent)
 
 if __name__ == '__main__':
     BaseStopCLI()

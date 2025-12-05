@@ -77,7 +77,7 @@ class BaseStartCLI(BaseCLI):
                 },
                 {
                     'short': 'ht',
-                    'long': 'hot-reloading',
+                    'long': 'hot-reload',
                     'help': 'Hot-reload on file changes',
                     'required': False
                 },
@@ -165,15 +165,13 @@ class BaseStartCLI(BaseCLI):
                                 # https://www.youtube.com/watch?v=bH17fIsYirI&ab_channel=SimonDToppin
                                 
                                 # Instantiate the class without automatic validation or execution
-                                stop = script_class(auto_validate=False,
-                                                    auto_execute=False)
-                                stop.scripts_directory = scripts_directory
-                                # Set the '--silent' flag to suppress verbose output
-                                stop.set_flag('silent', True)
+                                self.stop = script_class(auto_validate=False,
+                                                         auto_execute=False)
+                                self.stop.scripts_directory = scripts_directory
                                 # Perform any necessary pre-execution setup
-                                stop.pre_execute()
+                                self.stop.pre_execute()
                                 # Execute the script
-                                stop.execute()
+                                self.stop.execute()
                                 stop_script_found = True
                             if stop_script_found:
                                 break
@@ -187,7 +185,6 @@ class BaseStartCLI(BaseCLI):
                 if not stop_script_found:
                     if not silent_mode:
                         warn('No "stop" script found in scripts directory. Only limited functionality available.')
-
             finally:
                 # Ensure the temporary directory is removed from sys.path after import
                 sys.path.pop(0)
@@ -197,50 +194,24 @@ class BaseStartCLI(BaseCLI):
         return scripts
 
     # TODO: Implement exclude paths from reloader
-    def _run_with_reloader(self, full_cmd:str, watch_paths:list[str], silent_mode:bool=False, detached:bool=False):
+    def _run_with_reloader(self, full_cmd:str, watch_paths:list[str], silent_mode:bool=False):
         restarting = False
         lock = threading.Lock()
-        proc: subprocess.Popen | None = None
+        
+        def start_process():
+            shell(full_cmd,
+                  combine_stdout_and_stderr=True,
+                  detached=True)
 
-        # def start_proc():
-        #     nonlocal proc
-        #     if proc is not None and proc.poll() is None:
-        #         # already running
-        #         return
-        #     if not silent_mode:
-        #         log(f'[reloader] starting process: {cmd}')
-        #     proc = subprocess.Popen(
-        #         cmd,
-        #         shell=True,
-        #         preexec_fn=os.setsid  # separate process group; easier to kill
-        #     )
-
-        # def stop_proc():
-        #     nonlocal proc
-        #     if proc is None:
-        #         return
-        #     if proc.poll() is not None:
-        #         return
-
-        #     if not silent_mode:
-        #         warn('[reloader] stopping process ...')
-
-        #     try:
-        #         proc.terminate()
-        #         try:
-        #             proc.wait(timeout=5)
-        #         except subprocess.TimeoutExpired:
-        #             if not silent_mode:
-        #                 warn('[reloader] process did not exit, killing ...')
-        #             proc.kill()
-        #     finally:
-        #         proc = None
-
-        # # initial start
-        # start_proc()
-        shell(full_cmd,
-              combine_stdout_and_stderr=True,
-              detached=True if detached else False)
+        def stop_process():
+            # Perform any necessary pre-execution setup
+            self.stop.pre_execute()
+            # Execute the script
+            self.stop.execute()
+            
+        self.stop.set_flag('silent', True)
+        self.stop.set_flag('sleep', 0.25)
+        start_process()
 
         try:
             if not silent_mode:
@@ -248,15 +219,17 @@ class BaseStartCLI(BaseCLI):
 
             for changes in watch(*watch_paths, recursive=True):
                 # Filter only .py changes and ignore obvious noise
-                py_changes = [
+                changes_detected = [
                     (change, path_str)
                     for (change, path_str) in changes
-                    if path_str.endswith('.py')
-                    and '/venv/' not in path_str
-                    and '/.venv/' not in path_str
+                    if 'venv/' not in path_str
+                    # and path_str.endswith('.py')
+                    and '~temp' not in path_str
+                    and '.venv/' not in path_str
                     and '/logs/' not in path_str
+                    and 'pycache' not in path_str
                 ]
-                if not py_changes:
+                if not changes_detected:
                     continue
 
                 with lock:
@@ -267,15 +240,17 @@ class BaseStartCLI(BaseCLI):
                     restarting = True
 
                 if not silent_mode:
-                    log(f'[reloader] {len(py_changes)} .py change(s) detected. Restarting ...')
+                    println()
+                    warn(f'[reloader] {len(changes_detected)} .py change(s) detected. Restarting ...', include_symbol=True, use_prefix=False)
+                    println()
 
-                stop_proc()
-                start_proc()
+                stop_process()
+                start_process()
 
                 with lock:
                     restarting = False
         finally:
-            stop_proc()
+            stop_process()
     
     #########
     # Hooks #
@@ -323,12 +298,12 @@ class BaseStartCLI(BaseCLI):
         os.chdir(self.parent_path)
         
         # If the 'detached' flag is set, run the command in the background
+        self.stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
         detached = self.get_flag('detached')
         if detached:
             path.create('./logs')  # Create a logs directory if it does not exist
             # Append shell redirection to merge stderr with stdout
-            stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
-            self.start_command = f'{self.start_command} > {stdout_path}'
+            self.start_command = f'{self.start_command} > {self.stdout_path}'
             # FIXME: Why did I comment this out again?
             # self.start_command += f' > {stdout_path} 2>&1 &' 
         
@@ -419,11 +394,11 @@ class BaseStartCLI(BaseCLI):
                 log('Virtual environment activated.')
             full_cmd = f'. {venv_path}/bin/activate && {self.start_command}'
 
-        reload_enabled = self.get_flag('hot-reloading')
+        reload_enabled = self.get_flag('hot-reload')
         if reload_enabled:
             # Watch the module directory for changes and restart on .py edits
             watch_paths = [self.parent_path]
-            self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode, detached=detached)
+            self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode)
             # When reloader exits (e.g. Ctrl+C), clean up and exit gracefully
             signal_handler(signal.SIGSTOP, None)
             return
@@ -439,7 +414,7 @@ class BaseStartCLI(BaseCLI):
         
         if detached:
             if self.get_flag('tail'):
-                shell(f'tail -f {stdout_path}')
+                shell(f'tail -f {self.stdout_path}')
         else:
             signal_handler(signal.SIGSTOP, None) # Kill the process after successful activation
         
