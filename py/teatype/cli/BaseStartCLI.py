@@ -194,6 +194,7 @@ class BaseStartCLI(BaseCLI):
         return scripts
 
     # TODO: Implement exclude paths from reloader
+    # TODO: Make sure that multiple rapid changes do not trigger multiple restarts
     def _run_with_reloader(self, full_cmd:str, watch_paths:list[str], silent_mode:bool=False):
         restarting = False
         lock = threading.Lock()
