@@ -249,6 +249,8 @@ class BaseStartCLI(BaseCLI):
 
                 with lock:
                     restarting = False
+        except KeyboardInterrupt:
+            pass
         finally:
             stop_process()
     
@@ -308,7 +310,7 @@ class BaseStartCLI(BaseCLI):
             # self.start_command += f' > {stdout_path} 2>&1 &' 
         
         if file.exists('./.env'):
-            env.load()  # Load the environment variables
+            env.load() # Load the environment variables
         else:
             warn('No ".env" file found. Limited functionality available.')
         
@@ -400,7 +402,7 @@ class BaseStartCLI(BaseCLI):
             watch_paths = [self.parent_path]
             self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode)
             # When reloader exits (e.g. Ctrl+C), clean up and exit gracefully
-            signal_handler(signal.SIGSTOP, None)
+            # signal_handler(signal.SIGSTOP, None)
             return
 
         # Normal (non-reload) behaviour
