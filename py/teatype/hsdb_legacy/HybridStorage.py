@@ -12,6 +12,7 @@
 
 # Standard-library imports
 import threading
+import traceback
 from typing import List
 from datetime import datetime as dt
 # Third-party imports
@@ -127,11 +128,11 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             traceback.print_exc()
             return None
 
-    def create_entry(self, model:object, data:dict, overwrite_path:str=None) -> dict|None:
+    def create_entry(self, model:object, data:dict, overwrite_path:str=None) -> int:
         try:
-            model_instance = self.index_database.create_entry(model, data, overwrite_path)
+            model_instance, return_code = self.index_database.create_entry(model, data, overwrite_path)
             if model_instance is None:
-                return None
+                return None, return_code
             
             if model_instance.model_name == 'InstrumentModel':
                 try:
@@ -164,11 +165,10 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
             # TODO: If file save fails, delete entry from db
             # TODO: Implement implemented trap cleanup handlers in models
-            return model_instance.serialize()
+            return model_instance.serialize(), return_code
         except Exception as exc:
-            import traceback
             traceback.print_exc()
-            return None
+            return None, 500
 
     def get_entry(self, model_id:str, serialize:bool=False) -> dict:
         return self.index_database.get_entry(model_id, serialize)

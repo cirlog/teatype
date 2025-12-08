@@ -20,7 +20,7 @@ from typing import List, Type
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.hsdb_legacy import HybridStorage
-from teatype.comms.http.responses import NotAllowed, ServerError, Success
+from teatype.comms.http.responses import Conflict, NotAllowed, ServerError, Success
 
 # TODO: Create a seperate base class without hsdb support
 class HSDBDjangoView(APIView):
@@ -51,7 +51,6 @@ class HSDBDjangoView(APIView):
                 raise ValueError('Can\' use auto mode without specifying a hsdb_model in view')
             
             if request.method in self.__DATA_REQUIRED_METHODS:
-                print(request.method)
                 if not request.data:
                     return NotAllowed(f'Data is required for {request.method} requests')
                 
@@ -69,9 +68,11 @@ class HSDBDjangoView(APIView):
                         id = kwargs.get(self.api_id())
                         query_response = hybrid_storage.get_entry(id, serialize=True)
                 case 'POST':
-                    query_response = hybrid_storage.create_entry(self.hsdb_model, data)
-                    if query_response is None:
-                        return ServerError('Entry already exists')
+                    query_response, return_code = hybrid_storage.create_entry(self.hsdb_model, data)
+                    if return_code == 409:
+                        return Conflict('Entry already exists')
+                    elif return_code == 500:
+                        return ServerError('Internal server error during entry creation')
                 # case 'PUT':
                 #     query_response = hybrid_storage.create_entry()
                 # case 'PATCH':

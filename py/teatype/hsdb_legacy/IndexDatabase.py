@@ -11,8 +11,9 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import traceback
 import threading
-from typing import List
+from typing import List, Tuple
 
 # Third-party imports
 from teatype import generate_id
@@ -48,13 +49,19 @@ class IndexDatabase:
         self._relational_index = dict()
         self._relational_index_lock = threading.Lock()
                 
-    def create_entry(self, model:type, data:dict, overwrite_path:str=None) -> object|None:
+    def create_entry(self, model:type, data:dict, overwrite_path:str=None) -> Tuple[object|int,None|int]:
+        """
+        Return codes:
+            - 200: Success
+            - 409: Conflict (Entry already exists)
+            - 500: Internal Server Error
+        """
         try:
             with self._db_lock:
                 model_name = model.__name__
                 model_id = data.get('id', generate_id())
                 if model_id in self._db:
-                    return None
+                    return None, 409
                 
                 # Model.create(overwrite_path, model_instance)
                 # TODO: Quick and dirty hack, need to refactor this with proper attributes
@@ -77,7 +84,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None
+                            return None, 409
                     case 'InstrumentTypeModel':
                         existing_match = next(
                             (
@@ -89,8 +96,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None
-                    #     pass
+                            return None, 409
                     case 'ManufacturerModel':
                         existing_match = next(
                             (
@@ -102,7 +108,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None
+                            return None, 409
                     case 'SurgeryTypeModel':
                         existing_match = next(
                             (
@@ -114,7 +120,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None
+                            return None, 409
                         
                 # TODO: Validation
                 data['id'] = model_id
@@ -135,11 +141,10 @@ class IndexDatabase:
                             self._indexed_fields[indexed_field_name][name] = id
                         
                 self._db[model_id] = model_instance
-                return model_instance
+                return model_instance, 200
         except:
-            import traceback
             traceback.print_exc()
-            return None
+            return None, 500
         
     # TODO: Query optimization with indices
     def get_entries(self, model:type, serialize:bool=False) -> List[object]:
