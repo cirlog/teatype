@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional
 # Third-party imports
 from teatype.comms.ipc.socket.envelope import SocketEnvelope
 from teatype.comms.ipc.socket.protocol import SocketClientWorker, SocketServerWorker
-from teatype.logging import err, hint, log, warn
+from teatype.logging import *
 
 def socket_handler(endpoint:Optional[str]=None):
     """
@@ -68,7 +68,7 @@ class SocketEndpoint:
         queue_size: Maximum number of queued messages for client workers.
         max_clients: Maximum concurrent connections for server workers.
         connect_timeout: Seconds to wait for connection establishment.
-        ack_timeout: Seconds to wait for message acknowledgment.
+        acknowledgement_timeout: Seconds to wait for message acknowledgment.
         metadata: Additional key-value data for application-specific use.
     """
     name:str
@@ -80,7 +80,7 @@ class SocketEndpoint:
     queue_size:int=10
     max_clients:int=5
     connect_timeout:float=5.0
-    ack_timeout:float=5.0
+    acknowledgement_timeout:float=5.0
     metadata:Dict[str,Any]=field(default_factory=dict)
 
 class SocketServiceManager:
