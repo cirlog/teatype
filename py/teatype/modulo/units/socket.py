@@ -11,9 +11,9 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+from __future__ import annotations
 import argparse
 import time
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Union
 
@@ -262,7 +262,7 @@ class SocketUnit(CoreUnit):
                                          body=body,
                                          block=block)
 
-    def disconnect(self, endpoint:str, graceful bool=True) -> None:
+    def disconnect(self, endpoint:str, graceful:bool=True) -> None:
         """
         Disconnect a client endpoint.
         

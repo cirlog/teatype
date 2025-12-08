@@ -10,9 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+
 # Standard-library imports
-import threading
 from __future__ import annotations
+import threading
 from pathlib import Path
 from typing import Any, Dict, Optional
 
