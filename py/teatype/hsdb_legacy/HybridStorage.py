@@ -118,7 +118,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             
     def feed_entry(self, model:object, data:dict, overwrite_path:str=None) -> dict|None:
         try:
-            model_instance = self.index_database.create_entry(model, data, overwrite_path)
+            model_instance, _ = self.index_database.create_entry(model, data, overwrite_path)
             if model_instance is None:
                 return None
             file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
