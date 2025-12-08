@@ -1,0 +1,42 @@
+#!/usr/bin/env python3.11
+from __future__ import annotations
+
+from pathlib import Path
+
+from teatype.io import path, shell
+from teatype.logging import err, hint, log, success
+
+from base import ReactDashboardBase
+
+class BuildReactDashboard(ReactDashboardBase):
+    def meta(self):
+        return {
+            'name': 'react-dashboard-build',
+            'shorthand': 'rdb',
+            'help': 'Build the React dashboard via pnpm.',
+            'flags': [
+                {
+                    'short': 'c',
+                    'long': 'clean',
+                    'help': 'Delete the dist directory before building.',
+                    'required': False
+                }
+            ]
+        }
+
+    def execute(self):
+        self._ensure_project_exists()
+        if self.get_flag('clean'):
+            dist_path = self.project_root / 'dist'
+            if dist_path.exists():
+                log(f'Removing existing dist directory at {dist_path}.')
+                path.delete(str(dist_path))
+        hint('Building React dashboard ...', pad_before=1)
+        cmd = f'{self._pnpm()} build'
+        exit_code = shell(cmd, cwd=str(self.project_root))
+        if exit_code != 0:
+            err('React dashboard build failed.', exit=True)
+        success('React dashboard build complete. Dist artifacts ready for FastAPI.', include_symbol=True)
+
+if __name__ == '__main__':
+    BuildReactDashboard()

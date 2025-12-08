@@ -1,0 +1,74 @@
+#!/usr/bin/env python3.11
+from __future__ import annotations
+
+import os
+import signal
+from datetime import datetime
+
+from teatype.io import path, shell
+from teatype.logging import err, hint, log, success, warn
+
+from base import ReactDashboardBase
+
+class StartReactDashboard(ReactDashboardBase):
+    def meta(self):
+        return {
+            'name': 'react-dashboard-start',
+            'shorthand': 'rds',
+            'help': 'Run the React dashboard dev server.',
+            'flags': [
+                {
+                    'short': 'd',
+                    'long': 'detached',
+                    'help': 'Start the dev server in the background.',
+                    'required': False
+                },
+                {
+                    'short': 'h',
+                    'long': 'host',
+                    'help': 'Host to bind the Vite dev server.',
+                    'options': str,
+                    'required': False
+                },
+                {
+                    'short': 'p',
+                    'long': 'port',
+                    'help': 'Port for the dev server.',
+                    'options': int,
+                    'required': False
+                }
+            ]
+        }
+
+    def execute(self):
+        self._ensure_project_exists()
+        host = self.get_flag('host', '0.0.0.0')
+        port = int(self.get_flag('port', 5173))
+        detached = bool(self.get_flag('detached'))
+        cmd = f'{self._pnpm()} dev --host {host} --port {port}'
+
+        if detached:
+            self._launch_detached(cmd, host, port)
+        else:
+            hint('Starting React dashboard in foreground mode. Press Ctrl+C to stop.', pad_before=1)
+            result = shell(cmd, cwd=str(self.project_root))
+            if result != 0:
+                err('React dev server exited with an error.', exit=True)
+
+    def _launch_detached(self, cmd: str, host: str, port: int) -> None:
+        log_file = self.logs_dir / 'react-dashboard-dev.log'
+        path.create(self.logs_dir)
+        timestamp = datetime.utcnow().isoformat()
+        hint(f'Starting React dev server in background ({host}:{port}). Logs → {log_file}')
+        launch_cmd = (
+            f'cd {self.project_root} && '
+            f'nohup {cmd} > {log_file} 2>&1 & echo $! > {self.pid_file}'
+        )
+        exit_code = shell(launch_cmd)
+        if exit_code != 0:
+            err('Failed to start dev server in detached mode.', exit=True)
+        (self.project_root / '.devserver.started').write_text(timestamp)
+        success(f'React dev server running (PID file: {self.pid_file}).', include_symbol=True)
+
+if __name__ == '__main__':
+    StartReactDashboard()

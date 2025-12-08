@@ -108,10 +108,7 @@ class CoreUnit(threading.Thread):
         
     def __new__(cls, *args, **kwargs):
         if not cls._ALLOW_DIRECT_INSTANTIATION:
-            raise TypeError(
-                'Direct instantiation of CoreUnit baseclasses is not allowed. '
-                'Use Subclass.create() or better yet, Launchpads to instantiate appropriate worker units.'
-            )
+            raise TypeError('Direct instantiation of CoreUnit baseclasses is not allowed. \nUse Subclass.create() or better yet, Launchpads to instantiate appropriate worker units.')
         return super().__new__(cls)
     
     #################

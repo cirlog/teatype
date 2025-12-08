@@ -1,0 +1,68 @@
+#!/usr/bin/env python3.11
+from __future__ import annotations
+
+import os
+import signal
+import time
+
+from teatype.logging import err, hint, log, success, warn
+
+from base import ReactDashboardBase
+
+class StopReactDashboard(ReactDashboardBase):
+    def meta(self):
+        return {
+            'name': 'react-dashboard-stop',
+            'shorthand': 'rdp',
+            'help': 'Stop the background React dev server.',
+            'flags': [
+                {
+                    'short': 'f',
+                    'long': 'force',
+                    'help': 'Force kill the process with SIGKILL if graceful stop fails.',
+                    'required': False
+                }
+            ]
+        }
+
+    def execute(self):
+        if not self.pid_file.exists():
+            warn('Dev server PID file not found. Nothing to stop.', include_symbol=True)
+            return
+        pid = int(self.pid_file.read_text().strip())
+        if pid <= 0:
+            warn('Invalid PID detected in pidfile. Delete the file manually if needed.')
+            return
+        hint(f'Attempting to stop dev server (PID {pid}).')
+        if not self._terminate(pid, signal.SIGTERM):
+            if self.get_flag('force'):
+                warn('Graceful stop failed. Sending SIGKILL ...')
+                if not self._terminate(pid, signal.SIGKILL):
+                    err('Unable to stop dev server. Manual intervention required.', exit=True)
+            else:
+                err('Unable to stop dev server. Retry with --force if necessary.', exit=True)
+        success('React dev server stopped.', include_symbol=True)
+        try:
+            self.pid_file.unlink(missing_ok=True)  # type: ignore[arg-type]
+        except TypeError:
+            if self.pid_file.exists():
+                self.pid_file.unlink()
+
+    def _terminate(self, pid: int, sig: signal.Signals) -> bool:
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            warn('Process already stopped.')
+            return True
+        except PermissionError:
+            err('Permission denied while stopping process. Try running with sudo.', exit=True)
+        time.sleep(0.5)
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            log('Process exited cleanly.')
+            return True
+        return False
+
+if __name__ == '__main__':
+    StopReactDashboard()

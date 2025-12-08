@@ -15,6 +15,7 @@ from .application import ApplicationUnit
 from .core import CoreUnit, parse_designation, print_designation
 from .backend import BackendUnit
 from .service import ServiceUnit
+from .socket import SocketUnit, socket_handler
 from .workhorse import WorkhorseUnit
 
 if __name__ == '__main__':
@@ -26,7 +27,7 @@ if __name__ == '__main__':
     # TODO: Add launch key, so that only Launchpad can execute this script
     parser.add_argument('unit_type',
                         type=str,
-                        choices=['backend', 'service', 'workhorse'],
+                        choices=['backend', 'service', 'socket', 'workhorse'],
                         help='Type of the unit to launch')
     parser.add_argument('unit_name',
                         type=str,

@@ -13,14 +13,21 @@
 # Third-party imports
 from teatype.modulo.units.backend import BackendUnit
 from teatype.modulo.units.service import ServiceUnit
+from teatype.modulo.units.socket import SocketUnit
 
 class ApplicationUnit:
     """
-    Composite application unit consisting of backend and service units.
+    Composite application unit consisting of backend, service and socket units.
     """
-    def __init__(self, name:str):
-        self.backend = BackendUnit.create(name=name)
+
+    def __init__(self,
+                 name:str,
+                 *,
+                 backend_host:str='127.0.0.1',
+                 backend_port:int=8080):
+        self.backend = BackendUnit.create(name=name, host=backend_host, port=backend_port)
         self.service = ServiceUnit.create(name=name)
+        self.socket = SocketUnit.create(name=name)
         
     ##############
     # Public API #

@@ -36,11 +36,11 @@ class LaunchPad:
     
     @classmethod
     def create(cls,
-               unit_type:Literal['backend','service','workhorse']|type,
+               unit_type:Literal['backend','service','socket','workhorse']|type,
                unit_name:str=None,
                host:str|None=None,
                port:int|None=None,
-               **kwargs) -> BackendUnit|ServiceUnit|WorkhorseUnit:
+               **kwargs) -> BackendUnit|ServiceUnit|SocketUnit|WorkhorseUnit:
         """
         Launch a Teatype Modulo unit.
         
@@ -63,6 +63,8 @@ class LaunchPad:
                 unit = ServiceUnit.create(name=unit_name, **kwargs)
             elif unit_type == 'workhorse':
                 unit = WorkhorseUnit.create(name=unit_name, **kwargs)
+            elif unit_type == 'socket':
+                unit = SocketUnit.create(name=unit_name, **kwargs)
             else:
                 raise err(f'Invalid unit type: {unit_type}',
                         raise_exception=ValueError)
@@ -76,7 +78,7 @@ class LaunchPad:
     
     @classmethod
     def fire(cls,
-             unit_type:Literal['backend','service','workhorse']|type,
+             unit_type:Literal['backend','service','socket','workhorse']|type,
              unit_name:str=None,
              host:str|None=None,
              port:int|None=None,
@@ -123,7 +125,7 @@ if __name__ == "__main__":
     
     parser.add_argument('unit_type',
                         type=str,
-                        choices=['backend', 'service', 'workhorse'],
+                        choices=['backend', 'service', 'socket', 'workhorse'],
                         help='Type of unit to launch')
     parser.add_argument('unit_name',
                         type=str,
@@ -151,7 +153,7 @@ if __name__ == "__main__":
         LaunchPad.fire(args.unit_type, args.unit_name, host=args.host, port=args.port)
     else:
         try:
-            unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
+            unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port, verbose_logging=True)
             # Run unit directly (blocking mode)
             unit.start()
             unit.join()

@@ -1,0 +1,65 @@
+#!/usr/bin/env python3.11
+from __future__ import annotations
+
+import shutil
+from pathlib import Path
+
+from teatype.io import path, shell
+from teatype.logging import err, hint, log, success, warn
+
+from base import ReactDashboardBase
+
+class InstallReactDashboard(ReactDashboardBase):
+    def meta(self):
+        return {
+            'name': 'react-dashboard-install',
+            'shorthand': 'rdi',
+            'help': 'Install system prerequisites and pnpm dependencies for the React dashboard.',
+            'flags': [
+                {
+                    'short': 'y',
+                    'long': 'assume-yes',
+                    'help': 'Skip interactive confirmations when installing system packages.',
+                    'required': False
+                }
+            ]
+        }
+
+    def execute(self):
+        self._ensure_project_exists()
+        self._ensure_node()
+        self._ensure_pnpm()
+        self._install_dependencies()
+        success('React dashboard dependencies installed.', include_symbol=True)
+
+    # Internals -----------------------------------------------------------
+    def _ensure_node(self) -> None:
+        if shell('node --version', mute=True) == 0:
+            log('Node.js already present. Skipping install.')
+            return
+        hint('Node.js not detected. Installing Node 20.x (requires sudo).')
+        shell('curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -', combine_stdout_and_stderr=True)
+        apt_cmd = 'apt-get install -y nodejs build-essential'
+        shell(apt_cmd, sudo=True)
+
+    def _ensure_pnpm(self) -> None:
+        if shell('pnpm --version', mute=True) == 0:
+            log('pnpm already available.')
+            return
+        if shell('corepack --version', mute=True) != 0:
+            warn('corepack not found. Attempting to install via npm.')
+            shell('npm install -g corepack')
+        shell('corepack enable')
+        shell('corepack prepare pnpm@9.12.0 --activate')
+
+    def _install_dependencies(self) -> None:
+        node_modules = self.project_root / 'node_modules'
+        if node_modules.exists():
+            log('node_modules directory already present. Running incremental install for consistency.')
+        cmd = f'{self._pnpm()} install'
+        exit_code = shell(cmd, cwd=str(self.project_root))
+        if exit_code != 0:
+            err('pnpm install failed.', exit=True)
+
+if __name__ == '__main__':
+    InstallReactDashboard()
