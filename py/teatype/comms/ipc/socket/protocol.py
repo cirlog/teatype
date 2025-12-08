@@ -40,7 +40,7 @@ class FrameBuilder:
             'header': {
                 'content': 'bytes',
                 'method': 'size_of',
-                'id': envelope.request_id,
+                'id': envelope.id,
                 'status': 'pending',
                 'receiver': envelope.header['receiver']
             },
@@ -162,14 +162,14 @@ class SocketClientWorker(threading.Thread):
 
             try:
                 payload.normalize(receiver=self.name)
-                serialized_payload = payload.dumps()
+                serialized_payload = payload.serialize()
                 probe = FrameBuilder.size_probe(payload, len(serialized_payload))
                 self._send_raw(probe)
                 ack = self._safe_recv()
                 if ack != ACKNOWLEDGE_MESSAGE:
                     raise ConnectionError(f'Unexpected ACK {ack!r}')
                 self._send_raw(serialized_payload)
-                log(f'Socket client [{self.name}] shipped request {payload.request_id}')
+                log(f'Socket client [{self.name}] shipped request {payload.id}')
             except Exception as exc:  # noqa: BLE001
                 err(f'Socket client [{self.name}] send failure: {exc}', traceback=True)
                 break

@@ -34,17 +34,17 @@ def socket_handler(endpoint:Optional[str]=None):
 
 @dataclass
 class SocketEndpoint:
-    acknowledge_timeout:float=5.0
+    name:str
+    host:str
+    port:int
+    mode:Literal['client','server']='client'
     auto_connect:bool=True
     auto_reconnect:bool=True
-    connect_timeout:float=5.0
-    host:str
-    max_clients:int=5
-    metadata:Dict[str,Any]=field(default_factory=dict)
-    mode:Literal['client','server']
-    name:str
-    port:int
     queue_size:int=10
+    max_clients:int=5
+    connect_timeout:float=5.0
+    ack_timeout:float=5.0
+    metadata:Dict[str,Any]=field(default_factory=dict)
 
 class SocketServiceManager:
     """

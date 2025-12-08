@@ -36,8 +36,8 @@ class SocketEnvelope:
         self.header.setdefault('id', generate_id(truncate=16))
 
     @property
-    def request_id(self) -> str:
-        return self.header['id']
+    def id(self) -> str:
+        return self.header.get('id')
 
-    def dump(self) -> bytes:
+    def serialize(self) -> bytes:
         return pickle.dumps({'header': self.header, 'body': self.body})
