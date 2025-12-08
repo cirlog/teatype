@@ -162,7 +162,8 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                 except Exception as exc:
                     traceback.print_exc()
                     
-            file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
+            if return_code == 200:
+                file_path = self.raw_file_handler.create_entry(model_instance, overwrite_path)
             # TODO: If file save fails, delete entry from db
             # TODO: Implement implemented trap cleanup handlers in models
             return model_instance.serialize(), return_code

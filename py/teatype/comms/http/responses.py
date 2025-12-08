@@ -53,11 +53,11 @@ try:
         """
         return Response({'error': error}, status.HTTP_400_BAD_REQUEST, content_type=CONTENT_TYPE)
 
-    def Conflict(error:any):
+    def Conflict(error:any, data:any=None):
         """
         Return a response with HTTP 409 Conflict status.
         """
-        return Response({'error': error}, status.HTTP_409_CONFLICT, content_type=CONTENT_TYPE)
+        return Response({'error': error, 'data': data}, status.HTTP_409_CONFLICT, content_type=CONTENT_TYPE)
 
     def Forbidden(error:any):
         """

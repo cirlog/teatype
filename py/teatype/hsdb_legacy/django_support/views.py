@@ -70,7 +70,7 @@ class HSDBDjangoView(APIView):
                 case 'POST':
                     query_response, return_code = hybrid_storage.create_entry(self.hsdb_model, data)
                     if return_code == 409:
-                        return Conflict('Entry already exists')
+                        return Conflict('Entry already exists', data=query_response)
                     elif return_code == 500:
                         return ServerError('Internal server error during entry creation')
                 # case 'PUT':

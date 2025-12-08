@@ -60,9 +60,6 @@ class IndexDatabase:
             with self._db_lock:
                 model_name = model.__name__
                 model_id = data.get('id', generate_id())
-                if model_id in self._db:
-                    return None, 409
-                
                 # Model.create(overwrite_path, model_instance)
                 # TODO: Quick and dirty hack, need to refactor this with proper attributes
                 # need for algorithm to be implemented with the model callhandlers
@@ -79,12 +76,11 @@ class IndexDatabase:
                                 if getattr(obj, 'model_name', None) == 'InstrumentModel'
                                 and getattr(obj, 'article_number', None) == data.get('article_number')
                                 and getattr(obj, 'manufacturer', None) == data.get('manufacturer')
-                                # and getattr(obj, 'manufacturer_id', None) == data.get('manufacturer_id')
                             ),
                             None,
                         )
                         if existing_match:
-                            return None, 409
+                            return existing_match, 409
                     case 'InstrumentTypeModel':
                         existing_match = next(
                             (
@@ -96,7 +92,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None, 409
+                            return existing_match, 409
                     case 'ManufacturerModel':
                         existing_match = next(
                             (
@@ -108,7 +104,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None, 409
+                            return existing_match, 409
                     case 'SurgeryTypeModel':
                         existing_match = next(
                             (
@@ -120,7 +116,7 @@ class IndexDatabase:
                             None,
                         )
                         if existing_match:
-                            return None, 409
+                            return existing_match, 409
                         
                 # TODO: Validation
                 data['id'] = model_id
