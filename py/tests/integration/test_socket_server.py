@@ -23,22 +23,26 @@ def handler(message:dict, address:Tuple[str,int]) -> None:
     Simple handler that logs received messages.
     """
     log(f'[server] Received payload from {address}: {message}')
+    println()
 
+println()
 # Create and start server worker
 host = 'localhost'
 port = 9051
 server = SocketServerWorker('demo-server', host, port, handler)
 server.start()
-log(f'Demo server ready on {host}:{port}. Press Ctrl+C to stop.')
+println()
+hint(f'Demo server ready on {host}:{port}. Press Ctrl+C to stop.', include_symbol=True, use_prefix=False)
 try:
     # Keep main thread alive
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
     # User requested shutdown
-    log('Stopping demo server ...')
+    warn('Stopping demo server ...', include_symbol=True, use_prefix=False)
 finally:
     # Clean shutdown
     server.stop()
     # Wait for server thread to terminate
     server.join(timeout=2)
+println()

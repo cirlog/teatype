@@ -15,17 +15,18 @@ import sys
 import time
 
 # Third-party imports
-from teatype.comms.ipc.socket.protocol import SocketClientWorker, SocketEnvelope
+from teatype.comms.ipc.socket import SocketEnvelope
+from teatype.comms.ipc.socket.protocol import SocketClientWorker
 from teatype.logging import *
 
+println()
 host = 'localhost'
-port = 9050
+port = 9051
 # Create client worker (reuses server name for demo simplicity)
-client = SocketClientWorker('demo-server', host, port)
+client = SocketClientWorker('demo-client', host, port)
 # Attempt to connect to server
 if not client.connect():
-    err('Demo client failed to connect to server')
-    sys.exit(1)
+    err('Demo client failed to connect to server', exit=True, pad_after=1, pad_before=1)
 # Start client worker thread
 client.start()
 
@@ -42,4 +43,6 @@ time.sleep(1)
 client.close(graceful=True)
 # Wait for client thread to terminate
 client.join(timeout=2)
-log('Demo client finished')
+println()
+success('Demo client finished', include_symbol=True)
+println()
