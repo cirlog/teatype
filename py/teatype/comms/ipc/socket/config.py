@@ -10,5 +10,11 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .config import *
-from .envelope import SocketEnvelope
+# Acknowledgment byte sequence sent by server to confirm receipt of size probe
+ACKNOWLEDGE_MESSAGE = b'OK'
+
+# Default size for socket read operations (4KB chunks)
+DEFAULT_CHUNK_SIZE = 4096
+
+# Default timeout in seconds for queue.get() operations
+DEFAULT_QUEUE_TIMEOUT = 1.0

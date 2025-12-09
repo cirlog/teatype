@@ -10,5 +10,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .config import *
-from .envelope import SocketEnvelope
+
+from .client_worker import SocketClientWorker
+from .frame_builder import FrameBuilder
+from .server_worker import SocketServerWorker
+from .session import SocketSession

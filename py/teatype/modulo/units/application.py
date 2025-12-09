@@ -12,14 +12,14 @@
 
 # Third-party imports
 from teatype.modulo.units.backend import BackendUnit
+from teatype.modulo.units.core import CoreUnit
 from teatype.modulo.units.service import ServiceUnit
 from teatype.modulo.units.socket import SocketUnit
 
-class ApplicationUnit:
+class ApplicationUnit(CoreUnit):
     """
-    Composite application unit consisting of backend, service and socket units.
+    Composite powerful application unit consisting of backend, service and socket units.
     """
-
     def __init__(self,
                  name:str,
                  *,
@@ -36,14 +36,16 @@ class ApplicationUnit:
     def start(self):
         # Start backend and service threads if needed
         self.backend.start()
+        self.socket.start()
         self.service.start()
     
     def join(self):
         self.backend.join()
+        self.socket.join()
         self.service.join()
     
-    def broadcast(self, *args, **kwargs):
+    def broadcast_message(self, *args, **kwargs):
         return self.service.broadcast(*args, **kwargs)
     
-    def dispatch(self, *args, **kwargs):
+    def dispatch_command(self, *args, **kwargs):
         return self.service.dispatch(*args, **kwargs)

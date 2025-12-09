@@ -10,123 +10,18 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-"""
-@startuml
-    skinparam packageStyle rectangle
-
-    package "Socket Service" {
-        class SocketServiceManager {
-            +register_client()
-            +register_server()
-            +register_handler()
-            +send()
-            +disconnect_client()
-            +is_connected()
-            +shutdown()
-            -_connect_client()
-            -_start_server()
-            -_emit()
-            -_schedule_reconnect()
-        }
-        
-        class SocketEndpoint {
-            name
-            host
-            port
-            mode
-            auto_connect
-            auto_reconnect
-            queue_size
-            max_clients
-            connect_timeout
-            acknowledgement_timeout
-            metadata
-        }
-        
-        class SocketClientWorker
-        class SocketServerWorker
-    }
-
-    SocketServiceManager o-- SocketEndpoint : _client/_server configs
-    SocketServiceManager o-- SocketClientWorker : _client_workers
-    SocketServiceManager o-- SocketServerWorker : _server_workers
-    SocketServiceManager ..> SocketEnvelope : creates
-    SocketServiceManager ..> "handler functions" : _handlers
-@enduml
-"""
-
 # Standard-library imports
-from __future__ import annotations
 import inspect
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Literal, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 # Third-party imports
 from teatype.comms.ipc.socket.envelope import SocketEnvelope
 from teatype.comms.ipc.socket.protocol import SocketClientWorker, SocketServerWorker
+from teatype.comms.ipc.socket.service.endpoint import SocketEndpoint
 from teatype.logging import *
-
-def socket_handler(endpoint:Optional[str]=None):
-    """
-    Decorator used by units to register socket handlers.
-    
-    This decorator marks methods as socket message handlers for specific endpoints.
-    When applied to a method, it tags the function with metadata that the
-    SocketServiceManager can discover during autowiring.
-    
-    Args:
-        endpoint: The endpoint name to handle. If None, defaults to '*' (all endpoints).
-    
-    Returns:
-        The decorated function with added metadata.
-    
-    Example:
-        @socket_handler('data_channel')
-        def handle_data(self, envelope, **kwargs):
-            pass
-    """
-    def decorator(function: Callable):
-        # Store the endpoint target as metadata on the function object
-        # This allows autowire() to discover which endpoints this handler services
-        setattr(function, '_socket_handler_target', endpoint or '*')
-        return function
-    return decorator
-
-@dataclass
-class SocketEndpoint:
-    """
-    Configuration container for a socket endpoint.
-    
-    Holds all necessary connection parameters and behavioral settings for
-    both client and server socket endpoints. Used by SocketServiceManager
-    to initialize and manage socket workers.
-    
-    Attributes:
-        name: Unique identifier for this endpoint.
-        host: IP address or hostname to connect to (client) or bind to (server).
-        port: TCP port number.
-        mode: Operating mode - 'client' for outgoing connections, 'server' for incoming.
-        auto_connect: If True, client connects immediately upon registration.
-        auto_reconnect: If True, client automatically reconnects after disconnection.
-        queue_size: Maximum number of queued messages for client workers.
-        max_clients: Maximum concurrent connections for server workers.
-        connect_timeout: Seconds to wait for connection establishment.
-        acknowledgement_timeout: Seconds to wait for message acknowledgment.
-        metadata: Additional key-value data for application-specific use.
-    """
-    name:str
-    host:str
-    port:int
-    mode:Literal['client','server']='client'
-    auto_connect:bool=True
-    auto_reconnect:bool=True
-    queue_size:int=10
-    max_clients:int=5
-    connect_timeout:float=5.0
-    acknowledgement_timeout:float=5.0
-    metadata:Dict[str,Any]=field(default_factory=dict)
 
 class SocketServiceManager:
     """
@@ -182,116 +77,13 @@ class SocketServiceManager:
 
         # If an owner object is provided, automatically discover and register handlers
         if owner:
-            self.autowire(owner)
+            self._autowire(owner)
+            
+    ############
+    # Internal #
+    ############
 
-    # Registration
-    def register_client(self,
-                        name:str,
-                        host:str,
-                        port:int,
-                        *,
-                        auto_connect:bool=True,
-                        auto_reconnect:bool=True,
-                        queue_size:int=10,
-                        connect_timeout:float=5.0,
-                        acknowledge_timeout:float=5.0) -> SocketEndpoint:
-        """
-        Register a new socket client endpoint.
-        
-        Creates a client configuration and optionally initiates an immediate
-        connection. The client will automatically handle reconnection if configured.
-        
-        Args:
-            name: Unique identifier for this client.
-            host: Target server hostname or IP address.
-            port: Target server port number.
-            auto_connect: Connect immediately if True.
-            auto_reconnect: Enable automatic reconnection on disconnect if True.
-            queue_size: Maximum messages to queue before blocking.
-            connect_timeout: Seconds to wait for connection before failing.
-            acknowledge_timeout: Seconds to wait for message acknowledgment.
-        
-        Returns:
-            The created SocketEndpoint configuration object.
-        """
-        # Create the endpoint configuration with all provided parameters
-        endpoint = SocketEndpoint(name=name,
-                                  host=host,
-                                  port=port,
-                                  mode='client',
-                                  auto_connect=auto_connect,
-                                  auto_reconnect=auto_reconnect,
-                                  queue_size=queue_size,
-                                  connect_timeout=connect_timeout,
-                                  acknowledge_timeout=acknowledge_timeout)
-        
-        # Store the configuration in a thread-safe manner
-        with self._lock:
-            self._client_configs[name] = endpoint
-        
-        # If auto_connect is enabled, immediately attempt connection
-        if auto_connect:
-            self._connect_client(name)
-        
-        return endpoint
-
-    def register_server(self,
-                        name:str,
-                        host:str,
-                        port:int,
-                        *,
-                        max_clients:int=5) -> SocketEndpoint:
-        """
-        Register and start a new socket server endpoint.
-        
-        Creates a server configuration and immediately starts listening for
-        incoming connections on the specified host and port.
-        
-        Args:
-            name: Unique identifier for this server.
-            host: Interface to bind to ('0.0.0.0' for all interfaces).
-            port: Port number to listen on.
-            max_clients: Maximum number of simultaneous client connections.
-        
-        Returns:
-            The created SocketEndpoint configuration object.
-        """
-        # Create the server endpoint configuration
-        endpoint = SocketEndpoint(name=name,
-                                  host=host,
-                                  port=port,
-                                  mode='server',
-                                  max_clients=max_clients)
-        
-        # Store the configuration atomically
-        with self._lock:
-            self._server_configs[name] = endpoint
-        
-        # Immediately start the server worker thread
-        self._start_server(endpoint)
-        return endpoint
-
-    def register_handler(self, endpoint:str, handler:Callable) -> None:
-        """
-        Register a callback function to handle messages for an endpoint.
-        
-        Handlers are invoked when messages arrive for the specified endpoint.
-        Multiple handlers can be registered for the same endpoint and all will
-        be called in registration order.
-        
-        Args:
-            endpoint: Endpoint name to handle, or '*' for all endpoints.
-            handler: Callable that accepts (envelope, client_address, endpoint).
-        """
-        # Add the handler to the endpoint's handler list, creating the list if needed
-        with self._lock:
-            self._handlers.setdefault(endpoint, []).append(handler)
-        
-        # Log registration if verbose mode is enabled
-        if self._verbose:
-            log(f'Registered socket handler for endpoint {endpoint}')
-
-    def autowire(self, owner:object) -> None:
+    def _autowire(self, owner:object) -> None:
         """
         Automatically discover and register handler methods on an object.
         
@@ -308,85 +100,6 @@ class SocketServiceManager:
             if endpoint:
                 # Register the method as a handler for the discovered endpoint
                 self.register_handler(endpoint, member)
-
-    # Client control
-    def send(self,
-             receiver:str,
-             header:Optional[Dict[str,Any]]=None,
-             body:Any=None,
-             *,
-             block:bool=True) -> bool:
-        """
-        Send a message to a connected client endpoint.
-        
-        Constructs a SocketEnvelope with the provided data and sends it through
-        the specified client worker. The message is automatically normalized
-        with source and receiver metadata.
-        
-        Args:
-            receiver: Name of the registered client to send through.
-            header: Optional dictionary of message metadata.
-            body: Message payload (any serializable data).
-            block: If True, blocks until message is queued; if False, fails immediately if queue is full.
-        
-        Returns:
-            True if message was successfully queued, False otherwise.
-        """
-        # Look up the worker instance for the named receiver
-        worker = self._client_workers.get(receiver)
-        if not worker:
-            # Log warning and fail if no worker exists with that name
-            warn(f'No socket client named {receiver} is connected')
-            return False
-        
-        # Construct the message envelope with header and body
-        envelope = SocketEnvelope(header=header or {}, body=body)
-        
-        # Populate metadata fields with source and receiver information
-        envelope.normalize(receiver=receiver, source=self.client_name)
-        
-        # Delegate actual transmission to the worker's emit method
-        return worker.emit(envelope, block=block)
-
-    def disconnect_client(self, receiver:str, graceful:bool=True) -> None:
-        """
-        Disconnect and remove a client worker.
-        
-        Closes the connection to the specified client and removes it from
-        the active workers. Auto-reconnect will not trigger after manual disconnect.
-        
-        Args:
-            receiver: Name of the client to disconnect.
-            graceful: If True, flushes pending messages before closing.
-        """
-        # Retrieve the worker instance
-        worker = self._client_workers.get(receiver)
-        if not worker:
-            return
-        
-        # Close the connection (gracefully if requested)
-        worker.close(graceful=graceful)
-        
-        # Wait up to 2 seconds for the worker thread to terminate
-        worker.join(timeout=2)
-        
-        # Remove the worker from the active workers dictionary
-        with self._lock:
-            self._client_workers.pop(receiver, None)
-
-    def is_connected(self, receiver:str) -> bool:
-        """
-        Check if a client is currently connected.
-        
-        Args:
-            receiver: Name of the client to check.
-        
-        Returns:
-            True if the client exists and is connected, False otherwise.
-        """
-        # Look up the worker and check its connection status
-        worker = self._client_workers.get(receiver)
-        return bool(worker and worker.is_connected())
 
     # Server control
     def _start_server(self, endpoint:SocketEndpoint) -> None:
@@ -421,7 +134,6 @@ class SocketServiceManager:
         with self._lock:
             self._server_workers[endpoint.name] = server
 
-    # Internal
     def _connect_client(self, name:str) -> bool:
         """
         Internal method to establish a client connection.
@@ -561,8 +273,195 @@ class SocketServiceManager:
             except Exception as exc:  # noqa: BLE001
                 # Log handler errors without interrupting other handlers
                 err(f'Socket handler failure on {endpoint}: {exc}', traceback=True)
+                
+    ##############
+    # Public API #
+    ##############
+                
+    def register_client(self,
+                        name:str,
+                        host:str,
+                        port:int,
+                        *,
+                        auto_connect:bool=True,
+                        auto_reconnect:bool=True,
+                        queue_size:int=10,
+                        connect_timeout:float=5.0,
+                        acknowledge_timeout:float=5.0) -> SocketEndpoint:
+        """
+        Register a new socket client endpoint.
+        
+        Creates a client configuration and optionally initiates an immediate
+        connection. The client will automatically handle reconnection if configured.
+        
+        Args:
+            name: Unique identifier for this client.
+            host: Target server hostname or IP address.
+            port: Target server port number.
+            auto_connect: Connect immediately if True.
+            auto_reconnect: Enable automatic reconnection on disconnect if True.
+            queue_size: Maximum messages to queue before blocking.
+            connect_timeout: Seconds to wait for connection before failing.
+            acknowledge_timeout: Seconds to wait for message acknowledgment.
+        
+        Returns:
+            The created SocketEndpoint configuration object.
+        """
+        # Create the endpoint configuration with all provided parameters
+        endpoint = SocketEndpoint(name=name,
+                                  host=host,
+                                  port=port,
+                                  mode='client',
+                                  auto_connect=auto_connect,
+                                  auto_reconnect=auto_reconnect,
+                                  queue_size=queue_size,
+                                  connect_timeout=connect_timeout,
+                                  acknowledge_timeout=acknowledge_timeout)
+        
+        # Store the configuration in a thread-safe manner
+        with self._lock:
+            self._client_configs[name] = endpoint
+        
+        # If auto_connect is enabled, immediately attempt connection
+        if auto_connect:
+            self._connect_client(name)
+        return endpoint
 
-    # Lifecycle
+    def register_server(self,
+                        name:str,
+                        host:str,
+                        port:int,
+                        *,
+                        max_clients:int=5) -> SocketEndpoint:
+        """
+        Register and start a new socket server endpoint.
+        
+        Creates a server configuration and immediately starts listening for
+        incoming connections on the specified host and port.
+        
+        Args:
+            name: Unique identifier for this server.
+            host: Interface to bind to ('0.0.0.0' for all interfaces).
+            port: Port number to listen on.
+            max_clients: Maximum number of simultaneous client connections.
+        
+        Returns:
+            The created SocketEndpoint configuration object.
+        """
+        # Create the server endpoint configuration
+        endpoint = SocketEndpoint(name=name,
+                                  host=host,
+                                  port=port,
+                                  mode='server',
+                                  max_clients=max_clients)
+        
+        # Store the configuration atomically
+        with self._lock:
+            self._server_configs[name] = endpoint
+        
+        # Immediately start the server worker thread
+        self._start_server(endpoint)
+        return endpoint
+
+    def register_handler(self, endpoint:str, handler:Callable) -> None:
+        """
+        Register a callback function to handle messages for an endpoint.
+        
+        Handlers are invoked when messages arrive for the specified endpoint.
+        Multiple handlers can be registered for the same endpoint and all will
+        be called in registration order.
+        
+        Args:
+            endpoint: Endpoint name to handle, or '*' for all endpoints.
+            handler: Callable that accepts (envelope, client_address, endpoint).
+        """
+        # Add the handler to the endpoint's handler list, creating the list if needed
+        with self._lock:
+            self._handlers.setdefault(endpoint, []).append(handler)
+        
+        # Log registration if verbose mode is enabled
+        if self._verbose:
+            log(f'Registered socket handler for endpoint {endpoint}')
+
+    # Client control
+    def send(self,
+             receiver:str,
+             header:Optional[Dict[str,Any]]=None,
+             body:Any=None,
+             *,
+             block:bool=True) -> bool:
+        """
+        Send a message to a connected client endpoint.
+        
+        Constructs a SocketEnvelope with the provided data and sends it through
+        the specified client worker. The message is automatically normalized
+        with source and receiver metadata.
+        
+        Args:
+            receiver: Name of the registered client to send through.
+            header: Optional dictionary of message metadata.
+            body: Message payload (any serializable data).
+            block: If True, blocks until message is queued; if False, fails immediately if queue is full.
+        
+        Returns:
+            True if message was successfully queued, False otherwise.
+        """
+        # Look up the worker instance for the named receiver
+        worker = self._client_workers.get(receiver)
+        if not worker:
+            # Log warning and fail if no worker exists with that name
+            warn(f'No socket client named {receiver} is connected')
+            return False
+        
+        # Construct the message envelope with header and body
+        envelope = SocketEnvelope(header=header or {}, body=body)
+        
+        # Populate metadata fields with source and receiver information
+        envelope.normalize(receiver=receiver, source=self.client_name)
+        
+        # Delegate actual transmission to the worker's emit method
+        return worker.emit(envelope, block=block)
+
+    def disconnect_client(self, receiver:str, graceful:bool=True) -> None:
+        """
+        Disconnect and remove a client worker.
+        
+        Closes the connection to the specified client and removes it from
+        the active workers. Auto-reconnect will not trigger after manual disconnect.
+        
+        Args:
+            receiver: Name of the client to disconnect.
+            graceful: If True, flushes pending messages before closing.
+        """
+        # Retrieve the worker instance
+        worker = self._client_workers.get(receiver)
+        if not worker:
+            return
+        
+        # Close the connection (gracefully if requested)
+        worker.close(graceful=graceful)
+        
+        # Wait up to 2 seconds for the worker thread to terminate
+        worker.join(timeout=2)
+        
+        # Remove the worker from the active workers dictionary
+        with self._lock:
+            self._client_workers.pop(receiver, None)
+
+    def is_connected(self, receiver:str) -> bool:
+        """
+        Check if a client is currently connected.
+        
+        Args:
+            receiver: Name of the client to check.
+        
+        Returns:
+            True if the client exists and is connected, False otherwise.
+        """
+        # Look up the worker and check its connection status
+        worker = self._client_workers.get(receiver)
+        return bool(worker and worker.is_connected())
+
     def shutdown(self) -> None:
         """
         Gracefully shut down all socket connections.

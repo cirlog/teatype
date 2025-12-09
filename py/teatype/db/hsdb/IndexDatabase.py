@@ -39,7 +39,7 @@ class IndexDatabase:
     _db:Index # For all raw data
     # _indexed_fields:dict # For all indexed fields for faster query lookups
     # _model_index:dict # For all model references for faster model query lookups
-    _relational_index:dict # For all relations between models parsed dynamically from the model definitions
+    _relational_index:RelationalIndex # For all relations between models parsed dynamically from the model definitions
     models:List[type] # For all models
     
     def __init__(self,

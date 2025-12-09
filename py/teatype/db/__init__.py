@@ -11,4 +11,5 @@
 # all copies or substantial portions of the Software.
 
 # Local imports
-from .hsdb import *
+# from .aux import AuxilliaryDB
+from .hsdb import HSDB

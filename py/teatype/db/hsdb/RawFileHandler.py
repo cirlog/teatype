@@ -15,14 +15,14 @@ from teatype.io import env, file, path
 from teatype.db.hsdb import RawFileStructure
 
 class RawFileHandler:
-    _raw_file_structure:RawFileStructure
+    _rf_structure:RawFileStructure
     
     def __init__(self, root_path:str=None):
-        self._raw_file_structure = RawFileStructure(root_path)
+        self._rf_structure = RawFileStructure(root_path)
         
     @property
     def fs(self):
-        return self._raw_file_structure.get_fs()
+        return self._rf_structure.get_fs()
         
     # TODO: If new attributes surface (migrations), apply them to old files (backup before)
     def create_entry(self,
