@@ -16,7 +16,7 @@ from .RawFileStructure import RawFileStructure
 from .RawFileHandler import RawFileHandler
 from .IndexDatabase import IndexDatabase
 from .HybridStorage import HybridStorage
-from .HSDB import HSDB
+# from .HSDB import HSDB
 
 from .HSDBQuery import HSDBQuery
 from .HSDBField import HSDBField
