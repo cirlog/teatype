@@ -10,7 +10,6 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-
 from .client_worker import SocketClientWorker
 from .frame_builder import FrameBuilder
 from .server_worker import SocketServerWorker

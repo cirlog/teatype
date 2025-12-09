@@ -17,7 +17,6 @@ import threading
 from typing import Optional, Tuple
 
 # Third-party imports
-from teatype.comms.ipc.socket.protocol import SocketServerWorker
 from teatype.comms.ipc.socket.config import ACKNOWLEDGE_MESSAGE, DEFAULT_CHUNK_SIZE
 from teatype.logging import *
 
@@ -30,7 +29,7 @@ class SocketSession(threading.Thread):
     specific client.
     """
     def __init__(self,
-                 server:'SocketServerWorker',
+                 server:'SocketServerWorker', # type: ignore
                  connection: socket.socket,
                  address: Tuple[str, int]):
         """

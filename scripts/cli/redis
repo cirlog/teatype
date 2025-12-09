@@ -16,14 +16,13 @@
 import os
 import signal
 import time
-from pprint import pprint
+
 # Third-party imports
 import psutil
 from teatype.cli import BaseCLI
 from teatype.comms.ipc.redis import RedisConnectionPool
-from teatype.io import clear_shell, enable_sudo, file, path, prompt, shell
+from teatype.io import clear_shell, enable_sudo, path, prompt, shell
 from teatype.logging import *
-from teatype.toolkit import dt
 
 class Redis(BaseCLI):
     def meta(self):
@@ -107,10 +106,6 @@ class Redis(BaseCLI):
         return found, process_pid
     
     def start(self, parent_directory:str) -> None:
-        enable_sudo()
-        
-        println()
-        
         shell('echo "never" | sudo tee /sys/kernel/mm/transparent_hugepage/enabled', mute=True)
         hint('Disabled Transparent Huge Pages to reduce Redis latency', include_symbol=True, use_prefix=False)
         println()
@@ -156,7 +151,6 @@ class Redis(BaseCLI):
                     
                     if log_buffer != old_log_buffer or client_buffer != old_client_buffer:
                         clear_shell()
-                        println()
                         success('Redis server is running.', include_symbol=True)
                         println()
                         hint('Monitoring Redis server logs. Press Ctrl + C to exit log monitoring.',
@@ -193,7 +187,6 @@ class Redis(BaseCLI):
                     warn('Exited log monitoring.', pad_after=1, use_prefix=False)
                     break
         else:
-            println()
             err('Redis server is not running.',
                 include_symbol=True,
                 use_prefix=False,
@@ -320,7 +313,6 @@ class Redis(BaseCLI):
         match self.get_command():
             case 'start':
                 if is_running:
-                    println()
                     warn('Redis server is already running. Use `tt redis stop` to shut it down.',
                          include_symbol=True,
                          use_prefix=False)
@@ -331,7 +323,6 @@ class Redis(BaseCLI):
                 self.status(is_running)
             case 'stop':
                 if not is_running:
-                    println()
                     log('Redis server is not running. No action taken.')
                     println()
                 else:

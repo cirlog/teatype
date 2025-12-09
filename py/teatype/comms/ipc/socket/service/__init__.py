@@ -12,34 +12,61 @@
 
 """
 @startuml
-    actor Caller as C
-    participant SocketServiceManager as SSM
-    participant SocketClientWorker as SCW
-    participant FrameBuilder as FB
-    participant SocketServerWorker as SSW
-    participant SocketSession as Session
-    participant Handler as H
-    #
-    C -> SSM: send()
-    SSM -> SCW: emit(envelope)
-    SCW -> FB: size_probe()
-    FB --> SCW: probe bytes
-    SCW -> SSW: send probe
-    SSW -> Session: spawn session
-    Session -> SCW: ACK (OK)
-    SCW -> SSW: send payload
-    Session -> Session: deserialize
-    Session -> SSM: handler(payload, addr)
-    SSM -> H: invoke handler()
-    H --> SSM: return
-    Session -> SCW: optional close_signal()
+skinparam packageStyle rectangle
+package "Socket Service" {
+    class SocketServiceManager {
+        +register_client()
+        +register_server()
+        +register_handler()
+        +send()
+        +disconnect_client()
+        +is_connected()
+        +shutdown()
+        -_connect_client()
+        -_start_server()
+        -_emit()
+        -_schedule_reconnect()
+    }
+
+    class SocketEndpoint {
+        name
+        host
+        port
+        mode
+        auto_connect
+        auto_reconnect
+        queue_size
+        max_clients
+        connect_timeout
+        acknowledgement_timeout
+        metadata
+    }
+
+    class SocketClientWorker
+    class SocketServerWorker
+}
+
+SocketServiceManager "1" o-- "*" SocketEndpoint : _client_configs/_server_configs
+SocketServiceManager "1" o-- "*" SocketClientWorker : _client_workers
+SocketServiceManager "1" o-- "*" SocketServerWorker : _server_workers
+SocketServiceManager ..> SocketEnvelope : creates
+SocketServiceManager ..> "handler functions" : _handlers\n(endpoint→callable)
 @enduml
 """
 
+# From local imports
+from .endpoint import SocketEndpoint
+from .handler import socket_handler
+from .service_manager import SocketServiceManager
+
 if __name__ == '__main__':
+    import argparse
+    import time
+    from typing import Tuple
     from teatype.logging import *
+    from teatype.comms.ipc.socket.protocol import SocketServerWorker, SocketClientWorker, SocketEnvelope
     
-    def _demo_server(host: str, port: int) -> None:
+    def _demo_server(host:str, port:int) -> None:
         """
         Run a demonstration socket server that logs received payloads.
         
@@ -50,8 +77,10 @@ if __name__ == '__main__':
             host: Host interface to bind
             port: Port number to listen on
         """
-        def handler(message: dict, address: Tuple[str, int]) -> None:
-            """Simple handler that logs received messages."""
+        def handler(message:dict, address:Tuple[str,int]) -> None:
+            """
+            Simple handler that logs received messages.
+            """
             log(f'[server] Received payload from {address}: {message}')
 
         # Create and start server worker
@@ -71,7 +100,7 @@ if __name__ == '__main__':
             # Wait for server thread to terminate
             server.join(timeout=2)
 
-    def _demo_client(host: str, port: int) -> None:
+    def _demo_client(host:str, port:int) -> None:
         """
         Run a demonstration socket client that sends a sample message.
         
@@ -108,12 +137,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Socket protocol demo runner')
     parser.add_argument('role', choices=['server', 'client'], help='Which demo to run')
-    parser.add_argument('--host', default='127.0.0.1', help='Host to bind/connect')
-    parser.add_argument('--port', type=int, default=9050, help='Port to bind/connect')
     args = parser.parse_args()
 
     # Run appropriate demo based on role
     if args.role == 'server':
-        _demo_server(args.host, args.port)
+        _demo_server('localhost', 9050)
     else:
-        _demo_client(args.host, args.port)
+        _demo_client('localhost', 9051)

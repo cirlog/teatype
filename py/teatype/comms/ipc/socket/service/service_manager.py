@@ -19,7 +19,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 # Third-party imports
 from teatype.comms.ipc.socket.envelope import SocketEnvelope
-from teatype.comms.ipc.socket.protocol import SocketClientWorker, SocketServerWorker
+from teatype.comms.ipc.socket.protocol.client_worker import SocketClientWorker
+from teatype.comms.ipc.socket.protocol.server_worker import SocketServerWorker
 from teatype.comms.ipc.socket.service.endpoint import SocketEndpoint
 from teatype.logging import *
 
