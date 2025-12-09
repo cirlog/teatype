@@ -15,7 +15,7 @@ from .application import ApplicationUnit
 from .core import CoreUnit, parse_designation, print_designation
 from .backend import BackendUnit
 from .service import ServiceUnit
-from .socket import SocketUnit, socket_handler
+from .socket import SocketUnit
 from .workhorse import WorkhorseUnit
 
 __all__ = [
@@ -26,7 +26,6 @@ __all__ = [
     'BackendUnit',
     'ServiceUnit',
     'SocketUnit',
-    'socket_handler',
     'WorkhorseUnit',
 ]
 

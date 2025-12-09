@@ -38,7 +38,7 @@ package "Socket Service" {
         queue_size
         max_clients
         connect_timeout
-        acknowledgement_timeout
+        acknowledge_timeout
         metadata
     }
 

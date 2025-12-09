@@ -33,7 +33,7 @@ class SocketEndpoint:
         queue_size: Maximum number of queued messages for client workers.
         max_clients: Maximum concurrent connections for server workers.
         connect_timeout: Seconds to wait for connection establishment.
-        acknowledgement_timeout: Seconds to wait for message acknowledgment.
+        acknowledge_timeout: Seconds to wait for message acknowledgment.
         metadata: Additional key-value data for application-specific use.
     """
     name:str
@@ -45,5 +45,5 @@ class SocketEndpoint:
     queue_size:int=10
     max_clients:int=5
     connect_timeout:float=5.0
-    acknowledgement_timeout:float=5.0
+    acknowledge_timeout:float=5.0
     metadata:Dict[str,Any]=field(default_factory=dict)
