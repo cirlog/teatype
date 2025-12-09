@@ -54,8 +54,7 @@ class Redis(BaseCLI):
         if redis_installed == 0:
             return
         
-        install_redis = prompt('Redis server is not installed. Proceed with installation?',
-                               options=['Y', 'n'])
+        install_redis = prompt('Redis server is not installed. Proceed with installation?')
         if not install_redis:
             println()
             err('Redis installation aborted by user.', exit=True, pad_after=1, use_prefix=False, verbose=False)     

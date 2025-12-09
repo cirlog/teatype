@@ -44,8 +44,7 @@ class HSDB(BaseTUI):
                 verbose=False)
             
     def prune(self) -> str:
-        confirmation = prompt('Are you sure you want to prune the HSDB storage? This action cannot be undone.',
-                              ask=True)
+        confirmation = prompt('Are you sure you want to prune the HSDB storage? This action cannot be undone.')
         if confirmation:
             return 'Prune operation cancelled.'
         

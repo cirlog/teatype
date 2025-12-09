@@ -63,9 +63,7 @@ class Operations(BaseTUI):
                          return_bool=False)
         payload = prompt('Enter any additional payload data (or leave blank):',
                          return_bool=False)
-        is_async = prompt('Dispatch command asynchronously?',
-                          options=['Y', 'n'],
-                          return_bool=True)
+        is_async = prompt('Dispatch command asynchronously?')
 
         if payload == '':
             payload = None

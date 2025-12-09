@@ -12,7 +12,7 @@
 
 # System import
 import sys
-from typing import List
+from typing import List, Optional
 
 # Third-party imports
 from prompt_toolkit import prompt as pt_prompt
@@ -20,14 +20,15 @@ from prompt_toolkit.completion import WordCompleter
 from teatype.enum import EscapeColor
 from teatype.logging import *
 
+# TODO: Implement "freesolo" that allows to type in whatever you want or force to select from options only
 def prompt(prompt_text:str,
-           *,
-           ask:bool=False,
            options:List[str]=None,
-           return_bool:bool=True,
+           *,
            colorize:bool=True,
+           default:Optional[str]=None,
            exit_on_error:bool=False,
-           print_padding:bool=True) -> any:
+           print_padding:bool=True,
+           return_bool:bool=True) -> any:
     """
     Displays a prompt to the user with the given text and a list of available options.
     Supports arrow-key navigation for option selection via prompt_toolkit.
@@ -44,24 +45,22 @@ def prompt(prompt_text:str,
     """
     while True:
         try:
-            if ask and options:
-                raise ValueError('Cannot use both "ask=True" and provide custom options. Please choose one.')
-            
-            if ask and not return_bool:
-                raise ValueError('Cannot use "ask=True" with "return_bool=False". Please choose one.')
-            
-            if ask:
+            if options is None and return_bool:
                 options = ['Y', 'n']
                 
             if return_bool:
                 if options:
                     if len(options) > 2:
                         err('Cannot return a boolean value for more than two options.', exit=True)
-                else:
-                    err('Cannot return a boolean value without options. If you don\'t want to use options, set "return_bool=False"', exit=True)
 
             # Apply color to the prompt
             display_text = f'{EscapeColor.LIGHT_GREEN}{prompt_text}{EscapeColor.RESET}' if colorize else prompt_text
+            
+            if default is not None:
+                default_text = f' [Default: {default}]'
+                if colorize:
+                    default_text = f'{EscapeColor.RESET}{default_text}'
+                display_text += default_text
 
             # Build options string for display
             if options:
@@ -90,10 +89,16 @@ def prompt(prompt_text:str,
                         raise_exception=not exit_on_error,
                         use_prefix=False,
                         verbose=False)
+            
+            if prompt_answer == '' and default is not None:
+                prompt_answer = default
+                log(f'Using default value: {default}', pad_after=1 if print_padding else 0)
+                    
             # Return boolean if requested
             return prompt_answer == options[0] if return_bool and options else prompt_answer
         except KeyboardInterrupt:
             warn('User interrupted the input prompt.', pad_before=2, pad_after=1, use_prefix=False)
+            # TODO: Raise exception instead?
             sys.exit(1)
         except SystemExit as se:
             sys.exit(se.code)
