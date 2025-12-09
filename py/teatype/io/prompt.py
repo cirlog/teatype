@@ -21,6 +21,8 @@ from teatype.enum import EscapeColor
 from teatype.logging import *
 
 def prompt(prompt_text:str,
+           *,
+           ask:bool=False,
            options:List[str]=None,
            return_bool:bool=True,
            colorize:bool=True,
@@ -42,6 +44,15 @@ def prompt(prompt_text:str,
     """
     while True:
         try:
+            if ask and options:
+                raise ValueError('Cannot use both "ask=True" and provide custom options. Please choose one.')
+            
+            if ask and not return_bool:
+                raise ValueError('Cannot use "ask=True" with "return_bool=False". Please choose one.')
+            
+            if ask:
+                options = ['Y', 'n']
+                
             if return_bool:
                 if options:
                     if len(options) > 2:
