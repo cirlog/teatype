@@ -12,16 +12,15 @@
 
 
 # Standard-library imports
-from __future__ import annotations
 import threading
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 # Third-party imports
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-import uvicorn
 
 # Local imports
 from teatype.logging import hint, log
@@ -34,9 +33,13 @@ REACT_INDEX_FILE = REACT_DIST_DIR / 'index.html'
 REACT_ASSETS_DIR = REACT_DIST_DIR / 'assets'
 
 class UvicornWorker(threading.Thread):
-    def __init__(self, app: FastAPI, host: str, port: int):
+    def __init__(self, app:FastAPI, host:str, port:int):
         super().__init__(daemon=True)
-        self._server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, log_level='info'))
+        
+        self._server = uvicorn.Server(uvicorn.Config(app,
+                                                     host=host,
+                                                     port=port,
+                                                     log_level='debug'))
 
     def run(self) -> None:
         self._server.run()
@@ -49,16 +52,18 @@ class BackendUnit(CoreUnit):
     FastAPI-powered backend with dashboard rendering.
     """
     def __init__(self,
-                 name: str,
+                 name:str,
                  *,
-                 host: str = '127.0.0.1',
-                 port: int = 8080,
-                 verbose_logging: Optional[bool] = True) -> None:
+                 host:Optional[str]='127.0.0.1',
+                 port:Optional[int]=8080,
+                 verbose_logging:Optional[bool]=True) -> None:
         super().__init__(name=name, verbose_logging=verbose_logging)
+        
         self.host = host
         self.port = port
-        self._app = FastAPI(title=f'Teatype Backend · {name}', version='1.0.0')
-        self._server_thread: Optional[UvicornWorker] = None
+        
+        self._app = FastAPI(title=f'TeaType Moduloe Backend Unit · {name}', version='1.0.0')
+        self._server_thread = None
 
         self._mount_static_assets()
         self._register_routes()
@@ -137,5 +142,3 @@ class BackendUnit(CoreUnit):
             'to generate dist assets, or use "python packages/teatype/scripts/frontend/react-dashboard/start" '
             'to rely on the Vite dev server during development.'
         )
-
-__all__ = ['BackendUnit']

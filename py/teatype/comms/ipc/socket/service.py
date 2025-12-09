@@ -10,6 +10,51 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+"""
+@startuml
+    skinparam packageStyle rectangle
+
+    package "Socket Service" {
+        class SocketServiceManager {
+            +register_client()
+            +register_server()
+            +register_handler()
+            +send()
+            +disconnect_client()
+            +is_connected()
+            +shutdown()
+            -_connect_client()
+            -_start_server()
+            -_emit()
+            -_schedule_reconnect()
+        }
+        
+        class SocketEndpoint {
+            name
+            host
+            port
+            mode
+            auto_connect
+            auto_reconnect
+            queue_size
+            max_clients
+            connect_timeout
+            acknowledgement_timeout
+            metadata
+        }
+        
+        class SocketClientWorker
+        class SocketServerWorker
+    }
+
+    SocketServiceManager o-- SocketEndpoint : _client/_server configs
+    SocketServiceManager o-- SocketClientWorker : _client_workers
+    SocketServiceManager o-- SocketServerWorker : _server_workers
+    SocketServiceManager ..> SocketEnvelope : creates
+    SocketServiceManager ..> "handler functions" : _handlers
+@enduml
+"""
+
 # Standard-library imports
 from __future__ import annotations
 import inspect

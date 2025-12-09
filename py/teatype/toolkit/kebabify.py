@@ -13,6 +13,7 @@
 # Standard-library imports
 import re
 from typing import Union
+
 # Third-party imports
 from teatype.enum import EscapeColor
 

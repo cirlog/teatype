@@ -18,8 +18,21 @@ from .service import ServiceUnit
 from .socket import SocketUnit, socket_handler
 from .workhorse import WorkhorseUnit
 
+__all__ = [
+    'ApplicationUnit',
+    'CoreUnit',
+    'parse_designation',
+    'print_designation',
+    'BackendUnit',
+    'ServiceUnit',
+    'SocketUnit',
+    'socket_handler',
+    'WorkhorseUnit',
+]
+
 if __name__ == '__main__':
     import argparse
+    from teatype.logging import *
     
     parser = argparse.ArgumentParser(description='Teatype Modulo unit definitions.',
                                      formatter_class=argparse.RawDescriptionHelpFormatter)

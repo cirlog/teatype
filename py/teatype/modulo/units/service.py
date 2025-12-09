@@ -12,6 +12,7 @@
 
 # Standard-library imports
 from typing import Optional
+
 # Third-party imports
 from teatype.comms.ipc.redis import RedisChannel, RedisDispatch, RedisServiceManager, dispatch_handler
 from teatype.logging import *
