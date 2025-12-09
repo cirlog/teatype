@@ -43,7 +43,13 @@ class HSDBField(ABC, Generic[T]):
     type:T                      # The type of the attribute
     value:any                   # Property for the field value
 
-    def __init__(self, editable:bool, indexed:bool, required:bool, SUPPORTED_TYPES:List[Type], type:Type):
+    def __init__(self,
+                 *,
+                 editable:bool,
+                 indexed:bool,
+                 required:bool,
+                 type:Type,
+                 SUPPORTED_TYPES:List[Type]) -> None:
         # Manual type checking to complement static type checking
         if type not in SUPPORTED_TYPES:
             raise ValueError(f'Unsupported type: {type.__name__}, supported types are: {SUPPORTED_TYPES}')

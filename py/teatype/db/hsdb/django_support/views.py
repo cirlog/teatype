@@ -11,16 +11,17 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
-import re
 import traceback
 from abc import ABCMeta
 from typing import List, Type
+
 # Third-party imports
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
 from teatype.db.hsdb import HybridStorage
+from teatype.logging import *
 from teatype.toolkit import kebabify
-from teatype.comms.http.responses import NotAllowed, ServerError, Success
+from teatype.comms.http.responses import Conflict, Gone, NotAllowed, ServerError, Success
 
 _COLLECTION_METHODS=['GET', 'POST']
 _DATA_REQUIRED_METHODS=['POST', 'PUT', 'PATCH']
@@ -71,21 +72,26 @@ class HSDBDjangoView(APIView):
                         id = kwargs.get(self.api_id())
                         query_response = hybrid_storage.fetch_entry(id, serialize=True)
                 case 'POST':
-                    query_response = hybrid_storage.create_entry(self.hsdb_model, data)
-                    if query_response is None:
-                        return ServerError('Entry already exists')
+                    query_response, return_code = hybrid_storage.create_entry(self.hsdb_model, data)
+                    if return_code == 409:
+                        return Conflict('Entry already exists', data=query_response)
+                    elif return_code == 410:
+                        return Gone('Entry was lost')
+                    elif return_code == 500:
+                        return ServerError('Internal server error during entry creation')
+                # TODO: Implement other methods
+                # case 'DELETE':
+                #     query_response = hybrid_storage.delete_entry()
                 # case 'PUT':
                 #     query_response = hybrid_storage.create_entry()
                 # case 'PATCH':
                 #     query_response = hybrid_storage.modify_entry()
-                # case 'DELETE':
-                #     query_response = hybrid_storage.delete_entry()
             # TODO: Implement proper query_response handling
             if query_response is not None:
                 return Success(query_response)
             else:
                 query_response_error = 'Query-response was "None"'
-                print(query_response_error)
+                err(query_response_error, verbose=False)
                 return ServerError({'message': query_response_error})
         except Exception as exc:
             traceback.print_exc()

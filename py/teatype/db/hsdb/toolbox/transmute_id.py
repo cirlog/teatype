@@ -12,6 +12,7 @@
 
 # Standard-library imports
 from typing import TypeVar
+
 # Third-party imports
 from teatype.db.hsdb.HSDBAttribute import HSDBAttribute as HSDBAttributeClass
 from teatype.db.hsdb.HSDBField import HSDBField as HSDBFieldClass

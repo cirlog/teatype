@@ -16,7 +16,7 @@ from typing import List
 # Third-party imports
 from teatype.db.hsdb import HSDBField
 from teatype.db.hsdb.indices import Index
-from teatype.db.hsdb.util import transmute_id
+from teatype.db.hsdb.toolbox import transmute_id
 
 """
 Following structure for different relation types:

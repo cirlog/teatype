@@ -12,13 +12,15 @@
 
 # Standard-library imports
 import threading
+import traceback
 from multiprocessing import Queue
-from typing import List
+from typing import List, Tuple
+
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.db.hsdb import IndexDatabase, RawFileHandler
-from teatype.db.hsdb.util import parse_fixtures, parse_index_files
-from teatype.io import env
+from teatype.db.hsdb.toolbox import parse_fixtures, parse_index_files
+from teatype.io import env, file
 from teatype.logging import *
 from teatype.toolkit import SingletonMeta
 
@@ -64,10 +66,10 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             self.migrations = dict # Placeholder for storing migration info
             self.operations_queue = Queue() # Queue for operations processing
 
-            self.index_db = IndexDatabase(models=models) # Create or link an IndexDatabase with given models
+            self.index_db = IndexDatabase(models) # Create or link an IndexDatabase with given models
             
             if not cold_mode:
-                self.rf_handler = RawFileHandler(root_path=root_path) # Initialize file handler for raw data operations
+                self.rf_handler = RawFileHandler(root_path, cold_mode=cold_mode) # Initialize file handler for raw data operations
 
             self._initialized = True # Mark as initialized
             self.__instance = self # Set the instance for Singleton
@@ -154,7 +156,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                      data:dict,
                      parse:bool=False,
                      write:bool=True,
-                     overwrite_path:str=None) -> dict|None:
+                     overwrite_path:str=None) -> Tuple[dict|None, int]:
         """
         Create a new entry for a given model, optionally parsing the 
         entry data and writing it to the file system.
@@ -162,38 +164,56 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
         try:
             # TODO: Implement implemented trap cleanup handlers in models
             # The index database is asked to create an entry from data
-            model_instance = self.index_db.create_entry(model, data, parse)
-            if model_instance is None:  # If for some reason creation fails
-                return None
+            model_instance, return_code = self.index_db.create_entry(model, data, parse)
+            if model_instance is None: # If for some reason creation fails
+                return None, return_code
             
-            # If cold mode is enabled, automatically disable writing to disk
-            if self.cold_mode:
-                write = False
-                
             if write: # If writing to disk is enabled
                 try:
-                    file_path = self.rf_handler.create_entry(model_instance, overwrite_path)
-                    # if not file.exists(file_path):
-                    #     model_instance.delete()
+                    if return_code == 200:
+                        file_path = self.rf_handler.create_entry(model_instance, overwrite_path)
+                        # If the file does not exist after creation, rollback the index entry
+                        if not file.exists(file_path):
+                            model_instance.delete()
+                            return None, 410 # Indicate that writing failed
                 except:
-                    # model_instance.delete()
-                    pass
-            return model_instance.serialize() # Return the serialized model instance
+                    err('HybridStorage.create_entry() encountered an exception during file writing.', traceback=True)
+                    model_instance.delete()
+                    # self.rf_handler.delete_entry(model_instance, overwrite_path)
+                    return None, 410 # Indicate internal server error
+            return model_instance.serialize(), return_code # Return the serialized model instance
         except:
-            return None # Return None if any exception occurs
+            # TODO: Implement global RUNTIME_CONFIG that is accessible everywhere for all modules and is modified by service modulos
+            # if RUNTIME_CONFIG.DEBUG_MODE:
+            traceback.print_exc()
+            err('HybridStorage.create_entry() encountered an exception during entry creation.', traceback=True)
+            return None, 500 # Indicate internal server error
 
-    def fetch_entry(self, model_id:str, serialize:bool=False) -> dict:
+    def fetch_entry(self,
+                    id:str, 
+                    *,
+                    serialize:bool=False) -> dict:
         """
         Retrieve an entry from the index database by its ID, 
         optionally returning a serialized version.
         """
-        return self.index_db.fetch_entry(model_id, serialize)
+        return self.index_db.fetch_entry(id, serialize)
 
-    def fetch_model_entries(self, model:object, serialize:bool=False) -> List[dict]:
+    def fetch_model_entries(self,
+                            model:object, 
+                            *,
+                            serialize:bool=False,
+                            sort_by:str='updated_at',
+                            sort_desc:bool=True) -> List[dict]:
         """
         Return all entries for a given model, optionally serialized.
         """
-        return self.index_db.fetch_model_entries(model, serialize)
+        entries = self.index_db.fetch_model_entries(model, serialize)
+        if sort_by == 'updated_at':
+            entries.sort(key=lambda x: x['updated_at'], reverse=sort_desc)
+        else:
+            entries.sort(key=lambda x: x[sort_by], reverse=sort_desc)
+        return entries
 
     def modify_entry(self) -> bool:
         """

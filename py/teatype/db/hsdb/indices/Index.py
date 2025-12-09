@@ -15,7 +15,7 @@ import threading
 
 # Third-party imports
 from teatype.db.hsdb.HSDBField import HSDBField
-from teatype.db.hsdb.util import transmute_id
+from teatype.db.hsdb.toolbox import transmute_id
 
 class Index:
     primary_index:dict

@@ -29,9 +29,10 @@ _FS = {
         'exports': {},
         'index': {},
         'logs': {
-            'migrations': {}
+            'migrations': {},
+            'reads': {},
+            'writes': {}
         },
-        'meta': {},
         'models': {
             'adapters': {},
         },
@@ -75,7 +76,10 @@ class RawFileStructure:
     _fs:_FSProxy
     _root_path:str
     
-    def __init__(self, root_path:str=None, auto_create_folders:bool=True):
+    def __init__(self,
+                 root_path:str=None,
+                 *,
+                 auto_create_folders:bool=True):
         self._root_path = root_path if root_path else _DEFAULT_ROOT_PATH
         
         self._fs = _FSProxy(_FS, root_path)

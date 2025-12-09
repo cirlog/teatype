@@ -15,6 +15,7 @@ import json
 import pprint
 from abc import ABC
 from typing import List
+
 # Third-party imports
 from teatype.db.hsdb import HSDBAttribute, HSDBField, HSDBMeta, HSDBQuery, HSDBRelation
 from teatype.toolkit import dt, staticproperty
@@ -31,13 +32,15 @@ from teatype.toolkit import generate_id, kebabify
 class HSDBModel(ABC, metaclass=HSDBMeta):
     # Private class variables
     # _app_name:str # TODO: Implement these as computed properties
-    _attribute_cache = {} # Cache to store attributes once for each class
-    _overwrite_path:str
-    _overwrite_name:str
-    _overwrite_plural_name:str
-    _relations:dict
+    _attribute_cache = {} # Cache to store attributes once for each class # TODO: Set to None and then initialize on first access -> lazy initialization
+    # _overwrite_path:str
+    # _overwrite_name:str
+    # _overwrite_plural_name:str
+    # _relations:dict
     
     # Public class variables
+    # is_cached:bool=True # Describes whether the model entries are permanently cached in memory
+    # is_fixture:bool=False # Describes whether the model instance is a fixture
     model:type['HSDBModel']
     model_name:str
     path:str
@@ -45,17 +48,12 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     resource_name_plural:str
     # migrated_at:dt
     # migration_app_name:str
-    # migration_id:int
+    migration_id:int
     # migration_name:str
     
     # HSDB attributes
-    # app_name     = HSDBAttribute(str,  editable=False) # TODO: Maybe make this as a computed python property?
     created_at   = HSDBAttribute(dt,   computed=True)
     id           = HSDBAttribute(str,  computed=True, unique=True)
-    is_cached    = HSDBAttribute(bool, default=True) # Describes whether the model entries are permanently cached in memory
-    # is_fixture   = HSDBAttribute(bool, computed=True) # TODO: Maybe make this as a computed python property?
-    # migration_id = HSDBAttribute(int,  computed=True) # TODO: Maybe make this as a computed python property?
-    # synced_at    = HSDBAttribute(dt,   computed=True)
     updated_at   = HSDBAttribute(dt,   computed=True)
     
     def __init__(self,

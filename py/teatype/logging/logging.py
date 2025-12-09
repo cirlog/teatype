@@ -170,6 +170,7 @@ def _format(message:any,
     return formatted_message
 
 def err(message:str,
+        *,
         exit=False,
         include_symbol:bool=False,
         pad_before:int=None,
@@ -285,7 +286,9 @@ def hint(message:str,
 #       This way, the function can be called with a single argument to specify padding
 #       and the default value can be set to 0 for no padding
 #       Also, allow this: (0,) and (,0) to specify padding before and after, respectively
+# TODO: Allow args like in print and the rest as kwargs
 def log(message:any,
+        *,
         color:EscapeColor.Colors='default',
         pad_after:int=None,
         pad_before:int=None,

@@ -12,10 +12,11 @@
 
 # Standard-library imports
 from abc import ABC
-from typing import List
 from datetime import datetime as dt
+from typing import List
+
 # Third-party imports
-from teatype.db.hsdb.util import parse_index_files
+from teatype.db.hsdb.toolbox import parse_index_files
 from teatype.io import file, path
 from teatype.logging import *
 

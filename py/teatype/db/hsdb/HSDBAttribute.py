@@ -44,6 +44,7 @@ class HSDBAttribute(HSDBField):
 
     def __init__(self,
                  type:Type[T],
+                 *,
                  computed:bool=False,
                  default:Type[T]=None,
                  description:str=None,

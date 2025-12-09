@@ -630,7 +630,12 @@ def size(path:str, human_readable:bool=False) -> int|str:
         err(f'Error getting size of file "{path}": {exc}')
         raise exc
 
-def write(path:str, data:any, force_format:str=None, prettify:bool=False, create_parents:bool=True) -> bool:
+def write(path:str,
+          data:any,
+          *,
+          create_parents:bool=True,
+          force_format:str=None,
+          prettify:bool=False) -> bool:
     """
     Write data to a file at the specified path.
 
@@ -707,7 +712,6 @@ def write(path:str, data:any, force_format:str=None, prettify:bool=False, create
                 # Write plain text data to the file
                 f.write(data)
         return True
-    except Exception as exc:
+    except Exception:
         # Log an error message if an exception occurs
-        err(f'Error writing to file {path}: {exc}', traceback=True)
-        raise exc
+        err(f'Error writing to file {path}.', raise_exception=True, traceback=True)

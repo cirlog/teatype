@@ -62,6 +62,7 @@ class IndexDatabase:
         
     @property
     def memory_footprint(self) -> '_MemoryFootprint':
+        # TODO: Replace with probe.memory()
         return _MemoryFootprint(self)
     
     @property
@@ -76,13 +77,19 @@ class IndexDatabase:
     ##################
                 
     def create_entry(self, model:type, data:dict, parse:bool=False) -> object|None:
+        """
+        Return codes:
+            - 200: Success
+            - 409: Conflict (Entry already exists)
+            - 500: Internal Server Error
+        """
         try:
             if parse:
                 data = {
                     **data.get('base_data'),
                     **data.get('data')
                 }
-            # TODO: Validation
+            # TODO: Restore proper validation
             model_instance = model(**data)
             model_name = model_instance.model_name
             with self._model_index_lock:
@@ -91,7 +98,7 @@ class IndexDatabase:
             
             model_id = model_instance.id
             if model_id in self._db:
-                return None
+                return self._db.fetch(model_id), 409
             
             # Model.create(root_path, model_instance)
             # TODO: Quick and dirty hack, need to refactor this with proper attributes
@@ -110,7 +117,7 @@ class IndexDatabase:
                         None,
                     )
                     if existing_match:
-                        return None
+                        return existing_match, 409
                 case 'InstrumentTypeModel':
                     existing_match = next(
                         (
@@ -122,7 +129,7 @@ class IndexDatabase:
                         None,
                     )
                     if existing_match:
-                        return None
+                        return existing_match, 409
                 case 'ManufacturerModel':
                     existing_match = next(
                         (
@@ -134,7 +141,7 @@ class IndexDatabase:
                         None,
                     )
                     if existing_match:
-                        return None
+                        return existing_match, 409
                 case 'SurgeryTypeModel':
                     existing_match = next(
                         (
@@ -146,14 +153,24 @@ class IndexDatabase:
                         None,
                     )
                     if existing_match:
-                        return None
+                        return existing_match, 409
+                    
+            # if 'name' in data:
+            #     with self._indexed_fields_lock:
+            #         indexed_field_name = model_name + '_name'
+            #         if indexed_field_name not in self._indexed_fields:
+            #             self._indexed_fields[indexed_field_name] = {}
+                    
+            #         id = data.get('id')
+            #         name = data.get('name')
+            #         if name not in self._indexed_fields[indexed_field_name]:
+            #             self._indexed_fields[indexed_field_name][name] = id
             
             self._db.add(model_id, model_instance)
-            return model_instance
+            return model_instance, 200
         except:
-            import traceback
-            traceback.print_exc()
-            return None
+            err('Could not create index database entry.', traceback=True)
+            return None, 500
         
     def fetch_all(self, serialize:bool=False) -> List[object]:
         """
