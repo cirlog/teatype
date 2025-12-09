@@ -54,7 +54,7 @@ class HSDBAttribute(HSDBField):
                  required:bool=False,
                  searchable:bool=False,
                  unique:bool=False):
-        super().__init__(editable, indexed, required, _SUPPORTED_TYPES, type)
+        super().__init__(editable, indexed, required, type, _SUPPORTED_TYPES)
         
         if not isinstance(computed, bool):
             raise ValueError('computed must be a boolean')

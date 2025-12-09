@@ -18,7 +18,7 @@ from teatype.db.hsdb import HSDBField, HSDBQuery, HybridStorage
 from teatype.toolkit import generate_id, kebabify
 
 _AVAILABLE_FUNCTIONS = [
-    'all',
+    'all'
 ]
 _AVAILABLE_FIELDS = [
     'primary_model',
@@ -26,7 +26,7 @@ _AVAILABLE_FIELDS = [
     'relation_name',
     'relation_type',
     'reverse_lookup',
-    'secondary_model',
+    'secondary_model'
 ]
 _SUPPORTED_TYPES = [str, List[str]]
 # Type alias for attribute types
@@ -83,7 +83,7 @@ class HSDBRelation(HSDBField, Generic[T]):
                  relation_key:str='id',
                  required:bool=False,
                  reverse_lookup:str=None) -> None:
-        super().__init__(editable, True, required, _SUPPORTED_TYPES, type)
+        super().__init__(editable, True, required, type, _SUPPORTED_TYPES)
         
         self.primary_model = primary_model
         self.relation_key = relation_key
@@ -136,7 +136,7 @@ class HSDBRelation(HSDBField, Generic[T]):
         """
         self._validate_keys(primary_keys)
         self._validate_keys(secondary_keys)
-        self._hsdb_reference.index_database._relational_index.add(
+        self._hsdb_reference.index_db._relational_index.add(
             relation_name=self.relation_name,
             reverse_relation_name=self.reverse_relation_name,
             relation_type=self.relation_type,
@@ -155,12 +155,12 @@ class HSDBRelation(HSDBField, Generic[T]):
             super().__init__(value, field, _AVAILABLE_FIELDS)
             
             if field.relation_type == 'many-to-one':
-                fetch_id = field._hsdb_reference.index_database._relational_index.fetch(
+                fetch_id = field._hsdb_reference.index_db._relational_index.fetch(
                     relation_name=field.relation_name,
                     target_id=caller.id,
                     reverse_lookup=False
                 )
-                fetch_value = field._hsdb_reference.index_database._db.fetch(fetch_id)
+                fetch_value = field._hsdb_reference.index_db._db.fetch(fetch_id)
             
             self._value = fetch_value
             
@@ -171,7 +171,7 @@ class HSDBRelation(HSDBField, Generic[T]):
         # def __query_closure(self):
         #     # TODO: Replace with relational_index lookup
         #     if field.relation_type == 'many-to-one':
-        #         fetch_value = field._hsdb_reference.index_database._relational_index.fetch(
+        #         fetch_value = field._hsdb_reference.index_db._relational_index.fetch(
         #             relation_name=field.relation_name,
         #             target_id=caller.id,
         #             reverse_lookup=False

@@ -118,7 +118,7 @@ class HSDBQuery:
             List of entry that match the query if self._return_ids is False.
             """
             # Check if the database is empty
-            if not self._hsdb_reference.index_database._db:
+            if not self._hsdb_reference.index_db._db:
                 raise KeyError('No db entries found')
                 
             if self._verbose and self._measure_time:
@@ -126,7 +126,7 @@ class HSDBQuery:
             
             if id:
                 print('fetch')
-                queryset = [self._hsdb_reference.index_database._db.fetch(id)]
+                queryset = [self._hsdb_reference.index_db._db.fetch(id)]
             else:
                 def __get_nested_value(entry, attribute_path:str) -> any:
                     """
@@ -173,7 +173,7 @@ class HSDBQuery:
 
                 # First filter using conditions.
                 queryset = []
-                for entry_id, entry in self._hsdb_reference.index_database._db.items:
+                for entry_id, entry in self._hsdb_reference.index_db._db.items:
                     if self.subset and entry_id not in self.subset:
                         continue
                     

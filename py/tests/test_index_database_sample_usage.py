@@ -123,7 +123,7 @@ def random_schools():
 def hybrid_storage(random_schools):
     hybrid_storage = HybridStorage(cold_mode=True)
     for school in random_schools:
-        hybrid_storage.index_database.update_directly({school.id: school})
+        hybrid_storage.index_db.update_directly({school.id: school})
     return hybrid_storage
 
 ##########
@@ -142,7 +142,7 @@ def test_create_students_parallel(number_of_students,
     """
     log('--------------------')
     
-    db = hybrid_storage.index_database._db
+    db = hybrid_storage.index_db._db
     if number_of_students == 1:
         stopwatch('Creating student')
         student = create_student(0, random_first_names, random_sur_names, random_schools)
@@ -185,7 +185,7 @@ def test_queries(number_of_students,
     log('--------------------')
 
     stopwatch('Seeding DB data')
-    db = hybrid_storage.index_database._db
+    db = hybrid_storage.index_db._db
     if generate_in_parallel:
         students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
     else:
@@ -196,7 +196,7 @@ def test_queries(number_of_students,
     log(f'Total data: {total_database_entries}')
     if measure_memory_footprint:
         stopwatch('Measuring memory footprint')
-        log(hybrid_storage.index_database.memory_footprint)
+        log(hybrid_storage.index_db.memory_footprint)
         stopwatch()
     println()
     
@@ -257,7 +257,9 @@ def test_queries(number_of_students,
     log('--------------------')
     
 @pytest.mark.parametrize('number_of_students, generate_in_parallel, measure_memory_footprint', [
-    (1111, False, False),
+    (1234, False, True),
+    # (12345, False, True),
+    # (111_111, False, True),
 ])
 def test_relations(number_of_students,
                    generate_in_parallel,
@@ -273,12 +275,12 @@ def test_relations(number_of_students,
         students = create_students_parallel(number_of_students, random_first_names, random_sur_names, random_schools)
     else:
         students = create_students_sequentially(number_of_students, random_first_names, random_sur_names, random_schools)
-    hybrid_storage.index_database.update_directly(students)
+    hybrid_storage.index_db.update_directly(students)
     stopwatch()
-    log(f'Total data: {hybrid_storage.index_database.size}')
+    log(f'Total data: {hybrid_storage.index_db.size}')
     if measure_memory_footprint:
         stopwatch('Measuring memory footprint')
-        log(hybrid_storage.index_database.memory_footprint)
+        log(hybrid_storage.index_db.memory_footprint)
         stopwatch()
     println()
     
@@ -295,9 +297,11 @@ def test_relations(number_of_students,
         'name': 'Lion Reichl',
         'school': tu_muenchen.id
     })
-    hybrid_storage.index_database.update_directly({lion_reichl.id: lion_reichl})
+    hybrid_storage.index_db.update_directly({lion_reichl.id: lion_reichl})
     
-    # hybrid_storage.index_database.print(limit=10)
+    StudentModel.query.where('age').less_than(31).verbose().collect()
+    
+    # hybrid_storage.index_db.print(limit=10)
     
     log('Test relations:')
     println()

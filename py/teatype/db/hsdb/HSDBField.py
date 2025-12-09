@@ -44,7 +44,6 @@ class HSDBField(ABC, Generic[T]):
     value:any                   # Property for the field value
 
     def __init__(self,
-                 *,
                  editable:bool,
                  indexed:bool,
                  required:bool,
