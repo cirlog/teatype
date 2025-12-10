@@ -40,6 +40,9 @@ class SyncForks(BaseCLI):
         '*.log',
         '~temp*',
         '.env',
+        '*.egg-info',
+        '.DS_Store',
+        'Thumbs.db'
     ]
         
     def meta(self):
