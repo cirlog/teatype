@@ -42,7 +42,7 @@
     {
         "name": "pt",
         "description": "Run pytest with the specified arguments",
-        "command": "python3.11 -m pytest -s -rf --disable-warnings --tb=native --showlocals --color=yes --maxfail=1"
+        "command": "python3.11 -m pytest -s -rf --disable-warnings --tb=native --showlocals --color=yes"
     },
     {
         "name": "ptr",
