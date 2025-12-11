@@ -144,9 +144,9 @@ class HSDBRelation(HSDBField, Generic[T]):
             secondary_keys=secondary_keys,
         )
         
-    ####################
-    # Internal Classes #
-    ####################
+    #############
+    # Internals #
+    #############
 
     class _RelationWrapper(HSDBField._ValueWrapper):
         caller:object

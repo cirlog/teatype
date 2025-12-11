@@ -130,9 +130,9 @@ class HSDBAttribute(HSDBField):
         # Return the class type with the parameter
         return cls
         
-    ####################
-    # Internal Classes #
-    ####################
+    #############
+    # Internals #
+    #############
     
     class _AttributeWrapper(HSDBField._ValueWrapper):
         def __init__(self, value:any, field:str):

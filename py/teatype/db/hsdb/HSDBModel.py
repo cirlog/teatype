@@ -295,9 +295,9 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
             setattr(self, key, value)
         self.updated_at = dt.now()
     
-    ##################
-    # Static methods #
-    ##################
+    #################
+    # Class methods #
+    #################
     
     @classmethod
     def load(cls, dict_data:dict):

@@ -124,9 +124,9 @@ class HSDBField(ABC, Generic[T]):
         # self._validate_value(new_value)
         self._value = new_value
         
-    ####################
-    # Internal Classes #
-    ####################
+    #############
+    # Internals #
+    #############
 
     class _ValueWrapper(ABC):
         cache_values:dict = {} # Cache for the field values

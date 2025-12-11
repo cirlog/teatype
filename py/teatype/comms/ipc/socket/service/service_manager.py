@@ -80,9 +80,9 @@ class SocketServiceManager:
         if owner:
             self._autowire(owner)
             
-    ############
-    # Internal #
-    ############
+    #############
+    # Internals #
+    #############
 
     def _autowire(self, owner:object) -> None:
         """
