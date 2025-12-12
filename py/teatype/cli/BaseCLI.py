@@ -67,6 +67,8 @@ class BaseCLI(ABC):
     """
     _parsing_errors:List[str]
     
+    INCLUDE_SECRET_FLAGS:bool=True
+    INCLUDE_YES_FLAG:bool=False
     NOT_AVAILABLE:bool=False
     NOT_AVAILABLE_REASON:str='Not specified'
     
@@ -198,18 +200,26 @@ class BaseCLI(ABC):
         self.flags = []
         for flag in flags:
             self.flags.append(Flag(**flag))
-        self.secret_flags = [
-            Flag(short='0ct',
-                 long='0-clear-terminal',
-                 help=['A secret global debug option to clear the shell terminal before executing the script', 'If you don\'t know what this is, don\'t use it!'],
-                 required=False,
-                 secret=True),
-            Flag(short='0oss',
-                 long='0-override-security',
-                 help=['A secret global debug option to override any potential security features', 'If you don\'t know what this is, don\'t use it!'],
-                 required=False,
-                 secret=True)
-        ]
+            
+        self.secret_flags = []
+        if self.INCLUDE_SECRET_FLAGS:
+            self.secret_flags.append(Flag('0ct',
+                                          '0-clear-terminal',
+                                          ['A secret global debug option to clear the shell terminal before executing the script', 'If you don\'t know what this is, don\'t use it!'],
+                                          required=False,
+                                          secret=True))
+            self.secret_flags.append(Flag('0oss',
+                                          '0-override-security',
+                                          ['A secret global debug option to override any potential security features', 'If you don\'t know what this is, don\'t use it!'],
+                                          required=False,
+                                          secret=True))
+        if self.INCLUDE_YES_FLAG:
+            self.flags.append(
+                Flag('y',
+                     'yes',
+                     'Automatically answer yes to all prompts.',
+                     required=False)
+            )
             
         # DEPRECATED: Disabled auto adding help flag for now
             # Add the default help flag for all scripts

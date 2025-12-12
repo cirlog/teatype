@@ -31,6 +31,7 @@ class Flag:
                 short:str,
                 long:str,
                 help:str|List[str],
+                *,
                 required:bool,
                 depends_on:List[str]=None,
                 options:List[any]|type=None,
