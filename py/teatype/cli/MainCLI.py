@@ -166,7 +166,7 @@ class MainCLI(BaseCLI):
                 tui_info = f'    {tui_name.ljust(max_line_width)}    {tui.help}'
             help_message += f'{tui_info}\n'
         log(help_message)
-        hint(f'Use `$ {self.shorthand} <script> -h, --help` for more details on specific scripts.', pad_after=1)
+        hint(f'Use `{self.shorthand} <script> -h, --help` for more details on specific scripts.', pad_after=1)
         
     #########
     # Hooks #

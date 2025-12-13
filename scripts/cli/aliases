@@ -187,7 +187,7 @@ class Aliases(BaseCLI):
             # FIXME: Probably this code here causing hanging processes
             shell('exec bash') # Restart the shell
         else:
-            hint('To apply changes, run `$ exec bash`.', pad_before=1)
+            hint('To apply changes, run `exec bash`.', pad_before=1)
 
     def remove_all_aliases(self, aliases_list:List[_Alias], quiet:bool=False, refresh:bool=True):
         """
@@ -257,7 +257,7 @@ class Aliases(BaseCLI):
             shell('exec bash') # Restart the shell
         else:
             if not quiet:
-                hint('To apply changes, run `$ exec bash`.', pad_before=1)
+                hint('To apply changes, run `exec bash`.', pad_before=1)
 
     # FIXME: Not working completely, but fix later, no time now
     def create_bashrc_backup(self):

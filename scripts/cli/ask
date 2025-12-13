@@ -22,10 +22,13 @@ from teatype.ai import __GPU_SUPPORT__
 from teatype.cli import BaseCLI
 from teatype.io import fetch, file, path, prompt
 from teatype.logging import *
-from teatype.modulo import LaunchPad
+from teatype.modulo import __MODULO_SUPPORT__
 
 if __GPU_SUPPORT__:
     from teatype.ai.clients import LLMClient
+    
+if __MODULO_SUPPORT__:
+    from teatype.modulo import LaunchPad
 
 class Ask(BaseCLI):
     NOT_AVAILABLE=not __GPU_SUPPORT__

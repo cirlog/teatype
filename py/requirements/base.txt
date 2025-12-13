@@ -1,6 +1,7 @@
 aiohappyeyeballs==2.6.1
 aiohttp==3.12.15
 aiosignal==1.4.0
+annotated-types==0.7.0
 attrs==25.3.0
 certifi==2025.7.14
 celery==5.5.3
@@ -33,6 +34,8 @@ prompt_toolkit==3.0.52
 propcache==0.3.2
 psutil==7.0.0
 pycparser==2.22
+pydantic==2.12.5
+pydantic-core==2.41.5
 Pygments==2.19.2
 Pympler==1.1
 pyperclip==1.9.0
@@ -46,6 +49,8 @@ rich==14.1.0
 SecretStorage==3.3.3
 termcolor==3.1.0
 tqdm==4.67.1
+typing-extensions==4.15.0
+typing-inspection==0.4.2
 urllib3==2.5.0
 yarl==1.20.1
 watchfiles==1.1.1

@@ -14,6 +14,7 @@
 import sys
 import inspect
 from typing import Literal
+
 # Local imports
 from teatype.io import path, shell
 from teatype.logging import *

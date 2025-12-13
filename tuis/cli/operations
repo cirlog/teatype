@@ -14,15 +14,22 @@
 
 # Standard-library imports
 import json
+
 # Third-party imports
 import redis
 from teatype.cli import BaseTUI
 from teatype.enum import EscapeColor
 from teatype.io import prompt
 from teatype.logging import *
-from teatype.modulo import LaunchPad, ModuloOperations, parse_designation
+from teatype.modulo import __MODULO_IMPORT_ERROR__, __MODULO_SUPPORT__
 
+if __MODULO_SUPPORT__:
+    from teatype.modulo import LaunchPad, ModuloOperations, parse_designation
+    
 class Operations(BaseTUI):
+    NOT_AVAILABLE=not __MODULO_SUPPORT__
+    NOT_AVAILABLE_REASON=__MODULO_IMPORT_ERROR__
+    
     def meta(self):
         return {
             'name': 'operations',
