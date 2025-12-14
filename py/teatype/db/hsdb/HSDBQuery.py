@@ -14,6 +14,7 @@
 from functools import reduce
 from pprint import pprint
 from typing import List, Union
+
 # Third-party imports
 from teatype.db.hsdb import HybridStorage
 from teatype.logging import *

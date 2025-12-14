@@ -12,7 +12,8 @@
 
 # Standard-library imports
 from abc import ABC
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, List, TypeVar
+
 # Third-party imports
 from teatype.db.hsdb import HSDBField, HSDBQuery, HybridStorage
 from teatype.toolkit import generate_id, kebabify
@@ -112,7 +113,8 @@ class HSDBRelation(HSDBField, Generic[T]):
     def __get__(self, instance, owner):
         if self._wrapper is None:
             self._wrapper = self._RelationWrapper(self._value, self, instance)
-        return self._wrapper
+        # return self._wrapper.
+        return self._wrapper._value
     
     @classmethod
     def _stitch_relation_name(cls, primary_model, secondary_model, relation_type):
@@ -189,6 +191,10 @@ class HSDBRelation(HSDBField, Generic[T]):
             Returns all entries in the relation.
             """
             return self._value.all()
+        
+        @property
+        def id(self) -> str:
+            return self._value.id
         
         #########################################################################
     

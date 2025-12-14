@@ -17,7 +17,7 @@ from abc import ABC
 from typing import List
 
 # Third-party imports
-from teatype.db.hsdb import HSDBAttribute, HSDBField, HSDBMeta, HSDBQuery, HSDBRelation
+from teatype.db.hsdb import HSDBAttribute, HSDBMeta, HSDBQuery, HSDBRelation
 from teatype.toolkit import dt, staticproperty
 from teatype.toolkit import generate_id, kebabify
 
@@ -52,9 +52,9 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     # migration_name:str
     
     # HSDB attributes
-    created_at   = HSDBAttribute(dt,   computed=True)
-    id           = HSDBAttribute(str,  computed=True, unique=True)
-    updated_at   = HSDBAttribute(dt,   computed=True)
+    created_at = HSDBAttribute(dt,  computed=True)
+    id         = HSDBAttribute(str, computed=True, unique=True)
+    updated_at = HSDBAttribute(dt,  computed=True)
     
     def __init__(self,
                  data:dict,
