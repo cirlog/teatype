@@ -268,7 +268,8 @@ def test_queries(number_of_students,
     
     log('Test relations:')
     println()
-    log(lion_reichl.school.name)
+    log('Lion`s school:')
+    log(SchoolModel.serialize(lion_reichl.school))
     
     println()
     log('#' * 60, color='magenta')
