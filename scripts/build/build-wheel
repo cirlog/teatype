@@ -14,20 +14,25 @@
 
 # Standard-library imports
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 from packaging import version
 
-PACKAGE_NAME = 'teatype'
 PARENT_PATH = Path(__file__).parent.parent.parent
+
+BUILD_SCRIPTS_DIR = PARENT_PATH / 'scripts' / 'build'
 PACKAGE_PATH = PARENT_PATH / 'py'
-FILES_PATH = PARENT_PATH / 'files' / 'build' / 'py'
+TOML_FILE = PACKAGE_PATH / 'pyproject.toml'
 WHEEL_DIR = PARENT_PATH / 'build' / 'wheel'
-VERSION_FILE = FILES_PATH / 'version.txt'
-HISTORY_FILE = FILES_PATH / 'version_history.txt'
+
+PACKAGE_NAME = 'teatype'
 
 def get_pypi_versions():
+    """
+    Fetch available versions from PyPI.
+    """
     try:
         result = subprocess.run(
             ['python3.11', '-m', 'pip', 'index', 'versions', PACKAGE_NAME],
@@ -41,68 +46,129 @@ def get_pypi_versions():
     lines = result.stdout.splitlines()
     versions = set()
     for line in lines:
-        if "Available versions:" in line:
-            # crude parse: "Available versions: 2025.1.0.3, 2025.1.0.2, ..."
-            part = line.split("Available versions:")[-1]
-            for v in part.split(","):
+        if 'Available versions:' in line:
+            part = line.split('Available versions:')[-1]
+            for v in part.split(','):
                 v = v.strip()
                 if v:
                     versions.add(v)
     return versions
 
-def load_local_history():
-    versions = set()
-    if HISTORY_FILE.exists():
-        for line in HISTORY_FILE.read_text().splitlines():
-            v = line.strip()
-            if v:
-                versions.add(v)
-    if VERSION_FILE.exists():
-        versions.add(VERSION_FILE.read_text().strip())
-    return versions
+def get_current_toml_version():
+    """
+    Reads the current version hardcoded in pyproject.toml.
+    """
+    if not TOML_FILE.exists():
+        return None
+    
+    content = TOML_FILE.read_text(encoding='utf-8')
+    # Regex to find 'version = "x.y.z"'
+    match = re.search(r'(?m)^version\s*=\s*["\'](.*?)["\']', content)
+    if match:
+        return match.group(1)
+    return None
 
-def main():
+def update_toml_version(new_version):
+    """
+    Updates the version string and adds a history record in pyproject.toml.
+    """
+    content = TOML_FILE.read_text(encoding='utf-8')
+    
+    # Update the 'version = "..."' line
+    # This regex looks for 'version = "..."' at the start of a line
+    pattern_version = r'(?m)^version\s*=\s*["\'].*?["\']'
+    replacement_version = f'version = "{new_version}"'
+    
+    if not re.search(pattern_version, content):
+        raise ValueError(f'Could not find "version = ..." line in {TOML_FILE}')
+    
+    new_content = re.sub(pattern_version, replacement_version, content)
+    
+    # (Optional) Write 'history' as a comment at the bottom of the file
+    # This satisfies the requirement to keep a log without breaking TOML syntax
+    history_line = f'# Release: {new_version}\n'
+    
+    # Only append if this specific release line isn't already there
+    if history_line.strip() not in new_content:
+        if not new_content.endswith('\n'):
+            new_content += '\n'
+        new_content += history_line
+
+    TOML_FILE.write_text(new_content, encoding='utf-8')
+    print(f'Updated pyproject.toml to version {new_version}')
+
+if __name__ == '__main__':
     current_dir = os.getcwd()
     
     try:
         os.chdir(PACKAGE_PATH)
         
-        existing_local = load_local_history()
+        # 1. Gather forbidden versions (Remote + Current Local)
         existing_remote = get_pypi_versions()
-        forbidden = existing_local | existing_remote
+        current_local = get_current_toml_version()
+        
+        forbidden = existing_remote.copy()
+        if current_local:
+            forbidden.add(current_local)
+            print(f'Current local version: {current_local}')
 
-        print(f'Known versions: {sorted(forbidden)}')
+        print(f'Known remote versions: {sorted(existing_remote)}')
+        
         desired = input('Enter new version: ').strip()
+        if not desired:
+             raise SystemExit('Error: Empty version entered.')
 
         if desired in forbidden:
-            raise SystemExit(f'ERROR: version {desired} already exists. Pick another.')
+            raise SystemExit(f'ERROR: version {desired} already exists (locally or remotely). Pick another.')
 
-        # Check if new version is lower than any existing version
+        # Version Comparison Logic
         try:
             desired_ver = version.parse(desired)
-            for existing in forbidden:
-                try:
-                    if desired_ver < version.parse(existing):
-                        raise SystemExit(f'ERROR: version {desired} is lower than existing version {existing}. Use a higher version.')
-                except Exception:
-                    pass  # Skip invalid version formats
+            # Compare against the max existing version to prevent accidents
+            all_known = list(forbidden)
+            if all_known:
+                # Filter out invalid versions from the set before comparing
+                valid_known = []
+                for v_str in all_known:
+                    try:
+                        valid_known.append(version.parse(v_str))
+                    except: 
+                        continue
+                
+                if valid_known:
+                    max_existing = max(valid_known)
+                    if desired_ver < max_existing:
+                         raise SystemExit(f'ERROR: {desired} is lower than existing {max_existing}. Use a higher version.')
         except ImportError:
-            # Fallback: simple string comparison if packaging is not available
+            # Fallback if packaging library is missing
             if forbidden and desired < max(forbidden):
-                raise SystemExit(f'ERROR: version {desired} appears to be lower than existing versions. Use a higher version.')
+                 raise SystemExit(f'ERROR: version {desired} appears to be lower than existing versions.')
+
+        update_toml_version(desired)
 
         subprocess.run(['python3.11', '-m', 'build', '--wheel', '--outdir', WHEEL_DIR], check=True, capture_output=False, text=True)        
-
-        VERSION_FILE.write_text(desired + '\n')
-        with HISTORY_FILE.open('a', encoding='utf-8') as f:
-            f.write(desired + '\n')
-            
-        shutil.rmtree('build')
-    except:
+        
+        if Path('build').exists():
+            shutil.rmtree('build')
+        
+        upload = input('Do you want to upload the new version to PyPI now? (Y/n)')
+        if upload == 'Y':
+            subprocess.run(['bash', str(BUILD_SCRIPTS_DIR) + '/upload-wheel'], check=True, capture_output=False, text=True)
+            print(f'Uploaded version {desired} to PyPI successfully.')
+        else:
+            print('Upload skipped by user.')
+    except Exception:
         import traceback
         traceback.print_exc()
+        
+        # Restore old version in pyproject.toml
+        if current_local:
+            update_toml_version(current_local)
+            
+        # Remove wheel directory if it exists
+        if WHEEL_DIR.exists():
+            for item in WHEEL_DIR.iterdir():
+                if item.is_file() and item.suffix == '.whl' and desired in item.name:
+                    item.unlink()
     finally:
         os.chdir(current_dir)
-
-if __name__ == '__main__':
-    main()

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "teatype"
-version = "0.1.0" # maintained by your release script or manually
+version = "0.2.0" # maintained by your release script or manually
 description = "Useful utility classes & more (there isn't more). TypeScript and Python support."
 readme = "README.md"
 requires-python = ">=3.10.2"
@@ -88,3 +88,5 @@ classifiers = [
 where = ["."]
 include = ["teatype*"]
 exclude = ["tests", "requirements"]
+# Release: 0.2.0
+# Release: 0.1.0

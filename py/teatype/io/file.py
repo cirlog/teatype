@@ -22,8 +22,10 @@ import xml.etree.ElementTree as ET
 from pathlib import PosixPath
 from typing import List
 from builtins import list as list_type
+
 # Third-party imports
 import numpy as np
+
 # Local imports
 from teatype.logging import *
 from teatype.io import path as path_functions

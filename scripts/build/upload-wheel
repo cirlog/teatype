@@ -63,7 +63,7 @@ if [ -n "$server_name" ]; then
     echo "✅ Found server name: **$server_name**"
     echo "Running twine upload..."
     # Ensure $grandparent_directory is defined elsewhere in your script!
-    python3.11 -m twine upload -r "$server_name" "$grandparent_directory"/py/dist/teatype*
+    python3.11 -m twine upload -r "$server_name" "$grandparent_directory"/build/wheel/*
 else
     echo "❌ Error: Could not read 'index-servers' value from [distutils] section."
     echo "Please confirm your file format and path ($CONFIG_FILE) is correct."
