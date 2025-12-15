@@ -287,7 +287,11 @@ def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
             err(f'Error deleting file "{path}": {exc}')
         return False
     
-def exists(path:PosixPath|str, return_file:bool=False, trim_file:bool=False) -> bool|_File:
+def exists(path:PosixPath|str,
+           *,
+           alternative_extensions:List[str]=None,
+           return_file:bool=False,
+           trim_file:bool=False) -> bool|_File:
     """
     Check if a file exists at the specified path.
 
@@ -311,7 +315,18 @@ def exists(path:PosixPath|str, return_file:bool=False, trim_file:bool=False) -> 
         # Use the path as-is if it's already a string
         path_string = path
     
-    file_exists = os.path.exists(path_string)
+    if alternative_extensions:
+        for ext in alternative_extensions:
+            if '.' in ext:
+                ext = ext.replace('.', '')
+            file_name = path_string.split('.')[0]
+            alt_path = f'{file_name}.{ext}'
+            if os.path.exists(alt_path):
+                path_string = alt_path
+                file_exists = True
+                break
+    else:
+        file_exists = os.path.exists(path_string)
     if return_file:
         # Return a _File object with the specified path and trimming option if requested
         return _File(path_string, trimmed=trim_file) if file_exists else None
