@@ -315,6 +315,7 @@ def exists(path:PosixPath|str,
         # Use the path as-is if it's already a string
         path_string = path
     
+    file_exists = os.path.exists(path_string)
     if alternative_extensions:
         for ext in alternative_extensions:
             if '.' in ext:
@@ -325,8 +326,6 @@ def exists(path:PosixPath|str,
                 path_string = alt_path
                 file_exists = True
                 break
-    else:
-        file_exists = os.path.exists(path_string)
     if return_file:
         # Return a _File object with the specified path and trimming option if requested
         return _File(path_string, trimmed=trim_file) if file_exists else None
