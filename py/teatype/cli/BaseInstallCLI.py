@@ -13,6 +13,7 @@
 # Third-party imports
 from teatype.cli import BaseCLI
 
+# TODO: Implement Deployment Cache to skip already executed steps
 # TODO: Write base install script that creates dist folder, adds it to .gitignore if not yet exists,
 #       and creates an install flag file in the dist folder where everytime the install script is
 #       executed, append the exact time and date of the installation and whether it was successful or not
