@@ -40,9 +40,6 @@
 
 ## High-Priority TO-DOs
 
-<li>Use 1 global dist folder</li>
-<li>Customize build path for python wheels</li>
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
