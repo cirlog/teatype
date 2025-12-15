@@ -16,7 +16,7 @@ import copy
 # Third-party imports
 from teatype.io import path
 
-_DEFAULT_ROOT_PATH = '/var/lib/hsdb'
+_DEFAULT_ROOT_PATH = '/var/lib'
 _FS = {
     'hsdb': {
         'backups': {
