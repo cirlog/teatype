@@ -14,6 +14,7 @@
 
 # Standard-library imports
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from packaging import version
@@ -22,6 +23,7 @@ PACKAGE_NAME = 'teatype'
 PARENT_PATH = Path(__file__).parent.parent.parent
 PACKAGE_PATH = PARENT_PATH / 'py'
 FILES_PATH = PARENT_PATH / 'files' / 'build' / 'py'
+WHEEL_DIR = PARENT_PATH / 'build' / 'wheel'
 VERSION_FILE = FILES_PATH / 'version.txt'
 HISTORY_FILE = FILES_PATH / 'version_history.txt'
 
@@ -89,11 +91,13 @@ def main():
             if forbidden and desired < max(forbidden):
                 raise SystemExit(f'ERROR: version {desired} appears to be lower than existing versions. Use a higher version.')
 
-        subprocess.run(['python3.11', '-m', 'build'], check=True, capture_output=True, text=True)        
+        subprocess.run(['python3.11', '-m', 'build', '--wheel', '--outdir', WHEEL_DIR], check=True, capture_output=False, text=True)        
 
         VERSION_FILE.write_text(desired + '\n')
         with HISTORY_FILE.open('a', encoding='utf-8') as f:
             f.write(desired + '\n')
+            
+        shutil.rmtree('build')
     except:
         import traceback
         traceback.print_exc()
