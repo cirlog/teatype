@@ -289,7 +289,7 @@ def delete(path:str, silent_fail:bool=True, sudo:bool=False) -> bool:
     
 def exists(path:PosixPath|str,
            *,
-           alternative_extensions:List[str]=None,
+           alt_extensions:List[str]=None,
            return_file:bool=False,
            trim_file:bool=False) -> bool|_File:
     """
@@ -316,8 +316,8 @@ def exists(path:PosixPath|str,
         path_string = path
     
     file_exists = os.path.exists(path_string)
-    if alternative_extensions:
-        for ext in alternative_extensions:
+    if alt_extensions:
+        for ext in alt_extensions:
             if '.' in ext:
                 ext = ext.replace('.', '')
             file_name = path_string.split('.')[0]
