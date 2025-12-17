@@ -405,7 +405,7 @@ class BaseStartCLI(BaseCLI):
             # Watch the module directory for changes and restart on .py edits
             watch_paths = [self.parent_path]
             self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode)
-            signal_handler(signal.SIGSTOP, None) # Kill the process after successful activation
+            # signal_handler(signal.SIGSTOP, None) # Kill the process after successful activation
             return
 
         # Normal (non-reload) behaviour
