@@ -18,12 +18,14 @@ import shutil
 import sys
 import time
 from importlib import util as iutil
+
 # Third-party imports
 from teatype.cli import BaseCLI, BaseIsRunningCLI
 from teatype.io import path
 from teatype.logging import *
 from teatype.io import TemporaryDirectory as TempDir
 
+# TODO: Use softkill module instead of reimplementing everything here
 # TODO: Redis adapter to remove entries from a redis db?
 class BaseStopCLI(BaseCLI):
     # TODO: Add flag that uses exit codes instead of returning boolean

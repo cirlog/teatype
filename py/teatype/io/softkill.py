@@ -29,6 +29,8 @@ class _TerminationStrategy(IntEnum):
     STANDARD=io_signal.SIGTERM
     FORCE=io_signal.SIGKILL
 
+# TODO: Add multithreading support for faster termination of multiple processes
+# TODO: Sanity check that the processes being killed are indeed the intended ones and that the algorithm actually works as intended
 class _ProcessTerminator:
     """
     Handles termination of processes matching specified criteria.
