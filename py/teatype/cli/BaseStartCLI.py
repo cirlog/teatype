@@ -212,6 +212,7 @@ class BaseStartCLI(BaseCLI):
             
         self.stop.set_flag('silent', True)
         self.stop.set_flag('sleep', 0.25)
+            
         start_process()
 
         try:
@@ -251,7 +252,9 @@ class BaseStartCLI(BaseCLI):
                 with lock:
                     restarting = False
         except KeyboardInterrupt:
-            pass
+            if not silent_mode:
+                println()
+                warn('[reloader] keyboard interrupt detected, shutting down gracefully...', pad_before=1)
         finally:
             stop_process()
     
@@ -402,8 +405,7 @@ class BaseStartCLI(BaseCLI):
             # Watch the module directory for changes and restart on .py edits
             watch_paths = [self.parent_path]
             self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode)
-            # When reloader exits (e.g. Ctrl+C), clean up and exit gracefully
-            # signal_handler(signal.SIGSTOP, None)
+            signal_handler(signal.SIGSTOP, None) # Kill the process after successful activation
             return
 
         # Normal (non-reload) behaviour
