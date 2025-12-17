@@ -40,7 +40,7 @@ class _ProcessTerminator:
     ]
     
     def __init__(self,
-                 process_set:set=None,
+                 process_set:set,
                  signal_delay:float=0.5,
                  max_attempts:int=3,
                  *,
@@ -56,7 +56,7 @@ class _ProcessTerminator:
             force_signal: Force use of specific signal ('SIGINT', 'SIGTERM', 'SIGKILL').
             silent: Suppress logging output if True.
         """
-        self.process_set = process_set or self.DEFAULT_process_set
+        self.process_set = process_set
         self.signal_delay = signal_delay
         self.max_attempts = max_attempts
         self.force_signal = force_signal
@@ -66,9 +66,9 @@ class _ProcessTerminator:
         """
         Check if command line matches any process.
         """
-        return any(model in arg
+        return any(process in arg
                    for arg in cmdline
-                   for model in self.process_set)
+                   for process in self.process_set)
     
     def _send_signal(self, pid:int, signal:int) -> bool:
         """
@@ -120,7 +120,7 @@ class _ProcessTerminator:
             
             for attempt in range(1, self.max_attempts + 1):
                 if not self.silent:
-                    print(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
+                    log(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
                 
                 if not self._send_signal(pid, signal_type):
                     return False
@@ -129,11 +129,11 @@ class _ProcessTerminator:
                 
                 if not psutil.pid_exists(pid):
                     if not self.silent:
-                        print(f'PID {pid} terminated successfully on attempt {attempt}')
+                        log(f'PID {pid} terminated successfully on attempt {attempt}')
                     return True
                 
                 if not self.silent:
-                    print(f'PID {pid} still active after attempt {attempt}')
+                    log(f'PID {pid} still active after attempt {attempt}')
             
             if not self.silent:
                 warn(f'Failed to stop process (PID: {pid}) after {self.max_attempts} attempts with {signal_type.name}.')
@@ -143,7 +143,7 @@ class _ProcessTerminator:
         for signal_type in self.TERMINATION_SIGNALS:
             for attempt in range(1, self.max_attempts + 1):
                 if not self.silent:
-                    print(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
+                    log(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
                 
                 if not self._send_signal(pid, signal_type):
                     return False
@@ -152,11 +152,11 @@ class _ProcessTerminator:
                 
                 if not psutil.pid_exists(pid):
                     if not self.silent:
-                        print(f'PID {pid} terminated successfully on attempt {attempt}')
+                        log(f'PID {pid} terminated successfully on attempt {attempt}')
                     return True
                 
                 if not self.silent:
-                    print(f'PID {pid} still active after attempt {attempt}')
+                    log(f'PID {pid} still active after attempt {attempt}')
             
             if not self.silent:
                 warn(f'{signal_type.name} attempts failed. Trying with next signal...')
@@ -184,7 +184,7 @@ class _ProcessTerminator:
                     if self._terminate_process(pid):
                         termination_count += 1
                         if not self.silent:
-                            print(f'Process (PID: {pid}) has been stopped.')
+                            log(f'Process (PID: {pid}) has been stopped.')
                     else:
                         if not self.silent:
                             err(f'Process (PID: {pid}) could not be stopped. Manual intervention required.')
