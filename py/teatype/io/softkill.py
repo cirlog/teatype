@@ -42,18 +42,25 @@ class _ProcessTerminator:
     def __init__(self,
                  process_set:set=None,
                  signal_delay:float=0.5,
-                 max_attempts:int=3):
+                 max_attempts:int=3,
+                 *,
+                 force_signal:Optional[str]=None,
+                 silent:bool=False):
         """
         Initialize process terminator.
         
         Args:
             process_set: Set of process identifiers to match.
             signal_delay: Delay between termination attempts in seconds.
-            max_attempts: Maximum termination attempts per process.
+            max_attempts: Maximum termination attempts per signal type (default).
+            force_signal: Force use of specific signal ('SIGINT', 'SIGTERM', 'SIGKILL').
+            silent: Suppress logging output if True.
         """
         self.process_set = process_set or self.DEFAULT_process_set
         self.signal_delay = signal_delay
         self.max_attempts = max_attempts
+        self.force_signal = force_signal
+        self.silent = silent
     
     def _matches_criteria(self, cmdline:list) -> bool:
         """
@@ -79,8 +86,13 @@ class _ProcessTerminator:
             return True
         except ProcessLookupError:
             return False
-        except (OSError, PermissionError):
-            err(f'Failed to signal PID {pid}', traceback=True)
+        except PermissionError:
+            if not self.silent:
+                err('OS denied permission access for process. Please run the script with sudo.', pad_after=1, exit=True, verbose=False)
+            return False
+        except OSError as e:
+            if not self.silent:
+                err(f'Failed to signal PID {pid}: {e}', traceback=True)
             return False
     
     def _terminate_process(self, pid:int) -> bool:
@@ -93,21 +105,64 @@ class _ProcessTerminator:
         Returns:
             True if process terminated successfully.
         """
-        for attempt, signal_type in enumerate(self.TERMINATION_SIGNALS, 1):
-            print(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
-            
-            if not self._send_signal(pid, signal_type):
+        # If force_signal is set, use only that signal
+        if self.force_signal:
+            signal_map = {
+                'SIGINT': _TerminationStrategy.GRACEFUL,
+                'SIGTERM': _TerminationStrategy.STANDARD,
+                'SIGKILL': _TerminationStrategy.FORCE
+            }
+            signal_type = signal_map.get(self.force_signal)
+            if not signal_type:
+                if not self.silent:
+                    err(f'Invalid force_signal: {self.force_signal}')
                 return False
             
-            time.sleep(self.signal_delay)
+            for attempt in range(1, self.max_attempts + 1):
+                if not self.silent:
+                    print(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
+                
+                if not self._send_signal(pid, signal_type):
+                    return False
+                
+                time.sleep(self.signal_delay)
+                
+                if not psutil.pid_exists(pid):
+                    if not self.silent:
+                        print(f'PID {pid} terminated successfully on attempt {attempt}')
+                    return True
+                
+                if not self.silent:
+                    print(f'PID {pid} still active after attempt {attempt}')
             
-            if not psutil.pid_exists(pid):
-                print(f'PID {pid} terminated successfully on attempt {attempt}')
-                return True
-            
-            print(f'PID {pid} still active after attempt {attempt}')
+            if not self.silent:
+                warn(f'Failed to stop process (PID: {pid}) after {self.max_attempts} attempts with {signal_type.name}.')
+            return False
         
-        print(f'PID {pid} could not be terminated. Manual intervention required.')
+        # Standard escalation strategy
+        for signal_type in self.TERMINATION_SIGNALS:
+            for attempt in range(1, self.max_attempts + 1):
+                if not self.silent:
+                    print(f'Attempt {attempt}/{self.max_attempts}: Sending {signal_type.name} to PID {pid}')
+                
+                if not self._send_signal(pid, signal_type):
+                    return False
+                
+                time.sleep(self.signal_delay)
+                
+                if not psutil.pid_exists(pid):
+                    if not self.silent:
+                        print(f'PID {pid} terminated successfully on attempt {attempt}')
+                    return True
+                
+                if not self.silent:
+                    print(f'PID {pid} still active after attempt {attempt}')
+            
+            if not self.silent:
+                warn(f'{signal_type.name} attempts failed. Trying with next signal...')
+        
+        if not self.silent:
+            err('SIGKILL failed. Manual intervention required.')
         return False
     
     def terminate_matching_processes(self) -> int:
@@ -125,22 +180,45 @@ class _ProcessTerminator:
                     if not cmdline or not self._matches_criteria(cmdline):
                         continue
                     
-                    if self._terminate_process(process.info['pid']):
+                    pid = process.info['pid']
+                    if self._terminate_process(pid):
                         termination_count += 1
+                        if not self.silent:
+                            print(f'Process (PID: {pid}) has been stopped.')
+                    else:
+                        if not self.silent:
+                            err(f'Process (PID: {pid}) could not be stopped. Manual intervention required.')
                         
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
         except Exception:
-            err(f'Error during process iteration:', traceback=True)
+            if not self.silent:
+                err(f'Error during process iteration:', traceback=True)
         return termination_count
 
 # Convenience function for backward compatibility and ease of use
-def softkill(process_set:Optional[List[str]], delay:float=0.5) -> int:
+def softkill(process_set:List[str], 
+             delay:float=0.5,
+             max_attempts:int=3,
+             *,
+             force_signal:Optional[str]=None,
+             silent:bool=False,) -> int:
     """
     Terminate processes matching process identifiers.
+    
+    Args:
+        process_set: List of process identifiers to match in command lines.
+        delay: Delay between termination attempts in seconds.
+        max_attempts: Default maximum attempts per signal type.
+        force_signal: Force use of specific signal ('SIGINT', 'SIGTERM', 'SIGKILL').
+        silent: Suppress logging output.
+        
+    Returns:
+        Count of successfully terminated processes.
     """
-    terminator = _ProcessTerminator(
-        process_set=set(process_set) if process_set else None,
-        signal_delay=delay
-    )
+    terminator = _ProcessTerminator(set(process_set),
+                                    delay,
+                                    max_attempts,
+                                    force_signal=force_signal,
+                                    silent=silent)
     return terminator.terminate_matching_processes()
