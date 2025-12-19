@@ -304,7 +304,7 @@ class BaseStartCLI(BaseCLI):
             
         # Auto-navigating after loading compatible scripts, to not mess with the functionality of the algorithm
         os.chdir(self.parent_path)
-        
+    
         # If the 'detached' flag is set, run the command in the background
         self.stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
         detached = self.get_flag('detached')
