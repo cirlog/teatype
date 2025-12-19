@@ -16,4 +16,4 @@ from teatype.io import path
 # TODO: Doesn't work for some reason
 from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
 
-urlpatterns = parse_dynamic_routes(app_name='api', search_path=path.join(path.caller_parent(), 'resources'))
+urlpatterns = parse_dynamic_routes(app_name='api', search_path=path.join(path.caller_parent(), 'resources'), verbose=True)

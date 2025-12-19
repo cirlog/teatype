@@ -121,8 +121,8 @@ class HSDBDjangoView(APIView):
         
         parsed_name = kebabify(type(self).__name__)
         if self.is_collection:
-            return f'/{parsed_name}'
-        return f'/{self.api_plural_name()}/<str:{self.api_id()}>'
+            return f'{parsed_name}'
+        return f'{self.api_plural_name()}/<str:{self.api_id()}>'
 
     def initial(self, request, *args, **kwargs) -> None:
         """
