@@ -104,6 +104,7 @@ class IndexDatabase:
             # Model.create(root_path, model_instance)
             # TODO: Quick and dirty hack, need to refactor this with proper attributes
             # need for algorithm to be implemented with the model callhandlers
+            existing_match = None
             match model_name:
                 case 'InstrumentModel':
                     existing_match = next(
@@ -117,8 +118,6 @@ class IndexDatabase:
                         ),
                         None,
                     )
-                    if existing_match:
-                        return existing_match, 409
                 case 'InstrumentTypeModel':
                     existing_match = next(
                         (
@@ -129,8 +128,6 @@ class IndexDatabase:
                         ),
                         None,
                     )
-                    if existing_match:
-                        return existing_match, 409
                 case 'ManufacturerModel':
                     existing_match = next(
                         (
@@ -141,8 +138,6 @@ class IndexDatabase:
                         ),
                         None,
                     )
-                    if existing_match:
-                        return existing_match, 409
                 case 'SurgeryTypeModel':
                     existing_match = next(
                         (
@@ -153,8 +148,8 @@ class IndexDatabase:
                         ),
                         None,
                     )
-                    if existing_match:
-                        return existing_match, 409
+            if existing_match:
+                return existing_match, 409
                     
             # if 'name' in data:
             #     with self._indexed_fields_lock:
