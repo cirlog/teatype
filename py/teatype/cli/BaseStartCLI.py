@@ -11,11 +11,11 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import datetime
 import inspect
 import os
 import signal
 import shutil
-import subprocess
 import sys
 import threading
 from abc import abstractmethod
@@ -29,12 +29,14 @@ from teatype.io import TemporaryDirectory as TempDir
 from watchfiles import watch
 
 class BaseStartCLI(BaseCLI):
+    LOGS_PATH:str='/var/log'
+    
     def __init__(self, 
-                 auto_init: bool = True,
-                 auto_parse: bool = True,
-                 auto_validate: bool = True,
-                 auto_execute: bool = True,
-                 auto_parent_path: bool = True):
+                 auto_init:bool=True,
+                 auto_parse:bool=True,
+                 auto_validate:bool=True,
+                 auto_execute:bool=True,
+                 auto_parent_path:bool=True):
         
         if auto_parent_path:
             # TODO: Put this into BaseCLI instead, but with call_stack=2
@@ -97,7 +99,7 @@ class BaseStartCLI(BaseCLI):
         }
         
     # TODO: Decouple this class from Start into BaseCLI to prevent DRY
-    def load_compatible_scripts(self, silent_mode: bool = False):
+    def load_compatible_scripts(self, silent_mode:bool=False):
         """
         Discover and import all Python scripts in the `scripts/` directory, skipping __init__.py and non-Python files.
         """
@@ -267,11 +269,11 @@ class BaseStartCLI(BaseCLI):
         Executes the start command to initiate the process.
 
         This method performs the following steps:
-        1. Checks if 'start_command' is defined.
-        2. Changes the current working directory to its parent directory.
-        3. Appends shell redirections to the start command.
-        4. Executes the start command, optionally in detached mode.
-        5. Handles keyboard interrupts gracefully.
+            - Checks if 'start_command' is defined.
+            - Changes the current working directory to its parent directory.
+            - Appends shell redirections to the start command.
+            - Executes the start command, optionally in detached mode.
+            - Handles keyboard interrupts gracefully.
         """
         # Verify that the 'start_command' attribute exists; if not, log an error and exit
         if not hasattr(self, 'start_command'):
@@ -307,11 +309,40 @@ class BaseStartCLI(BaseCLI):
         self.stdout_path = path.join('./logs', f'_{self.process_name}.stdout')
         detached = self.get_flag('detached')
         if detached:
-            path.create('./logs')  # Create a logs directory if it does not exist
-            # Append shell redirection to merge stderr with stdout
-            self.start_command = f'{self.start_command} > {self.stdout_path}'
-            # FIXME: Why did I comment this out again?
-            # self.start_command += f' > {stdout_path} 2>&1 &' 
+            path.create('./logs') # Create a logs directory if it does not exist
+            
+            # Create logs directory structure with process name and current date
+            logs_base = path.join(self.LOGS_PATH, self.process_name)
+            if not path.exists(logs_base):
+                try:
+                    path.create(logs_base)
+                except PermissionError:
+                    denied_logs_base = logs_base
+                    logs_base = path.join('/home', env.get('USER'), 'logs', self.process_name)
+                    err(f'Permission denied while creating logs directory at {denied_logs_base}. Trying to create folder under ${logs_base} instead.',
+                        include_symbol=True,
+                        use_prefix=False,
+                        verbose=False)
+                    try:
+                        path.create(logs_base)
+                    except Exception as e:
+                        err(f'Failed to create logs directory at {logs_base} as well: {e}',
+                            exit=True)
+            
+            today = datetime.date.today().strftime('%Y-%m-%d')
+            logs_daily = path.join(logs_base, today)
+            if not path.exists(logs_daily):
+                path.create(logs_daily)
+                success(f'Created daily logs directory at {logs_daily}.',
+                        include_symbol=True)
+
+            # Create secondary log file with current time as filename
+            current_time = datetime.datetime.now().strftime('%H-%M-%S')
+            secondary_log_path = path.join(logs_daily, f'{current_time}.log')
+
+            # Append shell redirection to merge stderr with stdout and pipe to tee for both logs
+            # Redirect tee's output to /dev/null to prevent terminal output in detached mode
+            self.start_command = f'{self.start_command} 2>&1 | tee {self.stdout_path} {secondary_log_path} > /dev/null'
         
         if file.exists('./.env'):
             env.load() # Load the environment variables
@@ -350,9 +381,9 @@ class BaseStartCLI(BaseCLI):
                 exit(1)
 
         # WARNING: You cannot catch SIGKILL.
-        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGINT,  signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        signal.signal(signal.SIGHUP, signal_handler)
+        signal.signal(signal.SIGHUP,  signal_handler)
         signal.signal(signal.SIGQUIT, signal_handler)
         signal.signal(signal.SIGUSR1, signal_handler)
         signal.signal(signal.SIGUSR2, signal_handler)
@@ -386,7 +417,6 @@ class BaseStartCLI(BaseCLI):
                     venv_found = True
                     break
 
-        # -------- env + reload handling --------
         env.set('VIRTUAL_ENV', venv_path)
         env.set('PYTHONUNBUFFERED', '1')
         env.set('PYTHONDONTWRITEBYTECODE', '1')
