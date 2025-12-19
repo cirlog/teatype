@@ -243,7 +243,7 @@ class HSDBServer:
         from django.core.wsgi import get_wsgi_application
         return get_wsgi_application()
     
-    def create_urlpatterns(self, base_endpoint:str='v1', include_admin:bool=False):
+    def create_urlpatterns(self, base_endpoint:str=None, include_admin:bool=False):
         """
         Create URL patterns dynamically for registered apps.
         
@@ -270,7 +270,7 @@ class HSDBServer:
         for app_name in self.apps:
             try:
                 urlpatterns.append(
-                    path(f'{root_url}{app_name}/', include((f'{app_name}.urls', app_name), namespace=app_name))
+                    path(f'{root_url}', include((f'{app_name}.urls', app_name), namespace=app_name))
                 )
                 success(f'Registered URLs for app: {app_name}')
             except ImportError:

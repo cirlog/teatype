@@ -50,7 +50,6 @@ if __name__ == '__main__':
     
     # Dynamically create and set URL patterns
     urlpatterns = server.create_urlpatterns(
-        base_endpoint='v1',
         include_admin=False
     )
     
@@ -59,6 +58,8 @@ if __name__ == '__main__':
     url_module = types.ModuleType('hsdb_server_urls')
     url_module.urlpatterns = urlpatterns
     sys.modules['hsdb_server_urls'] = url_module
+    
+    
     
     # Check if we're running a command or just starting the server
     if len(sys.argv) > 1:

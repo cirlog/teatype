@@ -13,9 +13,11 @@
 # Standard-library imports
 import importlib
 import pkgutil
+
 # Third-party imports
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
+
 # Local imports
 from teatype.db.hsdb.django_support.views import HSDBDjangoCollection, HSDBDjangoResource, HSDBDjangoView
 
@@ -24,7 +26,7 @@ def parse_dynamic_routes(app_name:str, search_path:str, verbose:bool=False):
     print(f'Dynamic route registration for app "{app_name}"')
     urlpatterns = []
     for _, module_name, _ in pkgutil.iter_modules([search_path]):
-        module = importlib.import_module(f'.{module_name}', package='restapi.raw.routes')
+        module = importlib.import_module(f'{app_name}.resources.{module_name}')
         if verbose:
             print('Found module:', module_name)
         for _, obj in vars(module).items():
