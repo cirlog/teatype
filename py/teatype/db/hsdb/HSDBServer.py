@@ -10,17 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Local imports
-# WARNING: Do not change the order of the imports, it will break the code
-from .RawFileStructure import RawFileStructure
-from .RawFileHandler import RawFileHandler
-from .IndexDatabase import IndexDatabase
-from .HybridStorage import HybridStorage
+# Third-party imports
+from teatype.db.hsdb import HybridStorage
 
-from .HSDBQuery import HSDBQuery
-from .HSDBField import HSDBField
-from .HSDBAttribute import HSDBAttribute
-from .HSDBRelation import HSDBRelation
-from .HSDBMigration import HSDBMigration
-from .HSDBMeta import HSDBMeta
-from .HSDBModel import HSDBModel
+class HSDBServer:
+    def __init__(self, 
+                 host:str='127.0.0.1', 
+                 port=9876,
+                 *,
+                 cold_mode:bool=False) -> None:
+        self.hybrid_storage = HybridStorage(cold_mode=cold_mode)
+        
+if __name__ == '__main__':
+    hsdb = HSDBServer(cold_mode=True)
