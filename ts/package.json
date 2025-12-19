@@ -1,0 +1,7 @@
+{
+    "name": "@teatype/monorepo",
+    "version": "1.0.0",
+    "description": "Teatype TypeScript monorepo",
+    "private": true,
+    "type": "module"
+}

@@ -1,0 +1,3 @@
+{
+    "extends": "@teatype/base-config/tsconfig"
+}

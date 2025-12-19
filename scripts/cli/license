@@ -14,15 +14,15 @@
 
 # Standard-library imports
 import os
+
 # Third-party imports
-try:
-    import pyperclip
-    pyperclip_installed = True
-except:
-    pyperclip_installed = False
 from teatype.cli import BaseCLI
-from teatype.io import file
+from teatype.io import file, path, probe
 from teatype.logging import *
+
+pyperclip_installed = probe.package('pyperclip')
+if pyperclip_installed:
+    import pyperclip
 
 class License(BaseCLI):
     """
@@ -41,53 +41,33 @@ class License(BaseCLI):
             'commands': [
                 {
                     'name': 'go',
-                    'help': 'Print the license for Go',
-                    'shorthand': 'g'
+                    'shorthand': 'g',
+                    'help': 'Print the license for Go'
                 },
                 {
                     'name': 'html',
-                    'help': 'Print the license for HTML',
-                    'shorthand': 'h'
+                    'shorthand': 'h',
+                    'help': 'Print the license for HTML'
                 },
                 {
                     'name': 'jsonc',
-                    'help': 'Print the license for JSONC',
-                    'shorthand': 'jc'
+                    'shorthand': 'jc',
+                    'help': 'Print the license for JSONC'
                 },
                 {
                     'name': 'python',
-                    'help': 'Print the license for Python',
-                    'shorthand': 'py'
+                    'shorthand': 'py',
+                    'help': 'Print the license for Python'
                 },
                 {
                     'name': 'text',
-                    'help': 'Print the license as plain text',
-                    'shorthand': 'tx'
+                    'shorthand': 'tx',
+                    'help': 'Print the license as plain text'
                 },
                 {
                     'name': 'typescript',
-                    'help': 'Print the license for TypeScript',
-                    'shorthand': 'ts'
-                }
-            ],
-            'flags': [
-                {
-                    'long': 'long',
-                    'short': 'l',
-                    'help': 'Print the long version of the license',
-                    'required': False
-                },
-                {
-                    'long': 'no-copy',
-                    'short': 'nc',
-                    'help': 'Stop copying the license text',
-                    'required': False,
-                },
-                {
-                    'long': 'no-print',
-                    'short': 'nv',
-                    'help': 'Stop printing the license text',
-                    'required': False
+                    'shorthand': 'ts',
+                    'help': 'Print the license for TypeScript'
                 }
             ]
         }
@@ -149,17 +129,16 @@ class License(BaseCLI):
         and provides relevant logging messages.
         """
         try:
+            println()
+            
             # Determine the parent directory relative to this script
-            parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+            parent_directory = path.caller_parent(reverse_depth=2)
             files_directory_path = os.path.join(parent_directory, 'files', 'cli')
 
-            # Check if the user requested the long version of the license
-            long_version = self.get_flag('long')
             # Construct the filename based on license type and version
-            license_text_filename = 'license-' + ('long' if long_version else 'short') + '.txt'
-
+            license_text_filename = 'raw-license.txt'
             # Open and read the license file
-            license = file.read(f'{files_directory_path}/{license_text_filename}')
+            license = file.read(path.join(files_directory_path, 'license', license_text_filename))
             # Format the license text based on the selected language
             formatted_license = self.format_license(license)
             # If copying to clipboard is not disabled
