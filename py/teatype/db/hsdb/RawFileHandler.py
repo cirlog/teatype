@@ -25,7 +25,8 @@ class RawFileHandler:
                  cold_mode:bool=False):
         self.cold_mode = cold_mode
         
-        self._rf_structure = RawFileStructure(root_path)
+        self._rf_structure = RawFileStructure(root_path,
+                                              cold_mode=cold_mode)
         
     ##############
     # Properties #

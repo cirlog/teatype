@@ -68,16 +68,13 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
 
             self.index_db = IndexDatabase(models) # Create or link an IndexDatabase with given models
             
-            if not cold_mode:
-                self.rf_handler = RawFileHandler(root_path, cold_mode=cold_mode) # Initialize file handler for raw data operations
+            self.rf_handler = RawFileHandler(root_path, cold_mode=cold_mode) # Initialize file handler for raw data operations
 
             self._initialized = True # Mark as initialized
             self.__instance = self # Set the instance for Singleton
             
-            if not cold_mode:
-                success(f'HybridStorage finished initialization') # sucess the initialization
-            else:
-                success(f'HybridStorage initialized in {EscapeColor.CYAN}cold mode{EscapeColor.RESET}')
+            success(f'HybridStorage finished initialization') # sucess the initialization
+            println()
     
     @classmethod
     def instance(cls) -> 'HybridStorage':

@@ -10,16 +10,322 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+# Standard-library imports
+import os
+import sys
+from pathlib import Path
+from typing import List, Type
+
 # Third-party imports
 from teatype.db.hsdb import HybridStorage
+from teatype.io import env
+from teatype.logging import *
 
 class HSDBServer:
-    def __init__(self, 
-                 host:str='127.0.0.1', 
-                 port=9876,
-                 *,
-                 cold_mode:bool=False) -> None:
-        self.hybrid_storage = HybridStorage(cold_mode=cold_mode)
+    """
+    Hybrid Storage Database Server with integrated Django functionality.
+    
+    This class combines HSDB storage capabilities with Django web framework,
+    making it easy to create hybrid Django applications by simply importing
+    HSDBServer and defining custom models and routes.
+    
+    Usage:
+        # In your main application file
+        from teatype.db.hsdb import HSDBServer
+        from your_app.models import YourModel
         
-if __name__ == '__main__':
-    hsdb = HSDBServer(cold_mode=True)
+        server = HSDBServer(
+            models=[YourModel],
+            apps=['your_app'],
+            host='127.0.0.1',
+            port=8000
+        )
+        server.run()
+    """
+    def __init__(self, 
+                 apps:List[str]=None,
+                 models:List[Type]=None,
+                 host:str='127.0.0.1', 
+                 port:int=8000,
+                 *,
+                 allowed_hosts:List[str]=None,
+                 cold_mode:bool=False,
+                 cors_allow_all:bool=True,
+                 debug:bool=None,
+                 root_path:str=None,
+                 root_urlconf:str=None,
+                 settings_module:str=None) -> None:
+        """
+        Initialize HSDBServer with Django integration.
+        
+        Args:
+            apps: List of Django apps to include
+            models: List of HSDB models to register
+            host: Host address for the server
+            port: Port number for the server
+            allowed_hosts: List of allowed hosts for Django settings
+            cold_mode: Whether to start in cold mode (no DB initialization)
+            cors_allow_all: Whether to allow all CORS origins
+            debug: Enable or disable Django debug mode
+            root_path: Root path for HSDB storage
+            root_urlconf: Root URL configuration module for Django
+            settings_module: Django settings module to use
+        """
+        self.apps = apps or []
+        self.cold_mode = cold_mode
+        self.models = models or []
+        self.host = host
+        self.port = port
+        
+        # Load environment variables (optional - doesn't fail if .env is missing)
+        env.load()
+        
+        # Initialize HSDB HybridStorage
+        self.hybrid_storage = HybridStorage(models=self.models,
+                                            root_path=root_path,
+                                            cold_mode=cold_mode)
+        
+        # Configure Django settings
+        self._configure_django_settings(
+            debug=debug,
+            settings_module=settings_module,
+            root_urlconf=root_urlconf,
+            allowed_hosts=allowed_hosts,
+            cors_allow_all=cors_allow_all
+        )
+        
+        success(f'HSDBServer initialized on {host}:{port}')
+        
+    def _configure_django_settings(self,
+                                   debug:bool=None,
+                                   settings_module:str=None,
+                                   root_urlconf:str=None,
+                                   allowed_hosts:List[str]=None,
+                                   cors_allow_all:bool=True) -> None:
+        """
+        Configure Django settings programmatically.
+        """
+        # Set Django settings module
+        if settings_module:
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
+        else:
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hsdb_server_settings')
+            
+        # Import Django after setting the module
+        try:
+            import django
+            from django.conf import settings
+        except ImportError:
+            err('Django is not installed. Install it with: pip install django djangorestframework', exit=True)
+            return
+            
+        # Configure settings if not already configured
+        if not settings.configured:
+            base_dir = Path.cwd()
+            
+            settings.configure(
+                DEBUG=debug if debug is not None else env.get('DEBUG', 'True').lower() == 'true',
+                SECRET_KEY=env.get('SECRET_KEY', 'hsdb-server-default-secret-key-change-in-production'),
+                ALLOWED_HOSTS=allowed_hosts or env.get('ALLOWED_HOSTS', '*').split(','),
+                ROOT_URLCONF=root_urlconf or env.get('ROOT_URLCONF', 'hsdb_server_urls'),
+                BASE_DIR=base_dir,
+                
+                # Application definition
+                INSTALLED_APPS=[
+                    'django.contrib.admin',
+                    'django.contrib.auth',
+                    'django.contrib.contenttypes',
+                    'django.contrib.sessions',
+                    'django.contrib.messages',
+                    'django.contrib.staticfiles',
+                    'rest_framework',
+                    'corsheaders',
+                ] + self.apps,
+                
+                # Middleware
+                MIDDLEWARE=[
+                    'django.middleware.security.SecurityMiddleware',
+                    'corsheaders.middleware.CorsMiddleware',
+                    'django.contrib.sessions.middleware.SessionMiddleware',
+                    'django.middleware.common.CommonMiddleware',
+                    'django.middleware.csrf.CsrfViewMiddleware',
+                    'django.contrib.auth.middleware.AuthenticationMiddleware',
+                    'django.contrib.messages.middleware.MessageMiddleware',
+                    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+                ],
+                
+                # Templates
+                TEMPLATES=[
+                    {
+                        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                        'DIRS': [],
+                        'APP_DIRS': True,
+                        'OPTIONS': {
+                            'context_processors': [
+                                'django.template.context_processors.debug',
+                                'django.template.context_processors.request',
+                                'django.contrib.auth.context_processors.auth',
+                                'django.contrib.messages.context_processors.messages',
+                            ],
+                        },
+                    },
+                ],
+                
+                # Database (not used with HSDB)
+                DATABASES={},
+                
+                # Internationalization
+                LANGUAGE_CODE=env.get('LANGUAGE_CODE', 'en-us'),
+                TIME_ZONE=env.get('TIME_ZONE', 'UTC'),
+                USE_I18N=env.get('USE_I18N', 'True').lower() == 'true',
+                USE_TZ=env.get('USE_TZ', 'True').lower() == 'true',
+                
+                # Static files
+                STATIC_URL=env.get('STATIC_URL', '/static/'),
+                
+                # CORS settings
+                CORS_ALLOW_ALL_ORIGINS=cors_allow_all,
+                CORS_ALLOW_CREDENTIALS=True,
+                CORS_ALLOW_METHODS=[
+                    'DELETE',
+                    'GET',
+                    'OPTIONS',
+                    'PATCH',
+                    'POST',
+                    'PUT',
+                ],
+                CORS_ALLOW_HEADERS=[
+                    'accept',
+                    'accept-encoding',
+                    'authorization',
+                    'content-type',
+                    'dnt',
+                    'origin',
+                    'user-agent',
+                    'x-csrftoken',
+                    'x-requested-with',
+                    'x-auth-token',
+                ],
+                
+                # Disable trailing slash for REST API compatibility
+                APPEND_SLASH=False,
+                
+                # File upload settings
+                DATA_UPLOAD_MAX_MEMORY_SIZE=None,
+                DATA_UPLOAD_MAX_NUMBER_FIELDS=None,
+                FILE_UPLOAD_MAX_MEMORY_SIZE=None,
+                
+                # Default auto field
+                DEFAULT_AUTO_FIELD='django.db.models.BigAutoField',
+            )
+            
+            # Setup Django
+            django.setup()
+            success('Django configured successfully')
+    
+    def get_asgi_application(self):
+        """
+        Get the ASGI application for deployment.
+        
+        Returns:
+            The Django ASGI application
+        """
+        from django.core.asgi import get_asgi_application
+        return get_asgi_application()
+    
+    def get_wsgi_application(self):
+        """
+        Get the WSGI application for deployment.
+        
+        Returns:
+            The Django WSGI application
+        """
+        from django.core.wsgi import get_wsgi_application
+        return get_wsgi_application()
+    
+    def create_urlpatterns(self, base_endpoint:str='v1', include_admin:bool=False):
+        """
+        Create URL patterns dynamically for registered apps.
+        
+        Args:
+            base_endpoint: Base API endpoint prefix (e.g., 'v1', 'api')
+            include_admin: Whether to include Django admin interface
+            
+        Returns:
+            List of URL patterns
+        """
+        from django.urls import path, include
+        from django.conf import settings
+        from django.conf.urls.static import static
+        
+        urlpatterns = []
+        
+        # Add admin if requested
+        if include_admin:
+            from django.contrib import admin
+            urlpatterns.append(path(f'{base_endpoint}/admin/', admin.site.urls))
+        
+        # Add app URLs dynamically
+        root_url = f'{base_endpoint}/' if base_endpoint else ''
+        for app_name in self.apps:
+            try:
+                urlpatterns.append(
+                    path(f'{root_url}{app_name}/', include((f'{app_name}.urls', app_name), namespace=app_name))
+                )
+                success(f'Registered URLs for app: {app_name}')
+            except ImportError:
+                warn(f'Could not import URLs for app: {app_name}')
+        
+        # Add static files
+        if hasattr(settings, 'STATIC_URL'):
+            urlpatterns += static(settings.STATIC_URL, document_root=getattr(settings, 'STATIC_ROOT', ''))
+        
+        return urlpatterns
+    
+    def run(self, use_ssl:bool=False, cert_file:str=None, key_file:str=None):
+        """
+        Run the Django development server.
+        
+        Args:
+            use_ssl: Whether to use SSL/HTTPS
+            cert_file: Path to SSL certificate file
+            key_file: Path to SSL key file
+        """
+        try:
+            from django.core.management import execute_from_command_line
+        except ImportError as exc:
+            err(
+                "Couldn't import Django. Are you sure it's installed and "
+                "available on your PYTHONPATH environment variable?",
+                exit=True
+            )
+            return
+        
+        # Build command arguments
+        argv = [sys.argv[0], 'runserver', f'{self.host}:{self.port}']
+        
+        # Add SSL support if requested
+        if use_ssl:
+            argv[1] = 'runsslserver'
+            if cert_file:
+                argv.append(f'--certificate={cert_file}')
+            if key_file:
+                argv.append(f'--key={key_file}')
+        
+        success(f'Starting HSDBServer on {"https" if use_ssl else "http"}://{self.host}:{self.port}')
+        execute_from_command_line(argv)
+    
+    def execute_command(self, *args):
+        """
+        Execute Django management commands.
+        
+        Args:
+            *args: Command arguments (e.g., 'makemigrations', 'migrate', 'shell')
+        """
+        try:
+            from django.core.management import execute_from_command_line
+        except ImportError as exc:
+            err("Couldn't import Django management utilities", exit=True)
+            return
+        argv = [sys.argv[0]] + list(args)
+        execute_from_command_line(argv)

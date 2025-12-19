@@ -15,34 +15,33 @@ import copy
 
 # Third-party imports
 from teatype.io import path
+from teatype.logging import *
 
 _DEFAULT_ROOT_PATH = '/var/lib'
 _FS = {
-    'hsdb': {
-        'backups': {
-            'index': {},
-            'migration': {},
-            'rawfiles': {}
-        },
-        'dumps': {
-            'migrations': {}
-        },
-        'exports': {},
+    'backups': {
         'index': {},
-        'logs': {
-            'migrations': {},
-            'reads': {},
-            'writes': {}
-        },
-        'models': {
-            'adapters': {},
-        },
-        'rawfiles': {},
-        'redundancy': {},
-        'rejectpile': {
-            'index': {},
-            'rawfiles': {}
-        }
+        'migration': {},
+        'rawfiles': {}
+    },
+    'dumps': {
+        'migrations': {}
+    },
+    'exports': {},
+    'index': {},
+    'logs': {
+        'migrations': {},
+        'reads': {},
+        'writes': {}
+    },
+    'models': {
+        'adapters': {},
+    },
+    'rawfiles': {},
+    'redundancy': {},
+    'rejectpile': {
+        'index': {},
+        'rawfiles': {}
     }
 }
 
@@ -80,13 +79,33 @@ class RawFileStructure:
     def __init__(self,
                  root_path:str=None,
                  *,
-                 auto_create_folders:bool=True):
-        self._root_path = root_path if root_path else _DEFAULT_ROOT_PATH
+                 auto_create_folders:bool=True,
+                 cold_mode:bool=False):
+        self._root_path = path.join(root_path if root_path else _DEFAULT_ROOT_PATH, 'hsdb')
         
-        self._fs = _FSProxy(_FS, root_path)
+        self._fs = _FSProxy(_FS, self._root_path)
+        
+        if cold_mode:
+            hint('Cold mode enabled: Skipping raw file structure initialization.',
+                 include_symbol=True,
+                 pad_after=1,
+                 pad_before=1,
+                 use_prefix=False)
+            return
         
         if auto_create_folders:
-            self.create_fs(root_path, copy.deepcopy(_FS))
+            try:
+                path.create(self._root_path)
+            except PermissionError:
+                err(f'Could not create directory at {self._root_path} due to permission error, use another root_path.',
+                    exit=True,
+                    include_symbol=True,
+                    pad_after=1,
+                    pad_before=1,
+                    use_prefix=False,
+                    verbose=False)
+            
+            self.create_fs(self._root_path, copy.deepcopy(_FS))
         
     def create_fs(self, base_path:str, struct:dict):
         for key, value in struct.items():
