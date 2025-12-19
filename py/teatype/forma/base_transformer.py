@@ -67,7 +67,7 @@ class BaseTransformer:
       - rules: List[PathRule]
 
     At runtime you construct with:
-      transformer = InstrumentTransformer(to_forma='CirlogInstrument')
+      transformer = Transformer(to_forma='ModelA')
 
     Then call:
       transformer.transform(data)
