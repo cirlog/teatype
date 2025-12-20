@@ -13,8 +13,9 @@ mkdir -p "$cards_directory"
 SUITS=("S" "H" "D" "C")
 
 # Card ranks for Tunisian Chkobba: A, 2-10, J, Q, K
-RANKS=("A" "2" "3" "4" "5" "6" "7" "8" "9" "0" "J" "Q" "K")
+RANKS=("A" "2" "3" "4" "5" "6" "7" "8" "9" "0" "0" "J" "Q" "K")
 
+echo ""
 echo "Downloading card images to $cards_directory..."
 
 # Download card back
@@ -34,3 +35,4 @@ done
 echo ""
 echo "Download complete! Card images saved to $cards_directory"
 echo "Total files: $(ls -1 "$cards_directory" | wc -l)"
+echo ""
