@@ -3,8 +3,8 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { GameState, Difficulty, createInitialGameState } from '../types/GameState';
-import { Card, isPictureCard } from '../types/Card';
+import { iGameState, tDifficulty, createInitialGameState } from '../types/GameState';
+import { iCard } from '../types/Card';
 import {
     startNewGame,
     startNewRound,
@@ -14,15 +14,15 @@ import {
     calculateRoundScores
 } from '../game/GameLogic';
 import { executeNPCTurn, getNPCThinkingTime } from '../game/NPCAi';
-import { getTrainingTip, Tip } from '../game/TrainingTips';
+import { getTrainingTip, iTip } from '../game/TrainingTips';
 
 export function useGameState() {
-    const [state, setState] = useState<GameState>(createInitialGameState());
+    const [state, setState] = useState<iGameState>(createInitialGameState());
     const [roundScores, setRoundScores] = useState<ReturnType<typeof calculateRoundScores> | null>(null);
     const npcTurnRef = useRef<boolean>(false);
 
     // Calculate training tip when it's human's turn
-    const trainingTip: Tip | null = useMemo(() => {
+    const trainingTip: iTip | null = useMemo(() => {
         if (state.trainingMode && state.currentPlayer === 'human' && state.phase === 'playing') {
             return getTrainingTip(state);
         }
@@ -82,7 +82,7 @@ export function useGameState() {
         }
     }, [state.phase]);
 
-    const setDifficulty = useCallback((difficulty: Difficulty) => {
+    const setDifficulty = useCallback((difficulty: tDifficulty) => {
         setState(prev => ({ ...prev, difficulty }));
     }, []);
 
@@ -126,20 +126,10 @@ export function useGameState() {
         }));
     }, []);
 
-    const handleCardSelect = useCallback((card: Card) => {
+    const handleCardSelect = useCallback((card: iCard) => {
         if (state.currentPlayer !== 'human' || state.isAnimating) return;
 
         const validCaptures = findValidCaptures(card, state.table);
-
-        // Picture card: immediately take all or drop
-        if (isPictureCard(card)) {
-            if (state.table.length > 0) {
-                setState(prev => executeCapture(prev, 'human', card, prev.table));
-            } else {
-                setState(prev => executeDrop(prev, 'human', card));
-            }
-            return;
-        }
 
         // No captures possible: drop the card
         if (validCaptures.length === 0) {
@@ -163,12 +153,12 @@ export function useGameState() {
         }));
     }, [state.currentPlayer, state.isAnimating, state.table]);
 
-    const handleTableCardSelect = useCallback((card: Card) => {
+    const handleTableCardSelect = useCallback((card: iCard) => {
         if (!state.selectedCard || state.validCaptures.length === 0) return;
 
         setState(prev => {
             const isSelected = prev.selectedTableCards.some(c => c.id === card.id);
-            let newSelected: Card[];
+            let newSelected: iCard[];
 
             if (isSelected) {
                 newSelected = prev.selectedTableCards.filter(c => c.id !== card.id);

@@ -1,27 +1,27 @@
 /**
- * NPC AI for Tunisian Chkobba
+ * NPC AI for Chkobba (French variant)
  * 
- * Difficulty levels:
+ * tDifficulty levels:
  * - Easy: Random moves, no strategy
  * - Medium: Basic strategy (prefer captures, avoid leaving good cards)
  * - Hard: Advanced strategy (count cards, maximize points)
  * - Expert: Optimal play (consider all future moves, card counting)
  */
 
-import { Card, isPictureCard, canMakeChkobba } from '../types/Card';
-import { GameState, Difficulty } from '../types/GameState';
+import { iCard, isFaceCard, canMakeChkobba } from '../types/Card';
+import { iGameState, tDifficulty } from '../types/GameState';
 import { findValidCaptures, executeCapture, executeDrop } from './GameLogic';
 
-interface Move {
-    card: Card;
-    capture: Card[] | null;
+interface iMove {
+    card: iCard;
+    capture: iCard[] | null;
     score: number;
 }
 
 /**
  * Execute NPC turn based on difficulty
  */
-export function executeNPCTurn(state: GameState): GameState {
+export function executeNPCTurn(state: iGameState): iGameState {
     // Safety check - if NPC has no cards, return unchanged state
     if (state.npc.hand.length === 0) {
         console.warn('NPC has no cards to play');
@@ -45,19 +45,14 @@ export function executeNPCTurn(state: GameState): GameState {
 /**
  * Select the best move based on difficulty
  */
-function selectMove(state: GameState): Move {
+function selectMove(state: iGameState): iMove {
     const { difficulty } = state;
     const hand = state.npc.hand;
     const table = state.table;
 
     // Generate all possible moves
-    const moves: Move[] = hand.map(card => {
+    const moves: iMove[] = hand.map(card => {
         const captures = findValidCaptures(card, table);
-
-        if (isPictureCard(card) && table.length > 0) {
-            // Picture card takes all
-            return { card, capture: table, score: 0 };
-        }
 
         if (captures.length > 0) {
             // Has captures available
@@ -94,11 +89,11 @@ function selectMove(state: GameState): Move {
  * Select best capture from multiple options
  */
 function selectBestCapture(
-    _card: Card,
-    captures: Card[][],
-    state: GameState,
-    difficulty: Difficulty
-): Card[] {
+    _card: iCard,
+    captures: iCard[][],
+    state: iGameState,
+    difficulty: tDifficulty
+): iCard[] {
     if (captures.length === 1) return captures[0];
 
     // Score each capture option
@@ -124,7 +119,7 @@ function selectBestCapture(
 /**
  * Evaluate the value of a capture
  */
-function evaluateCaptureValue(capture: Card[], state: GameState, difficulty: Difficulty): number {
+function evaluateCaptureValue(capture: iCard[], state: iGameState, difficulty: tDifficulty): number {
     let score = capture.length * 10; // Base score for number of cards
 
     for (const card of capture) {
@@ -160,7 +155,7 @@ function evaluateCaptureValue(capture: Card[], state: GameState, difficulty: Dif
 /**
  * Evaluate a complete move
  */
-function evaluateMove(move: Move, state: GameState, difficulty: Difficulty): number {
+function evaluateMove(move: iMove, state: iGameState, difficulty: tDifficulty): number {
     let score = 0;
 
     // Capturing is always preferred
@@ -185,12 +180,12 @@ function evaluateMove(move: Move, state: GameState, difficulty: Difficulty): num
 /**
  * Evaluate dropping a card (when no capture possible)
  */
-function evaluateDrop(card: Card, state: GameState, difficulty: Difficulty): number {
+function evaluateDrop(card: iCard, state: iGameState, difficulty: tDifficulty): number {
     let score = 0;
 
-    // Dropping picture cards is risky - opponent can take all
-    if (isPictureCard(card)) {
-        score -= 30;
+    // Face cards (J, Q, K) are high value - prefer not to drop
+    if (isFaceCard(card)) {
+        score -= 15;
     }
 
     // Don't drop valuable cards if possible
@@ -207,22 +202,18 @@ function evaluateDrop(card: Card, state: GameState, difficulty: Difficulty): num
 
     // Higher difficulties consider what opponent could capture
     if (difficulty === 'hard' || difficulty === 'expert') {
-        const newTableSum = state.table.reduce((sum, c) =>
-            isPictureCard(c) ? sum : sum + c.value, 0
-        ) + (isPictureCard(card) ? 0 : card.value);
+        const newTableSum = state.table.reduce((sum, c) => sum + c.value, 0) + card.value;
 
         // If dropping creates easy capture opportunity for opponent
-        for (let possibleCard = 2; possibleCard <= 7; possibleCard++) {
+        for (let possibleCard = 2; possibleCard <= 10; possibleCard++) {
             if (newTableSum === possibleCard) {
                 score -= 50; // Opponent could clear with a single card
             }
         }
     }
 
-    // Prefer dropping low-value cards
-    if (!isPictureCard(card)) {
-        score += (8 - card.value) * 5;
-    }
+    // Prefer dropping low-value cards (face cards are high value: J=8, Q=9, K=10)
+    score += (11 - card.value) * 5;
 
     return score;
 }
@@ -230,7 +221,7 @@ function evaluateDrop(card: Card, state: GameState, difficulty: Difficulty): num
 /**
  * Easy: Mostly random with slight preference for captures
  */
-function selectEasyMove(moves: Move[]): Move {
+function selectEasyMove(moves: iMove[]): iMove {
     // 70% chance to just pick randomly
     if (Math.random() < 0.7) {
         return moves[Math.floor(Math.random() * moves.length)];
@@ -248,7 +239,7 @@ function selectEasyMove(moves: Move[]): Move {
 /**
  * Medium: Basic strategy with some randomness
  */
-function selectMediumMove(moves: Move[]): Move {
+function selectMediumMove(moves: iMove[]): iMove {
     // Sort by score
     const sorted = [...moves].sort((a, b) => b.score - a.score);
 
@@ -263,7 +254,7 @@ function selectMediumMove(moves: Move[]): Move {
 /**
  * Hard: Strong strategy, minimal mistakes
  */
-function selectHardMove(moves: Move[]): Move {
+function selectHardMove(moves: iMove[]): iMove {
     const sorted = [...moves].sort((a, b) => b.score - a.score);
 
     // 5% chance for suboptimal play
@@ -277,7 +268,7 @@ function selectHardMove(moves: Move[]): Move {
 /**
  * Expert: Optimal play with card counting and lookahead
  */
-function selectExpertMove(moves: Move[], state: GameState): Move {
+function selectExpertMove(moves: iMove[], state: iGameState): iMove {
     // Advanced evaluation considering remaining cards
     const enhancedMoves = moves.map(move => {
         let enhancedScore = move.score;
@@ -329,7 +320,7 @@ function selectExpertMove(moves: Move[], state: GameState): Move {
 /**
  * Add thinking delay for more natural gameplay
  */
-export function getNPCThinkingTime(difficulty: Difficulty): number {
+export function getNPCThinkingTime(difficulty: tDifficulty): number {
     switch (difficulty) {
         case 'easy':
             return 500 + Math.random() * 500;

@@ -3,10 +3,10 @@
  */
 
 import React from 'react';
-import { Card as CardType, getSuitColor } from '../types/Card';
+import { iCard, getSuitColor } from '../types/Card';
 
-interface CardProps {
-    card: CardType;
+interface iCardProps {
+    card: iCard;
     faceDown?: boolean;
     selected?: boolean;
     highlighted?: boolean;
@@ -18,12 +18,12 @@ interface CardProps {
 
 /**
  * Get local card image URL
- * Card codes: A, 2-9, 0 (for 10) + S (spades), H (hearts), D (diamonds), C (clubs)
+ * Card codes: A, 2-7, J, Q, K + S (spades), H (hearts), D (diamonds), C (clubs)
  * Images stored in /public/cards/
  */
-function getCardImageUrl(card: CardType): string {
-    // deckofcardsapi uses '0' for 10, 'A' for Ace
-    const rankCode = card.rank === 1 ? 'A' : card.rank === 10 ? '0' : card.rank.toString();
+function getCardImageUrl(card: iCard): string {
+    // Map rank to image code
+    const rankCode = card.rank === 1 ? 'A' : card.rank.toString();
     const suitCode = {
         spades: 'S',
         hearts: 'H',
@@ -36,7 +36,7 @@ function getCardImageUrl(card: CardType): string {
 
 const CARD_BACK_URL = '/cards/back.png';
 
-const CardComponent: React.FC<CardProps> = ({
+const CardComponent: React.FC<iCardProps> = ({
     card,
     faceDown = false,
     selected = false,
@@ -73,11 +73,11 @@ const CardComponent: React.FC<CardProps> = ({
             <img
                 src={imageUrl}
                 alt={faceDown ? 'Card back' : `${card.rank} of ${card.suit}`}
-                className='card__image'
+                className='card-image'
                 draggable={false}
             />
-            {selected && <div className='card__selection-indicator' />}
-            {highlighted && <div className='card__highlight-indicator' />}
+            {selected && <div className='card-selection-indicator' />}
+            {highlighted && <div className='card-highlight-indicator' />}
         </div>
     );
 };

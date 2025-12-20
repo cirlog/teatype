@@ -18,21 +18,21 @@ const GameOver: React.FC<GameOverProps> = ({ winner, humanScore, npcScore, onPla
     return (
         <div className='modal-overlay'>
             <div className={`modal game-over ${isWinner ? 'game-over--win' : 'game-over--lose'}`}>
-                <div className='game-over__icon'>{isWinner ? '🎉' : '😔'}</div>
-                <h2 className='game-over__title'>{isWinner ? 'Congratulations!' : 'Game Over'}</h2>
-                <p className='game-over__message'>{isWinner ? 'You won the game!' : 'The NPC won this time.'}</p>
-                <div className='game-over__scores'>
-                    <div className={`game-over__score ${isWinner ? 'game-over__score--winner' : ''}`}>
-                        <span className='game-over__score-label'>You</span>
-                        <span className='game-over__score-value'>{humanScore}</span>
+                <div className='game-over-icon'>{isWinner ? '🎉' : '😔'}</div>
+                <h2 className='game-over-title'>{isWinner ? 'Congratulations!' : 'Game Over'}</h2>
+                <p className='game-over-message'>{isWinner ? 'You won the game!' : 'The NPC won this time.'}</p>
+                <div className='game-over-scores'>
+                    <div className={`game-over-score ${isWinner ? 'game-over-score--winner' : ''}`}>
+                        <span className='game-over-score-label'>You</span>
+                        <span className='game-over-score-value'>{humanScore}</span>
                     </div>
-                    <div className='game-over__vs'>vs</div>
-                    <div className={`game-over__score ${!isWinner ? 'game-over__score--winner' : ''}`}>
-                        <span className='game-over__score-label'>NPC</span>
-                        <span className='game-over__score-value'>{npcScore}</span>
+                    <div className='game-over-vs'>vs</div>
+                    <div className={`game-over-score ${!isWinner ? 'game-over-score--winner' : ''}`}>
+                        <span className='game-over-score-label'>NPC</span>
+                        <span className='game-over-score-value'>{npcScore}</span>
                     </div>
                 </div>
-                <div className='game-over__actions'>
+                <div className='game-over-actions'>
                     <button className='btn btn--primary' onClick={onPlayAgain}>
                         Play Again
                     </button>

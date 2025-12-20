@@ -1,78 +1,90 @@
 /**
- * Game state types for Tunisian Chkobba
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  */
 
-import { Card } from './Card';
+// Components
+import { iCard } from './Card';
 
-export type Player = 'human' | 'npc';
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert';
-export type GamePhase = 'menu' | 'playing' | 'roundEnd' | 'gameEnd';
-export type ActionType = 'capture' | 'drop' | 'chkobba' | 'deal' | 'info' | 'picture-capture';
+export type tActionType = 'capture' | 'drop' | 'chkobba' | 'deal' | 'info';
+export type tDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
+export type tGamePhase = 'menu' | 'playing' | 'roundEnd' | 'gameEnd';
+export type tPlayer = 'human' | 'npc';
 
-export interface GameAction {
+export interface iGameAction {
+    cards?: iCard[];
     id: string;
+    message: string;
+    player: tPlayer | 'system';
     timestamp: number;
-    player: Player | 'system';
-    type: ActionType;
-    message: string;
-    cards?: Card[];
+    type: tActionType;
 }
 
-export interface PlayerState {
-    hand: Card[];
-    capturedCards: Card[];
+export interface iPlayerState {
+    capturedCards: iCard[];
     chkobbas: number;
+    hand: iCard[];
 }
 
-export interface AnimationState {
-    type: 'none' | 'card-play' | 'card-capture' | 'chkobba' | 'deal';
+export interface iAnimationState {
     cardId?: string;
+    player?: tPlayer;
     targetCards?: string[];
-    player?: Player;
+    type: 'none' | 'card-play' | 'card-capture' | 'chkobba' | 'deal';
 }
 
-export interface GameState {
-    phase: GamePhase;
-    difficulty: Difficulty;
-    deck: Card[];
-    table: Card[];
-    human: PlayerState;
-    npc: PlayerState;
-    currentPlayer: Player;
-    dealer: Player;
-    lastCapturePlayer: Player | null;
-    roundNumber: number;
+export interface iGameState {
+    actionLog: iGameAction[];
+    animation: iAnimationState;
+    currentPlayer: tPlayer;
+    dealer: tPlayer;
+    deck: iCard[];
+    difficulty: tDifficulty;
+    human: iPlayerState;
     humanTotalScore: number;
-    npcTotalScore: number;
-    targetScore: number;
-    message: string;
-    selectedCard: Card | null;
-    selectedTableCards: Card[];
-    validCaptures: Card[][];
     isAnimating: boolean;
+    lastCapturePlayer: tPlayer | null;
+    message: string;
+    npc: iPlayerState;
+    npcTotalScore: number;
+    phase: tGamePhase;
+    roundNumber: number;
+    selectedCard: iCard | null;
+    selectedTableCards: iCard[];
+    table: iCard[];
+    targetScore: number;
     trainingMode: boolean;
-    actionLog: GameAction[];
-    animation: AnimationState;
+    validCaptures: iCard[][];
 }
 
-export interface RoundScore {
+export interface iRoundScore {
     cards: number;        // +1 for majority (21+)
+    chkobbas: number;     // +1 per chkobba
     diamonds: number;     // +1 for majority of diamonds
     setteDeneri: number;  // +1 for 7♦
     sevens: number;       // +1 for majority of 7s (3+)
-    chkobbas: number;     // +1 per chkobba
     total: number;
 }
 
-export interface GameScores {
-    human: RoundScore;
-    npc: RoundScore;
+export interface iGameScores {
+    human: iRoundScore;
+    npc: iRoundScore;
 }
 
 /**
  * Create initial player state
  */
-export function createPlayerState(): PlayerState {
+export function createPlayerState(): iPlayerState {
     return {
         hand: [],
         capturedCards: [],
@@ -83,7 +95,7 @@ export function createPlayerState(): PlayerState {
 /**
  * Create initial game state
  */
-export function createInitialGameState(): GameState {
+export function createInitialGameState(): iGameState {
     return {
         phase: 'menu',
         difficulty: 'medium',
@@ -113,11 +125,11 @@ export function createInitialGameState(): GameState {
  * Create a new game action for the log
  */
 export function createGameAction(
-    player: Player | 'system',
-    type: ActionType,
+    player: tPlayer | 'system',
+    type: tActionType,
     message: string,
-    cards?: Card[]
-): GameAction {
+    cards?: iCard[]
+): iGameAction {
     return {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         timestamp: Date.now(),

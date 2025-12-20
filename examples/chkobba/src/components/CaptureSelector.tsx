@@ -4,16 +4,16 @@
 
 import React from 'react';
 import CardComponent from './Card';
-import { Card } from '../types/Card';
+import { iCard } from '../types/Card';
 
-interface CaptureSelectorProps {
-    playedCard: Card;
-    captures: Card[][];
-    onSelect: (capture: Card[]) => void;
+interface iCaptureSelectorProps {
+    playedCard: iCard;
+    captures: iCard[][];
+    onSelect: (capture: iCard[]) => void;
     onCancel: () => void;
 }
 
-const CaptureSelector: React.FC<CaptureSelectorProps> = ({ playedCard, captures, onSelect, onCancel }) => {
+const CaptureSelector: React.FC<iCaptureSelectorProps> = ({ playedCard, captures, onSelect, onCancel }) => {
     return (
         <div className='modal-overlay'>
             <div className='modal capture-selector'>
@@ -24,12 +24,12 @@ const CaptureSelector: React.FC<CaptureSelectorProps> = ({ playedCard, captures,
                 <div className='capture-options'>
                     {captures.map((capture, index) => (
                         <div key={index} className='capture-option' onClick={() => onSelect(capture)}>
-                            <div className='capture-option__cards'>
+                            <div className='capture-option-cards'>
                                 {capture.map((card) => (
                                     <CardComponent key={card.id} card={card} small />
                                 ))}
                             </div>
-                            <div className='capture-option__sum'>Sum: {capture.reduce((s, c) => s + c.value, 0)}</div>
+                            <div className='capture-option-sum'>Sum: {capture.reduce((s, c) => s + c.value, 0)}</div>
                         </div>
                     ))}
                 </div>

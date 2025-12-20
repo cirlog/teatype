@@ -1,38 +1,31 @@
 /**
- * Game logic for Tunisian Chkobba
+ * Game logic for Chkobba (French variant)
  * 
  * Key rules:
- * - Deck: 40 cards (WITH 8, 9, 10 - without J, Q, K)
- * - Picture cards (8/9/10): Take ALL cards from table, never make Chkobba
+ * - Deck: 40 cards (with J, Q, K - without 8, 9, 10)
+ * - J=8, Q=9, K=10 for capture calculations
  * - Ace (1): Can capture but CANNOT make Chkobba
- * - Number cards (2-7): Can capture by sum, CAN make Chkobba
+ * - All other cards (2-7, J, Q, K): Can capture by sum, CAN make Chkobba
  * - Capturing is MANDATORY if possible
- * - Chkobba: Clearing table with a number card (2-7) = +1 point
+ * - Chkobba: Clearing table with any card except Ace = +1 point
  */
 
-import { Card, isPictureCard, canMakeChkobba, createDeck, shuffleDeck, getCardName } from '../types/Card';
-import { GameState, Player, RoundScore, GameScores, createPlayerState, createGameAction } from '../types/GameState';
+import { iCard, canMakeChkobba, createDeck, shuffleDeck, getCardName } from '../types/Card';
+import { iGameState, tPlayer, iRoundScore, iGameScores, createPlayerState, createGameAction } from '../types/GameState';
 
 /**
  * Find all valid capture combinations for a played card
+ * In French Chkobba, all cards capture by sum (J=8, Q=9, K=10)
  */
-export function findValidCaptures(playedCard: Card, tableCards: Card[]): Card[][] {
-    // Picture cards (8, 9, 10) take ALL cards from the table
-    if (isPictureCard(playedCard)) {
-        if (tableCards.length > 0) {
-            return [tableCards]; // Only one option: take all
-        }
-        return []; // No cards to take
-    }
-
-    // For number cards (1-7), find combinations that sum to the card value
+export function findValidCaptures(playedCard: iCard, tableCards: iCard[]): iCard[][] {
+    // All cards find combinations that sum to the card value
     const targetSum = playedCard.value;
-    const combinations: Card[][] = [];
+    const combinations: iCard[][] = [];
 
     // Find all subsets of table cards that sum to targetSum
     const findSubsets = (
-        remaining: Card[],
-        current: Card[],
+        remaining: iCard[],
+        current: iCard[],
         currentSum: number,
         startIndex: number
     ) => {
@@ -42,9 +35,6 @@ export function findValidCaptures(playedCard: Card, tableCards: Card[]): Card[][
         if (currentSum >= targetSum) return;
 
         for (let i = startIndex; i < remaining.length; i++) {
-            // Skip picture cards - they can't be captured by sum
-            if (isPictureCard(remaining[i])) continue;
-
             current.push(remaining[i]);
             findSubsets(remaining, current, currentSum + remaining[i].value, i + 1);
             current.pop();
@@ -59,16 +49,13 @@ export function findValidCaptures(playedCard: Card, tableCards: Card[]): Card[][
  * Check if the initial table setup allows immediate Chkobba
  * If so, we need to reshuffle
  */
-export function canMakeImmediateChkobba(tableCards: Card[]): boolean {
+export function canMakeImmediateChkobba(tableCards: iCard[]): boolean {
     // Check if any single card from a potential hand could clear the table
-    // This is simplified - just check if table sum could be achieved by any 2-7 card
-    const tableSum = tableCards
-        .filter(c => !isPictureCard(c))
-        .reduce((sum, c) => sum + c.value, 0);
+    // This is simplified - just check if table sum could be achieved by 2-7, J, Q, or K
+    const tableSum = tableCards.reduce((sum, c) => sum + c.value, 0);
 
-    // If table has only picture cards, or sum is achievable by 2-7
-    if (tableCards.every(c => isPictureCard(c))) return false;
-    if (tableSum >= 2 && tableSum <= 7 && tableCards.filter(c => !isPictureCard(c)).length === tableCards.length) {
+    // If sum is achievable by any single card value 2-10
+    if (tableSum >= 2 && tableSum <= 10) {
         return true;
     }
     return false;
@@ -77,9 +64,9 @@ export function canMakeImmediateChkobba(tableCards: Card[]): boolean {
 /**
  * Deal initial cards for a new round
  */
-export function dealInitialCards(state: GameState): GameState {
+export function dealInitialCards(state: iGameState): iGameState {
     let deck = shuffleDeck(createDeck());
-    let table: Card[] = [];
+    let table: iCard[] = [];
 
     // Deal 4 cards to table, reshuffle if immediate Chkobba is possible
     let attempts = 0;
@@ -94,13 +81,13 @@ export function dealInitialCards(state: GameState): GameState {
     const npcHand = deck.splice(0, 3);
 
     // Non-dealer starts
-    const currentPlayer: Player = state.dealer === 'human' ? 'npc' : 'human';
+    const currentPlayer: tPlayer = state.dealer === 'human' ? 'npc' : 'human';
 
     // Create action log entry
     const dealAction = createGameAction(
         'system',
         'deal',
-        `Neue Runde! ${table.map(c => getCardName(c)).join(', ')} auf dem Tisch.`,
+        `New round! ${table.map(c => getCardName(c)).join(', ')} on the table.`,
         table
     );
 
@@ -131,7 +118,7 @@ export function dealInitialCards(state: GameState): GameState {
 /**
  * Deal new hands when both players have played all cards
  */
-export function dealNewHands(state: GameState): GameState {
+export function dealNewHands(state: iGameState): iGameState {
     if (state.deck.length === 0) {
         // No more cards - end round
         return endRound(state);
@@ -160,20 +147,20 @@ export function dealNewHands(state: GameState): GameState {
  * Execute a capture move
  */
 export function executeCapture(
-    state: GameState,
-    player: Player,
-    playedCard: Card,
-    capturedCards: Card[]
-): GameState {
-    const playerState = state[player];
-    const newHand = playerState.hand.filter(c => c.id !== playedCard.id);
-    const newCaptured = [...playerState.capturedCards, playedCard, ...capturedCards];
+    state: iGameState,
+    player: tPlayer,
+    playedCard: iCard,
+    capturedCards: iCard[]
+): iGameState {
+    const iPlayerState = state[player];
+    const newHand = iPlayerState.hand.filter(c => c.id !== playedCard.id);
+    const newCaptured = [...iPlayerState.capturedCards, playedCard, ...capturedCards];
     const newTable = state.table.filter(c => !capturedCards.some(cc => cc.id === c.id));
 
-    // Check for Chkobba (table cleared by a number card 2-7, not Ace, not picture card)
-    let chkobbas = playerState.chkobbas;
+    // Check for Chkobba (table cleared by any card except Ace)
+    let chkobbas = iPlayerState.chkobbas;
     let message = `${player === 'human' ? 'You' : 'NPC'} captured ${capturedCards.length + 1} cards!`;
-    let actionType: 'capture' | 'chkobba' | 'picture-capture' = isPictureCard(playedCard) ? 'picture-capture' : 'capture';
+    let actionType: 'capture' | 'chkobba' = 'capture';
     let logMessage = `${player === 'human' ? 'You' : 'NPC'} plays ${getCardName(playedCard)} and captures ${capturedCards.map(c => getCardName(c)).join(', ')}.`;
 
     if (newTable.length === 0 && canMakeChkobba(playedCard)) {
@@ -181,17 +168,15 @@ export function executeCapture(
         message = `CHKOBBA! ${player === 'human' ? 'You' : 'NPC'} cleared the table!`;
         actionType = 'chkobba';
         logMessage = `🎯 CHKOBBA! ${player === 'human' ? 'You' : 'NPC'} clears the table with ${getCardName(playedCard)}!`;
-    } else if (isPictureCard(playedCard)) {
-        logMessage = `${player === 'human' ? 'You' : 'NPC'} plays picture card ${getCardName(playedCard)} and takes ALL table cards!`;
     }
 
     const captureAction = createGameAction(player, actionType, logMessage, [playedCard, ...capturedCards]);
 
-    const newState: GameState = {
+    const newState: iGameState = {
         ...state,
         table: newTable,
         [player]: {
-            ...playerState,
+            ...iPlayerState,
             hand: newHand,
             capturedCards: newCaptured,
             chkobbas,
@@ -216,9 +201,9 @@ export function executeCapture(
 /**
  * Execute a drop move (when no capture is possible)
  */
-export function executeDrop(state: GameState, player: Player, playedCard: Card): GameState {
-    const playerState = state[player];
-    const newHand = playerState.hand.filter(c => c.id !== playedCard.id);
+export function executeDrop(state: iGameState, player: tPlayer, playedCard: iCard): iGameState {
+    const iPlayerState = state[player];
+    const newHand = iPlayerState.hand.filter(c => c.id !== playedCard.id);
     const newTable = [...state.table, playedCard];
 
     const dropAction = createGameAction(
@@ -228,11 +213,11 @@ export function executeDrop(state: GameState, player: Player, playedCard: Card):
         [playedCard]
     );
 
-    const newState: GameState = {
+    const newState: iGameState = {
         ...state,
         table: newTable,
         [player]: {
-            ...playerState,
+            ...iPlayerState,
             hand: newHand,
         },
         message: `${player === 'human' ? 'You' : 'NPC'} dropped a card.`,
@@ -253,8 +238,8 @@ export function executeDrop(state: GameState, player: Player, playedCard: Card):
 /**
  * Switch to the next player's turn
  */
-function switchTurn(state: GameState): GameState {
-    const nextPlayer: Player = state.currentPlayer === 'human' ? 'npc' : 'human';
+function switchTurn(state: iGameState): iGameState {
+    const nextPlayer: tPlayer = state.currentPlayer === 'human' ? 'npc' : 'human';
 
     // Check if both players need new cards
     if (state.human.hand.length === 0 && state.npc.hand.length === 0) {
@@ -274,7 +259,7 @@ function switchTurn(state: GameState): GameState {
 /**
  * End the current round and calculate scores
  */
-export function endRound(state: GameState): GameState {
+export function endRound(state: iGameState): iGameState {
     // Last player to capture gets remaining table cards
     let finalState = { ...state };
     if (state.lastCapturePlayer && state.table.length > 0) {
@@ -304,7 +289,7 @@ export function endRound(state: GameState): GameState {
 /**
  * Calculate round scores according to Tunisian rules
  */
-export function calculateRoundScores(state: GameState): GameScores {
+export function calculateRoundScores(state: iGameState): iGameScores {
     const humanCards = state.human.capturedCards;
     const npcCards = state.npc.capturedCards;
 
@@ -320,7 +305,7 @@ export function calculateRoundScores(state: GameState): GameScores {
     const humanHasSetteDeneri = humanCards.some(c => c.suit === 'diamonds' && c.rank === 7);
     const npcHasSetteDeneri = npcCards.some(c => c.suit === 'diamonds' && c.rank === 7);
 
-    const humanScore: RoundScore = {
+    const humanScore: iRoundScore = {
         cards: humanCards.length >= 21 ? 1 : 0,
         diamonds: humanDiamonds > npcDiamonds ? 1 : 0,
         setteDeneri: humanHasSetteDeneri ? 1 : 0,
@@ -331,7 +316,7 @@ export function calculateRoundScores(state: GameState): GameScores {
     humanScore.total = humanScore.cards + humanScore.diamonds + humanScore.setteDeneri +
         humanScore.sevens + humanScore.chkobbas;
 
-    const npcScore: RoundScore = {
+    const npcScore: iRoundScore = {
         cards: npcCards.length >= 21 ? 1 : 0,
         diamonds: npcDiamonds > humanDiamonds ? 1 : 0,
         setteDeneri: npcHasSetteDeneri ? 1 : 0,
@@ -348,7 +333,7 @@ export function calculateRoundScores(state: GameState): GameScores {
 /**
  * Start a new round
  */
-export function startNewRound(state: GameState): GameState {
+export function startNewRound(state: iGameState): iGameState {
     // Check for game end
     if (state.humanTotalScore >= state.targetScore || state.npcTotalScore >= state.targetScore) {
         return {
@@ -361,9 +346,9 @@ export function startNewRound(state: GameState): GameState {
     }
 
     // Alternate dealer
-    const newDealer: Player = state.dealer === 'human' ? 'npc' : 'human';
+    const newDealer: tPlayer = state.dealer === 'human' ? 'npc' : 'human';
 
-    const newState: GameState = {
+    const newState: iGameState = {
         ...state,
         dealer: newDealer,
         roundNumber: state.roundNumber + 1,
@@ -377,8 +362,8 @@ export function startNewRound(state: GameState): GameState {
 /**
  * Start a new game
  */
-export function startNewGame(state: GameState): GameState {
-    const newState: GameState = {
+export function startNewGame(state: iGameState): iGameState {
+    const newState: iGameState = {
         ...state,
         phase: 'playing',
         deck: [],
@@ -404,28 +389,20 @@ export function startNewGame(state: GameState): GameState {
  * Validate and execute a human player's move
  */
 export function executeHumanMove(
-    state: GameState,
-    playedCard: Card,
-    selectedCapture: Card[] | null
-): GameState {
+    state: iGameState,
+    playedCard: iCard,
+    selectedCapture: iCard[] | null
+): iGameState {
     if (state.currentPlayer !== 'human') {
         return { ...state, message: "It's not your turn!" };
     }
 
     const validCaptures = findValidCaptures(playedCard, state.table);
 
-    // Picture card: must take all if there are cards
-    if (isPictureCard(playedCard)) {
-        if (state.table.length > 0) {
-            return executeCapture(state, 'human', playedCard, state.table);
-        }
-        return executeDrop(state, 'human', playedCard);
-    }
-
     // If captures are possible, must capture
     if (validCaptures.length > 0) {
         if (!selectedCapture) {
-            // Player hasn't selected which capture yet
+            // iPlayer hasn't selected which capture yet
             return {
                 ...state,
                 selectedCard: playedCard,

@@ -4,21 +4,21 @@
 
 import React from 'react';
 import CardComponent from './Card';
-import { Card } from '../types/Card';
-import { AnimationState, Player } from '../types/GameState';
+import { iCard } from '../types/Card';
+import { iAnimationState, tPlayer } from '../types/GameState';
 
-interface TableProps {
-    cards: Card[];
-    selectedCards: Card[];
-    validCaptures: Card[][];
-    onCardSelect?: (card: Card) => void;
+interface iTableProps {
+    cards: iCard[];
+    selectedCards: iCard[];
+    validCaptures: iCard[][];
+    onCardSelect?: (card: iCard) => void;
     disabled?: boolean;
     animatingCardIds?: string[];
-    animationType?: AnimationState['type'];
-    animatingPlayer?: Player;
+    animationType?: iAnimationState['type'];
+    animatingPlayer?: tPlayer;
 }
 
-const Table: React.FC<TableProps> = ({
+const Table: React.FC<iTableProps> = ({
     cards,
     selectedCards,
     validCaptures,
@@ -43,15 +43,15 @@ const Table: React.FC<TableProps> = ({
 
     return (
         <div className={tableClass}>
-            <div className='table__felt'>
-                <div className='table__cards'>
+            <div className='table-felt'>
+                <div className='table-cards'>
                     {cards.length === 0 ? (
-                        <div className='table__empty'>Table is empty</div>
+                        <div className='table-empty'>Table is empty</div>
                     ) : (
                         cards.map((card, index) => (
                             <div
                                 key={card.id}
-                                className={`table__card ${animatingSet.has(card.id) ? 'table__card--animating' : ''}`}
+                                className={`table-card ${animatingSet.has(card.id) ? 'table-card--animating' : ''}`}
                                 style={
                                     {
                                         '--card-index': index,
@@ -72,7 +72,7 @@ const Table: React.FC<TableProps> = ({
                     )}
                 </div>
             </div>
-            <div className='table__label'>Table ({cards.length} cards)</div>
+            <div className='table-label'>Table ({cards.length} cards)</div>
         </div>
     );
 };

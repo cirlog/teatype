@@ -3,14 +3,14 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { GameAction } from '../types/GameState';
+import { iGameAction } from '../types/GameState';
 
-interface MessageLogProps {
-    actions: GameAction[];
+interface iMessageLogProps {
+    actions: iGameAction[];
     maxVisible?: number;
 }
 
-const MessageLog: React.FC<MessageLogProps> = ({ actions, maxVisible = 15 }) => {
+const MessageLog: React.FC<iMessageLogProps> = ({ actions, maxVisible = 15 }) => {
     const logRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom when new messages arrive
@@ -23,14 +23,12 @@ const MessageLog: React.FC<MessageLogProps> = ({ actions, maxVisible = 15 }) => 
     const visibleActions = actions.slice(-maxVisible);
     const totalActions = actions.length;
 
-    const getActionIcon = (action: GameAction): string => {
+    const getActionIcon = (action: iGameAction): string => {
         switch (action.type) {
             case 'chkobba':
                 return '🎯';
             case 'capture':
                 return '✋';
-            case 'picture-capture':
-                return '🃏';
             case 'drop':
                 return '📤';
             case 'deal':
@@ -41,18 +39,18 @@ const MessageLog: React.FC<MessageLogProps> = ({ actions, maxVisible = 15 }) => 
         }
     };
 
-    const getActionClass = (action: GameAction, index: number): string => {
+    const getActionClass = (action: iGameAction, index: number): string => {
         const isLatest = index === visibleActions.length - 1;
         const fadeLevel = Math.max(0, visibleActions.length - 1 - index);
 
-        let className = 'message-log__item';
-        className += ` message-log__item--${action.type}`;
-        className += ` message-log__item--${action.player}`;
+        let className = 'message-log-item';
+        className += ` message-log-item--${action.type}`;
+        className += ` message-log-item--${action.player}`;
 
         if (isLatest) {
-            className += ' message-log__item--latest';
+            className += ' message-log-item--latest';
         } else if (fadeLevel > 0) {
-            className += ` message-log__item--fade-${Math.min(fadeLevel, 5)}`;
+            className += ` message-log-item--fade-${Math.min(fadeLevel, 5)}`;
         }
 
         return className;
@@ -60,23 +58,23 @@ const MessageLog: React.FC<MessageLogProps> = ({ actions, maxVisible = 15 }) => 
 
     return (
         <div className='message-log'>
-            <div className='message-log__header'>
-                <span className='message-log__title'>📜 Game Log</span>
-                <span className='message-log__count'>{totalActions} actions</span>
+            <div className='message-log-header'>
+                <span className='message-log-title'>📜 Game Log</span>
+                <span className='message-log-count'>{totalActions} actions</span>
             </div>
-            <div className='message-log__content' ref={logRef}>
+            <div className='message-log-content' ref={logRef}>
                 {visibleActions.length === 0 ? (
-                    <div className='message-log__empty'>No actions yet...</div>
+                    <div className='message-log-empty'>No actions yet...</div>
                 ) : (
                     visibleActions.map((action, index) => (
                         <div key={action.id} className={getActionClass(action, index)}>
-                            <span className='message-log__icon'>{getActionIcon(action)}</span>
-                            <span className='message-log__text'>{action.message}</span>
+                            <span className='message-log-icon'>{getActionIcon(action)}</span>
+                            <span className='message-log-text'>{action.message}</span>
                         </div>
                     ))
                 )}
             </div>
-            {totalActions > maxVisible && <div className='message-log__fade-top' />}
+            {totalActions > maxVisible && <div className='message-log-fade-top' />}
         </div>
     );
 };

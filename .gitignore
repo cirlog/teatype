@@ -197,3 +197,7 @@ logs
 *.pytest_cache
 
 */*llama-cpp-python
+
+tsconfig.tsbuildinfo
+
+examples/chkobba/public/cards

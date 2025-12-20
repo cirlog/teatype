@@ -3,9 +3,9 @@
  */
 
 import React from 'react';
-import { RoundScore } from '../types/GameState';
+import { iRoundScore } from '../types/GameState';
 
-interface ScoreDisplayProps {
+interface iScoreDisplayProps {
     humanScore: number;
     npcScore: number;
     humanChkobbas: number;
@@ -14,7 +14,7 @@ interface ScoreDisplayProps {
     roundNumber: number;
 }
 
-const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
+const ScoreDisplay: React.FC<iScoreDisplayProps> = ({
     humanScore,
     npcScore,
     humanChkobbas,
@@ -24,24 +24,24 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 }) => {
     return (
         <div className='score-display'>
-            <div className='score-display__round'>Round {roundNumber}</div>
-            <div className='score-display__target'>First to {targetScore} wins</div>
-            <div className='score-display__scores'>
-                <div className='score-display__player'>
-                    <div className='score-display__name'>You</div>
-                    <div className='score-display__points'>{humanScore}</div>
+            <div className='score-display-round'>Round {roundNumber}</div>
+            <div className='score-display-target'>First to {targetScore} wins</div>
+            <div className='score-display-scores'>
+                <div className='score-display-player'>
+                    <div className='score-display-name'>You</div>
+                    <div className='score-display-points'>{humanScore}</div>
                     {humanChkobbas > 0 && (
-                        <div className='score-display__chkobbas'>
+                        <div className='score-display-chkobbas'>
                             🎯 {humanChkobbas} Chkobba{humanChkobbas > 1 ? 's' : ''}
                         </div>
                     )}
                 </div>
-                <div className='score-display__divider'>vs</div>
-                <div className='score-display__player'>
-                    <div className='score-display__name'>NPC</div>
-                    <div className='score-display__points'>{npcScore}</div>
+                <div className='score-display-divider'>vs</div>
+                <div className='score-display-player'>
+                    <div className='score-display-name'>NPC</div>
+                    <div className='score-display-points'>{npcScore}</div>
                     {npcChkobbas > 0 && (
-                        <div className='score-display__chkobbas'>
+                        <div className='score-display-chkobbas'>
                             🎯 {npcChkobbas} Chkobba{npcChkobbas > 1 ? 's' : ''}
                         </div>
                     )}
@@ -51,13 +51,13 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     );
 };
 
-interface RoundScoreModalProps {
-    humanScore: RoundScore;
-    npcScore: RoundScore;
+interface iRoundScoreModalProps {
+    humanScore: iRoundScore;
+    npcScore: iRoundScore;
     onContinue: () => void;
 }
 
-export const RoundScoreModal: React.FC<RoundScoreModalProps> = ({ humanScore, npcScore, onContinue }) => {
+export const RoundScoreModal: React.FC<iRoundScoreModalProps> = ({ humanScore, npcScore, onContinue }) => {
     const categories = [
         { label: 'Cards (21+)', human: humanScore.cards, npc: npcScore.cards },
         { label: 'Diamonds ♦', human: humanScore.diamonds, npc: npcScore.diamonds },

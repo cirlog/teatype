@@ -1,13 +1,13 @@
 /**
- * Training tips and strategy guide for Tunisian Chkobba
+ * Training tips and strategy guide for Chkobba (French variant)
  * Based on expert strategies to improve gameplay
  */
 
-import { isPictureCard } from '../types/Card';
-import { GameState } from '../types/GameState';
+import { isFaceCard, canMakeChkobba, getCardName } from '../types/Card';
+import { iGameState } from '../types/GameState';
 import { findValidCaptures } from './GameLogic';
 
-export interface Tip {
+export interface iTip {
     priority: number; // Higher = more important
     title: string;
     message: string;
@@ -17,12 +17,12 @@ export interface Tip {
 /**
  * Analyze the current game state and provide the best tip
  */
-export function getTrainingTip(state: GameState): Tip | null {
+export function getTrainingTip(state: iGameState): iTip | null {
     if (state.currentPlayer !== 'human' || state.human.hand.length === 0) {
         return null;
     }
 
-    const tips: Tip[] = [];
+    const tips: iTip[] = [];
     const hand = state.human.hand;
     const table = state.table;
 
@@ -30,15 +30,15 @@ export function getTrainingTip(state: GameState): Tip | null {
     for (const card of hand) {
         const captures = findValidCaptures(card, table);
 
-        // Check for Chkobba opportunity
-        if (captures.length > 0 && !isPictureCard(card) && card.rank >= 2 && card.rank <= 7) {
+        // Check for Chkobba opportunity (any card except Ace can make Chkobba)
+        if (captures.length > 0 && canMakeChkobba(card)) {
             for (const capture of captures) {
                 const remainingTable = table.filter(t => !capture.some(c => c.id === t.id));
                 if (remainingTable.length === 0) {
                     tips.push({
                         priority: 100,
                         title: '🎯 CHKOBBA POSSIBLE!',
-                        message: `Play your ${card.rank} to capture all cards and score a Chkobba point!`,
+                        message: `Play your ${getCardName(card)} to capture all cards and score a Chkobba point!`,
                         category: 'opportunity',
                     });
                 }
@@ -78,48 +78,37 @@ export function getTrainingTip(state: GameState): Tip | null {
         }
     }
 
-    // Picture card strategy tips
-    const pictureCards = hand.filter(c => isPictureCard(c));
-    const normalCards = hand.filter(c => !isPictureCard(c));
+    // Face card strategy tips (J, Q, K are high value cards)
+    const faceCards = hand.filter(c => isFaceCard(c));
+    const lowCards = hand.filter(c => !isFaceCard(c) && c.rank !== 1);
 
-    if (pictureCards.length > 0 && table.length > 0) {
-        // Warn against playing picture cards too early
-        if (normalCards.length > 0 && table.length < 4) {
+    if (faceCards.length > 0 && table.length > 0) {
+        // Face cards are valuable for high-sum captures
+        const faceCaptures = faceCards.some(c => findValidCaptures(c, table).length > 0);
+        if (faceCaptures) {
             tips.push({
                 priority: 70,
-                title: '⚠️ Picture Card Strategy',
-                message: 'Hold your picture cards (8/9/10)! They are control weapons, not early loot.',
-                category: 'strategy',
-            });
-        }
-
-        // Endgame picture card advantage
-        if (state.deck.length === 0 && pictureCards.length > 0) {
-            tips.push({
-                priority: 90,
-                title: '🏆 Endgame Advantage!',
-                message: 'You have the last picture card! Play it at the end to take ALL table cards.',
+                title: '👑 Face Card Advantage',
+                message: 'Your J/Q/K can capture high-value combinations! Use them wisely.',
                 category: 'strategy',
             });
         }
     }
 
     // Check for "easy sum" warning
-    for (const card of normalCards) {
-        if (!isPictureCard(card)) {
-            const cardValue = card.value;
-            // Check if dropping would create easy capture for opponent
-            const newTableSum = table.filter(c => !isPictureCard(c)).reduce((s, c) => s + c.value, 0) + cardValue;
-            if (newTableSum >= 2 && newTableSum <= 7) {
-                const captures = findValidCaptures(card, table);
-                if (captures.length === 0) {
-                    tips.push({
-                        priority: 60,
-                        title: '⚠️ Careful When Dropping!',
-                        message: `Your ${card.rank} would create a table sum of ${newTableSum} - easy for opponent!`,
-                        category: 'warning',
-                    });
-                }
+    for (const card of lowCards) {
+        const cardValue = card.value;
+        // Check if dropping would create easy capture for opponent
+        const newTableSum = table.reduce((s, c) => s + c.value, 0) + cardValue;
+        if (newTableSum >= 2 && newTableSum <= 10) {
+            const captures = findValidCaptures(card, table);
+            if (captures.length === 0) {
+                tips.push({
+                    priority: 60,
+                    title: '⚠️ Careful When Dropping!',
+                    message: `Your ${getCardName(card)} would create a table sum of ${newTableSum} - easy for opponent!`,
+                    category: 'warning',
+                });
             }
         }
     }
@@ -181,30 +170,28 @@ export function getTrainingTip(state: GameState): Tip | null {
     }
 
     // No capture available - give dropping advice
-    const hasCapture = hand.some(card => findValidCaptures(card, table).length > 0 || (isPictureCard(card) && table.length > 0));
+    const hasCapture = hand.some(card => findValidCaptures(card, table).length > 0);
     if (!hasCapture && hand.length > 0) {
-        // Find best card to drop
-        const dropPriority = hand
-            .filter(c => !isPictureCard(c))
-            .sort((a, b) => {
-                // Prefer dropping low cards
-                let scoreA = a.value;
-                let scoreB = b.value;
-                // Penalize diamonds
-                if (a.suit === 'diamonds') scoreA += 10;
-                if (b.suit === 'diamonds') scoreB += 10;
-                // Heavily penalize 7s
-                if (a.rank === 7) scoreA += 20;
-                if (b.rank === 7) scoreB += 20;
-                return scoreA - scoreB;
-            });
+        // Find best card to drop - prefer low value cards
+        const dropPriority = [...hand].sort((a, b) => {
+            // Prefer dropping low cards
+            let scoreA = a.value;
+            let scoreB = b.value;
+            // Penalize diamonds
+            if (a.suit === 'diamonds') scoreA += 10;
+            if (b.suit === 'diamonds') scoreB += 10;
+            // Heavily penalize 7s
+            if (a.rank === 7) scoreA += 20;
+            if (b.rank === 7) scoreB += 20;
+            return scoreA - scoreB;
+        });
 
         if (dropPriority.length > 0) {
             const bestDrop = dropPriority[0];
             tips.push({
                 priority: 40,
                 title: '📤 Drop Card',
-                message: `No capture possible. The ${bestDrop.rank} is the safest card to drop.`,
+                message: `No capture possible. The ${getCardName(bestDrop)} is the safest card to drop.`,
                 category: 'info',
             });
         }
@@ -213,62 +200,4 @@ export function getTrainingTip(state: GameState): Tip | null {
     // Sort by priority and return the best tip
     tips.sort((a, b) => b.priority - a.priority);
     return tips[0] || null;
-}
-
-/**
- * Get a random general strategy tip for display
- */
-export function getRandomStrategyTip(): Tip {
-    const strategies: Tip[] = [
-        {
-            priority: 0,
-            title: '🎴 Picture Cards = Control',
-            message: 'NEVER play 8/9/10 immediately. They are reset buttons, Chkobba blockers, and endgame weapons.',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '❌ No Easy Sums',
-            message: 'Avoid combinations like 3+4, 2+5, 1+6 on the table. Better to leave single cards or totals >7.',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '7️⃣ Seven Memory',
-            message: 'Track the 7♦ or lose! Every played seven changes the game.',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '🅰️ Ace is a Tool',
-            message: 'Perfect for snatching single cards. Never play it hoping for Chkobba!',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '🏆 Endgame Checkmate',
-            message: 'Last picture card = intentionally leave cards, then take EVERYTHING at the end.',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '🧠 Play Calculatively',
-            message: 'Play avoidant, cold, calculated. This is brutally effective against intuitive players.',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '💎 Diamond Priority',
-            message: 'Diamond cards score points! Especially the 7♦ is worth gold.',
-            category: 'strategy',
-        },
-        {
-            priority: 0,
-            title: '🃏 Last Capture Rule',
-            message: 'Whoever captures last gets all remaining table cards!',
-            category: 'info',
-        },
-    ];
-
-    return strategies[Math.floor(Math.random() * strategies.length)];
 }

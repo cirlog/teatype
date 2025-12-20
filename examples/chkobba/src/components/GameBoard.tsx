@@ -1,5 +1,16 @@
 /**
- * Main game board component
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  */
 
 import React from 'react';
@@ -9,22 +20,24 @@ import Deck from './Deck';
 import ScoreDisplay from './ScoreDisplay';
 import MessageLog from './MessageLog';
 import TrainingTip from './TrainingTip';
-import { GameState } from '../types/GameState';
-import { Card } from '../types/Card';
-import { Tip } from '../game/TrainingTips';
+import { iGameState } from '../types/GameState';
+import { iCard } from '../types/Card';
+import { iTip } from '../game/TrainingTips';
 
-interface GameBoardProps {
-    state: GameState;
-    trainingTip: Tip | null;
-    onCardSelect: (card: Card) => void;
-    onTableCardSelect: (card: Card) => void;
+interface iGameBoardProps {
+    state: iGameState;
+    trainingTip: iTip | null;
+
+    onCardSelect: (card: iCard) => void;
+    onTableCardSelect: (card: iCard) => void;
     onConfirmCapture: () => void;
     onCancelSelection: () => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({
+const GameBoard: React.FC<iGameBoardProps> = ({
     state,
     trainingTip,
+
     onCardSelect,
     onTableCardSelect,
     onConfirmCapture,
@@ -42,7 +55,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
     return (
         <div className={`game-board ${getAnimationClass()}`}>
-            <div className='game-board__header'>
+            <div className='game-board-header'>
                 <ScoreDisplay
                     humanScore={state.humanTotalScore}
                     npcScore={state.npcTotalScore}
@@ -53,10 +66,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 />
             </div>
 
-            <div className='game-board__body'>
-                <div className='game-board__main'>
+            <div className='game-board-body'>
+                <div className='game-board-main'>
                     {/* NPC Hand */}
-                    <div className='game-board__npc-area'>
+                    <div className='game-board-npc-area'>
                         <Hand
                             cards={state.npc.hand}
                             isHuman={false}
@@ -67,17 +80,17 @@ const GameBoard: React.FC<GameBoardProps> = ({
                     </div>
 
                     {/* Center area with table and deck */}
-                    <div className='game-board__center'>
-                        <div className='game-board__deck-area'>
+                    <div className='game-board-center'>
+                        <div className='game-board-deck-area'>
                             <Deck cardsRemaining={state.deck.length} />
-                            <div className='game-board__captured'>
+                            <div className='game-board-captured'>
                                 <div className='captured-pile'>
-                                    <span className='captured-pile__label'>Your captures</span>
-                                    <span className='captured-pile__count'>{state.human.capturedCards.length}</span>
+                                    <span className='captured-pile-label'>Your captures</span>
+                                    <span className='captured-pile-count'>{state.human.capturedCards.length}</span>
                                 </div>
                                 <div className='captured-pile captured-pile--npc'>
-                                    <span className='captured-pile__label'>NPC captures</span>
-                                    <span className='captured-pile__count'>{state.npc.capturedCards.length}</span>
+                                    <span className='captured-pile-label'>NPC captures</span>
+                                    <span className='captured-pile-count'>{state.npc.capturedCards.length}</span>
                                 </div>
                             </div>
                         </div>
@@ -95,7 +108,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                     </div>
 
                     {/* Human Hand */}
-                    <div className='game-board__human-area'>
+                    <div className='game-board-human-area'>
                         <Hand
                             cards={state.human.hand}
                             isHuman={true}
@@ -108,20 +121,20 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
                     {/* Training tip */}
                     {state.trainingMode && isHumanTurn && (
-                        <div className='game-board__training-tip'>
+                        <div className='game-board-training-tip'>
                             <TrainingTip tip={trainingTip} enabled={state.trainingMode} />
                         </div>
                     )}
                 </div>
 
                 {/* Message Log sidebar */}
-                <div className='game-board__sidebar'>
+                <div className='game-board-sidebar'>
                     <MessageLog actions={state.actionLog} />
                 </div>
             </div>
 
             {/* Action bar */}
-            <div className='game-board__actions'>
+            <div className='game-board-actions'>
                 <div className={`message ${state.message.includes('CHKOBBA') ? 'message--chkobba' : ''}`}>
                     {state.message}
                 </div>

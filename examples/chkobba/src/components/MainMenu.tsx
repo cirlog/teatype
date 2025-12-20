@@ -3,20 +3,19 @@
  */
 
 import React from 'react';
-import { Difficulty } from '../types/GameState';
-import { getRandomStrategyTip } from '../game/TrainingTips';
+import { tDifficulty } from '../types/GameState';
 
-interface MainMenuProps {
-    difficulty: Difficulty;
+interface iMainMenuProps {
+    difficulty: tDifficulty;
     targetScore: number;
     trainingMode: boolean;
-    onDifficultyChange: (difficulty: Difficulty) => void;
+    onDifficultyChange: (difficulty: tDifficulty) => void;
     onTargetScoreChange: (score: number) => void;
     onTrainingModeChange: (enabled: boolean) => void;
     onStartGame: () => void;
 }
 
-const MainMenu: React.FC<MainMenuProps> = ({
+const MainMenu: React.FC<iMainMenuProps> = ({
     difficulty,
     targetScore,
     trainingMode,
@@ -25,26 +24,25 @@ const MainMenu: React.FC<MainMenuProps> = ({
     onTrainingModeChange,
     onStartGame,
 }) => {
-    const difficulties: { value: Difficulty; label: string; description: string }[] = [
-        { value: 'easy', label: 'Easy', description: 'Random moves, forgiving play' },
-        { value: 'medium', label: 'Medium', description: 'Basic strategy, occasional mistakes' },
-        { value: 'hard', label: 'Hard', description: 'Strong strategy, few mistakes' },
-        { value: 'expert', label: 'Expert', description: 'Optimal play, card counting' },
+    const difficulties: { value: tDifficulty; label: string; description: string }[] = [
+        { value: 'easy', label: 'Noob', description: 'Random moves, forgiving play' },
+        { value: 'medium', label: 'Casual', description: 'Basic strategy, occasional mistakes' },
+        { value: 'hard', label: 'Expert', description: 'Strong strategy, few mistakes' },
+        { value: 'expert', label: 'Yessmine', description: 'Optimal play, card counting. You will suffer' },
     ];
 
     const scoreOptions = [7, 11, 15, 21];
-    const [strategyTip] = React.useState(() => getRandomStrategyTip());
 
     return (
         <div className='main-menu'>
-            <div className='main-menu__header'>
-                <h1 className='main-menu__title'>🃏 Chkobba</h1>
-                <p className='main-menu__subtitle'>Tunisian Card Game</p>
+            <div className='main-menu-header'>
+                <h1 className='main-menu-title'>🃏Chkobba</h1>
+                <p className='main-menu-subtitle'>لعبة ورق تونسية</p>
             </div>
 
-            <div className='main-menu__options'>
+            <div className='main-menu-options'>
                 <div className='option-group'>
-                    <label className='option-label'>Difficulty</label>
+                    <label className='option-label'>Difficulty-Level:</label>
                     <div className='difficulty-selector'>
                         {difficulties.map((d) => (
                             <button
@@ -52,15 +50,15 @@ const MainMenu: React.FC<MainMenuProps> = ({
                                 className={`difficulty-btn ${difficulty === d.value ? 'difficulty-btn--active' : ''}`}
                                 onClick={() => onDifficultyChange(d.value)}
                             >
-                                <span className='difficulty-btn__label'>{d.label}</span>
-                                <span className='difficulty-btn__desc'>{d.description}</span>
+                                <span className='difficulty-btn-label'>{d.label}</span>
+                                <span className='difficulty-btn-desc'>{d.description}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className='option-group'>
-                    <label className='option-label'>Target Score</label>
+                    <label className='option-label'>Target Score:</label>
                     <div className='score-selector'>
                         {scoreOptions.map((score) => (
                             <button
@@ -75,24 +73,24 @@ const MainMenu: React.FC<MainMenuProps> = ({
                 </div>
 
                 <div className='option-group'>
-                    <label className='option-label'>Training Mode</label>
+                    <label className='option-label'>Training Mode:</label>
                     <button
                         className={`training-toggle ${trainingMode ? 'training-toggle--active' : ''}`}
                         onClick={() => onTrainingModeChange(!trainingMode)}
                     >
-                        <span className='training-toggle__icon'>{trainingMode ? '💡' : '🎓'}</span>
-                        <div className='training-toggle__content'>
-                            <span className='training-toggle__label'>
+                        <span className='training-toggle-icon'>{trainingMode ? '💡' : '🎓'}</span>
+                        <div className='training-toggle-content'>
+                            <span className='training-toggle-label'>
                                 {trainingMode ? 'Training Mode ON' : 'Training Mode OFF'}
                             </span>
-                            <span className='training-toggle__desc'>
+                            <span className='training-toggle-desc'>
                                 {trainingMode
                                     ? 'Tips and best moves will be shown during gameplay'
                                     : 'Enable to see strategic tips during the game'}
                             </span>
                         </div>
-                        <span className='training-toggle__switch'>
-                            <span className='training-toggle__switch-knob' />
+                        <span className='training-toggle-switch'>
+                            <span className='training-toggle-switch-knob' />
                         </span>
                     </button>
                 </div>
@@ -102,16 +100,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
                 Start Game
             </button>
 
-            {/* Strategy tip of the day */}
-            <div className='main-menu__tip'>
-                <div className='strategy-tip'>
-                    <span className='strategy-tip__badge'>💡 Strategy Tip</span>
-                    <h4 className='strategy-tip__title'>{strategyTip.title}</h4>
-                    <p className='strategy-tip__message'>{strategyTip.message}</p>
-                </div>
-            </div>
-
-            <div className='main-menu__rules'>
+            <div className='main-menu-rules'>
                 <h3>Quick Rules</h3>
                 <ul>
                     <li>
