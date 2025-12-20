@@ -1,24 +1,20 @@
 #!/bin/bash
 
-# Copyright (c) 2024-2025 enamentis GmbH. All rights reserved.
+# Copyright (C) 2024-2026 Burak Günaydin
 #
-# This software module is the proprietary property of enamentis GmbH.
-# Unauthorized copying, modification, distribution, or use of this software
-# is strictly prohibited unless explicitly authorized in writing.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# THIS SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NONINFRINGEMENT.
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
-#
-# For more details, check the LICENSE file in the root directory of this repository.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 
-# Parse the script's parent directory
 parent_directory=$(dirname "$(readlink -f "$0")")
 cd $parent_directory
 
-# Update the package list and upgrade all installed packages to their latest versions
 sudo apt update -y
 sudo apt-get remove node nodejs -y
 
@@ -27,36 +23,26 @@ sudo systemctl disable nginx
 
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-# Download and execute the NVM installation script from the official repository
 wget -q -O- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 
-# Source the updated bash configuration to apply NVM changes to the current shell session
 . ~/.bashrc
 
-# Set the NVM directory environment variable to ensure NVM is correctly referenced
 export NVM_DIR="$HOME/.nvm"
 
-# This loads nvm if the nvm.sh script is present
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-# This loads bash_completion for NVM if the bash_completion script is present
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# Install Node.js version 20 using NVM
 nvm install 20
 
-# Switch to using Node.js version 20 in the current shell session
 nvm use 20
 
-# Set Node.js version 20 as the default version for future shell sessions
 nvm alias default 20
 
-# Enable Corepack, which manages package managers like pnpm
 corepack enable
 
 export COREPACK_ENABLE_PROMPT=0
 
-# Prepare and activate the 10.12.1 version of pnpm using Corepack
 corepack prepare pnpm@10.12.1 --activate
 
 corepack install --global pnpm@10.12.1

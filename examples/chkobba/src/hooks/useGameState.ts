@@ -1,0 +1,202 @@
+/**
+ * Custom hook for managing game state
+ */
+
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { GameState, Difficulty, createInitialGameState } from '../types/GameState';
+import { Card, isPictureCard } from '../types/Card';
+import {
+    startNewGame,
+    startNewRound,
+    findValidCaptures,
+    executeCapture,
+    executeDrop,
+    calculateRoundScores
+} from '../game/GameLogic';
+import { executeNPCTurn, getNPCThinkingTime } from '../game/NPCAi';
+
+export function useGameState() {
+    const [state, setState] = useState<GameState>(createInitialGameState());
+    const [roundScores, setRoundScores] = useState<ReturnType<typeof calculateRoundScores> | null>(null);
+    const npcTurnRef = useRef<boolean>(false);
+
+    // Handle NPC turn
+    useEffect(() => {
+        // Check if it's NPC's turn and they have cards to play
+        const isNpcTurn = state.phase === 'playing' &&
+            state.currentPlayer === 'npc' &&
+            state.npc.hand.length > 0;
+
+        if (isNpcTurn && !npcTurnRef.current) {
+            npcTurnRef.current = true;
+
+            const thinkingTime = getNPCThinkingTime(state.difficulty);
+
+            const timeout = setTimeout(() => {
+                setState(prev => {
+                    // Double-check it's still NPC's turn
+                    if (prev.currentPlayer !== 'npc' || prev.npc.hand.length === 0) {
+                        npcTurnRef.current = false;
+                        return prev;
+                    }
+                    const newState = executeNPCTurn(prev);
+                    npcTurnRef.current = false;
+                    return newState;
+                });
+            }, thinkingTime);
+
+            return () => {
+                clearTimeout(timeout);
+                npcTurnRef.current = false;
+            };
+        }
+    }, [state.currentPlayer, state.phase, state.npc.hand.length, state.difficulty]);
+
+    // Calculate round scores when round ends
+    useEffect(() => {
+        if (state.phase === 'roundEnd') {
+            const scores = calculateRoundScores(state);
+            setRoundScores(scores);
+        }
+    }, [state.phase]);
+
+    const setDifficulty = useCallback((difficulty: Difficulty) => {
+        setState(prev => ({ ...prev, difficulty }));
+    }, []);
+
+    const setTargetScore = useCallback((targetScore: number) => {
+        setState(prev => ({ ...prev, targetScore }));
+    }, []);
+
+    const handleStartGame = useCallback(() => {
+        setState(prev => startNewGame(prev));
+    }, []);
+
+    const handleContinueRound = useCallback(() => {
+        setRoundScores(null);
+        setState(prev => startNewRound(prev));
+    }, []);
+
+    const handlePlayAgain = useCallback(() => {
+        setRoundScores(null);
+        setState(prev => ({
+            ...createInitialGameState(),
+            difficulty: prev.difficulty,
+            targetScore: prev.targetScore,
+        }));
+        setTimeout(() => {
+            setState(prev => startNewGame(prev));
+        }, 100);
+    }, []);
+
+    const handleMainMenu = useCallback(() => {
+        setRoundScores(null);
+        setState(prev => ({
+            ...createInitialGameState(),
+            difficulty: prev.difficulty,
+            targetScore: prev.targetScore,
+        }));
+    }, []);
+
+    const handleCardSelect = useCallback((card: Card) => {
+        if (state.currentPlayer !== 'human' || state.isAnimating) return;
+
+        const validCaptures = findValidCaptures(card, state.table);
+
+        // Picture card: immediately take all or drop
+        if (isPictureCard(card)) {
+            if (state.table.length > 0) {
+                setState(prev => executeCapture(prev, 'human', card, prev.table));
+            } else {
+                setState(prev => executeDrop(prev, 'human', card));
+            }
+            return;
+        }
+
+        // No captures possible: drop the card
+        if (validCaptures.length === 0) {
+            setState(prev => executeDrop(prev, 'human', card));
+            return;
+        }
+
+        // Single capture option: execute immediately
+        if (validCaptures.length === 1) {
+            setState(prev => executeCapture(prev, 'human', card, validCaptures[0]));
+            return;
+        }
+
+        // Multiple capture options: let player choose
+        setState(prev => ({
+            ...prev,
+            selectedCard: card,
+            validCaptures,
+            selectedTableCards: [],
+            message: 'Multiple captures possible. Select cards to capture:',
+        }));
+    }, [state.currentPlayer, state.isAnimating, state.table]);
+
+    const handleTableCardSelect = useCallback((card: Card) => {
+        if (!state.selectedCard || state.validCaptures.length === 0) return;
+
+        setState(prev => {
+            const isSelected = prev.selectedTableCards.some(c => c.id === card.id);
+            let newSelected: Card[];
+
+            if (isSelected) {
+                newSelected = prev.selectedTableCards.filter(c => c.id !== card.id);
+            } else {
+                newSelected = [...prev.selectedTableCards, card];
+            }
+
+            return {
+                ...prev,
+                selectedTableCards: newSelected,
+            };
+        });
+    }, [state.selectedCard, state.validCaptures]);
+
+    const handleConfirmCapture = useCallback(() => {
+        if (!state.selectedCard || state.selectedTableCards.length === 0) return;
+
+        // Validate that selected cards form a valid capture
+        const isValid = state.validCaptures.some(vc =>
+            vc.length === state.selectedTableCards.length &&
+            vc.every(c => state.selectedTableCards.some(sc => sc.id === c.id))
+        );
+
+        if (!isValid) {
+            setState(prev => ({
+                ...prev,
+                message: 'Invalid selection! Cards must sum to your card\'s value.',
+            }));
+            return;
+        }
+
+        setState(prev => executeCapture(prev, 'human', prev.selectedCard!, prev.selectedTableCards));
+    }, [state.selectedCard, state.selectedTableCards, state.validCaptures]);
+
+    const handleCancelSelection = useCallback(() => {
+        setState(prev => ({
+            ...prev,
+            selectedCard: null,
+            selectedTableCards: [],
+            validCaptures: [],
+            message: 'Your turn! Select a card to play.',
+        }));
+    }, []);
+
+    return {
+        state,
+        roundScores,
+        setDifficulty,
+        setTargetScore,
+        handleStartGame,
+        handleContinueRound,
+        handlePlayAgain,
+        handleMainMenu,
+        handleCardSelect,
+        handleTableCardSelect,
+        handleConfirmCapture,
+        handleCancelSelection,
+    };
+}
