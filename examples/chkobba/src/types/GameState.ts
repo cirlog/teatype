@@ -7,11 +7,28 @@ import { Card } from './Card';
 export type Player = 'human' | 'npc';
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert';
 export type GamePhase = 'menu' | 'playing' | 'roundEnd' | 'gameEnd';
+export type ActionType = 'capture' | 'drop' | 'chkobba' | 'deal' | 'info' | 'picture-capture';
+
+export interface GameAction {
+    id: string;
+    timestamp: number;
+    player: Player | 'system';
+    type: ActionType;
+    message: string;
+    cards?: Card[];
+}
 
 export interface PlayerState {
     hand: Card[];
     capturedCards: Card[];
     chkobbas: number;
+}
+
+export interface AnimationState {
+    type: 'none' | 'card-play' | 'card-capture' | 'chkobba' | 'deal';
+    cardId?: string;
+    targetCards?: string[];
+    player?: Player;
 }
 
 export interface GameState {
@@ -33,6 +50,9 @@ export interface GameState {
     selectedTableCards: Card[];
     validCaptures: Card[][];
     isAnimating: boolean;
+    trainingMode: boolean;
+    actionLog: GameAction[];
+    animation: AnimationState;
 }
 
 export interface RoundScore {
@@ -83,5 +103,27 @@ export function createInitialGameState(): GameState {
         selectedTableCards: [],
         validCaptures: [],
         isAnimating: false,
+        trainingMode: false,
+        actionLog: [],
+        animation: { type: 'none' },
+    };
+}
+
+/**
+ * Create a new game action for the log
+ */
+export function createGameAction(
+    player: Player | 'system',
+    type: ActionType,
+    message: string,
+    cards?: Card[]
+): GameAction {
+    return {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: Date.now(),
+        player,
+        type,
+        message,
+        cards,
     };
 }

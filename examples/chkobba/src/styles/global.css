@@ -542,6 +542,7 @@ h6 {
 .game-board__human-area {
     display: flex;
     justify-content: center;
+    position: relative;
 }
 
 .game-board__actions {
@@ -881,5 +882,420 @@ h6 {
     .score-display {
         flex-direction: column;
         gap: var(--spacing-sm);
+    }
+
+    .game-board__body {
+        flex-direction: column;
+    }
+
+    .game-board__sidebar {
+        width: 100%;
+        max-height: 150px;
+    }
+
+    .message-log {
+        max-height: 120px;
+    }
+}
+
+/* Training Mode Toggle */
+.training-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg-light);
+    border-radius: var(--border-radius);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+    width: 100%;
+}
+
+.training-toggle:hover {
+    background: var(--color-secondary);
+}
+
+.training-toggle--active {
+    border-color: var(--color-success);
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.training-toggle__icon {
+    font-size: 1.5rem;
+}
+
+.training-toggle__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.training-toggle__label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.training-toggle__desc {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.training-toggle__switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: var(--color-secondary);
+    border-radius: 13px;
+    transition: background var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.training-toggle--active .training-toggle__switch {
+    background: var(--color-success);
+}
+
+.training-toggle__switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform var(--transition-fast);
+}
+
+.training-toggle--active .training-toggle__switch-knob {
+    transform: translateX(24px);
+}
+
+/* Strategy Tip in Menu */
+.main-menu__tip {
+    width: 100%;
+    margin-top: var(--spacing-xl);
+}
+
+.strategy-tip {
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-bg-light));
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--color-accent);
+}
+
+.strategy-tip__badge {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-sm);
+}
+
+.strategy-tip__title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-sm);
+}
+
+.strategy-tip__message {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Message Log Sidebar */
+.game-board__body {
+    display: flex;
+    flex: 1;
+    gap: var(--spacing-md);
+}
+
+.game-board__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-board__sidebar {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+}
+
+.message-log {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-light);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.message-log__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.message-log__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.message-log__count {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.message-log__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    max-height: 300px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+}
+
+.message-log__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: all var(--transition-fast);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.message-log__item--latest {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+}
+
+.message-log__item--fade-1 {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-log__item--fade-2 {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.message-log__item--fade-3 {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.message-log__item--fade-4 {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.message-log__icon {
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+}
+
+.message-log__text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.message-log__empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: var(--spacing-md);
+}
+
+/* Training Tip Display */
+.training-tip {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    animation: fadeInTip 0.4s ease;
+}
+
+@keyframes fadeInTip {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.training-tip--opportunity {
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(74, 222, 128, 0.1));
+    border-left: 4px solid var(--color-success);
+}
+
+.training-tip--warning {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1));
+    border-left: 4px solid #fbbf24;
+}
+
+.training-tip--strategy {
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(96, 165, 250, 0.1));
+    border-left: 4px solid #60a5fa;
+}
+
+.training-tip--info {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.2), rgba(156, 163, 175, 0.1));
+    border-left: 4px solid var(--color-text-muted);
+}
+
+.training-tip__header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.training-tip__badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.training-tip__title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.training-tip__icon {
+    font-size: 1.25rem;
+}
+
+.training-tip__category {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.training-tip--opportunity .training-tip__category {
+    color: var(--color-success);
+}
+
+.training-tip--warning .training-tip__category {
+    color: #fbbf24;
+}
+
+.training-tip--strategy .training-tip__category {
+    color: #60a5fa;
+}
+
+.training-tip--info .training-tip__category {
+    color: var(--color-text-muted);
+}
+
+.training-tip__message {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--color-text);
+}
+
+/* Training tip area on game board */
+.game-board__training-tip {
+    position: absolute;
+    bottom: calc(100% + var(--spacing-md));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px;
+    z-index: 100;
+}
+
+/* Card Animations */
+.card--animating {
+    animation: cardPlay 0.5s ease forwards;
+}
+
+@keyframes cardPlay {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1) translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.table__card--captured {
+    animation: cardCapture 0.6s ease forwards;
+}
+
+@keyframes cardCapture {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px var(--color-accent);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+}
+
+.hand__card--played {
+    animation: cardFromHand 0.4s ease forwards;
+}
+
+@keyframes cardFromHand {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+}
+
+/* Chkobba celebration animation */
+.chkobba-flash {
+    animation: chkobbaFlash 0.8s ease;
+}
+
+@keyframes chkobbaFlash {
+    0%,
+    100% {
+        background: var(--color-felt);
+    }
+    25%,
+    75% {
+        background: linear-gradient(var(--color-felt), rgba(255, 215, 0, 0.3));
+    }
+    50% {
+        background: linear-gradient(var(--color-felt), rgba(255, 215, 0, 0.5));
     }
 }

@@ -5,6 +5,7 @@
 import React from 'react';
 import CardComponent from './Card';
 import { Card } from '../types/Card';
+import { AnimationState } from '../types/GameState';
 
 interface TableProps {
     cards: Card[];
@@ -12,14 +13,25 @@ interface TableProps {
     validCaptures: Card[][];
     onCardSelect?: (card: Card) => void;
     disabled?: boolean;
+    animatingCardIds?: string[];
+    animationType?: AnimationState['type'];
 }
 
-const Table: React.FC<TableProps> = ({ cards, selectedCards, validCaptures, onCardSelect, disabled = false }) => {
+const Table: React.FC<TableProps> = ({
+    cards,
+    selectedCards,
+    validCaptures,
+    onCardSelect,
+    disabled = false,
+    animatingCardIds = [],
+    animationType = 'none',
+}) => {
     // Flatten valid captures to see which cards can be captured
     const capturableCardIds = new Set(validCaptures.flat().map((c) => c.id));
+    const animatingSet = new Set(animatingCardIds);
 
     return (
-        <div className='table'>
+        <div className={`table ${animationType !== 'none' ? `table--animation-${animationType}` : ''}`}>
             <div className='table__felt'>
                 <div className='table__cards'>
                     {cards.length === 0 ? (
@@ -28,7 +40,7 @@ const Table: React.FC<TableProps> = ({ cards, selectedCards, validCaptures, onCa
                         cards.map((card, index) => (
                             <div
                                 key={card.id}
-                                className='table__card'
+                                className={`table__card ${animatingSet.has(card.id) ? 'table__card--animating' : ''}`}
                                 style={
                                     {
                                         '--card-index': index,
@@ -42,6 +54,7 @@ const Table: React.FC<TableProps> = ({ cards, selectedCards, validCaptures, onCa
                                     highlighted={capturableCardIds.has(card.id)}
                                     onClick={onCardSelect && !disabled ? () => onCardSelect(card) : undefined}
                                     disabled={disabled || !capturableCardIds.has(card.id)}
+                                    animating={animatingSet.has(card.id)}
                                 />
                             </div>
                         ))

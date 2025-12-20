@@ -13,6 +13,7 @@ interface CardProps {
     onClick?: () => void;
     disabled?: boolean;
     small?: boolean;
+    animating?: boolean;
 }
 
 /**
@@ -43,6 +44,7 @@ const CardComponent: React.FC<CardProps> = ({
     onClick,
     disabled = false,
     small = false,
+    animating = false,
 }) => {
     const imageUrl = faceDown ? CARD_BACK_URL : getCardImageUrl(card);
     const color = getSuitColor(card.suit);
@@ -61,6 +63,7 @@ const CardComponent: React.FC<CardProps> = ({
         small ? 'card--small' : '',
         faceDown ? 'card--facedown' : '',
         color === 'red' ? 'card--red' : 'card--black',
+        animating ? 'card--animating' : '',
     ]
         .filter(Boolean)
         .join(' ');

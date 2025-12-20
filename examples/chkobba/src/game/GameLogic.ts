@@ -10,8 +10,8 @@
  * - Chkobba: Clearing table with a number card (2-7) = +1 point
  */
 
-import { Card, isPictureCard, canMakeChkobba, createDeck, shuffleDeck } from '../types/Card';
-import { GameState, Player, RoundScore, GameScores, createPlayerState } from '../types/GameState';
+import { Card, isPictureCard, canMakeChkobba, createDeck, shuffleDeck, getCardName } from '../types/Card';
+import { GameState, Player, RoundScore, GameScores, createPlayerState, createGameAction } from '../types/GameState';
 
 /**
  * Find all valid capture combinations for a played card
@@ -96,6 +96,14 @@ export function dealInitialCards(state: GameState): GameState {
     // Non-dealer starts
     const currentPlayer: Player = state.dealer === 'human' ? 'npc' : 'human';
 
+    // Create action log entry
+    const dealAction = createGameAction(
+        'system',
+        'deal',
+        `Neue Runde! ${table.map(c => getCardName(c)).join(', ')} auf dem Tisch.`,
+        table
+    );
+
     return {
         ...state,
         deck,
@@ -115,6 +123,8 @@ export function dealInitialCards(state: GameState): GameState {
         selectedCard: null,
         selectedTableCards: [],
         validCaptures: [],
+        actionLog: [...state.actionLog, dealAction],
+        animation: { type: 'deal' },
     };
 }
 
@@ -163,11 +173,19 @@ export function executeCapture(
     // Check for Chkobba (table cleared by a number card 2-7, not Ace, not picture card)
     let chkobbas = playerState.chkobbas;
     let message = `${player === 'human' ? 'You' : 'NPC'} captured ${capturedCards.length + 1} cards!`;
+    let actionType: 'capture' | 'chkobba' | 'picture-capture' = isPictureCard(playedCard) ? 'picture-capture' : 'capture';
+    let logMessage = `${player === 'human' ? 'Du' : 'NPC'} spielt ${getCardName(playedCard)} und nimmt ${capturedCards.map(c => getCardName(c)).join(', ')}.`;
 
     if (newTable.length === 0 && canMakeChkobba(playedCard)) {
         chkobbas++;
         message = `CHKOBBA! ${player === 'human' ? 'You' : 'NPC'} cleared the table!`;
+        actionType = 'chkobba';
+        logMessage = `🎯 CHKOBBA! ${player === 'human' ? 'Du' : 'NPC'} räumt den Tisch mit ${getCardName(playedCard)}!`;
+    } else if (isPictureCard(playedCard)) {
+        logMessage = `${player === 'human' ? 'Du' : 'NPC'} spielt Bildkarte ${getCardName(playedCard)} und nimmt ALLE Tischkarten!`;
     }
+
+    const captureAction = createGameAction(player, actionType, logMessage, [playedCard, ...capturedCards]);
 
     const newState: GameState = {
         ...state,
@@ -183,6 +201,13 @@ export function executeCapture(
         selectedCard: null,
         selectedTableCards: [],
         validCaptures: [],
+        actionLog: [...state.actionLog, captureAction],
+        animation: {
+            type: actionType === 'chkobba' ? 'chkobba' : 'card-capture',
+            cardId: playedCard.id,
+            targetCards: capturedCards.map(c => c.id),
+            player,
+        },
     };
 
     return switchTurn(newState);
@@ -196,6 +221,13 @@ export function executeDrop(state: GameState, player: Player, playedCard: Card):
     const newHand = playerState.hand.filter(c => c.id !== playedCard.id);
     const newTable = [...state.table, playedCard];
 
+    const dropAction = createGameAction(
+        player,
+        'drop',
+        `${player === 'human' ? 'Du' : 'NPC'} legt ${getCardName(playedCard)} ab.`,
+        [playedCard]
+    );
+
     const newState: GameState = {
         ...state,
         table: newTable,
@@ -207,6 +239,12 @@ export function executeDrop(state: GameState, player: Player, playedCard: Card):
         selectedCard: null,
         selectedTableCards: [],
         validCaptures: [],
+        actionLog: [...state.actionLog, dropAction],
+        animation: {
+            type: 'card-play',
+            cardId: playedCard.id,
+            player,
+        },
     };
 
     return switchTurn(newState);

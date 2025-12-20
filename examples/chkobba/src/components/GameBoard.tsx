@@ -7,11 +7,15 @@ import Hand from './Hand';
 import Table from './Table';
 import Deck from './Deck';
 import ScoreDisplay from './ScoreDisplay';
+import MessageLog from './MessageLog';
+import TrainingTip from './TrainingTip';
 import { GameState } from '../types/GameState';
 import { Card } from '../types/Card';
+import { Tip } from '../game/TrainingTips';
 
 interface GameBoardProps {
     state: GameState;
+    trainingTip: Tip | null;
     onCardSelect: (card: Card) => void;
     onTableCardSelect: (card: Card) => void;
     onConfirmCapture: () => void;
@@ -20,6 +24,7 @@ interface GameBoardProps {
 
 const GameBoard: React.FC<GameBoardProps> = ({
     state,
+    trainingTip,
     onCardSelect,
     onTableCardSelect,
     onConfirmCapture,
@@ -29,8 +34,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
     const hasSelectedCard = state.selectedCard !== null;
     const hasValidCaptures = state.validCaptures.length > 0;
 
+    // Determine animation classes
+    const getAnimationClass = (): string => {
+        if (state.animation.type === 'none') return '';
+        return `game-board--animating game-board--animation-${state.animation.type}`;
+    };
+
     return (
-        <div className='game-board'>
+        <div className={`game-board ${getAnimationClass()}`}>
             <div className='game-board__header'>
                 <ScoreDisplay
                     humanScore={state.humanTotalScore}
@@ -42,46 +53,69 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 />
             </div>
 
-            <div className='game-board__main'>
-                {/* NPC Hand */}
-                <div className='game-board__npc-area'>
-                    <Hand cards={state.npc.hand} isHuman={false} selectedCard={null} disabled={true} />
-                </div>
-
-                {/* Center area with table and deck */}
-                <div className='game-board__center'>
-                    <div className='game-board__deck-area'>
-                        <Deck cardsRemaining={state.deck.length} />
-                        <div className='game-board__captured'>
-                            <div className='captured-pile'>
-                                <span className='captured-pile__label'>Your captures</span>
-                                <span className='captured-pile__count'>{state.human.capturedCards.length}</span>
-                            </div>
-                            <div className='captured-pile captured-pile--npc'>
-                                <span className='captured-pile__label'>NPC captures</span>
-                                <span className='captured-pile__count'>{state.npc.capturedCards.length}</span>
-                            </div>
-                        </div>
+            <div className='game-board__body'>
+                <div className='game-board__main'>
+                    {/* NPC Hand */}
+                    <div className='game-board__npc-area'>
+                        <Hand
+                            cards={state.npc.hand}
+                            isHuman={false}
+                            selectedCard={null}
+                            disabled={true}
+                            animatingCardId={state.animation.player === 'npc' ? state.animation.cardId : undefined}
+                        />
                     </div>
 
-                    <Table
-                        cards={state.table}
-                        selectedCards={state.selectedTableCards}
-                        validCaptures={state.validCaptures}
-                        onCardSelect={hasSelectedCard && hasValidCaptures ? onTableCardSelect : undefined}
-                        disabled={!isHumanTurn || state.isAnimating}
-                    />
+                    {/* Center area with table and deck */}
+                    <div className='game-board__center'>
+                        <div className='game-board__deck-area'>
+                            <Deck cardsRemaining={state.deck.length} />
+                            <div className='game-board__captured'>
+                                <div className='captured-pile'>
+                                    <span className='captured-pile__label'>Your captures</span>
+                                    <span className='captured-pile__count'>{state.human.capturedCards.length}</span>
+                                </div>
+                                <div className='captured-pile captured-pile--npc'>
+                                    <span className='captured-pile__label'>NPC captures</span>
+                                    <span className='captured-pile__count'>{state.npc.capturedCards.length}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Table
+                            cards={state.table}
+                            selectedCards={state.selectedTableCards}
+                            validCaptures={state.validCaptures}
+                            onCardSelect={hasSelectedCard && hasValidCaptures ? onTableCardSelect : undefined}
+                            disabled={!isHumanTurn || state.isAnimating}
+                            animatingCardIds={state.animation.targetCards}
+                            animationType={state.animation.type}
+                        />
+                    </div>
+
+                    {/* Human Hand */}
+                    <div className='game-board__human-area'>
+                        <Hand
+                            cards={state.human.hand}
+                            isHuman={true}
+                            selectedCard={state.selectedCard}
+                            onCardSelect={onCardSelect}
+                            disabled={!isHumanTurn || state.isAnimating || hasSelectedCard}
+                            animatingCardId={state.animation.player === 'human' ? state.animation.cardId : undefined}
+                        />
+                    </div>
+
+                    {/* Training tip */}
+                    {state.trainingMode && isHumanTurn && (
+                        <div className='game-board__training-tip'>
+                            <TrainingTip tip={trainingTip} enabled={state.trainingMode} />
+                        </div>
+                    )}
                 </div>
 
-                {/* Human Hand */}
-                <div className='game-board__human-area'>
-                    <Hand
-                        cards={state.human.hand}
-                        isHuman={true}
-                        selectedCard={state.selectedCard}
-                        onCardSelect={onCardSelect}
-                        disabled={!isHumanTurn || state.isAnimating || hasSelectedCard}
-                    />
+                {/* Message Log sidebar */}
+                <div className='game-board__sidebar'>
+                    <MessageLog actions={state.actionLog} />
                 </div>
             </div>
 

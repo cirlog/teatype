@@ -13,8 +13,10 @@ const App: React.FC = () => {
     const {
         state,
         roundScores,
+        trainingTip,
         setDifficulty,
         setTargetScore,
+        setTrainingMode,
         handleStartGame,
         handleContinueRound,
         handlePlayAgain,
@@ -31,8 +33,10 @@ const App: React.FC = () => {
                 <MainMenu
                     difficulty={state.difficulty}
                     targetScore={state.targetScore}
+                    trainingMode={state.trainingMode}
                     onDifficultyChange={setDifficulty}
                     onTargetScoreChange={setTargetScore}
+                    onTrainingModeChange={setTrainingMode}
                     onStartGame={handleStartGame}
                 />
             )}
@@ -40,6 +44,7 @@ const App: React.FC = () => {
             {state.phase === 'playing' && (
                 <GameBoard
                     state={state}
+                    trainingTip={trainingTip}
                     onCardSelect={handleCardSelect}
                     onTableCardSelect={handleTableCardSelect}
                     onConfirmCapture={handleConfirmCapture}
@@ -51,6 +56,7 @@ const App: React.FC = () => {
                 <>
                     <GameBoard
                         state={state}
+                        trainingTip={null}
                         onCardSelect={() => {}}
                         onTableCardSelect={() => {}}
                         onConfirmCapture={() => {}}
@@ -68,6 +74,7 @@ const App: React.FC = () => {
                 <>
                     <GameBoard
                         state={state}
+                        trainingTip={null}
                         onCardSelect={() => {}}
                         onTableCardSelect={() => {}}
                         onConfirmCapture={() => {}}

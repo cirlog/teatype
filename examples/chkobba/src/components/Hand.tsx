@@ -12,16 +12,24 @@ interface HandProps {
     selectedCard: Card | null;
     onCardSelect?: (card: Card) => void;
     disabled?: boolean;
+    animatingCardId?: string;
 }
 
-const Hand: React.FC<HandProps> = ({ cards, isHuman, selectedCard, onCardSelect, disabled = false }) => {
+const Hand: React.FC<HandProps> = ({
+    cards,
+    isHuman,
+    selectedCard,
+    onCardSelect,
+    disabled = false,
+    animatingCardId,
+}) => {
     return (
         <div className={`hand ${isHuman ? 'hand--human' : 'hand--npc'}`}>
             <div className='hand__cards'>
                 {cards.map((card, index) => (
                     <div
                         key={card.id}
-                        className='hand__card'
+                        className={`hand__card ${animatingCardId === card.id ? 'hand__card--animating' : ''}`}
                         style={
                             {
                                 '--card-index': index,
@@ -35,6 +43,7 @@ const Hand: React.FC<HandProps> = ({ cards, isHuman, selectedCard, onCardSelect,
                             selected={selectedCard?.id === card.id}
                             onClick={isHuman && onCardSelect ? () => onCardSelect(card) : undefined}
                             disabled={disabled || !isHuman}
+                            animating={animatingCardId === card.id}
                         />
                     </div>
                 ))}

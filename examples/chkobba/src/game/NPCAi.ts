@@ -94,7 +94,7 @@ function selectMove(state: GameState): Move {
  * Select best capture from multiple options
  */
 function selectBestCapture(
-    card: Card,
+    _card: Card,
     captures: Card[][],
     state: GameState,
     difficulty: Difficulty
@@ -289,9 +289,9 @@ function selectExpertMove(moves: Move[], state: GameState): Move {
             ...state.table,
         ];
 
-        // Calculate remaining sevens and diamonds
-        const remainingSevens = 4 - playedCards.filter(c => c.rank === 7).length;
-        const remainingDiamonds = 10 - playedCards.filter(c => c.suit === 'diamonds').length;
+        // Calculate remaining sevens and diamonds for future use
+        const _remainingSevens = 4 - playedCards.filter(c => c.rank === 7).length;
+        const _remainingDiamonds = 10 - playedCards.filter(c => c.suit === 'diamonds').length;
 
         // Adjust strategy based on remaining cards
         if (move.capture) {

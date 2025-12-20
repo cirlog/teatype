@@ -4,20 +4,25 @@
 
 import React from 'react';
 import { Difficulty } from '../types/GameState';
+import { getRandomStrategyTip } from '../game/TrainingTips';
 
 interface MainMenuProps {
     difficulty: Difficulty;
     targetScore: number;
+    trainingMode: boolean;
     onDifficultyChange: (difficulty: Difficulty) => void;
     onTargetScoreChange: (score: number) => void;
+    onTrainingModeChange: (enabled: boolean) => void;
     onStartGame: () => void;
 }
 
 const MainMenu: React.FC<MainMenuProps> = ({
     difficulty,
     targetScore,
+    trainingMode,
     onDifficultyChange,
     onTargetScoreChange,
+    onTrainingModeChange,
     onStartGame,
 }) => {
     const difficulties: { value: Difficulty; label: string; description: string }[] = [
@@ -28,6 +33,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
     ];
 
     const scoreOptions = [7, 11, 15, 21];
+    const [strategyTip] = React.useState(() => getRandomStrategyTip());
 
     return (
         <div className='main-menu'>
@@ -67,11 +73,43 @@ const MainMenu: React.FC<MainMenuProps> = ({
                         ))}
                     </div>
                 </div>
+
+                <div className='option-group'>
+                    <label className='option-label'>Training Mode</label>
+                    <button
+                        className={`training-toggle ${trainingMode ? 'training-toggle--active' : ''}`}
+                        onClick={() => onTrainingModeChange(!trainingMode)}
+                    >
+                        <span className='training-toggle__icon'>{trainingMode ? '💡' : '🎓'}</span>
+                        <div className='training-toggle__content'>
+                            <span className='training-toggle__label'>
+                                {trainingMode ? 'Training Mode ON' : 'Training Mode OFF'}
+                            </span>
+                            <span className='training-toggle__desc'>
+                                {trainingMode
+                                    ? 'Tips and best moves will be shown during gameplay'
+                                    : 'Enable to see strategic tips during the game'}
+                            </span>
+                        </div>
+                        <span className='training-toggle__switch'>
+                            <span className='training-toggle__switch-knob' />
+                        </span>
+                    </button>
+                </div>
             </div>
 
             <button className='btn btn--primary btn--large' onClick={onStartGame}>
                 Start Game
             </button>
+
+            {/* Strategy tip of the day */}
+            <div className='main-menu__tip'>
+                <div className='strategy-tip'>
+                    <span className='strategy-tip__badge'>💡 Strategie-Tipp</span>
+                    <h4 className='strategy-tip__title'>{strategyTip.title}</h4>
+                    <p className='strategy-tip__message'>{strategyTip.message}</p>
+                </div>
+            </div>
 
             <div className='main-menu__rules'>
                 <h3>Quick Rules</h3>

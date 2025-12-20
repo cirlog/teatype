@@ -2,7 +2,7 @@
  * Custom hook for managing game state
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { GameState, Difficulty, createInitialGameState } from '../types/GameState';
 import { Card, isPictureCard } from '../types/Card';
 import {
@@ -14,11 +14,33 @@ import {
     calculateRoundScores
 } from '../game/GameLogic';
 import { executeNPCTurn, getNPCThinkingTime } from '../game/NPCAi';
+import { getTrainingTip, Tip } from '../game/TrainingTips';
 
 export function useGameState() {
     const [state, setState] = useState<GameState>(createInitialGameState());
     const [roundScores, setRoundScores] = useState<ReturnType<typeof calculateRoundScores> | null>(null);
     const npcTurnRef = useRef<boolean>(false);
+
+    // Calculate training tip when it's human's turn
+    const trainingTip: Tip | null = useMemo(() => {
+        if (state.trainingMode && state.currentPlayer === 'human' && state.phase === 'playing') {
+            return getTrainingTip(state);
+        }
+        return null;
+    }, [state.trainingMode, state.currentPlayer, state.phase, state.human.hand, state.table]);
+
+    // Clear animation after a delay
+    useEffect(() => {
+        if (state.animation.type !== 'none') {
+            const timeout = setTimeout(() => {
+                setState(prev => ({
+                    ...prev,
+                    animation: { type: 'none' },
+                }));
+            }, 600);
+            return () => clearTimeout(timeout);
+        }
+    }, [state.animation]);
 
     // Handle NPC turn
     useEffect(() => {
@@ -68,6 +90,10 @@ export function useGameState() {
         setState(prev => ({ ...prev, targetScore }));
     }, []);
 
+    const setTrainingMode = useCallback((trainingMode: boolean) => {
+        setState(prev => ({ ...prev, trainingMode }));
+    }, []);
+
     const handleStartGame = useCallback(() => {
         setState(prev => startNewGame(prev));
     }, []);
@@ -83,6 +109,7 @@ export function useGameState() {
             ...createInitialGameState(),
             difficulty: prev.difficulty,
             targetScore: prev.targetScore,
+            trainingMode: prev.trainingMode,
         }));
         setTimeout(() => {
             setState(prev => startNewGame(prev));
@@ -95,6 +122,7 @@ export function useGameState() {
             ...createInitialGameState(),
             difficulty: prev.difficulty,
             targetScore: prev.targetScore,
+            trainingMode: prev.trainingMode,
         }));
     }, []);
 
@@ -188,8 +216,10 @@ export function useGameState() {
     return {
         state,
         roundScores,
+        trainingTip,
         setDifficulty,
         setTargetScore,
+        setTrainingMode,
         handleStartGame,
         handleContinueRound,
         handlePlayAgain,
