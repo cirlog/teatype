@@ -105,7 +105,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
             {/* Strategy tip of the day */}
             <div className='main-menu__tip'>
                 <div className='strategy-tip'>
-                    <span className='strategy-tip__badge'>💡 Strategie-Tipp</span>
+                    <span className='strategy-tip__badge'>💡 Strategy Tip</span>
                     <h4 className='strategy-tip__title'>{strategyTip.title}</h4>
                     <p className='strategy-tip__message'>{strategyTip.message}</p>
                 </div>

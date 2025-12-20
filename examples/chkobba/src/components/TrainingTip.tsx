@@ -32,7 +32,7 @@ const TrainingTip: React.FC<TrainingTipProps> = ({ tip, enabled }) => {
     return (
         <div className={`training-tip ${getCategoryClass(tip.category)}`}>
             <div className='training-tip__header'>
-                <span className='training-tip__badge'>💡 TIPP</span>
+                <span className='training-tip__badge'>💡 TIP</span>
                 <span className='training-tip__title'>{tip.title}</span>
             </div>
             <p className='training-tip__message'>{tip.message}</p>

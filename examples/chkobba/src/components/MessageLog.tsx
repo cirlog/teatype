@@ -61,12 +61,12 @@ const MessageLog: React.FC<MessageLogProps> = ({ actions, maxVisible = 15 }) => 
     return (
         <div className='message-log'>
             <div className='message-log__header'>
-                <span className='message-log__title'>📜 Spielverlauf</span>
-                <span className='message-log__count'>{totalActions} Aktionen</span>
+                <span className='message-log__title'>📜 Game Log</span>
+                <span className='message-log__count'>{totalActions} actions</span>
             </div>
             <div className='message-log__content' ref={logRef}>
                 {visibleActions.length === 0 ? (
-                    <div className='message-log__empty'>Noch keine Aktionen...</div>
+                    <div className='message-log__empty'>No actions yet...</div>
                 ) : (
                     visibleActions.map((action, index) => (
                         <div key={action.id} className={getActionClass(action, index)}>

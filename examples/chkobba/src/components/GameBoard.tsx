@@ -90,6 +90,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                             disabled={!isHumanTurn || state.isAnimating}
                             animatingCardIds={state.animation.targetCards}
                             animationType={state.animation.type}
+                            animatingPlayer={state.animation.player}
                         />
                     </div>
 

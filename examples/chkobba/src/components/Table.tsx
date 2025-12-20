@@ -5,7 +5,7 @@
 import React from 'react';
 import CardComponent from './Card';
 import { Card } from '../types/Card';
-import { AnimationState } from '../types/GameState';
+import { AnimationState, Player } from '../types/GameState';
 
 interface TableProps {
     cards: Card[];
@@ -15,6 +15,7 @@ interface TableProps {
     disabled?: boolean;
     animatingCardIds?: string[];
     animationType?: AnimationState['type'];
+    animatingPlayer?: Player;
 }
 
 const Table: React.FC<TableProps> = ({
@@ -25,13 +26,23 @@ const Table: React.FC<TableProps> = ({
     disabled = false,
     animatingCardIds = [],
     animationType = 'none',
+    animatingPlayer,
 }) => {
     // Flatten valid captures to see which cards can be captured
     const capturableCardIds = new Set(validCaptures.flat().map((c) => c.id));
     const animatingSet = new Set(animatingCardIds);
 
+    // Build table class with animation context
+    const tableClass = [
+        'table',
+        animationType !== 'none' ? `table--animation-${animationType}` : '',
+        animatingPlayer ? `table--capture-${animatingPlayer}` : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
+
     return (
-        <div className={`table ${animationType !== 'none' ? `table--animation-${animationType}` : ''}`}>
+        <div className={tableClass}>
             <div className='table__felt'>
                 <div className='table__cards'>
                     {cards.length === 0 ? (

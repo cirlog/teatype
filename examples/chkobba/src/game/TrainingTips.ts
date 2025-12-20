@@ -37,8 +37,8 @@ export function getTrainingTip(state: GameState): Tip | null {
                 if (remainingTable.length === 0) {
                     tips.push({
                         priority: 100,
-                        title: '🎯 CHKOBBA MÖGLICH!',
-                        message: `Spiele die ${card.rank} um alle Karten zu nehmen und einen Chkobba-Punkt zu bekommen!`,
+                        title: '🎯 CHKOBBA POSSIBLE!',
+                        message: `Play your ${card.rank} to capture all cards and score a Chkobba point!`,
                         category: 'opportunity',
                     });
                 }
@@ -50,7 +50,7 @@ export function getTrainingTip(state: GameState): Tip | null {
             tips.push({
                 priority: 95,
                 title: '💎 7♦ Sette di Deneri!',
-                message: `Du kannst die 7♦ nehmen - das ist ein garantierter Punkt!`,
+                message: `You can capture the 7♦ - that's a guaranteed point!`,
                 category: 'opportunity',
             });
         }
@@ -60,8 +60,8 @@ export function getTrainingTip(state: GameState): Tip | null {
         if (capturedSevens.length >= 2) {
             tips.push({
                 priority: 85,
-                title: '7️⃣ Siebener-Gelegenheit',
-                message: `Du kannst ${capturedSevens.length} Siebener auf einmal nehmen!`,
+                title: '7️⃣ Seven Opportunity',
+                message: `You can capture ${capturedSevens.length} sevens at once!`,
                 category: 'opportunity',
             });
         }
@@ -71,8 +71,8 @@ export function getTrainingTip(state: GameState): Tip | null {
         if (capturedDiamonds.length >= 3) {
             tips.push({
                 priority: 80,
-                title: '♦ Karo-Sammlung',
-                message: `Gute Chance ${capturedDiamonds.length} Karo-Karten zu sammeln!`,
+                title: '♦ Diamond Collection',
+                message: `Good chance to collect ${capturedDiamonds.length} diamond cards!`,
                 category: 'opportunity',
             });
         }
@@ -87,8 +87,8 @@ export function getTrainingTip(state: GameState): Tip | null {
         if (normalCards.length > 0 && table.length < 4) {
             tips.push({
                 priority: 70,
-                title: '⚠️ Bildkarten-Strategie',
-                message: 'Halte deine Bildkarten (8/9/10) zurück! Sie sind Kontroll-Waffen, nicht frühe Beute.',
+                title: '⚠️ Picture Card Strategy',
+                message: 'Hold your picture cards (8/9/10)! They are control weapons, not early loot.',
                 category: 'strategy',
             });
         }
@@ -97,8 +97,8 @@ export function getTrainingTip(state: GameState): Tip | null {
         if (state.deck.length === 0 && pictureCards.length > 0) {
             tips.push({
                 priority: 90,
-                title: '🏆 Endgame-Vorteil!',
-                message: 'Du hast die letzte Bildkarte! Spiele sie zum Schluss um ALLE Tischkarten zu bekommen.',
+                title: '🏆 Endgame Advantage!',
+                message: 'You have the last picture card! Play it at the end to take ALL table cards.',
                 category: 'strategy',
             });
         }
@@ -115,8 +115,8 @@ export function getTrainingTip(state: GameState): Tip | null {
                 if (captures.length === 0) {
                     tips.push({
                         priority: 60,
-                        title: '⚠️ Vorsicht beim Ablegen!',
-                        message: `Die ${card.rank} würde eine Tischsumme von ${newTableSum} erzeugen - leicht für den Gegner!`,
+                        title: '⚠️ Careful When Dropping!',
+                        message: `Your ${card.rank} would create a table sum of ${newTableSum} - easy for opponent!`,
                         category: 'warning',
                     });
                 }
@@ -131,14 +131,14 @@ export function getTrainingTip(state: GameState): Tip | null {
         if (aceCaptures.length > 0 && aceCaptures.some(c => c.length === 1)) {
             tips.push({
                 priority: 55,
-                title: '🅰️ Ass als Werkzeug',
-                message: 'Das Ass kann einzelne Karten wegschnappen - perfekt zum Zerstören gefährlicher Tischbilder!',
+                title: '🅰️ Ace as Tool',
+                message: 'The Ace can snatch single cards - perfect for breaking dangerous table patterns!',
                 category: 'info',
             });
         }
     }
 
-    // 7er Memory tip
+    // 7s tracking tip
     const humanSevens = state.human.capturedCards.filter(c => c.rank === 7).length;
     const npcSevens = state.npc.capturedCards.filter(c => c.rank === 7).length;
     const tableSevens = table.filter(c => c.rank === 7).length;
@@ -146,8 +146,8 @@ export function getTrainingTip(state: GameState): Tip | null {
     if (humanSevens < npcSevens && tableSevens > 0) {
         tips.push({
             priority: 75,
-            title: '7️⃣ Siebener-Aufholjagd',
-            message: `Der Gegner führt ${npcSevens}:${humanSevens} bei Siebenern. Versuche die 7 auf dem Tisch zu holen!`,
+            title: '7️⃣ Sevens Chase',
+            message: `Opponent leads ${npcSevens}:${humanSevens} in sevens. Try to grab the 7 on the table!`,
             category: 'warning',
         });
     }
@@ -159,8 +159,8 @@ export function getTrainingTip(state: GameState): Tip | null {
     if (npcDiamonds > humanDiamonds + 2) {
         tips.push({
             priority: 65,
-            title: '♦ Karo-Rückstand',
-            message: `Gegner führt ${npcDiamonds}:${humanDiamonds} bei Karos. Priorisiere Karo-Karten!`,
+            title: '♦ Diamond Deficit',
+            message: `Opponent leads ${npcDiamonds}:${humanDiamonds} in diamonds. Prioritize diamond cards!`,
             category: 'warning',
         });
     }
@@ -173,8 +173,8 @@ export function getTrainingTip(state: GameState): Tip | null {
         if (npcCards > humanCards + 5) {
             tips.push({
                 priority: 50,
-                title: '📊 Kartenmehrheit',
-                message: `Der Gegner hat ${npcCards} Karten, du nur ${humanCards}. Nimm mehr Karten!`,
+                title: '📊 Card Majority',
+                message: `Opponent has ${npcCards} cards, you only have ${humanCards}. Capture more cards!`,
                 category: 'info',
             });
         }
@@ -203,8 +203,8 @@ export function getTrainingTip(state: GameState): Tip | null {
             const bestDrop = dropPriority[0];
             tips.push({
                 priority: 40,
-                title: '📤 Ablegen',
-                message: `Kein Stechen möglich. Die ${bestDrop.rank} ist die sicherste Karte zum Ablegen.`,
+                title: '📤 Drop Card',
+                message: `No capture possible. The ${bestDrop.rank} is the safest card to drop.`,
                 category: 'info',
             });
         }
@@ -222,50 +222,50 @@ export function getRandomStrategyTip(): Tip {
     const strategies: Tip[] = [
         {
             priority: 0,
-            title: '🎴 Bildkarten = Kontrolle',
-            message: '8/9/10 NIE sofort spielen. Sie sind Reset-Knöpfe, Chkobba-Blocker und Endgame-Waffen.',
+            title: '🎴 Picture Cards = Control',
+            message: 'NEVER play 8/9/10 immediately. They are reset buttons, Chkobba blockers, and endgame weapons.',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '❌ Keine einfachen Summen',
-            message: 'Vermeide Kombinationen wie 3+4, 2+5, 1+6 auf dem Tisch. Lieber einzelne Karten oder >5.',
+            title: '❌ No Easy Sums',
+            message: 'Avoid combinations like 3+4, 2+5, 1+6 on the table. Better to leave single cards or totals >7.',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '7️⃣ Siebener-Memory',
-            message: '7♦ merken oder sterben! Jeder gespielte 7er verändert das Spiel.',
+            title: '7️⃣ Seven Memory',
+            message: 'Track the 7♦ or lose! Every played seven changes the game.',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '🅰️ Ass ist ein Werkzeug',
-            message: 'Perfekt zum Wegnehmen einzelner Karten. Nie auf Chkobba spielen!',
+            title: '🅰️ Ace is a Tool',
+            message: 'Perfect for snatching single cards. Never play it hoping for Chkobba!',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '🏆 Endgame-Checkmate',
-            message: 'Letzte Bildkarte = lass bewusst Karten liegen, nimm am Schluss ALLES.',
+            title: '🏆 Endgame Checkmate',
+            message: 'Last picture card = intentionally leave cards, then take EVERYTHING at the end.',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '🧠 Rechnerisch spielen',
-            message: 'Spiele vermeidend, kalt, rechnerisch. Das ist brutal effektiv gegen intuitive Spieler.',
+            title: '🧠 Play Calculatively',
+            message: 'Play avoidant, cold, calculated. This is brutally effective against intuitive players.',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '💎 Karo-Priorität',
-            message: 'Karo-Karten bringen Punkte! Besonders die 7♦ ist Gold wert.',
+            title: '💎 Diamond Priority',
+            message: 'Diamond cards score points! Especially the 7♦ is worth gold.',
             category: 'strategy',
         },
         {
             priority: 0,
-            title: '🃏 Letzte Stich-Regel',
-            message: 'Wer zuletzt sticht, bekommt alle verbleibenden Tischkarten!',
+            title: '🃏 Last Capture Rule',
+            message: 'Whoever captures last gets all remaining table cards!',
             category: 'info',
         },
     ];

@@ -1230,72 +1230,309 @@ h6 {
     z-index: 100;
 }
 
-/* Card Animations */
-.card--animating {
-    animation: cardPlay 0.5s ease forwards;
+/* ==========================================
+   CARD ANIMATIONS - Visual Card Movement
+   ========================================== */
+
+/* Base transition for all cards */
+.card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
 }
 
-@keyframes cardPlay {
+/* Card being played from hand - flies to table */
+.hand__card--animating {
+    animation: cardPlayToTable 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    z-index: 1000;
+}
+
+@keyframes cardPlayToTable {
     0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1) translateY(-10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-.table__card--captured {
-    animation: cardCapture 0.6s ease forwards;
-}
-
-@keyframes cardCapture {
-    0% {
+        transform: translateY(0) scale(1);
         opacity: 1;
+    }
+    30% {
+        transform: translateY(-30px) scale(1.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    100% {
+        transform: translateY(-150px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* NPC card being played - flies down to table */
+.hand--npc .hand__card--animating {
+    animation: npcCardPlayToTable 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes npcCardPlayToTable {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    30% {
+        transform: translateY(30px) scale(1.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    100% {
+        transform: translateY(150px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Card appearing on table after being played */
+.table__card--new {
+    animation: cardAppearOnTable 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cardAppearOnTable {
+    0% {
+        transform: scale(0.5) translateY(-50px);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.1) translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Cards being captured - glow and fly away */
+.table__card--animating {
+    animation: cardBeingCaptured 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    z-index: 100;
+}
+
+@keyframes cardBeingCaptured {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    30% {
+        transform: scale(1.2) rotate(5deg);
+        box-shadow: 0 0 30px var(--color-accent), 0 0 60px rgba(255, 215, 0, 0.5);
+    }
+    100% {
+        transform: scale(0.3) rotate(-10deg) translateY(100px);
+        opacity: 0;
+    }
+}
+
+/* Cards captured by NPC - fly upward */
+.table--capture-npc .table__card--animating {
+    animation: cardCapturedByNpc 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cardCapturedByNpc {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    30% {
+        transform: scale(1.2) rotate(-5deg);
+        box-shadow: 0 0 30px var(--color-primary), 0 0 60px rgba(233, 69, 96, 0.5);
+    }
+    100% {
+        transform: scale(0.3) rotate(10deg) translateY(-100px);
+        opacity: 0;
+    }
+}
+
+/* Chkobba celebration - bigger, flashier animation */
+.table--animation-chkobba .table__card--animating {
+    animation: chkobbaCapture 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes chkobbaCapture {
+    0% {
         transform: scale(1);
+        opacity: 1;
+    }
+    20% {
+        transform: scale(1.3);
+        box-shadow: 0 0 50px var(--color-accent), 0 0 100px rgba(255, 215, 0, 0.8);
     }
     50% {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px var(--color-accent);
+        transform: scale(1.5) rotate(360deg);
+        box-shadow: 0 0 80px var(--color-accent);
     }
     100% {
-        opacity: 0;
-        transform: scale(0.8) translateY(-20px);
-    }
-}
-
-.hand__card--played {
-    animation: cardFromHand 0.4s ease forwards;
-}
-
-@keyframes cardFromHand {
-    0% {
-        transform: translateY(0);
-    }
-    100% {
-        transform: translateY(-50px);
+        transform: scale(0) rotate(720deg);
         opacity: 0;
     }
 }
 
-/* Chkobba celebration animation */
-.chkobba-flash {
-    animation: chkobbaFlash 0.8s ease;
+/* Table flash on Chkobba */
+.table--animation-chkobba .table__felt {
+    animation: chkobbaTableFlash 0.8s ease;
 }
 
-@keyframes chkobbaFlash {
+@keyframes chkobbaTableFlash {
     0%,
     100% {
         background: var(--color-felt);
+        box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.3);
     }
     25%,
     75% {
-        background: linear-gradient(var(--color-felt), rgba(255, 215, 0, 0.3));
+        background: linear-gradient(135deg, var(--color-felt), rgba(255, 215, 0, 0.2));
+        box-shadow: inset 0 0 50px rgba(255, 215, 0, 0.3), 0 0 30px rgba(255, 215, 0, 0.5);
     }
     50% {
-        background: linear-gradient(var(--color-felt), rgba(255, 215, 0, 0.5));
+        background: linear-gradient(135deg, var(--color-felt), rgba(255, 215, 0, 0.4));
+        box-shadow: inset 0 0 80px rgba(255, 215, 0, 0.5), 0 0 50px rgba(255, 215, 0, 0.8);
+    }
+}
+
+/* Card highlight pulse when it's a valid capture target */
+.card--highlighted {
+    animation: highlightPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes highlightPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 10px var(--color-success), 0 0 20px rgba(74, 222, 128, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--color-success), 0 0 40px rgba(74, 222, 128, 0.5);
+    }
+}
+
+/* Selected card bounce */
+.card--selected {
+    animation: selectedBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(-16px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 20px var(--color-primary);
+}
+
+@keyframes selectedBounce {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-20px) scale(1.1);
+    }
+    100% {
+        transform: translateY(-16px) scale(1.05);
+    }
+}
+
+/* Deal animation for new cards */
+.hand__card {
+    animation: cardDealt 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    animation-delay: calc(var(--card-index, 0) * 0.1s);
+}
+
+@keyframes cardDealt {
+    0% {
+        transform: translateX(-200px) rotate(-20deg);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Table card entrance */
+.table__card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Capture pile animation */
+.captured-pile__count {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.captured-pile--updated .captured-pile__count {
+    animation: countBump 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes countBump {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+        color: var(--color-accent);
+    }
+}
+
+/* Thinking indicator pulse */
+.thinking-indicator {
+    display: flex;
+    gap: 4px;
+}
+
+.thinking-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-text-muted);
+    border-radius: 50%;
+    animation: thinkingPulse 1.4s ease-in-out infinite;
+}
+
+.thinking-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.thinking-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes thinkingPulse {
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+        background: var(--color-primary);
+    }
+}
+
+/* Message appear animation */
+.message {
+    animation: messageAppear 0.3s ease;
+}
+
+@keyframes messageAppear {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chkobba message special animation */
+.message--chkobba {
+    animation: chkobbaMessage 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--color-accent) !important;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+@keyframes chkobbaMessage {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
     }
 }
