@@ -17,15 +17,15 @@
 import React from 'react';
 
 // Types
-import { iTip } from '../engine/TrainingTips';
+import { iTip } from '@/engine/TrainingTips';
 
 interface iTrainingTipProps {
     tip: iTip | null;
     enabled: boolean;
 }
 
-const TrainingTip: React.FC<iTrainingTipProps> = ({ tip, enabled }) => {
-    if (!enabled || !tip) {
+const TrainingTip: React.FC<iTrainingTipProps> = (props) => {
+    if (!props.enabled || !props.tip) {
         return null;
     }
 
@@ -42,12 +42,12 @@ const TrainingTip: React.FC<iTrainingTipProps> = ({ tip, enabled }) => {
     };
 
     return (
-        <div className={`training-tip ${getCategoryClass(tip.category)}`}>
+        <div className={`training-tip ${getCategoryClass(props.tip.category)}`}>
             <div className='training-tip-header'>
                 <span className='training-tip-badge'>💡 TIP</span>
-                <span className='training-tip-title'>{tip.title}</span>
+                <span className='training-tip-title'>{props.tip.title}</span>
             </div>
-            <p className='training-tip-message'>{tip.message}</p>
+            <p className='training-tip-message'>{props.tip.message}</p>
         </div>
     );
 };

@@ -20,41 +20,41 @@
  * Values: Ace = 1, 2-7 = face value, J=8, Q=9, K=10
  * All cards can capture by matching sums - no special "picture card" rules
  */
-export type tSuit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
-export type tRank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'J' | 'Q' | 'K';
+type tSuit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
+type tRank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'J' | 'Q' | 'K';
 
-export interface iCard {
+interface iCard {
     id: string;
     suit: tSuit;
     rank: tRank;
     value: number; // For gameplay calculations
 }
 
-export const SUITS: tSuit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
-export const RANKS: tRank[] = [1, 2, 3, 4, 5, 6, 7, 'J', 'Q', 'K'];
+const SUITS: tSuit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
+const RANKS: tRank[] = [1, 2, 3, 4, 5, 6, 7, 'J', 'Q', 'K'];
 
 // Face cards (J, Q, K) - in French Chkobba these are just higher value cards
-export const FACE_CARDS: tRank[] = ['J', 'Q', 'K'];
+const FACE_CARDS: tRank[] = ['J', 'Q', 'K'];
 
 // Rank values for gameplay calculations
-export const RANK_VALUES: Record<tRank, number> = {
+const RANK_VALUES: Record<tRank, number> = {
     1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 'J': 8, 'Q': 9, 'K': 10
 };
 
 // Cards that can make Chkobba (2-7 and face cards, not Ace)
-export const CHKOBBA_ELIGIBLE_RANKS: tRank[] = [2, 3, 4, 5, 6, 7, 'J', 'Q', 'K'];
+const CHKOBBA_ELIGIBLE_RANKS: tRank[] = [2, 3, 4, 5, 6, 7, 'J', 'Q', 'K'];
 
 /**
  * Create a unique card ID
  */
-export function createCardId(suit: tSuit, rank: tRank): string {
+const createCardId = (suit: tSuit, rank: tRank): string => {
     return `${suit}-${rank}`;
 }
 
 /**
  * Create a single card
  */
-export function createCard(suit: tSuit, rank: tRank): iCard {
+const createCard = (suit: tSuit, rank: tRank): iCard => {
     return {
         id: createCardId(suit, rank),
         suit,
@@ -66,7 +66,7 @@ export function createCard(suit: tSuit, rank: tRank): iCard {
 /**
  * Create a full 40-card deck
  */
-export function createDeck(): iCard[] {
+const createDeck = (): iCard[] => {
     const deck: iCard[] = [];
     for (const suit of SUITS) {
         for (const rank of RANKS) {
@@ -79,7 +79,7 @@ export function createDeck(): iCard[] {
 /**
  * Fisher-Yates shuffle algorithm
  */
-export function shuffleDeck(deck: iCard[]): iCard[] {
+const shuffleDeck = (deck: iCard[]): iCard[] => {
     const shuffled = [...deck];
     for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -92,21 +92,21 @@ export function shuffleDeck(deck: iCard[]): iCard[] {
  * Check if a card is a face card (J, Q, K)
  * In French Chkobba, these are regular cards with higher values
  */
-export function isFaceCard(card: iCard): boolean {
+const isFaceCard = (card: iCard): boolean => {
     return FACE_CARDS.includes(card.rank);
 }
 
 /**
  * Check if a card can make a Chkobba (2-7 only, not Ace)
  */
-export function canMakeChkobba(card: iCard): boolean {
+const canMakeChkobba = (card: iCard): boolean => {
     return CHKOBBA_ELIGIBLE_RANKS.includes(card.rank);
 }
 
 /**
  * Get card display name
  */
-export function getCardName(card: iCard): string {
+const getCardName = (card: iCard): string => {
     const rankNames: Record<tRank, string> = {
         1: 'A',
         2: '2',
@@ -133,6 +133,24 @@ export function getCardName(card: iCard): string {
 /**
  * Get suit color
  */
-export function getSuitColor(suit: tSuit): 'red' | 'black' {
+const getSuitColor = (suit: tSuit): 'red' | 'black' => {
     return suit === 'hearts' || suit === 'diamonds' ? 'red' : 'black';
 }
+
+export {
+    SUITS,
+    RANKS,
+
+    createDeck,
+    shuffleDeck,
+    isFaceCard,
+    canMakeChkobba,
+    getCardName,
+    getSuitColor
+};
+
+export type {
+    iCard,
+    tSuit,
+    tRank
+};

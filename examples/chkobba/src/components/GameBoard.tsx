@@ -17,17 +17,17 @@
 import React from 'react';
 
 // Components
-import Hand from './Hand';
-import Table from './Table';
-import Deck from './Deck';
-import ScoreDisplay from './ScoreDisplay';
-import MessageLog from './MessageLog';
-import TrainingTip from './TrainingTip';
+import Hand from '@/components/Hand';
+import Table from '@/components/Table';
+import Deck from '@/components/Deck';
+import ScoreDisplay from '@/components/ScoreDisplay';
+import MessageLog from '@/components/MessageLog';
+import TrainingTip from '@/components/TrainingTip';
 
 // Types
-import { iTip } from '../engine/TrainingTips';
-import { iGameState } from '../types/GameState';
-import { iCard } from '../types/Card';
+import { iTip } from '@/engine/TrainingTips';
+import { iGameState } from '@/types/GameState';
+import { iCard } from '@/types/Card';
 
 interface iGameBoardProps {
     state: iGameState;
@@ -39,35 +39,27 @@ interface iGameBoardProps {
     onCancelSelection: () => void;
 }
 
-const GameBoard: React.FC<iGameBoardProps> = ({
-    state,
-    trainingTip,
-
-    onCardSelect,
-    onTableCardSelect,
-    onConfirmCapture,
-    onCancelSelection,
-}) => {
-    const isHumanTurn = state.currentPlayer === 'human';
-    const hasSelectedCard = state.selectedCard !== null;
-    const hasValidCaptures = state.validCaptures.length > 0;
+const GameBoard: React.FC<iGameBoardProps> = (props) => {
+    const isHumanTurn = props.state.currentPlayer === 'human';
+    const hasSelectedCard = props.state.selectedCard !== null;
+    const hasValidCaptures = props.state.validCaptures.length > 0;
 
     // Determine animation classes
     const getAnimationClass = (): string => {
-        if (state.animation.type === 'none') return '';
-        return `game-board--animating game-board--animation-${state.animation.type}`;
+        if (props.state.animation.type === 'none') return '';
+        return `game-board--animating game-board--animation-${props.state.animation.type}`;
     };
 
     return (
         <div className={`game-board ${getAnimationClass()}`}>
             <div className='game-board-header'>
                 <ScoreDisplay
-                    humanScore={state.humanTotalScore}
-                    npcScore={state.npcTotalScore}
-                    humanChkobbas={state.human.chkobbas}
-                    npcChkobbas={state.npc.chkobbas}
-                    targetScore={state.targetScore}
-                    roundNumber={state.roundNumber}
+                    humanScore={props.state.humanTotalScore}
+                    npcScore={props.state.npcTotalScore}
+                    humanChkobbas={props.state.human.chkobbas}
+                    npcChkobbas={props.state.npc.chkobbas}
+                    targetScore={props.state.targetScore}
+                    roundNumber={props.state.roundNumber}
                 />
             </div>
 
@@ -76,57 +68,63 @@ const GameBoard: React.FC<iGameBoardProps> = ({
                     {/* NPC Hand */}
                     <div className='game-board-npc-area'>
                         <Hand
-                            cards={state.npc.hand}
+                            cards={props.state.npc.hand}
                             isHuman={false}
                             selectedCard={null}
                             disabled={true}
-                            animatingCardId={state.animation.player === 'npc' ? state.animation.cardId : undefined}
+                            animatingCardId={
+                                props.state.animation.player === 'npc' ? props.state.animation.cardId : undefined
+                            }
                         />
                     </div>
 
                     {/* Center area with table and deck */}
                     <div className='game-board-center'>
                         <div className='game-board-deck-area'>
-                            <Deck cardsRemaining={state.deck.length} />
+                            <Deck cardsRemaining={props.state.deck.length} />
                             <div className='game-board-captured'>
                                 <div className='captured-pile'>
                                     <span className='captured-pile-label'>You captured:</span>
-                                    <span className='captured-pile-count'>{state.human.capturedCards.length}</span>
+                                    <span className='captured-pile-count'>
+                                        {props.state.human.capturedCards.length}
+                                    </span>
                                 </div>
                                 <div className='captured-pile captured-pile--npc'>
                                     <span className='captured-pile-label'>NPC captured:</span>
-                                    <span className='captured-pile-count'>{state.npc.capturedCards.length}</span>
+                                    <span className='captured-pile-count'>{props.state.npc.capturedCards.length}</span>
                                 </div>
                             </div>
                         </div>
 
                         <Table
-                            cards={state.table}
-                            selectedCards={state.selectedTableCards}
-                            validCaptures={state.validCaptures}
-                            onCardSelect={hasSelectedCard && hasValidCaptures ? onTableCardSelect : undefined}
-                            disabled={!isHumanTurn || state.isAnimating}
-                            animatingCardIds={state.animation.targetCards}
-                            animationType={state.animation.type}
-                            animatingPlayer={state.animation.player}
+                            cards={props.state.table}
+                            selectedCards={props.state.selectedTableCards}
+                            validCaptures={props.state.validCaptures}
+                            onCardSelect={hasSelectedCard && hasValidCaptures ? props.onTableCardSelect : undefined}
+                            disabled={!isHumanTurn || props.state.isAnimating}
+                            animatingCardIds={props.state.animation.targetCards}
+                            animationType={props.state.animation.type}
+                            animatingPlayer={props.state.animation.player}
                         />
                     </div>
 
                     {/* Human Hand */}
                     <div className='game-board-human-area'>
                         <Hand
-                            cards={state.human.hand}
+                            cards={props.state.human.hand}
                             isHuman={true}
-                            selectedCard={state.selectedCard}
-                            onCardSelect={onCardSelect}
-                            disabled={!isHumanTurn || state.isAnimating || hasSelectedCard}
-                            animatingCardId={state.animation.player === 'human' ? state.animation.cardId : undefined}
+                            selectedCard={props.state.selectedCard}
+                            onCardSelect={props.onCardSelect}
+                            disabled={!isHumanTurn || props.state.isAnimating || hasSelectedCard}
+                            animatingCardId={
+                                props.state.animation.player === 'human' ? props.state.animation.cardId : undefined
+                            }
                         />
 
                         {/* Training tip */}
-                        {state.trainingMode && isHumanTurn && (
+                        {props.state.trainingMode && isHumanTurn && (
                             <div className='game-board-training-tip'>
-                                <TrainingTip tip={trainingTip} enabled={state.trainingMode} />
+                                <TrainingTip tip={props.trainingTip} enabled={props.state.trainingMode} />
                             </div>
                         )}
                     </div>
@@ -134,27 +132,27 @@ const GameBoard: React.FC<iGameBoardProps> = ({
 
                 {/* Message Log sidebar */}
                 <div className='game-board-sidebar'>
-                    <MessageLog actions={state.actionLog} />
+                    <MessageLog actions={props.state.actionLog} />
                 </div>
             </div>
 
             {/* Action bar */}
             <div className='game-board-actions'>
-                <div className={`message ${state.message.includes('CHKOBBA') ? 'message--chkobba' : ''}`}>
-                    {state.message}
+                <div className={`message ${props.state.message.includes('CHKOBBA') ? 'message--chkobba' : ''}`}>
+                    {props.state.message}
                 </div>
 
-                {hasSelectedCard && hasValidCaptures && state.validCaptures.length > 1 && (
+                {hasSelectedCard && hasValidCaptures && props.state.validCaptures.length > 1 && (
                     <div className='action-buttons'>
                         <span className='action-hint'>Click table cards to select, then confirm</span>
                         <button
                             className='btn btn--primary'
-                            onClick={onConfirmCapture}
-                            disabled={state.selectedTableCards.length === 0}
+                            onClick={props.onConfirmCapture}
+                            disabled={props.state.selectedTableCards.length === 0}
                         >
                             Confirm Capture
                         </button>
-                        <button className='btn btn--secondary' onClick={onCancelSelection}>
+                        <button className='btn btn--secondary' onClick={props.onCancelSelection}>
                             Cancel
                         </button>
                     </div>

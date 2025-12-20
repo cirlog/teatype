@@ -17,25 +17,27 @@
 import React, { useEffect, useRef } from 'react';
 
 // Types
-import { iGameAction } from '../types/GameState';
+import { iGameAction } from '@/types/GameState';
 
 interface iMessageLogProps {
     actions: iGameAction[];
     maxVisible?: number;
 }
 
-const MessageLog: React.FC<iMessageLogProps> = ({ actions, maxVisible = 15 }) => {
+const MessageLog: React.FC<iMessageLogProps> = (props) => {
     const logRef = useRef<HTMLDivElement>(null);
+
+    const maxVisible = props.maxVisible ?? 15;
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
         if (logRef.current) {
             logRef.current.scrollTop = logRef.current.scrollHeight;
         }
-    }, [actions.length]);
+    }, [props.actions.length]);
 
-    const visibleActions = actions.slice(-maxVisible);
-    const totalActions = actions.length;
+    const visibleActions = props.actions.slice(-maxVisible);
+    const totalActions = props.actions.length;
 
     const getActionIcon = (action: iGameAction): string => {
         switch (action.type) {
@@ -44,10 +46,11 @@ const MessageLog: React.FC<iMessageLogProps> = ({ actions, maxVisible = 15 }) =>
             case 'capture':
                 return '✋';
             case 'drop':
-                return '📤';
+                return '👇';
             case 'deal':
-                return '🎴';
+                return '🎲';
             case 'info':
+                return 'ℹ️';
             default:
                 return 'ℹ️';
         }

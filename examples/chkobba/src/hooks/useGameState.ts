@@ -25,12 +25,12 @@ import {
     executeDrop,
     calculateRoundScores
 } from '../engine/GameLogic';
-import { executeNPCTurn, getNPCThinkingTime } from '../engine/AI';
-import { getTrainingTip, iTip } from '../engine/TrainingTips';
+import { executeNPCTurn, getNPCThinkingTime } from '@/engine/AI';
+import { getTrainingTip, iTip } from '@/engine/TrainingTips';
 
 // Types
-import { iCard } from '../types/Card';
-import { iGameState, tDifficulty, createInitialGameState } from '../types/GameState';
+import { iCard } from '@/types/Card';
+import { iGameState, tDifficulty, createInitialGameState } from '@/types/GameState';
 
 const useGameState = () => {
     const [state, setState] = useState<iGameState>(createInitialGameState());

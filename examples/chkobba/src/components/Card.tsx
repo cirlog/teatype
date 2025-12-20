@@ -17,25 +17,28 @@
 import React from 'react';
 
 // Types
-import { iCard, getSuitColor } from '../types/Card';
+import { iCard, getSuitColor } from '@/types/Card';
 
 interface iCardProps {
-    card: iCard;
-    faceDown?: boolean;
-    selected?: boolean;
-    highlighted?: boolean;
-    onClick?: () => void;
-    disabled?: boolean;
-    small?: boolean;
     animating?: boolean;
+    card: iCard;
+    disabled?: boolean;
+    faceDown?: boolean;
+    highlighted?: boolean;
+    selected?: boolean;
+    small?: boolean;
+
+    onClick?: () => void;
 }
+
+const CARD_BACK_URL = '/cards/back.png';
 
 /**
  * Get local card image URL
  * Card codes: A, 2-7, J, Q, K + S (spades), H (hearts), D (diamonds), C (clubs)
  * Images stored in /public/cards/
  */
-function getCardImageUrl(card: iCard): string {
+const getCardImageUrl = (card: iCard): string => {
     // Map rank to image code
     const rankCode = card.rank === 1 ? 'A' : card.rank.toString();
     const suitCode = {
@@ -46,26 +49,22 @@ function getCardImageUrl(card: iCard): string {
     }[card.suit];
 
     return `/cards/${rankCode}${suitCode}.png`;
-}
+};
 
-const CARD_BACK_URL = '/cards/back.png';
+const CardComponent: React.FC<iCardProps> = (props) => {
+    const animating = props.animating ?? false;
+    const disabled = props.disabled ?? false;
+    const faceDown = props.faceDown ?? false;
+    const highlighted = props.highlighted ?? false;
+    const selected = props.selected ?? false;
+    const small = props.small ?? false;
 
-const CardComponent: React.FC<iCardProps> = ({
-    card,
-    faceDown = false,
-    selected = false,
-    highlighted = false,
-    onClick,
-    disabled = false,
-    small = false,
-    animating = false,
-}) => {
-    const imageUrl = faceDown ? CARD_BACK_URL : getCardImageUrl(card);
-    const color = getSuitColor(card.suit);
+    const imageUrl = faceDown ? CARD_BACK_URL : getCardImageUrl(props.card);
+    const color = getSuitColor(props.card.suit);
 
     const handleClick = () => {
-        if (!disabled && onClick) {
-            onClick();
+        if (!disabled && props.onClick) {
+            props.onClick();
         }
     };
 
@@ -86,11 +85,13 @@ const CardComponent: React.FC<iCardProps> = ({
         <div className={cardClass} onClick={handleClick}>
             <img
                 src={imageUrl}
-                alt={faceDown ? 'Card back' : `${card.rank} of ${card.suit}`}
+                alt={faceDown ? 'Card back' : `${props.card.rank} of ${props.card.suit}`}
                 className='card-image'
                 draggable={false}
             />
+
             {selected && <div className='card-selection-indicator' />}
+
             {highlighted && <div className='card-highlight-indicator' />}
         </div>
     );

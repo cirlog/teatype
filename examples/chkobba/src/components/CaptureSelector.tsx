@@ -17,29 +17,32 @@
 import React from 'react';
 
 // Components
-import CardComponent from './Card';
+import CardComponent from '@/components/Card';
 
 // Types
-import { iCard } from '../types/Card';
+import { iCard } from '@/types/Card';
 
 interface iCaptureSelectorProps {
-    playedCard: iCard;
     captures: iCard[][];
-    onSelect: (capture: iCard[]) => void;
+    playedCard: iCard;
+
     onCancel: () => void;
+    onSelect: (capture: iCard[]) => void;
 }
 
-const CaptureSelector: React.FC<iCaptureSelectorProps> = ({ playedCard, captures, onSelect, onCancel }) => {
+const CaptureSelector: React.FC<iCaptureSelectorProps> = (props) => {
     return (
         <div className='modal-overlay'>
             <div className='modal capture-selector'>
                 <h3>Select cards to capture</h3>
+
                 <p>
-                    Your card: <strong>{playedCard.rank}</strong> (value: {playedCard.value})
+                    Your card: <strong>{props.playedCard.rank}</strong> (value: {props.playedCard.value})
                 </p>
+
                 <div className='capture-options'>
-                    {captures.map((capture, index) => (
-                        <div key={index} className='capture-option' onClick={() => onSelect(capture)}>
+                    {props.captures.map((capture, index) => (
+                        <div key={index} className='capture-option' onClick={() => props.onSelect(capture)}>
                             <div className='capture-option-cards'>
                                 {capture.map((card) => (
                                     <CardComponent key={card.id} card={card} small />
@@ -49,7 +52,8 @@ const CaptureSelector: React.FC<iCaptureSelectorProps> = ({ playedCard, captures
                         </div>
                     ))}
                 </div>
-                <button className='btn btn--secondary' onClick={onCancel}>
+
+                <button className='btn btn--secondary' onClick={props.onCancel}>
                     Cancel
                 </button>
             </div>

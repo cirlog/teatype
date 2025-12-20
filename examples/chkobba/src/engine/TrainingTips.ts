@@ -14,13 +14,13 @@
  */
 
 // Components
-import { findValidCaptures } from './GameLogic';
+import { findValidCaptures } from '@/engine/GameLogic';
 
 // Types
-import { isFaceCard, canMakeChkobba, getCardName } from '../types/Card';
-import { iGameState } from '../types/GameState';
+import { isFaceCard, canMakeChkobba, getCardName } from '@/types/Card';
+import { iGameState } from '@/types/GameState';
 
-export interface iTip {
+interface iTip {
     priority: number; // Higher = more important
     title: string;
     message: string;
@@ -30,7 +30,7 @@ export interface iTip {
 /**
  * Analyze the current game state and provide the best tip
  */
-export function getTrainingTip(state: iGameState): iTip | null {
+const getTrainingTip = (state: iGameState): iTip | null => {
     if (state.currentPlayer !== 'human' || state.human.hand.length === 0) {
         return null;
     }
@@ -214,3 +214,7 @@ export function getTrainingTip(state: iGameState): iTip | null {
     tips.sort((a, b) => b.priority - a.priority);
     return tips[0] || null;
 }
+
+export { getTrainingTip };
+
+export type { iTip };

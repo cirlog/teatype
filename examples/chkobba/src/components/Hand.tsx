@@ -17,33 +17,29 @@
 import React from 'react';
 
 // Components
-import CardComponent from './Card';
+import CardComponent from '@/components/Card';
 
 // Types
-import { iCard } from '../types/Card';
+import { iCard } from '@/types/Card';
 
 interface iHandProps {
+    animatingCardId?: string;
     cards: iCard[];
+    disabled?: boolean;
     isHuman: boolean;
     selectedCard: iCard | null;
+
     onCardSelect?: (card: iCard) => void;
-    disabled?: boolean;
-    animatingCardId?: string;
 }
 
-const Hand: React.FC<iHandProps> = ({
-    cards,
-    isHuman,
-    selectedCard,
-    onCardSelect,
-    disabled = false,
-    animatingCardId,
-}) => {
+const Hand: React.FC<iHandProps> = (props) => {
+    const disabled = props.disabled ?? false;
+
     return (
-        <div className={`hand ${isHuman ? 'hand--human' : 'hand--npc'}`}>
+        <div className={`hand ${props.isHuman ? 'hand--human' : 'hand--npc'}`}>
             <div className='hand-cards'>
-                {cards.map((card, index) => {
-                    const isAnimating = animatingCardId === card.id;
+                {props.cards.map((card, index) => {
+                    const isAnimating = props.animatingCardId === card.id;
                     return (
                         <div
                             key={card.id}
@@ -57,18 +53,20 @@ const Hand: React.FC<iHandProps> = ({
                         >
                             <CardComponent
                                 card={card}
-                                faceDown={!isHuman}
-                                selected={selectedCard?.id === card.id}
-                                onClick={isHuman && onCardSelect ? () => onCardSelect(card) : undefined}
-                                disabled={disabled || !isHuman}
+                                faceDown={!props.isHuman}
+                                selected={props.selectedCard?.id === card.id}
+                                onClick={
+                                    props.isHuman && props.onCardSelect ? () => props.onCardSelect(card) : undefined
+                                }
+                                disabled={disabled || !props.isHuman}
                                 animating={isAnimating}
                             />
                         </div>
                     );
                 })}
             </div>
-            {!isHuman && <div className='hand-label'>NPC's Hand ({cards.length} cards)</div>}
-            {isHuman && <div className='hand-label'>Your Hand</div>}
+            {!props.isHuman && <div className='hand-label'>NPC's Hand ({props.cards.length} cards)</div>}
+            {props.isHuman && <div className='hand-label'>Your Hand</div>}
         </div>
     );
 };

@@ -14,14 +14,14 @@
  */
 
 // Types
-import { iCard, canMakeChkobba, createDeck, shuffleDeck, getCardName } from '../types/Card';
-import { iGameState, tPlayer, iRoundScore, iGameScores, createPlayerState, createGameAction } from '../types/GameState';
+import { iCard, canMakeChkobba, createDeck, shuffleDeck, getCardName } from '@/types/Card';
+import { iGameState, tPlayer, iRoundScore, iGameScores, createPlayerState, createGameAction } from '@/types/GameState';
 
 /**
  * Find all valid capture combinations for a played card
  * In French Chkobba, all cards capture by sum (J=8, Q=9, K=10)
  */
-export function findValidCaptures(playedCard: iCard, tableCards: iCard[]): iCard[][] {
+const findValidCaptures = (playedCard: iCard, tableCards: iCard[]): iCard[][] => {
     // All cards find combinations that sum to the card value
     const targetSum = playedCard.value;
     const combinations: iCard[][] = [];
@@ -53,7 +53,7 @@ export function findValidCaptures(playedCard: iCard, tableCards: iCard[]): iCard
  * Check if the initial table setup allows immediate Chkobba
  * If so, we need to reshuffle
  */
-export function canMakeImmediateChkobba(tableCards: iCard[]): boolean {
+const canMakeImmediateChkobba = (tableCards: iCard[]): boolean => {
     // Check if any single card from a potential hand could clear the table
     // This is simplified - just check if table sum could be achieved by 2-7, J, Q, or K
     const tableSum = tableCards.reduce((sum, c) => sum + c.value, 0);
@@ -68,7 +68,7 @@ export function canMakeImmediateChkobba(tableCards: iCard[]): boolean {
 /**
  * Deal initial cards for a new round
  */
-export function dealInitialCards(state: iGameState): iGameState {
+const dealInitialCards = (state: iGameState): iGameState => {
     let deck = shuffleDeck(createDeck());
     let table: iCard[] = [];
 
@@ -122,7 +122,7 @@ export function dealInitialCards(state: iGameState): iGameState {
 /**
  * Deal new hands when both players have played all cards
  */
-export function dealNewHands(state: iGameState): iGameState {
+const dealNewHands = (state: iGameState): iGameState => {
     if (state.deck.length === 0) {
         // No more cards - end round
         return endRound(state);
@@ -150,12 +150,7 @@ export function dealNewHands(state: iGameState): iGameState {
 /**
  * Execute a capture move
  */
-export function executeCapture(
-    state: iGameState,
-    player: tPlayer,
-    playedCard: iCard,
-    capturedCards: iCard[]
-): iGameState {
+const executeCapture = (state: iGameState, player: tPlayer, playedCard: iCard, capturedCards: iCard[]): iGameState => {
     const iPlayerState = state[player];
     const newHand = iPlayerState.hand.filter(c => c.id !== playedCard.id);
     const newCaptured = [...iPlayerState.capturedCards, playedCard, ...capturedCards];
@@ -205,7 +200,7 @@ export function executeCapture(
 /**
  * Execute a drop move (when no capture is possible)
  */
-export function executeDrop(state: iGameState, player: tPlayer, playedCard: iCard): iGameState {
+const executeDrop = (state: iGameState, player: tPlayer, playedCard: iCard): iGameState => {
     const iPlayerState = state[player];
     const newHand = iPlayerState.hand.filter(c => c.id !== playedCard.id);
     const newTable = [...state.table, playedCard];
@@ -242,7 +237,7 @@ export function executeDrop(state: iGameState, player: tPlayer, playedCard: iCar
 /**
  * Switch to the next player's turn
  */
-function switchTurn(state: iGameState): iGameState {
+const switchTurn = (state: iGameState): iGameState => {
     const nextPlayer: tPlayer = state.currentPlayer === 'human' ? 'npc' : 'human';
 
     // Check if both players need new cards
@@ -263,7 +258,7 @@ function switchTurn(state: iGameState): iGameState {
 /**
  * End the current round and calculate scores
  */
-export function endRound(state: iGameState): iGameState {
+const endRound = (state: iGameState): iGameState => {
     // Last player to capture gets remaining table cards
     let finalState = { ...state };
     if (state.lastCapturePlayer && state.table.length > 0) {
@@ -293,7 +288,7 @@ export function endRound(state: iGameState): iGameState {
 /**
  * Calculate round scores according to Tunisian rules
  */
-export function calculateRoundScores(state: iGameState): iGameScores {
+const calculateRoundScores = (state: iGameState): iGameScores => {
     const humanCards = state.human.capturedCards;
     const npcCards = state.npc.capturedCards;
 
@@ -337,7 +332,7 @@ export function calculateRoundScores(state: iGameState): iGameScores {
 /**
  * Start a new round
  */
-export function startNewRound(state: iGameState): iGameState {
+const startNewRound = (state: iGameState): iGameState => {
     // Check for game end
     if (state.humanTotalScore >= state.targetScore || state.npcTotalScore >= state.targetScore) {
         return {
@@ -366,7 +361,7 @@ export function startNewRound(state: iGameState): iGameState {
 /**
  * Start a new game
  */
-export function startNewGame(state: iGameState): iGameState {
+const startNewGame = (state: iGameState): iGameState => {
     const newState: iGameState = {
         ...state,
         phase: 'playing',
@@ -392,11 +387,7 @@ export function startNewGame(state: iGameState): iGameState {
 /**
  * Validate and execute a human player's move
  */
-export function executeHumanMove(
-    state: iGameState,
-    playedCard: iCard,
-    selectedCapture: iCard[] | null
-): iGameState {
+const executeHumanMove = (state: iGameState, playedCard: iCard, selectedCapture: iCard[] | null): iGameState => {
     if (state.currentPlayer !== 'human') {
         return { ...state, message: "It's not your turn!" };
     }
@@ -428,3 +419,17 @@ export function executeHumanMove(
     // No capture possible - drop the card
     return executeDrop(state, 'human', playedCard);
 }
+
+export {
+    findValidCaptures,
+    dealInitialCards,
+    dealNewHands,
+    executeCapture,
+    executeDrop,
+    switchTurn,
+    endRound,
+    calculateRoundScores,
+    startNewRound,
+    startNewGame,
+    executeHumanMove,
+};

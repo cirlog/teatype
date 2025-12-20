@@ -12,6 +12,8 @@
     },
     "dependencies": {
         "@teatype/base-config": "workspace:*",
+        "@teatype/components": "workspace:*",
+        "@teatype/hooks": "workspace:*",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
     },

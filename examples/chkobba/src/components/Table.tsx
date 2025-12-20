@@ -17,42 +17,38 @@
 import React from 'react';
 
 // Components
-import CardComponent from './Card';
+import CardComponent from '@/components/Card';
 
 // Types
-import { iCard } from '../types/Card';
-import { iAnimationState, tPlayer } from '../types/GameState';
+import { iCard } from '@/types/Card';
+import { iAnimationState, tPlayer } from '@/types/GameState';
 
 interface iTableProps {
+    animationType?: iAnimationState['type'];
+    animatingCardIds?: string[];
+    animatingPlayer?: tPlayer;
     cards: iCard[];
+    disabled?: boolean;
     selectedCards: iCard[];
     validCaptures: iCard[][];
+
     onCardSelect?: (card: iCard) => void;
-    disabled?: boolean;
-    animatingCardIds?: string[];
-    animationType?: iAnimationState['type'];
-    animatingPlayer?: tPlayer;
 }
 
-const Table: React.FC<iTableProps> = ({
-    cards,
-    selectedCards,
-    validCaptures,
-    onCardSelect,
-    disabled = false,
-    animatingCardIds = [],
-    animationType = 'none',
-    animatingPlayer,
-}) => {
+const Table: React.FC<iTableProps> = (props) => {
+    const disabled = props.disabled ?? false;
+    const animatingCardIds = props.animatingCardIds ?? [];
+    const animationType = props.animationType ?? 'none';
+
     // Flatten valid captures to see which cards can be captured
-    const capturableCardIds = new Set(validCaptures.flat().map((c) => c.id));
+    const capturableCardIds = new Set(props.validCaptures.flat().map((c) => c.id));
     const animatingSet = new Set(animatingCardIds);
 
     // Build table class with animation context
     const tableClass = [
         'table',
         animationType !== 'none' ? `table--animation-${animationType}` : '',
-        animatingPlayer ? `table--capture-${animatingPlayer}` : '',
+        props.animatingPlayer ? `table--capture-${props.animatingPlayer}` : '',
     ]
         .filter(Boolean)
         .join(' ');
@@ -61,25 +57,27 @@ const Table: React.FC<iTableProps> = ({
         <div className={tableClass}>
             <div className='table-felt'>
                 <div className='table-cards'>
-                    {cards.length === 0 ? (
+                    {props.cards.length === 0 ? (
                         <div className='table-empty'>Table is empty</div>
                     ) : (
-                        cards.map((card, index) => (
+                        props.cards.map((card, index) => (
                             <div
                                 key={card.id}
                                 className={`table-card ${animatingSet.has(card.id) ? 'table-card--animating' : ''}`}
                                 style={
                                     {
                                         '--card-index': index,
-                                        '--total-cards': cards.length,
+                                        '--total-cards': props.cards.length,
                                     } as React.CSSProperties
                                 }
                             >
                                 <CardComponent
                                     card={card}
-                                    selected={selectedCards.some((sc) => sc.id === card.id)}
+                                    selected={props.selectedCards.some((sc) => sc.id === card.id)}
                                     highlighted={capturableCardIds.has(card.id)}
-                                    onClick={onCardSelect && !disabled ? () => onCardSelect(card) : undefined}
+                                    onClick={
+                                        props.onCardSelect && !disabled ? () => props.onCardSelect(card) : undefined
+                                    }
                                     disabled={disabled || !capturableCardIds.has(card.id)}
                                     animating={animatingSet.has(card.id)}
                                 />
@@ -88,7 +86,7 @@ const Table: React.FC<iTableProps> = ({
                     )}
                 </div>
             </div>
-            <div className='table-label'>Table ({cards.length} cards)</div>
+            <div className='table-label'>Table ({props.cards.length} cards)</div>
         </div>
     );
 };

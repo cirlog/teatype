@@ -17,27 +17,20 @@
 import React from 'react';
 
 // Types
-import { tDifficulty } from '../types/GameState';
+import { tDifficulty } from '@/types/GameState';
 
 interface iMainMenuProps {
     difficulty: tDifficulty;
     targetScore: number;
     trainingMode: boolean;
+
     onDifficultyChange: (difficulty: tDifficulty) => void;
     onTargetScoreChange: (score: number) => void;
     onTrainingModeChange: (enabled: boolean) => void;
     onStartGame: () => void;
 }
 
-const MainMenu: React.FC<iMainMenuProps> = ({
-    difficulty,
-    targetScore,
-    trainingMode,
-    onDifficultyChange,
-    onTargetScoreChange,
-    onTrainingModeChange,
-    onStartGame,
-}) => {
+const MainMenu: React.FC<iMainMenuProps> = (props) => {
     const difficulties: { value: tDifficulty; label: string; description: string }[] = [
         { value: 'easy', label: 'Noob', description: 'Random moves, forgiving play' },
         { value: 'medium', label: 'Casual', description: 'Basic strategy, occasional mistakes' },
@@ -61,8 +54,10 @@ const MainMenu: React.FC<iMainMenuProps> = ({
                         {difficulties.map((d) => (
                             <button
                                 key={d.value}
-                                className={`difficulty-btn ${difficulty === d.value ? 'difficulty-btn--active' : ''}`}
-                                onClick={() => onDifficultyChange(d.value)}
+                                className={`difficulty-btn ${
+                                    props.difficulty === d.value ? 'difficulty-btn--active' : ''
+                                }`}
+                                onClick={() => props.onDifficultyChange(d.value)}
                             >
                                 <span className='difficulty-btn-label'>{d.label}</span>
                                 <span className='difficulty-btn-desc'>{d.description}</span>
@@ -77,8 +72,8 @@ const MainMenu: React.FC<iMainMenuProps> = ({
                         {scoreOptions.map((score) => (
                             <button
                                 key={score}
-                                className={`score-btn ${targetScore === score ? 'score-btn--active' : ''}`}
-                                onClick={() => onTargetScoreChange(score)}
+                                className={`score-btn ${props.targetScore === score ? 'score-btn--active' : ''}`}
+                                onClick={() => props.onTargetScoreChange(score)}
                             >
                                 {score}
                             </button>
@@ -89,16 +84,16 @@ const MainMenu: React.FC<iMainMenuProps> = ({
                 <div className='option-group'>
                     <label className='option-label'>Training Mode:</label>
                     <button
-                        className={`training-toggle ${trainingMode ? 'training-toggle--active' : ''}`}
-                        onClick={() => onTrainingModeChange(!trainingMode)}
+                        className={`training-toggle ${props.trainingMode ? 'training-toggle--active' : ''}`}
+                        onClick={() => props.onTrainingModeChange(!props.trainingMode)}
                     >
-                        <span className='training-toggle-icon'>{trainingMode ? '💡' : '🎓'}</span>
+                        <span className='training-toggle-icon'>{props.trainingMode ? '💡' : '🎓'}</span>
                         <div className='training-toggle-content'>
                             <span className='training-toggle-label'>
-                                {trainingMode ? 'Training Mode ON' : 'Training Mode OFF'}
+                                {props.trainingMode ? 'Training Mode ON' : 'Training Mode OFF'}
                             </span>
                             <span className='training-toggle-desc'>
-                                {trainingMode
+                                {props.trainingMode
                                     ? 'Tips and best moves will be shown during gameplay'
                                     : 'Enable to see strategic tips during the game'}
                             </span>
@@ -110,7 +105,7 @@ const MainMenu: React.FC<iMainMenuProps> = ({
                 </div>
             </div>
 
-            <button className='btn btn--primary btn--large' onClick={onStartGame}>
+            <button className='btn btn--primary btn--large' onClick={props.onStartGame}>
                 Start Game
             </button>
 

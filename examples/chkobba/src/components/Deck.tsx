@@ -20,11 +20,11 @@ interface DeckProps {
     cardsRemaining: number;
 }
 
-const Deck: React.FC<DeckProps> = ({ cardsRemaining }) => {
+const Deck: React.FC<DeckProps> = (props) => {
     return (
         <div className='deck'>
             <div className='deck-stack'>
-                {cardsRemaining > 0 ? (
+                {props.cardsRemaining > 0 ? (
                     <>
                         <img src='/cards/back.png' alt='Deck' className='deck-image' />
                         <div className='deck-shadow' />
@@ -34,7 +34,7 @@ const Deck: React.FC<DeckProps> = ({ cardsRemaining }) => {
                     <div className='deck-empty'>Empty</div>
                 )}
             </div>
-            <div className='deck-count'>{cardsRemaining} cards left</div>
+            <div className='deck-count'>{props.cardsRemaining} cards left</div>
         </div>
     );
 };
