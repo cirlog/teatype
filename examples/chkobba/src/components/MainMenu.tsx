@@ -28,7 +28,7 @@ const MainMenu: React.FC<iMainMenuProps> = ({
         { value: 'easy', label: 'Noob', description: 'Random moves, forgiving play' },
         { value: 'medium', label: 'Casual', description: 'Basic strategy, occasional mistakes' },
         { value: 'hard', label: 'Expert', description: 'Strong strategy, few mistakes' },
-        { value: 'expert', label: 'Yessmine', description: 'Optimal play, card counting. You will suffer' },
+        { value: 'expert', label: 'Yessmine🌼', description: 'Optimal play, card counting. You will suffer' },
     ];
 
     const scoreOptions = [7, 11, 15, 21];

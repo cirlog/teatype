@@ -34,7 +34,7 @@ class Softkill(BaseCLI):
 
     def execute(self):
         try:
-            process_names = [name.strip() for name in self.args['process-names'].split(',')]
+            process_names = [name.strip() for name in self.get_argument('process-names').split(',')]
             softkill(process_names)
         except Exception:
             err(f"An error occurred while attempting to soft-kill processes", traceback=True)

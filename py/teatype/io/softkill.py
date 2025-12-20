@@ -182,6 +182,10 @@ class _ProcessTerminator:
                     if not cmdline or not self._matches_criteria(cmdline):
                         continue
                     
+                    # Skip softkill processes to avoid self-termination
+                    if any('softkill' in arg for arg in cmdline):
+                        continue
+                    
                     pid = process.info['pid']
                     if self._terminate_process(pid):
                         termination_count += 1

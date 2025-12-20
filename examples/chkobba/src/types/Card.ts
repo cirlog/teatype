@@ -1,4 +1,17 @@
-
+/**
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
 
 /**
  * Card types and game constants for Chkobba (French variant)
@@ -7,7 +20,6 @@
  * Values: Ace = 1, 2-7 = face value, J=8, Q=9, K=10
  * All cards can capture by matching sums - no special "picture card" rules
  */
-
 export type tSuit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 export type tRank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'J' | 'Q' | 'K';
 
