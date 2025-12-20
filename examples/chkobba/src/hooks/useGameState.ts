@@ -13,9 +13,10 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { iGameState, tDifficulty, createInitialGameState } from '../types/GameState';
-import { iCard } from '../types/Card';
+
+// Components
 import {
     startNewGame,
     startNewRound,
@@ -27,7 +28,11 @@ import {
 import { executeNPCTurn, getNPCThinkingTime } from '../game/NPCAi';
 import { getTrainingTip, iTip } from '../game/TrainingTips';
 
-export function useGameState() {
+// Types
+import { iCard } from '../types/Card';
+import { iGameState, tDifficulty, createInitialGameState } from '../types/GameState';
+
+const useGameState = () => {
     const [state, setState] = useState<iGameState>(createInitialGameState());
     const [roundScores, setRoundScores] = useState<ReturnType<typeof calculateRoundScores> | null>(null);
     const npcTurnRef = useRef<boolean>(false);
@@ -231,3 +236,5 @@ export function useGameState() {
         handleCancelSelection,
     };
 }
+
+export { useGameState };

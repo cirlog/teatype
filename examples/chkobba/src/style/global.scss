@@ -367,7 +367,7 @@ h6 {
     &-cards {
         display: flex;
         justify-content: center;
-        gap: calc(var(--spacing-sm) * -1);
+        gap: calc(var(--spacing-sm) * 0.25);
         perspective: 1000px;
     }
 
@@ -560,6 +560,7 @@ h6 {
     &-npc-area {
         display: flex;
         justify-content: center;
+        width: 100%;
     }
 
     &-center {
@@ -623,6 +624,7 @@ h6 {
     &-label {
         font-size: 0.8rem;
         color: var(--color-text-muted);
+        padding-right: var(--spacing-sm);
     }
 
     &-count {
@@ -994,11 +996,14 @@ h6 {
 
 /* Message Log */
 .message-log {
+    overflow: hidden;
+
     display: flex;
     flex-direction: column;
+    height: 100%;
+
     background: var(--color-bg-light);
     border-radius: var(--border-radius);
-    overflow: hidden;
 
     &-header {
         display: flex;
@@ -1021,11 +1026,13 @@ h6 {
     }
 
     &-content {
+        overflow-y: auto;
+
         display: flex;
         flex-direction: column;
         gap: var(--spacing-xs);
-        max-height: 300px;
-        overflow-y: auto;
+        // max-height: 300px;
+        height: 100%;
         padding: var(--spacing-sm);
     }
 

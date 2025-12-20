@@ -85,11 +85,11 @@ const GameBoard: React.FC<iGameBoardProps> = ({
                             <Deck cardsRemaining={state.deck.length} />
                             <div className='game-board-captured'>
                                 <div className='captured-pile'>
-                                    <span className='captured-pile-label'>Your captures</span>
+                                    <span className='captured-pile-label'>You captured:</span>
                                     <span className='captured-pile-count'>{state.human.capturedCards.length}</span>
                                 </div>
                                 <div className='captured-pile captured-pile--npc'>
-                                    <span className='captured-pile-label'>NPC captures</span>
+                                    <span className='captured-pile-label'>NPC captured:</span>
                                     <span className='captured-pile-count'>{state.npc.capturedCards.length}</span>
                                 </div>
                             </div>
@@ -117,14 +117,14 @@ const GameBoard: React.FC<iGameBoardProps> = ({
                             disabled={!isHumanTurn || state.isAnimating || hasSelectedCard}
                             animatingCardId={state.animation.player === 'human' ? state.animation.cardId : undefined}
                         />
-                    </div>
 
-                    {/* Training tip */}
-                    {state.trainingMode && isHumanTurn && (
-                        <div className='game-board-training-tip'>
-                            <TrainingTip tip={trainingTip} enabled={state.trainingMode} />
-                        </div>
-                    )}
+                        {/* Training tip */}
+                        {state.trainingMode && isHumanTurn && (
+                            <div className='game-board-training-tip'>
+                                <TrainingTip tip={trainingTip} enabled={state.trainingMode} />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Message Log sidebar */}

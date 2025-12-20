@@ -161,7 +161,7 @@ export function executeCapture(
     let chkobbas = iPlayerState.chkobbas;
     let message = `${player === 'human' ? 'You' : 'NPC'} captured ${capturedCards.length + 1} cards!`;
     let actionType: 'capture' | 'chkobba' = 'capture';
-    let logMessage = `${player === 'human' ? 'You' : 'NPC'} plays ${getCardName(playedCard)} and captures ${capturedCards.map(c => getCardName(c)).join(', ')}.`;
+    let logMessage = `${player === 'human' ? 'You' : 'NPC'} ${player === 'human' ? 'play' : 'plays'} ${getCardName(playedCard)} and captures ${capturedCards.map(c => getCardName(c)).join(', ')}.`;
 
     if (newTable.length === 0 && canMakeChkobba(playedCard)) {
         chkobbas++;
@@ -209,7 +209,7 @@ export function executeDrop(state: iGameState, player: tPlayer, playedCard: iCar
     const dropAction = createGameAction(
         player,
         'drop',
-        `${player === 'human' ? 'You' : 'NPC'} drops ${getCardName(playedCard)} on the table.`,
+        `${player === 'human' ? 'You' : 'NPC'} ${player === 'human' ? 'drop' : 'drops'} ${getCardName(playedCard)} on the table.`,
         [playedCard]
     );
 
