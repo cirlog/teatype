@@ -24,9 +24,9 @@ import {
     executeCapture,
     executeDrop,
     calculateRoundScores
-} from '../game/GameLogic';
-import { executeNPCTurn, getNPCThinkingTime } from '../game/NPCAi';
-import { getTrainingTip, iTip } from '../game/TrainingTips';
+} from '../engine/GameLogic';
+import { executeNPCTurn, getNPCThinkingTime } from '../engine/AI';
+import { getTrainingTip, iTip } from '../engine/TrainingTips';
 
 // Types
 import { iCard } from '../types/Card';

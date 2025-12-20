@@ -13,16 +13,21 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import React from 'react';
+
+// Components
 import Hand from './Hand';
 import Table from './Table';
 import Deck from './Deck';
 import ScoreDisplay from './ScoreDisplay';
 import MessageLog from './MessageLog';
 import TrainingTip from './TrainingTip';
+
+// Types
+import { iTip } from '../engine/TrainingTips';
 import { iGameState } from '../types/GameState';
 import { iCard } from '../types/Card';
-import { iTip } from '../game/TrainingTips';
 
 interface iGameBoardProps {
     state: iGameState;

@@ -1,16 +1,24 @@
 /**
- * NPC AI for Chkobba (French variant)
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
  * 
- * tDifficulty levels:
- * - Easy: Random moves, no strategy
- * - Medium: Basic strategy (prefer captures, avoid leaving good cards)
- * - Hard: Advanced strategy (count cards, maximize points)
- * - Expert: Optimal play (consider all future moves, card counting)
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  */
 
+// Components
+import { findValidCaptures, executeCapture, executeDrop } from './GameLogic';
+
+// Types
 import { iCard, isFaceCard, canMakeChkobba } from '../types/Card';
 import { iGameState, tDifficulty } from '../types/GameState';
-import { findValidCaptures, executeCapture, executeDrop } from './GameLogic';
 
 interface iMove {
     card: iCard;
@@ -18,9 +26,6 @@ interface iMove {
     score: number;
 }
 
-/**
- * Execute NPC turn based on difficulty
- */
 export function executeNPCTurn(state: iGameState): iGameState {
     // Safety check - if NPC has no cards, return unchanged state
     if (state.npc.hand.length === 0) {
