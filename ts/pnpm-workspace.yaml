@@ -1,6 +1,12 @@
 packages:
-    - 'base_config'
-    - 'platforms/*'
-    - 'components'
-    - 'hooks'
-    - '../examples/*'
+    - apps/*
+    - base_config
+    - platforms/*
+    - components
+    - hooks
+    - ../examples/*
+
+ignoredBuiltDependencies:
+    - '@parcel/watcher'
+    - esbuild
+    - node

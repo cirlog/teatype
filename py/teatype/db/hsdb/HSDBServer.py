@@ -18,10 +18,7 @@ from typing import List, Type
 # Third-party imports
 import django
 from django.conf import settings
-from django.conf.urls.static import static
-from django.urls import path as django_path
 from teatype.db.hsdb import HybridStorage
-from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
 from teatype.io import env, path
 from teatype.logging import *
 
@@ -77,8 +74,8 @@ class HSDBServer:
         """
         self.apps = apps or []
         self.cold_mode = cold_mode
-        self.models = models or []
         self.host = host
+        self.models = models or []
         self.port = port
         
         # Load environment variables (optional - doesn't fail if .env is missing)
@@ -250,24 +247,27 @@ class HSDBServer:
         Returns:
             List of URL patterns
         """
+        from pathlib import Path
+        from django.urls import path
+        from django.conf.urls.static import static
+        from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
+        
         urlpatterns = []
         
         # Add admin if requested
         if include_admin:
             from django.contrib import admin
             admin_url = f'{base_endpoint}/admin/' if base_endpoint else 'admin/'
-            urlpatterns.append(django_path(admin_url, admin.site.urls))
+            urlpatterns.append(path(admin_url, admin.site.urls))
         
         # Add app URLs dynamically using parse_dynamic_routes
         for app_name in self.apps:
             try:
                 # Find the resources directory for the app
+                from pathlib import Path
                 app_module = __import__(app_name)
-                print(app_module)
-                app_path = path.caller_parent(reverse_depth=2)
-                print(app_path)
-                resources_path = path.join(app_path, 'resources')
-                print(app_path)
+                app_path = Path(app_module.__file__).parent
+                resources_path = app_path / 'resources'
                 
                 if resources_path.exists():
                     app_urlpatterns = parse_dynamic_routes(
