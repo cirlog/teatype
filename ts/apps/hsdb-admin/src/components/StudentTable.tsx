@@ -33,7 +33,7 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
                             <td>{student.age}</td>
                             <td>{student.gender}</td>
                             <td>{student.height}</td>
-                            <td className='mono'>{student.school.substring(0, 8)}...</td>
+                            <td className='mono'>{student.school ? `${student.school.substring(0, 8)}...` : '-'}</td>
                             <td className='actions'>
                                 <button className='btn btn--sm btn--edit' onClick={() => onEdit(student)}>
                                     Edit

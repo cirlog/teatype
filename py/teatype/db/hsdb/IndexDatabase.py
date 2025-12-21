@@ -183,8 +183,7 @@ class IndexDatabase:
     # TODO: Query optimization with indices
     def fetch_model_entries(self, model:type, serialize:bool=False) -> List[object]:
         entries = []
-        for entry_id in self._db:
-            entry = self._db.fetch(entry_id)
+        for entry in self._db:
             if entry.model_name == model.__name__:
                 if serialize:
                     entry = entry.model.serialize(entry)

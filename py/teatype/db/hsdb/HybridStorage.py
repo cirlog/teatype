@@ -71,7 +71,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             self.rf_handler = RawFileHandler(root_path, cold_mode=cold_mode) # Initialize file handler for raw data operations
 
             self._initialized = True # Mark as initialized
-            self.__instance = self # Set the instance for Singleton
+            HybridStorage._instance = self # Set the instance for Singleton
             
             success(f'HybridStorage finished initialization') # sucess the initialization
             println()
@@ -81,12 +81,9 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
         """
         Return or create the HybridStorage singleton instance.
         """
-        print('instance()')
-        if not hasattr(HybridStorage, '__instance'):
-            print('instance()')
-            HybridStorage.__instance = HybridStorage() # Create a default instance if none exists
-        print('instance()')
-        return HybridStorage.__instance
+        if not hasattr(cls, '_instance'):
+            cls._instance = HybridStorage() # Create a default instance if none exists
+        return cls._instance
     
     # def fill(self):
     #     pass
