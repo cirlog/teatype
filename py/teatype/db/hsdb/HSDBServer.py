@@ -247,6 +247,8 @@ class HSDBServer:
         Returns:
             List of URL patterns
         """
+        import importlib
+        import importlib.util
         from pathlib import Path
         from django.urls import path
         from django.conf.urls.static import static
@@ -264,8 +266,27 @@ class HSDBServer:
         for app_name in self.apps:
             try:
                 # Find the resources directory for the app
-                app_module = __import__(app_name)
-                app_path = Path(app_module.__file__).parent
+                # Use importlib for proper module importing
+                app_module = importlib.import_module(app_name)
+                
+                # Try to get the app path from __file__ or use importlib.util.find_spec
+                app_path = None
+                if hasattr(app_module, '__file__') and app_module.__file__ is not None:
+                    app_path = Path(app_module.__file__).parent
+                elif hasattr(app_module, '__path__'):
+                    # Handle namespace packages or packages without __file__
+                    app_path = Path(list(app_module.__path__)[0])
+                else:
+                    # Fallback: use importlib.util.find_spec to locate the module
+                    spec = importlib.util.find_spec(app_name)
+                    if spec and spec.origin:
+                        app_path = Path(spec.origin).parent
+                    elif spec and spec.submodule_search_locations:
+                        app_path = Path(list(spec.submodule_search_locations)[0])
+                
+                if app_path is None:
+                    warn(f'Could not determine path for app: {app_name}')
+                    continue
                 resources_path = app_path / 'resources'
                 
                 if resources_path.exists():
