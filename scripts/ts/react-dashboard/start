@@ -18,21 +18,21 @@ class StartReactDashboard(ReactDashboardBase):
             'help': 'Run the React dashboard dev server.',
             'flags': [
                 {
-                    'short': 'd',
-                    'long': 'detached',
+                    'shorthand': 'd',
+                    'name': 'detached',
                     'help': 'Start the dev server in the background.',
                     'required': False
                 },
                 {
-                    'short': 'h',
-                    'long': 'host',
+                    'shorthand': 'h',
+                    'name': 'host',
                     'help': 'Host to bind the Vite dev server.',
                     'options': str,
                     'required': False
                 },
                 {
-                    'short': 'p',
-                    'long': 'port',
+                    'shorthand': 'p',
+                    'name': 'port',
                     'help': 'Port for the dev server.',
                     'options': int,
                     'required': False

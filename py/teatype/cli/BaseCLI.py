@@ -224,7 +224,7 @@ class BaseCLI(ABC):
         # DEPRECATED: Disabled auto adding help flag for now
             # Add the default help flag for all scripts
             # self.flags.append(Flag(short='h', long='help', help='Display the (sometimes more detailed) help message.', required=False))
-        self.flags.sort(key=lambda flag: flag.short) # Sort the flags by their short notation
+        self.flags.sort(key=lambda flag: flag.shorthand) # Sort the flags by their short notation
         
         if self.NOT_AVAILABLE:
             def _override_pre_validation():
@@ -396,25 +396,25 @@ class BaseCLI(ABC):
                 # Validate the presence of only known flags
                 flags = self.flags + self.secret_flags
                 for parsed_flag in self.parsed_flags:
-                    search_result = [flag for flag in flags if flag.short == parsed_flag or flag.long == parsed_flag]
+                    search_result = [flag for flag in flags if flag.shorthand == parsed_flag or flag.name == parsed_flag]
                     if len(search_result) == 0:
                         self.add_parsing_error(f'Unknown flag: {parsed_flag}.')
 
                 # Check for required flags and validate flag values
                 for flag in flags:
                     if flag.required:
-                        if flag.short not in self.parsed_flags and flag.long not in self.parsed_flags:
-                            self.add_parsing_error(f'Missing required flag: {flag.short}, {flag.long}.')
+                        if flag.shorthand not in self.parsed_flags and flag.name not in self.parsed_flags:
+                            self.add_parsing_error(f'Missing required flag: {flag.shorthand}, {flag.name}.')
 
-                    if flag.short in self.parsed_flags or flag.long in self.parsed_flags:
+                    if flag.shorthand in self.parsed_flags or flag.name in self.parsed_flags:
                         # Retrieve the value associated with the flag, if any
-                        parsed_flag_value = self.parsed_flags.get(flag.short) or self.parsed_flags.get(flag.long)
+                        parsed_flag_value = self.parsed_flags.get(flag.shorthand) or self.parsed_flags.get(flag.name)
                         flag_options = flag.options
                         
                         # Validate flags that should not have a value
                         if parsed_flag_value and flag_options is None and parsed_flag_value is not True:
                             self.add_parsing_error(
-                                f'Flag `{flag.short}, {flag.long}` does not expect a value, but one was given: "{parsed_flag_value}".'
+                                f'Flag `{flag.shorthand}, {flag.name}` does not expect a value, but one was given: "{parsed_flag_value}".'
                             )
                         else:
                             # Check if options even exist, otherwise treat as "True", "False"
@@ -435,15 +435,15 @@ class BaseCLI(ABC):
                                                 
                                         if type(parsed_flag_value) != flag_options:
                                             # Report type mismatch errors
-                                            self.add_parsing_error(f'Flag `{flag.short}, {flag.long}` expects a value of type {flag_options_name}, but "{parsed_flag_value}" was given.')
+                                            self.add_parsing_error(f'Flag `{flag.shorthand}, {flag.name}` expects a value of type {flag_options_name}, but "{parsed_flag_value}" was given.')
                                     except Exception as exc:
                                         # Report type conversion errors
-                                        self.add_parsing_error(f'Could not properly parse flag `{flag.short}, {flag.long}` value "{parsed_flag_value}" to type {flag_options_name}. Error: {str(exc)}')
+                                        self.add_parsing_error(f'Could not properly parse flag `{flag.shorthand}, {flag.name}` value "{parsed_flag_value}" to type {flag_options_name}. Error: {str(exc)}')
                                 else:
                                     # Validate that the flag value is within the allowed options
                                     if parsed_flag_value not in flag_options:
                                         self.add_parsing_error(
-                                            f'Flag `{flag.short}, {flag.long}` expects a value from the list {flag_options}, but "{parsed_flag_value}" was given.'
+                                            f'Flag `{flag.shorthand}, {flag.name}` expects a value from the list {flag_options}, but "{parsed_flag_value}" was given.'
                                         )
                             flag.value = parsed_flag_value # Assign the validated flag value
                             
@@ -530,7 +530,7 @@ class BaseCLI(ABC):
         amount_of_commands_greater_0 = len(self.commands)
         # DEPRECATED: Not needed anymore really
             # Filter out the help flag from the list of flags
-            # flags = list(filter(lambda flag: not flag.short == '-h' and not flag.long == '--help', self.flags))
+            # flags = list(filter(lambda flag: not flag.shorthand == '-h' and not flag.name == '--help', self.flags))
         amount_of_flags_greater_0 = len(self.flags)
         
         # Set the name to './<name>' by default
@@ -580,18 +580,18 @@ class BaseCLI(ABC):
             if amount_of_flags_greater_0:
                 for flag in self.flags:
                     # Format the flag line with indentation, short flag, and long flag
-                    flag_line = f'{GLOBAL_CLI_CONFIG.TAB}{flag.short}, {flag.long}'
+                    flag_line = f'{GLOBAL_CLI_CONFIG.TAB}{flag.shorthand}, {flag.name}'
                     # If the flag has options, include them in the flag line
                     if flag.options:
                         if type(flag.options) == list:
                             # DEPRECATED: Using default keyword 'option' instead for clarity
-                                # flag_line += f' <{flag.long.replace("-", "")}>'
+                                # flag_line += f' <{flag.name.replace("-", "")}>'
                             flag_line += ' <option>'
                         else:
                             if type(flag.options) == type:
                                 flag_line += f' <{flag.options.__name__}>'
                             else:
-                                err(f'Flag options must be a list or a type, not {type(flag.options).__name__}. Affected flag: {flag.short}, {flag.long}.',
+                                err(f'Flag options must be a list or a type, not {type(flag.options).__name__}. Affected flag: {flag.shorthand}, {flag.name}.',
                                     pad_before=1,
                                     pad_after=1,
                                     exit=True)
@@ -678,12 +678,12 @@ class BaseCLI(ABC):
                 # Iterate over each flag and add its details to the formatted string
                 for flag in self.flags:
                     # Format the flag line with indentation
-                    flag_line = f'{GLOBAL_CLI_CONFIG.TAB}{flag.short}, {flag.long}'
+                    flag_line = f'{GLOBAL_CLI_CONFIG.TAB}{flag.shorthand}, {flag.name}'
                     # TODO: Check wrong flag options
                     if flag.options:
                         if type(flag.options) == list:
                             # DEPRECATED: Using default keyword 'option' instead for clarity
-                                # flag_line += f' <{flag.long.replace("-", "")}>'
+                                # flag_line += f' <{flag.name.replace("-", "")}>'
                             flag_line += ' <option>'
                         else:
                             flag_line += f' <{flag.options.__name__}>'
@@ -745,10 +745,10 @@ class BaseCLI(ABC):
             if flag.value:
                 # If the flag accepts an option, append the flag's long name and its value
                 if flag.options:
-                    flags += f'{flag.long} {flag.value} '
+                    flags += f'{flag.name} {flag.value} '
                 else:
                     # If the flag does not accept an option, append only the flag's long name
-                    flags += f'{flag.long} '
+                    flags += f'{flag.name} '
         # Return the concatenated string of active flags
         return flags
         
@@ -800,7 +800,7 @@ class BaseCLI(ABC):
         """
         flag_value = None
         for flag in self.flags + self.secret_flags:
-            if flag.short == f'-{name}' or flag.long == f'--{name}':
+            if flag.shorthand == f'-{name}' or flag.name == f'--{name}':
                 flag_value = flag.value
                 break
         if default is not None and flag_value is None:
@@ -816,7 +816,7 @@ class BaseCLI(ABC):
         Sets the flag value with the given name.
         """
         for flag in self.flags + self.secret_flags:
-            if flag.short == f'-{name}' or flag.long == f'--{name}':
+            if flag.shorthand == f'-{name}' or flag.name == f'--{name}':
                 flag.value = value
                 return True
         return False

@@ -44,8 +44,8 @@ class MakeExecutable(BaseCLI):
             ],
             'flags': [
                 {
-                    'short': 'ng',
-                    'long': 'no-git',
+                    'shorthand': 'ng',
+                    'name': 'no-git',
                     'help': ['Disables adding the file to the git index and setting the executable bit',
                              '(This flag is not recommended for version control)'],
                     'required': False

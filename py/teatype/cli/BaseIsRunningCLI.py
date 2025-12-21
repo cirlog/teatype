@@ -25,8 +25,8 @@ class BaseIsRunningCLI(BaseCLI):
             'help': 'Check if a process is running',
             'flags': [
                 {
-                    'short': 's',
-                    'long': 'silent',
+                    'shorthand': 's',
+                    'name': 'silent',
                     'help': 'Hide verbose output of script',
                     'required': False
                 }

@@ -52,22 +52,22 @@ class SyncForks(BaseCLI):
             'help': 'Synchronize all your forks with their upstream repositories.',
             'flags': [
                 {
-                    'short': 'a',
-                    'long': 'a-repo',
+                    'shorthand': 'a',
+                    'name': 'a-repo',
                     'help': 'Path to first repository.',
                     'options': str,
                     'required': True
                 },
                 {
-                    'short': 'b',
-                    'long': 'b-repo',
+                    'shorthand': 'b',
+                    'name': 'b-repo',
                     'help': 'Path to second repository.',
                     'options': str,
                     'required': True
                 },
                 {
-                    'short': 'e',
-                    'long': 'exclude',
+                    'shorthand': 'e',
+                    'name': 'exclude',
                     'help': 'Additional exclude pattern (can be used multiple times).',
                     # 'options': List[str], # TODO: Add support for list type for options
                     'options': str,

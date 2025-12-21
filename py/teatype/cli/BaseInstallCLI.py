@@ -31,8 +31,8 @@ class BaseInstallCLI(BaseCLI):
             'help': 'Install a package/module',
             'flags': [
                 {
-                    'short': 'ng',
-                    'long': 'no-gitignore',
+                    'shorthand': 'ng',
+                    'name': 'no-gitignore',
                     'help': 'Do not add the dist directory to the .gitignore file',
                     'required': False
                 }

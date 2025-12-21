@@ -17,8 +17,8 @@ class InstallReactDashboard(ReactDashboardBase):
             'help': 'Install system prerequisites and pnpm dependencies for the React dashboard.',
             'flags': [
                 {
-                    'short': 'y',
-                    'long': 'assume-yes',
+                    'shorthand': 'y',
+                    'name': 'assume-yes',
                     'help': 'Skip interactive confirmations when installing system packages.',
                     'required': False
                 }

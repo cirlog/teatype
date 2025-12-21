@@ -17,8 +17,8 @@ class StopReactDashboard(ReactDashboardBase):
             'help': 'Stop the background React dev server.',
             'flags': [
                 {
-                    'short': 'f',
-                    'long': 'force',
+                    'shorthand': 'f',
+                    'name': 'force',
                     'help': 'Force kill the process with SIGKILL if graceful stop fails.',
                     'required': False
                 }

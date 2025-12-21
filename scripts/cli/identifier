@@ -36,29 +36,29 @@ class Identifier(BaseCLI):
             'help': 'Generates one or multiple (globally) unique identifiers',
             'flags': [
                 {
-                    'short': 'c',
-                    'long': 'count',
+                    'shorthand': 'c',
+                    'name': 'count',
                     'help': ['Set the number of identifiers to generate in `burst` mode', '(Default: 100)'],
                     'options': int,
                     'required': False  
                 },
                 {
-                    'short': 'l',
-                    'long': 'length',
+                    'shorthand': 'l',
+                    'name': 'length',
                     'help': ['Set the length of the identifier/s', '(Default: 60)'],
                     'options': int,
                     'required': False
                 },
                 {
-                    'short': 'm',
-                    'long': 'mode',
+                    'shorthand': 'm',
+                    'name': 'mode',
                     'help': ['Select the mode of the identifier generation', '(Default: single)'],
                     'options': ['burst', 'continous', 'single'],
                     'required': False
                 },
                 # {
-                #     'short': 'o',
-                #     'long': 'output',
+                #     'shorthand': 'o',
+                #     'name': 'output',
                 #     'help': ['Save the generated identifier/s to the specified file', '(Only works in `single` and `burst` mode)'],
                 #     'options': str,
                 #     'required': False

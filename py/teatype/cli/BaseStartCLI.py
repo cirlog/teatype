@@ -66,32 +66,32 @@ class BaseStartCLI(BaseCLI):
             'help': 'Start a process',
             'flags': [
                 {
-                    'short': 'd',
-                    'long': 'detached',
+                    'shorthand': 'd',
+                    'name': 'detached',
                     'help': 'Start process in detached mode',
                     'required': False
                 },
                 {
-                    'short': 'ir',
-                    'long': 'ignore-running',
+                    'shorthand': 'ir',
+                    'name': 'ignore-running',
                     'help': 'Ignore if process is already running',
                     'required': False
                 },
                 {
-                    'short': 'ht',
-                    'long': 'hot-reload',
+                    'shorthand': 'ht',
+                    'name': 'hot-reload',
                     'help': 'Hot-reload on file changes',
                     'required': False
                 },
                 {
-                    'short': 's',
-                    'long': 'silent',
+                    'shorthand': 's',
+                    'name': 'silent',
                     'help': 'Silent mode (no output)',
                     'required': False
                 },
                 {
-                    'short': 't',
-                    'long': 'tail',
+                    'shorthand': 't',
+                    'name': 'tail',
                     'help': 'Tail logs of process',
                     'required': False
                 }

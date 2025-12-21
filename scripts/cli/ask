@@ -48,20 +48,20 @@ class Ask(BaseCLI):
             ],
             'flags': [
                 {
-                    'short': 'lm',
-                    'long': 'load-model',
+                    'shorthand': 'lm',
+                    'name': 'load-model',
                     'help': 'Load and save a default model for future use',
                     'required': False
                 },
                 {
-                    'short': 's',
-                    'long': 'stream',
+                    'shorthand': 's',
+                    'name': 'stream',
                     'help': 'Stream the response as it is generated',
                     'required': False  
                 },
                 {
-                    'short': 'v',
-                    'long': 'verbose',
+                    'shorthand': 'v',
+                    'name': 'verbose',
                     'help': 'Enable verbose output',
                     'required': False
                 }

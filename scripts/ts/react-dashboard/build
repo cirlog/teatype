@@ -16,8 +16,8 @@ class BuildReactDashboard(ReactDashboardBase):
             'help': 'Build the React dashboard via pnpm.',
             'flags': [
                 {
-                    'short': 'c',
-                    'long': 'clean',
+                    'shorthand': 'c',
+                    'name': 'clean',
                     'help': 'Delete the dist directory before building.',
                     'required': False
                 }

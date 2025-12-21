@@ -13,15 +13,13 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
-import os
-import signal
 import time
 
 # Third-party imports
 import psutil
 from teatype.cli import BaseCLI
 from teatype.comms.ipc.redis import RedisConnectionPool
-from teatype.io import clear_shell, enable_sudo, path, prompt, shell
+from teatype.io import clear_shell, enable_sudo, path, prompt, shell, softkill
 from teatype.logging import *
 
 class Redis(BaseCLI):
@@ -45,6 +43,14 @@ class Redis(BaseCLI):
                     'name': 'stop',
                     'shorthand': 'sp',
                     'help': 'Stop the Redis server.'
+                }
+            ],
+            "flags": [
+                {
+                    'shorthand': 'ss',
+                    'name': 'show-status',
+                    'help': 'Show Redis server status after executing the command.',
+                    'required': False
                 }
             ]
         }
@@ -192,116 +198,6 @@ class Redis(BaseCLI):
                 verbose=False)
             println()
         
-    def stop(self, parent_directory, process_pid:int) -> None:
-        def _is_process_running(pid:int) -> bool:
-            """
-            Check if a process with the given PID is currently running.
-
-            Args:
-                pid (int): Process ID to check.
-
-            Returns:
-                bool: True if the process is running, False otherwise.
-            """
-            try:
-                # Sending signal 0 does not kill the process but checks its existence
-                os.kill(pid, 0)
-                return True
-            except OSError as ose:
-                # Permission error, request sudo access
-                if ose.errno == 1:
-                    err('OS denied permission access for process. Please run the script with sudo.', pad_after=1, exit=True, verbose=False)
-                return False
-
-        def _attempt_stop(pid:int, signal_type:int, max_attempts:int, signal_name:str) -> bool:
-            """
-            Attempt to stop a process by sending a specific signal, retrying up to a maximum number of attempts.
-
-            Args:
-                pid (int): Process ID to stop.
-                signal_type (int): Signal to send (e.g., signal.SIGTERM).
-                max_attempts (int): Maximum number of attempts to send the signal.
-                signal_name (str): Name of the signal for logging purposes.
-
-            Returns:
-                bool: True if the process was successfully stopped, False otherwise.
-            """
-            attempts = 0
-            while _is_process_running(pid):
-                if attempts >= max_attempts:
-                    # Warn if maximum attempts have been reached without success
-                    warn(f'Failed to stop process (PID: {pid}) after {max_attempts} attempts with {signal_name}.')
-                    return False
-                # Log the attempt to stop the process
-                log(f'Attempt {attempts + 1} to stop process (PID: {pid}) with {signal_name}...')
-                try:
-                    # Send the specified signal to the process
-                    os.kill(pid, signal_type)
-                except OSError as e:
-                    # Log an error if sending the signal fails
-                    err(f'Error sending signal {signal_name} to PID {pid}: {e}')
-                    return False
-                attempts += 1
-                # Wait for a short period before the next attempt
-                sleep = 1
-                if self.get_flag('sleep'):
-                    sleep = self.get_flag('sleep')
-                time.sleep(sleep)
-            # Log success if the process has been stopped
-            log(f'Process (PID: {pid}) stopped using {signal_name}.')
-            return True
-
-        def _stop_process(pid:int) -> bool:
-            """
-            Attempt to stop a process using SIGINT, then SIGTERM, and finally SIGKILL if necessary.
-
-            Args:
-                pid (int): Process ID to stop.
-
-            Returns:
-                bool: True if the process was successfully stopped, False otherwise.
-            """
-            MAX_SIGINT_ATTEMPTS = 3
-            MAX_SIGTERM_ATTEMPTS = 3
-            MAX_SIGKILL_ATTEMPTS = 3
-            # Attempt to stop the process using SIGINT
-            if not _attempt_stop(pid, signal.SIGINT, MAX_SIGINT_ATTEMPTS, 'SIGINT'):
-                # Warn and attempt to stop using SIGTERM if SIGINT fails
-                warn('SIGINT attempts failed. Trying with SIGTERM...')
-                if not _attempt_stop(pid, signal.SIGTERM, MAX_SIGTERM_ATTEMPTS, 'SIGTERM'):
-                    # Warn and attempt to stop using SIGKILL if SIGTERM fails
-                    warn('SIGTERM attempts failed. Trying with SIGKILL...')
-                    if not _attempt_stop(pid, signal.SIGKILL, MAX_SIGKILL_ATTEMPTS, 'SIGKILL'):
-                        # Log an error if all attempts fail
-                        err('SIGKILL failed. Manual intervention required.')
-                        return False
-            return True
-        
-        def recursive_kill():
-            """
-            Recursively attempt to kill all processes in the process_pids list until no processes remain.
-            """
-
-            # Execute the is_running to update the list of process PIDs
-            is_running, process_pid = self.is_running()
-            if not is_running:
-                log('No running Redis server processes found. Exiting recursive kill.')
-                return
-            
-            if _is_process_running(process_pid):
-                # Attempt to stop the process and log the result
-                if _stop_process(process_pid):
-                    log(f'Process (PID: "{process_pid}") has been stopped.')
-                else:
-                    # Log an error if the process could not be stopped
-                    err(f'Process (PID: "{process_pid}") could not be stopped. Manual intervention required.')
-            else:
-                # Log if the process is not running
-                log(f'Process (PID: "{process_pid}") is not running.')
-            println()
-                    
-        recursive_kill()
-
     def execute(self):
         enable_sudo()
         
@@ -318,6 +214,11 @@ class Redis(BaseCLI):
                     println()
                 else:
                     self.start(parent_directory)
+                    if self.get_flag('show-status'):
+                        warn('Waiting 2 seconds for Redis server to initialize ...', use_prefix=False)
+                        time.sleep(2.0)
+                        is_running, process_pid = self.is_running()
+                        self.status(is_running)
             case 'status':
                 self.status(is_running)
             case 'stop':
@@ -325,7 +226,7 @@ class Redis(BaseCLI):
                     log('Redis server is not running. No action taken.')
                     println()
                 else:
-                    self.stop(parent_directory, process_pid)
+                    softkill(['redis-server'])
 
 if __name__ == '__main__':
     Redis()

@@ -20,16 +20,16 @@ class Flag:
     """
     Represents a command-line flag.
     Attributes:
-        short (str): The short form of the flag (e.g., '-h').
-        long (str): The long form of the flag (e.g., '--help').
+        shorthand (str): The shorthand form of the flag (e.g., '-h').
+        name (str): The name form of the flag (e.g., '--help').
         help (str): A brief description of the flag.
         depends_on (List[str]): A list of flags that this flag depends on.
         required (bool): Indicates whether the flag is required.
         options (List[any]|type): A list of options for the flag or the type of option for the flag.
     """
     def __init__(self,
-                short:str,
-                long:str,
+                shorthand:str,
+                name:str,
                 help:str|List[str],
                 *,
                 required:bool,
@@ -41,8 +41,8 @@ class Flag:
         self.required = required
         self.secret = secret
         
-        self.short = f'-{short}'
-        self.long = f'--{long}'
+        self.shorthand = f'-{shorthand}'
+        self.name = f'--{name}'
         
         # Check if 'options' are provided for the flag
         if options:
@@ -51,7 +51,7 @@ class Flag:
                 # Append ' <option>' to the flag line to indicate that an option is expected
                 flag_line += ' <option>'
                 # Log a runtime error with details about the invalid 'options' type and terminate execution
-                err(f'Runtime error: Flag options must be a list or a type, not {type(options).__name__}. Affected flag: {short}, {long}.',
+                err(f'Runtime error: Flag options must be a list or a type, not {type(options).__name__}. Affected flag: {shorthand}, {name}.',
                     pad_before=1,
                     pad_after=1,
                     exit=True,

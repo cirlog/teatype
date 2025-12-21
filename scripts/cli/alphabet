@@ -33,8 +33,8 @@ class Alphabet(BaseCLI):
             'help': 'Prints the alphabet for big dum dums (listen, but don\'t judge)',
             'flags': [
                 {
-                    'short': 'v',
-                    'long': 'vertical',
+                    'shorthand': 'v',
+                    'name': 'vertical',
                     'help': 'Print the alphabet vertically with indices',
                     'required': False,
                 }

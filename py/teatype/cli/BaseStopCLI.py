@@ -33,21 +33,21 @@ class BaseStopCLI(BaseCLI):
             'help': 'Stop a process',
             'flags': [
                 {
-                    'short': 'f',
-                    'long': 'force-signal',
+                    'shorthand': 'f',
+                    'name': 'force-signal',
                     'help': 'Force a specific signal',
                     'options': ['SIGINT', 'SIGTERM', 'SIGKILL'],
                     'required': False
                 },
                 {
-                    'short': 's',
-                    'long': 'silent',
+                    'shorthand': 's',
+                    'name': 'silent',
                     'help': 'Hide verbose output of script',
                     'required': False
                 },
                 {
-                    'short': 'sl',
-                    'long': 'sleep',
+                    'shorthand': 'sl',
+                    'name': 'sleep',
                     'help': 'Sleep time between process checks',
                     'options': float,
                     'required': False

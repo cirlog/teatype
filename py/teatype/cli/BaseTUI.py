@@ -84,20 +84,20 @@ class BaseTUI(BaseCLI):
         def _meta_closure():
             additional_flags = [
                 {
-                    'long': 'debug',
-                    'short': 'd',
+                    'name': 'debug',
+                    'shorthand': 'd',
                     'help': 'Enable debug mode for the TUI.',
                     'required': False,
                 },
                 {
-                    'long': 'manual-refresh',
-                    'short': 'mr',
+                    'name': 'manual-refresh',
+                    'shorthand': 'mr',
                     'help': 'Enable manual refresh mode for the TUI.',
                     'required': False,
                 },
                 {
-                    'long': 'one-shot',
-                    'short': 'os',
+                    'name': 'one-shot',
+                    'shorthand': 'os',
                     'help': 'Execute a single command and exit the TUI.',
                     'required': False
                 }
