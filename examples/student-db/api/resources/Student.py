@@ -11,9 +11,13 @@
 # all copies or substantial portions of the Software.
 
 # From package imports
-from teatype.io import path
+from teatype.db.hsdb.django_support.views import HSDBDjangoResource
 
-# TODO: Doesn't work for some reason
-from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
+# From local imports
+from api.models import Student
 
-urlpatterns = parse_dynamic_routes(app_name='api', search_path=path.join(path.caller_parent(), 'resources'), verbose=True)
+class Student(HSDBDjangoResource):
+    allowed_methods=['GET','PUT','PATCH','DELETE']
+    auto_view=True
+    data_key='student_data'
+    hsdb_model=Student

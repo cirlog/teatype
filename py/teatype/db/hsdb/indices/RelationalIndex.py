@@ -153,3 +153,9 @@ class RelationalIndex(Index):
             if self.fetch(relation_name, target_id, reverse_lookup) is None:
                 raise KeyError(f'Entry with ID {target_id} does not exist in the index.')
             del target_index[relation_name][target_id]
+            
+# from django.contrib import admin
+# from django.urls import path
+# from django.conf import settings
+# from django.conf.urls.static import static
+# from django.core.management import execute_from_command_line

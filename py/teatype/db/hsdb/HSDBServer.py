@@ -13,12 +13,16 @@
 # Standard-library imports
 import os
 import sys
-from pathlib import Path
 from typing import List, Type
 
 # Third-party imports
+import django
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path as django_path
 from teatype.db.hsdb import HybridStorage
-from teatype.io import env
+from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
+from teatype.io import env, path
 from teatype.logging import *
 
 class HSDBServer:
@@ -46,7 +50,7 @@ class HSDBServer:
                  apps:List[str]=None,
                  models:List[Type]=None,
                  host:str='127.0.0.1', 
-                 port:int=8000,
+                 port:int=8080,
                  *,
                  allowed_hosts:List[str]=None,
                  cold_mode:bool=False,
@@ -111,17 +115,9 @@ class HSDBServer:
         else:
             os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hsdb_server_settings')
             
-        # Import Django after setting the module
-        try:
-            import django
-            from django.conf import settings
-        except ImportError:
-            err('Django is not installed. Install it with: pip install django djangorestframework', exit=True)
-            return
-            
         # Configure settings if not already configured
         if not settings.configured:
-            base_dir = Path.cwd()
+            base_dir = path.workdir()
             
             settings.configure(
                 DEBUG=debug if debug is not None else env.get('DEBUG', 'True').lower() == 'true',
@@ -254,27 +250,43 @@ class HSDBServer:
         Returns:
             List of URL patterns
         """
-        from django.urls import path, include
-        from django.conf import settings
-        from django.conf.urls.static import static
-        
         urlpatterns = []
         
         # Add admin if requested
         if include_admin:
             from django.contrib import admin
-            urlpatterns.append(path(f'{base_endpoint}/admin/', admin.site.urls))
+            admin_url = f'{base_endpoint}/admin/' if base_endpoint else 'admin/'
+            urlpatterns.append(django_path(admin_url, admin.site.urls))
         
-        # Add app URLs dynamically
-        root_url = f'{base_endpoint}/' if base_endpoint else ''
+        # Add app URLs dynamically using parse_dynamic_routes
         for app_name in self.apps:
             try:
-                urlpatterns.append(
-                    path(f'{root_url}', include((f'{app_name}.urls', app_name), namespace=app_name))
-                )
-                success(f'Registered URLs for app: {app_name}')
-            except ImportError:
-                warn(f'Could not import URLs for app: {app_name}')
+                # Find the resources directory for the app
+                app_module = __import__(app_name)
+                print(app_module)
+                app_path = path.caller_parent(reverse_depth=2)
+                print(app_path)
+                resources_path = path.join(app_path, 'resources')
+                print(app_path)
+                
+                if resources_path.exists():
+                    app_urlpatterns = parse_dynamic_routes(
+                        app_name=app_name,
+                        search_path=str(resources_path),
+                        verbose=True
+                    )
+                    
+                    # Add base endpoint prefix if provided
+                    if base_endpoint:
+                        for pattern in app_urlpatterns:
+                            pattern.pattern._route = f'{base_endpoint}/{pattern.pattern._route}'
+                    
+                    urlpatterns.extend(app_urlpatterns)
+                    success(f'Registered URLs for app: {app_name}')
+                else:
+                    warn(f'No resources directory found for app: {app_name}')
+            except Exception as e:
+                warn(f'Could not register URLs for app {app_name}: {e}')
         
         # Add static files
         if hasattr(settings, 'STATIC_URL'):
@@ -302,7 +314,7 @@ class HSDBServer:
             return
         
         # Build command arguments
-        argv = [sys.argv[0], 'runserver', f'{self.host}:{self.port}']
+        argv = [sys.argv[0], 'runserver', f'{self.host}:{self.port}', '--noreload']
         
         # Add SSL support if requested
         if use_ssl:

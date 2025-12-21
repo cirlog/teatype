@@ -99,6 +99,7 @@ if __name__ == '__main__':
         models=MODELS,
     )
     
+    # Seed the database
     stopwatch('Seeding DB data')
     hybrid_storage = server.hybrid_storage
     db = hybrid_storage.index_db._db
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     stopwatch('Measuring memory footprint')
     log(hybrid_storage.index_db.memory_footprint)
     stopwatch()
-    
+        
     # Create URL patterns
     from django.urls import path
     import sys
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     url_module = types.ModuleType('hsdb_server_urls')
     url_module.urlpatterns = urlpatterns
     sys.modules['hsdb_server_urls'] = url_module
-    
+        
     # Check if we're running a command or just starting the server
     if len(sys.argv) > 1:
         if sys.argv[1] == 'runserver':

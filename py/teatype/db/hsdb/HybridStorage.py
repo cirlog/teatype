@@ -54,11 +54,11 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
         """
         # Only initialize once, prevent reinitialization
         if not getattr(self, '_initialized', False):
-            threading.Thread.__init__(self)  # Initialize the Thread superclass
+            threading.Thread.__init__(self) # Initialize the Thread superclass
 
             # Set the root data path
             if root_path is None:
-                root_path = env.get('HSDB_ROOT_PATH')  # Retrieves path from environment
+                root_path = env.get('HSDB_ROOT_PATH') # Retrieves path from environment
 
             self.coroutines = [] # List to keep track of coroutines
             self.coroutines_queue = Queue() # Queue for coroutine scheduling
