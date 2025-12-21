@@ -1,0 +1,109 @@
+/**
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ */
+
+.student-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+
+            th {
+                padding: 16px;
+                text-align: left;
+                font-weight: 600;
+                color: #495057;
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+        }
+
+        tbody {
+            tr {
+                border-bottom: 1px solid #e9ecef;
+                transition: background-color 0.2s;
+
+                &:hover {
+                    background-color: #f8f9fa;
+                }
+
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+
+            td {
+                padding: 16px;
+                color: #212529;
+
+                &.mono {
+                    font-family: 'Monaco', 'Courier New', monospace;
+                    font-size: 13px;
+                    color: #6c757d;
+                }
+
+                &.actions {
+                    display: flex;
+                    gap: 8px;
+                }
+            }
+        }
+    }
+
+    .empty-state {
+        padding: 48px;
+        text-align: center;
+        color: #6c757d;
+    }
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &--sm {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    &--edit {
+        background: #0d6efd;
+        color: white;
+
+        &:hover {
+            background: #0b5ed7;
+        }
+    }
+
+    &--delete {
+        background: #dc3545;
+        color: white;
+
+        &:hover {
+            background: #bb2d3b;
+        }
+    }
+
+    &--primary {
+        background: #198754;
+        color: white;
+
+        &:hover {
+            background: #157347;
+        }
+    }
+}

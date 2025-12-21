@@ -264,7 +264,6 @@ class HSDBServer:
         for app_name in self.apps:
             try:
                 # Find the resources directory for the app
-                from pathlib import Path
                 app_module = __import__(app_name)
                 app_path = Path(app_module.__file__).parent
                 resources_path = app_path / 'resources'
@@ -286,7 +285,7 @@ class HSDBServer:
                 else:
                     warn(f'No resources directory found for app: {app_name}')
             except Exception as e:
-                warn(f'Could not register URLs for app {app_name}: {e}')
+                err(f'Could not register URLs for app {app_name}', traceback=True)
         
         # Add static files
         if hasattr(settings, 'STATIC_URL'):

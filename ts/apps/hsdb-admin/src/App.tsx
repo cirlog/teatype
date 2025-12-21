@@ -14,52 +14,82 @@
  */
 
 // Components
-import { StatusCard } from '@/components/StatusCard';
+import { StudentTable } from '@/components/StudentTable';
 
 // Hooks
-import { useStatusPulse } from '@/hooks/useStatusPulse';
+import { useStudents } from '@/hooks/useStudents';
+import { Student } from '@/api/students';
 
 // Style
-import '@/style/status.scss';
-
-function HeroTags({ name, pod, type }: { name: string; pod: number; type: string }) {
-    return (
-        <div className='hero__tags'>
-            <span className='hero__tag'>{name}</span>
-            <span className='hero__tag'>pod {pod}</span>
-            <span className='hero__tag'>{type}</span>
-        </div>
-    );
-}
+import '@/style/dashboard.scss';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
-    const { status, history, updating, error, refresh } = useStatusPulse();
+    const { students, loading, error, refresh, deleteStudent } = useStudents();
+
+    const handleEdit = (student: Student) => {
+        // TODO: Implement edit modal/form
+        console.log('Edit student:', student);
+    };
+
+    const stats = {
+        total: students.length,
+        male: students.filter((s) => s.gender === 'male').length,
+        female: students.filter((s) => s.gender === 'female').length,
+        avgAge: students.length > 0 ? (students.reduce((sum, s) => sum + s.age, 0) / students.length).toFixed(1) : 0,
+    };
 
     return (
-        <div className='page'>
-            <header className='hero'>
-                <div className='hero__content'>
-                    <p className='hero__eyebrow'>Realtime module vitals</p>
-                    <h1>Operations Pulse</h1>
-                    <p className='hero__lede'>
-                        A lightweight dashboard pinging the backend status endpoint. Rebuilt in React + Vite for faster
-                        iteration.
-                    </p>
-                    <HeroTags name={status.unit} pod={0} type={status.type} />
-                </div>
+        <div className='dashboard'>
+            <Toaster position='top-right' />
+
+            <header className='dashboard__header'>
+                <h1>HSDB Admin Dashboard</h1>
+                <p>Manage your Django student database</p>
             </header>
 
-            <main className='grid'>
-                <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
-                <section className='card card--timeline'>
-                    <h2>Activity</h2>
-                    <ul>
-                        {history.map((entry, idx) => (
-                            <li key={`${entry}-${idx}`}>{entry}</li>
-                        ))}
-                    </ul>
-                </section>
-            </main>
+            <div className='dashboard__stats'>
+                <div className='stat-card'>
+                    <p className='stat-card__label'>Total Students</p>
+                    <h2 className='stat-card__value'>{stats.total}</h2>
+                </div>
+                <div className='stat-card'>
+                    <p className='stat-card__label'>Male Students</p>
+                    <h2 className='stat-card__value'>{stats.male}</h2>
+                </div>
+                <div className='stat-card'>
+                    <p className='stat-card__label'>Female Students</p>
+                    <h2 className='stat-card__value'>{stats.female}</h2>
+                </div>
+                <div className='stat-card'>
+                    <p className='stat-card__label'>Average Age</p>
+                    <h2 className='stat-card__value'>{stats.avgAge}</h2>
+                </div>
+            </div>
+
+            <div className='dashboard__content'>
+                <div className='dashboard__toolbar'>
+                    <h2>Students</h2>
+                    <div className='actions'>
+                        <button className='btn btn--primary' onClick={refresh} disabled={loading}>
+                            {loading ? 'Loading...' : 'Refresh'}
+                        </button>
+                    </div>
+                </div>
+
+                {loading && <div className='loading'>Loading students...</div>}
+
+                {error && (
+                    <div className='error'>
+                        Error loading students: {error}
+                        <button onClick={refresh}>Retry</button>
+                    </div>
+                )}
+
+                {!loading && !error && (
+                    <StudentTable students={students} onEdit={handleEdit} onDelete={deleteStudent} />
+                )}
+            </div>
         </div>
     );
 }

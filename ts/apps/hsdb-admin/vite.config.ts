@@ -37,7 +37,7 @@ export const getBaseViteConfig = (): UserConfig => ({
     plugins: [react(), eslint()],
     resolve: {
         alias: {
-            '@': resolve(__dirname, '../../'),
+            '@': resolve(__dirname, './src'),
         },
     },
     css: {
