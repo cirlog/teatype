@@ -32,9 +32,9 @@ interface iMainMenuProps {
 
 const MainMenu: React.FC<iMainMenuProps> = (props) => {
     const difficulties: { value: tDifficulty; label: string; description: string }[] = [
-        { value: 'easy', label: 'Noob', description: 'Random moves, forgiving play' },
-        { value: 'medium', label: 'Casual', description: 'Basic strategy, occasional mistakes' },
-        { value: 'hard', label: 'Expert', description: 'Strong strategy, few mistakes' },
+        { value: 'easy', label: 'Noob 👶', description: 'Random moves, forgiving play' },
+        { value: 'medium', label: 'Casual 👖', description: 'Basic strategy, occasional mistakes' },
+        { value: 'hard', label: 'Expert 🎓', description: 'Strong strategy, few mistakes' },
         { value: 'expert', label: 'Yessmine🌼', description: 'Optimal play, card counting. You will suffer' },
     ];
 
