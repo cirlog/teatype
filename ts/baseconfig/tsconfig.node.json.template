@@ -46,8 +46,8 @@
         // Require explicit handling of all switch statement cases
         "noFallthroughCasesInSwitch": true,
         // Warn about imports with unanalyzed side effects
-        "noUncheckedSideEffectImports": true
+        "noUncheckedSideEffectImports": true,
     },
     // Files to include in TypeScript compilation
-    "include": ["vite.config.ts"]
+    "include": ["vite.config.ts"],
 }

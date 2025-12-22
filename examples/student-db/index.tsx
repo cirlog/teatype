@@ -18,7 +18,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 // Components
-import App from './src/ModuloDashboard';
+import App from '../../ts/apps/tiles/src/ModuloDashboard';
 
 // Style
 import '@/style/global.scss';

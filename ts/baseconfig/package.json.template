@@ -1,7 +1,7 @@
 {
-    "name": "@teatype/student-db",
+    "name": "{{PLACEHOLDER}}",
     "version": "1.0.0",
-    "description": "Student database example app",
+    "description": "{{PLACEHOLDER}}",
     "private": true,
     "type": "module",
     "scripts": {
