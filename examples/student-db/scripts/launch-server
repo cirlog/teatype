@@ -13,15 +13,13 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
-from teatype.cli import BaseCLI
+from teatype.cli import BaseStartCLI
 from teatype.io import path, shell
 
-class Start(BaseCLI):
-    def execute(self):
-        shell(f'cd {self.parent_path} && pnpm start', detached=True)
-        
+class LaunchServer(BaseStartCLI):
+    def pre_execute(self):
         self.process_name = 'student_db_server'
         self.start_command = f'python3.11 {self.process_name}.py'
 
 if __name__ == '__main__':
-    Start()
+    LaunchServer()
