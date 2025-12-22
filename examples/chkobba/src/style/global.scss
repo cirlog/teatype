@@ -14,10 +14,14 @@
 
 :root {
     /* Colors */
-    --color-bg: #1a1a2e;
-    --color-bg-light: #16213e;
+    // --color-bg: #1a1a2e;
+    // --color-bg-light: #16213e;
+    --color-bg: #1a2e2b;
+    --color-bg-light: #163e35;
     --color-primary: #e94560;
-    --color-secondary: #0f3460;
+    // --color-primary: #e94560;
+    // --color-secondary: #0f3460;
+    --color-secondary: #0f6055;
     --color-accent: #ffd700;
     --color-success: #4ade80;
     --color-text: #ffffff;
@@ -25,7 +29,8 @@
     --color-felt: #0d5c2e;
     --color-felt-dark: #094d25;
     --color-card-red: #dc2626;
-    --color-card-black: #1f2937;
+    // --color-card-black: #1f2937;
+    --color-card-black: #1f3731;
 
     /* Spacing */
     --spacing-xs: 4px;
@@ -236,7 +241,8 @@ h6 {
         }
 
         &--active {
-            border-color: var(--color-primary);
+            // border-color: var(--color-primary);
+            border-color: var(--color-accent);
             background: var(--color-secondary);
         }
 
@@ -278,7 +284,8 @@ h6 {
         }
 
         &--active {
-            border-color: var(--color-primary);
+            // border-color: var(--color-primary);
+            border-color: var(--color-accent);
             background: var(--color-secondary);
         }
     }
@@ -708,6 +715,7 @@ h6 {
     &-round {
         font-family: 'Cinzel', serif;
         font-size: 1.2rem;
+        font-weight: bold;
         color: var(--color-accent);
     }
 
@@ -1060,10 +1068,14 @@ h6 {
         }
 
         &--fade-3 {
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.45);
         }
 
         &--fade-4 {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        &--fade-5 {
             color: rgba(255, 255, 255, 0.25);
         }
     }

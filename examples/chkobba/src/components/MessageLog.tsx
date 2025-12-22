@@ -76,12 +76,11 @@ const MessageLog: React.FC<iMessageLogProps> = (props) => {
     return (
         <div className='message-log'>
             <div className='message-log-header'>
-                <span className='message-log-title'>📜 Game Log</span>
-                <span className='message-log-count'>{totalActions} actions</span>
+                <span className='message-log-count'>{totalActions} plays</span>
             </div>
             <div className='message-log-content' ref={logRef}>
                 {visibleActions.length === 0 ? (
-                    <div className='message-log-empty'>No actions yet...</div>
+                    <div className='message-log-empty'>No plays yet...</div>
                 ) : (
                     visibleActions.map((action, index) => (
                         <div key={action.id} className={getActionClass(action, index)}>

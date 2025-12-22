@@ -113,21 +113,22 @@ const MainMenu: React.FC<iMainMenuProps> = (props) => {
                 <h3>Quick Rules</h3>
                 <ul>
                     <li>
-                        <strong>Deck:</strong> 40 cards (A-10, no J/Q/K)
+                        <strong>Deck:</strong> 40 cards (A-7, J/Q/K, no 8,9,10)
                     </li>
                     <li>
-                        <strong>Picture cards (8-10):</strong> Take ALL table cards, no Chkobba
+                        <strong>Picture cards (J/Q/K):</strong> Capture cards that sum to your card's value
                     </li>
                     <li>
                         <strong>Number cards (1-7):</strong> Capture cards that sum to your card's value
                     </li>
                     <li>
-                        <strong>Chkobba:</strong> Clear the table with a 2-7 card = +1 point
+                        <strong>Chkobba:</strong> Clear the table
                     </li>
                     <li>
                         <strong>Ace:</strong> Can capture (value 1) but cannot make Chkobba
                     </li>
                 </ul>
+
                 <h4>Scoring</h4>
                 <ul>
                     <li>Most cards (21+): +1 point</li>
