@@ -1,3 +1,3 @@
-import baseConfig from '@teatype/base-config/eslint';
+import baseConfig from '@teatype/baseconfig/eslint';
 
 export default [...baseConfig];

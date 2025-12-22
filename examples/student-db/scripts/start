@@ -14,11 +14,14 @@
 
 # Third-party imports
 from teatype.cli import BaseStartCLI
+from teatype.io import path, shell
 
 class Start(BaseStartCLI):
     REQUIRES_SSL=False
         
     def pre_execute(self):
+        shell(f'cd {self.parent_path} && pnpm start', detached=True)
+        
         self.process_name = 'student_db_server'
         self.start_command = f'python3.11 {self.process_name}.py'
 

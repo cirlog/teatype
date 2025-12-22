@@ -1,9 +1,10 @@
 packages:
     - apps/*
-    - base_config
+    - baseconfig
     - platforms/*
     - components
     - hooks
+    - style
     - ../examples/*
 
 ignoredBuiltDependencies:

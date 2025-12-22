@@ -1,0 +1,13 @@
+{
+    "name": "@teatype/style",
+    "version": "1.0.0",
+    "description": "Shared styles for Teatype apps",
+    "private": true,
+    "type": "module",
+    "main": "global.scss",
+    "exports": {
+        ".": "./global.scss",
+        "./global": "./global.scss",
+        "./*": "./*"
+    }
+}

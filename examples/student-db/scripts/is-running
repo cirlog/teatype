@@ -21,7 +21,7 @@ class IsRunning(BaseIsRunningCLI):
     #########
     
     def pre_execute(self):
-        self.process_names = ['student_db_server']
+        self.process_names = ['student_db_server', 'pnpm', 'vite']
 
 if __name__ == '__main__':
     IsRunning()

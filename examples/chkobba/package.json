@@ -11,7 +11,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@teatype/base-config": "workspace:*",
+        "@teatype/baseconfig": "workspace:*",
         "@teatype/components": "workspace:*",
         "@teatype/hooks": "workspace:*",
         "react": "^19.0.0",

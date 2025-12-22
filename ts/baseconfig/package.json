@@ -1,5 +1,5 @@
 {
-    "name": "@teatype/base-config",
+    "name": "@teatype/baseconfig",
     "version": "1.0.0",
     "description": "Shared configuration for Teatype apps",
     "private": true,

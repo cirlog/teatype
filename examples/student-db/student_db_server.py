@@ -118,7 +118,7 @@ if __name__ == '__main__':
     )
     
     student = Student.query.where('age').equals(18).first()
-    print(student.university)
+    # print(student.university)
     
     # Create a temporary module for URL configuration
     import types

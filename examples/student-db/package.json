@@ -1,0 +1,24 @@
+{
+    "name": "student-db-dashboard",
+    "version": "1.0.0",
+    "description": "Student DB Dashboard",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "vite",
+        "build": "vite build",
+        "build-with-tsc": "tsc -b && vite build",
+        "lint": "eslint .",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "teatype": "workspace:*"
+    },
+    "devDependencies": {},
+    "prettier": {
+        "jsxSingleQuote": true,
+        "singleQuote": true,
+        "printWidth": 120,
+        "tabWidth": 4
+    }
+}

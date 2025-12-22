@@ -12,7 +12,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@teatype/base-config": "workspace:*",
+        "@teatype/baseconfig": "workspace:*",
         "axios": "^1.7.9",
         "eslint-config-prettier": "^9.1.0",
         "prettier": "^3.4.2",
