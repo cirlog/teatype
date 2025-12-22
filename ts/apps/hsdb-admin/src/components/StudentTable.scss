@@ -25,6 +25,16 @@
                 font-size: 14px;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
+
+                &.sortable {
+                    cursor: pointer;
+                    user-select: none;
+                    transition: background-color 0.2s;
+
+                    &:hover {
+                        background-color: #e9ecef;
+                    }
+                }
             }
         }
 
@@ -64,6 +74,31 @@
         padding: 48px;
         text-align: center;
         color: #6c757d;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 16px;
+        border-top: 1px solid #e9ecef;
+        background: #f8f9fa;
+
+        &__info {
+            margin: 0 16px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .btn {
+            min-width: 36px;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
     }
 }
 

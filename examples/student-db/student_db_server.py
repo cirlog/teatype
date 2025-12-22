@@ -45,7 +45,7 @@ def create_student(i:int, random_first_names, random_sur_names, random_schools):
         'gender': gender,
         'height': random.randint(140, 200),
         'name': f'{random.choice(random_first_names[0] if gender == "male" else random_first_names[1])} {random.choice(random_sur_names)}',
-        'school': random.choice([random_school.id for random_school in random_schools])
+        'university': random.choice([random_school.id for random_school in random_schools])
     })
     return student.id, student
 
@@ -112,14 +112,13 @@ if __name__ == '__main__':
     log(hybrid_storage.index_db.memory_footprint)
     stopwatch()
         
-    # Create URL patterns
-    from django.urls import path
-    import sys
-    
     # Dynamically create and set URL patterns
     urlpatterns = server.create_urlpatterns(
         include_admin=False
     )
+    
+    student = Student.query.where('age').equals(18).first()
+    print(student.university)
     
     # Create a temporary module for URL configuration
     import types

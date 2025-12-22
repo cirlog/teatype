@@ -13,8 +13,11 @@
  * all copies or substantial portions of the Software.
  */
 
+import { useState } from 'react';
+
 // Components
 import { StudentTable } from '@/components/StudentTable';
+import { EditStudentModal } from '@/components/EditStudentModal';
 
 // Hooks
 import { useStudents } from '@/hooks/useStudents';
@@ -25,11 +28,19 @@ import '@/style/dashboard.scss';
 import { Toaster } from 'react-hot-toast';
 
 export default function App() {
-    const { students, loading, error, refresh, deleteStudent } = useStudents();
+    const { students, loading, error, refresh, updateStudent, deleteStudent } = useStudents();
+    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
     const handleEdit = (student: Student) => {
-        // TODO: Implement edit modal/form
-        console.log('Edit student:', student);
+        setEditingStudent(student);
+    };
+
+    const handleSave = async (id: string, updates: Partial<Student>) => {
+        await updateStudent(id, updates);
+    };
+
+    const handleCloseModal = () => {
+        setEditingStudent(null);
     };
 
     const stats = {
@@ -90,6 +101,8 @@ export default function App() {
                     <StudentTable students={students} onEdit={handleEdit} onDelete={deleteStudent} />
                 )}
             </div>
+
+            <EditStudentModal student={editingStudent} onSave={handleSave} onClose={handleCloseModal} />
         </div>
     );
 }

@@ -80,12 +80,15 @@ class HSDBDjangoView(APIView):
                     elif return_code == 500:
                         return ServerError('Internal server error during entry creation')
                 # TODO: Implement other methods
-                # case 'DELETE':
-                #     query_response = hybrid_storage.delete_entry()
-                # case 'PUT':
-                #     query_response = hybrid_storage.create_entry()
-                # case 'PATCH':
-                #     query_response = hybrid_storage.modify_entry()
+                case 'DELETE':
+                    raise NotImplementedError('DELETE method not implemented yet')
+                    query_response = hybrid_storage.delete_entry()
+                case 'PUT':
+                    raise NotImplementedError('PUT method not implemented yet')
+                    query_response = hybrid_storage.create_entry()
+                case 'PATCH':
+                    raise NotImplementedError('PATCH method not implemented yet')
+                    query_response = hybrid_storage.modify_entry()
             # TODO: Implement proper query_response handling
             if query_response is not None:
                 return Success(query_response)
@@ -94,8 +97,8 @@ class HSDBDjangoView(APIView):
                 err(query_response_error, verbose=False)
                 return ServerError({'message': query_response_error})
         except Exception as exc:
-            traceback.print_exc()
-            return ServerError(exc)
+            err('Exception during auto method handling', traceback=True)
+            return ServerError(str(exc))
     
     # TODO: Figure out how to make these work as properties
     def api_id(self) -> str:

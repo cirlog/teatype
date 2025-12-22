@@ -18,8 +18,8 @@ from .University import University
 
 # Assume these are your models derived from BaseModel.
 class Student(HSDBModel):
-    age    = HSDBAttribute(int, required=True)
-    gender = HSDBAttribute(str, required=True)
-    height = HSDBAttribute(int, description='Height in cm', required=True)
-    name   = HSDBAttribute(str, required=True)
-    school = HSDBRelation.ManyToOne(University, required=True)
+    age        = HSDBAttribute(int, required=True)
+    gender     = HSDBAttribute(str, required=True)
+    height     = HSDBAttribute(int, description='Height in cm', required=True)
+    name       = HSDBAttribute(str, required=True)
+    university = HSDBRelation.ManyToOne(University, required=True)
