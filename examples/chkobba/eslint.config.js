@@ -13,6 +13,42 @@
  * all copies or substantial portions of the Software.
  */
 
-import baseConfig from '@teatype/baseconfig/eslint';
+import eslintJs from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import tseslint from 'typescript-eslint';
 
-export default [...baseConfig];
+const DIST_IGNORE_PATTERN = ['dist'];
+const TYPESCRIPT_FILES = ['**/*.{ts,tsx}'];
+const ECMA_VERSION = 2020;
+
+export default tseslint.config(
+    { ignores: DIST_IGNORE_PATTERN },
+    {
+        files: TYPESCRIPT_FILES,
+        extends: [eslintJs.configs.recommended, ...tseslint.configs.recommended],
+        languageOptions: {
+            ecmaVersion: ECMA_VERSION,
+            globals: globals.browser,
+        },
+        settings: {
+            'import/resolver': {
+                typescript: {
+                    alwaysTryTypes: true,
+                },
+            },
+        },
+        plugins: {
+            'react-hooks': reactHooks,
+            'react-refresh': reactRefresh,
+        },
+        rules: {
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': 'warn',
+            'react-hooks/rules-of-hooks': 'error',
+            'react-hooks/exhaustive-deps': 'warn',
+            'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+        },
+    },
+);

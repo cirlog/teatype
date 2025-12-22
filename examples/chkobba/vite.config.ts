@@ -13,19 +13,48 @@
  * all copies or substantial portions of the Software.
  */
 
+import { defineConfig, type UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import eslint from 'vite-plugin-eslint';
+import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-export default defineConfig({
-    plugins: [react()],
+const loadSSLCertificate = (certPath: string, keyPath: string): { cert: Buffer; key: Buffer } | null => {
+    try {
+        return {
+            cert: readFileSync(certPath),
+            key: readFileSync(keyPath),
+        };
+    } catch (error) {
+        console.warn('Failed to load SSL certificates, HTTPS disabled:', error instanceof Error ? error.message : 'Unknown error');
+        return null;
+    }
+};
+
+const sslConfig = loadSSLCertificate('ssl.crt', 'ssl.key');
+
+export const getBaseViteConfig = (): UserConfig => ({
+    plugins: [react(), eslint()],
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
         },
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                additionalData: [
+                ].join('\n'),
+            },
+        },
+    },
     server: {
-        port: 3000,
-        open: true
-    }
+        cors: true,
+        host: '0.0.0.0',
+        port: 5173,
+        open: false,
+        // https: sslConfig ? { cert: sslConfig.cert, key: sslConfig.key } : false,
+    },
 });
+
+export default defineConfig(getBaseViteConfig());

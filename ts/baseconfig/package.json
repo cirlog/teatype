@@ -6,12 +6,12 @@
     "type": "module",
     "exports": {
         ".": ".",
-        "./eslint": "./eslint.config.js.template",
-        "./tsconfig": "./tsconfig.json.template",
-        "./tsconfig.app": "./tsconfig.app.json.template",
-        "./tsconfig.node": "./tsconfig.node.json.template",
-        "./vite": "./vite.config.ts.template",
-        "./vite.config": "./vite.config.ts.template"
+        "./eslint": "./eslint.config.js",
+        "./tsconfig": "./tsconfig.json",
+        "./tsconfig.app": "./tsconfig.app.json",
+        "./tsconfig.node": "./tsconfig.node.json",
+        "./vite": "./vite.config.ts",
+        "./vite.config": "./vite.config.ts"
     },
     "scripts": {
         "start": "vite",

@@ -25,7 +25,7 @@ import { RoundScoreModal } from './components/ScoreDisplay';
 // Hooks
 import { useGameState } from './hooks/useGameState';
 
-const App: React.FC = () => {
+const Chkobba: React.FC = () => {
     const {
         state,
         roundScores,
@@ -45,7 +45,7 @@ const App: React.FC = () => {
     } = useGameState();
 
     return (
-        <div className='app'>
+        <div className='chkobba-app'>
             {state.phase === 'menu' && (
                 <MainMenu
                     difficulty={state.difficulty}
@@ -110,4 +110,4 @@ const App: React.FC = () => {
     );
 };
 
-export default App;
+export default Chkobba;
