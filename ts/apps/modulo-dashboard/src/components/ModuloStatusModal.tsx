@@ -20,9 +20,9 @@ import { StatusCard } from '@/components/StatusCard';
 import { useStatusPulse } from '@/hooks/useStatusPulse';
 
 // Style
-import '@/style/status.scss';
+import '@/components/style/ModuloStatusModal.scss';
 
-function HeroTags({ name, pod, type }: { name: string; pod: number; type: string }) {
+const HeroTags = ({ name, pod, type }: { name: string; pod: number; type: string }) => {
     return (
         <div className='hero__tags'>
             <span className='hero__tag'>{name}</span>
@@ -30,9 +30,9 @@ function HeroTags({ name, pod, type }: { name: string; pod: number; type: string
             <span className='hero__tag'>{type}</span>
         </div>
     );
-}
+};
 
-export default function App() {
+const ModuloStatusModal = () => {
     const { status, history, updating, error, refresh } = useStatusPulse();
 
     return (
@@ -62,4 +62,6 @@ export default function App() {
             </main>
         </div>
     );
-}
+};
+
+export default ModuloStatusModal;

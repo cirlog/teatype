@@ -13,19 +13,15 @@
  * all copies or substantial portions of the Software.
  */
 
-// React imports
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+/// <reference types="vite/client" />
 
-// Components
-import StudentDB from './src/StudentDB';
+// Type declarations for SCSS modules
+declare module '*.scss' {
+    const content: { [className: string]: string };
+    export default content;
+}
 
-// Style
-import '@teatype/style/globstyle.scss';
-import '@teatype/style/globvars.scss';
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-    <React.StrictMode>
-        <StudentDB />
-    </React.StrictMode>
-);
+// Type declarations for side-effect SCSS imports from workspace packages
+declare module '@teatype/style/*.scss';
+declare module '@teatype/style/globstyle.scss';
+declare module '@teatype/style/globvars.scss';

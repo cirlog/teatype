@@ -1,0 +1,57 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+// Color codes
+$black: #111;
+$black-light: #222;
+$black-very-light: #353535;
+$dune: #f6d7b0;
+$gray: #777777;
+$gray-dark: #555555;
+$gray-light: #999999;
+$baby-blue: #44abff;
+$blue: #6b7cff;
+$blue-dark: #4a59c8;
+$green: #66cc66;
+$green-dark: #009900;
+$red: #da3649;
+$red-dark: rgb(185, 35, 35);
+$red-light: #ff6677;
+$white: #eee;
+$yellow: #ffd376;
+$yellow-dark: #d1a64b;
+
+// Gradients
+$teatype-gradient: linear-gradient(90deg, #f48a51 0%, #ef6a5f 25%, #e03a7d 50%, #c8329a 75%, #9b28b0 100%);
+$teatype-gradient-allblue: radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),
+    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.2), transparent 35%), var(--surface);
+$teatype-gradient-alt: linear-gradient(90deg, #64d74f 0%, #3acd6a 25%, #1fc582 50%, #10959f 75%, #0b75ae 100%);
+$teatype-gradient-dark: linear-gradient(90deg, #b25f34 0%, #a64a46 25%, #9c265a 50%, #7a2f70 75%, #6b1c7d 100%);
+$teatype-gradient-reverse: linear-gradient(90deg, #9b28b0 0%, #c8329a 25%, #e03a7d 50%, #ef6a5f 75%, #f48a51 100%);
+$teatype-gradient-negative: linear-gradient(90deg, #0b75ae 0%, #10959f 25%, #1fc582 50%, #3acd6a 75%, #64d74f 100%);
+
+// Shadows
+
+// Borders
+
+// Transitions
+$transition-fast: 100ms all;
+$transition-default: 250ms all;
+$transition-slow: 500ms all;
+
+// Font sizes
+$font-small: 12px;
+$font-default: 16px;
+$font-large: 20px;
+$font-huge: 24px;

@@ -1,13 +1,29 @@
-import type { StatusSnapshot } from '../hooks/useStatusPulse';
+/**
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
 
-interface StatusCardProps {
-    status: StatusSnapshot;
-    updating: boolean;
+import type { tStatusSnapshot } from '../hooks/useStatusPulse';
+
+interface iStatusCardProps {
     error: string | null;
+    status: tStatusSnapshot;
+    updating: boolean;
+
     onRefresh: () => void;
 }
 
-export function StatusCard({ status, updating, error, onRefresh }: StatusCardProps) {
+export function StatusCard({ status, updating, error, onRefresh }: iStatusCardProps) {
     const pillLabel = updating ? 'Updating' : error ? 'Offline' : 'Online';
     const pillStyle = {
         background: error ? 'rgba(249, 115, 22, 0.18)' : 'rgba(16, 185, 129, 0.18)',

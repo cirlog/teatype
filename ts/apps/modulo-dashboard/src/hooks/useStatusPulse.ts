@@ -1,5 +1,19 @@
+/**
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
 
-
+// React imports
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 /**
@@ -7,7 +21,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
  * Contains information about the unit state, designation, status message,
  * loop iteration count, and the type of status tracking being used.
  */
-export type StatusSnapshot = {
+type tStatusSnapshot = {
     unit: string;
     designation: string;
     status: string;
@@ -16,7 +30,7 @@ export type StatusSnapshot = {
 };
 
 // Initial default status state used when the hook first mounts before any real data is fetched
-const DEFAULT_STATUS: StatusSnapshot = {
+const DEFAULT_STATUS: tStatusSnapshot = {
     unit: 'unknown',
     designation: '—',
     status: 'initializing',
@@ -40,9 +54,9 @@ const HISTORY_LIMIT = 5;
  *   - error: Error message string or null if no error
  *   - refresh: Function to manually trigger a status update
  */
-export function useStatusPulse(endpoint?: string) {
+const useStatusPulse = (endpoint?: string) => {
     // State for the most recent status snapshot
-    const [status, setStatus] = useState<StatusSnapshot>(DEFAULT_STATUS);
+    const [status, setStatus] = useState<tStatusSnapshot>(DEFAULT_STATUS);
     // State for the timestamped history of status changes, initialized with a waiting message
     const [history, setHistory] = useState<string[]>(['Waiting for first update …']);
     // State to track whether an update request is currently in flight
@@ -118,3 +132,7 @@ export function useStatusPulse(endpoint?: string) {
     // Return object with status data, history log, loading state, error state, and manual refresh function
     return { status, history, updating, error, refresh };
 }
+
+export type { tStatusSnapshot };
+
+export default useStatusPulse;
