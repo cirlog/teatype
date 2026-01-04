@@ -91,12 +91,15 @@ export const Sidebar = ({
                                 notes
                                     .sort((a, b) => b.updatedAt - a.updatedAt)
                                     .map((note) => (
-                                        <button
+                                        <div
                                             key={note.id}
                                             className={`sidebar__note ${
                                                 activeNoteId === note.id ? 'sidebar__note--active' : ''
                                             }`}
                                             onClick={() => onNoteSelect(note.id)}
+                                            role='button'
+                                            tabIndex={0}
+                                            onKeyDown={(e) => e.key === 'Enter' && onNoteSelect(note.id)}
                                         >
                                             <div className='sidebar__note-header'>
                                                 <span className='sidebar__note-title'>{note.title}</span>
@@ -115,7 +118,7 @@ export const Sidebar = ({
                                                 <span className='sidebar__note-date'>{formatDate(note.updatedAt)}</span>
                                                 <span className='sidebar__note-preview'>{getNotePreview(note)}</span>
                                             </div>
-                                        </button>
+                                        </div>
                                     ))
                             )}
                         </div>

@@ -41,7 +41,12 @@ const tools: iToolButton[] = [
     { mode: 'highlight', icon: '◌', label: 'Highlight', shortcut: 'Ctrl+Shift+H' },
 ];
 
-const FloatingToolbar: React.FC<iFloatingToolbarProps> = (props) => {
+const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
+    formatMode,
+    selectedColor,
+    onFormatModeChange,
+    onColorChange,
+}) => {
     return (
         <div className='floating-toolbar'>
             <div className='floating-toolbar__inner'>

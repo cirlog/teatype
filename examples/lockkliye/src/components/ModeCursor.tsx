@@ -48,7 +48,7 @@ const getModeIcon = (mode: tFormatMode): string => {
     }
 };
 
-const ModeCursor: React.FC<iModeCursorProps> = (props) => {
+const ModeCursor: React.FC<iModeCursorProps> = ({ formatMode, selectedColor }) => {
     const { x, y } = useMousePosition();
 
     if (!formatMode) return null;
