@@ -153,7 +153,7 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                 <div className='floating-toolbar__status'>
                     {formatMode ? (
                         <span className='floating-toolbar__mode-label'>
-                            Mode: <strong>{formatMode}</strong>
+                            mode: <strong>{formatMode}</strong>
                             <span className='floating-toolbar__hint'> (ESC to exit)</span>
                         </span>
                     ) : (

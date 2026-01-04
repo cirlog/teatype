@@ -13,20 +13,32 @@
  * all copies or substantial portions of the Software.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { iTextBlock, tFormatMode, iWord } from '@/types';
 import { createWord } from '@/types';
 import { WordComponent, applyFormatMode } from './WordComponent';
+
+// Debounce utility for resize performance
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    return (...args: Parameters<T>) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
+};
 
 interface iTextBlockComponentProps {
     block: iTextBlock;
     formatMode: tFormatMode;
     selectedColor: string;
+    selectedSize: string;
     onWordFormatChange: (blockId: string, wordId: string, format: Partial<iWord['format']>) => void;
     onWordsChange: (blockId: string, words: iWord[]) => void;
     onStyleChange: (blockId: string, style: Partial<iTextBlock['style']>) => void;
     onDelete: (blockId: string) => void;
     onAddBlockAfter: (blockId: string) => void;
+    onEditingChange?: (blockId: string, isEditing: boolean) => void;
 }
 
 // Helper to serialize words to editable text while preserving format info
@@ -39,11 +51,13 @@ export const TextBlockComponent = ({
     block,
     formatMode,
     selectedColor,
+    selectedSize,
     onWordFormatChange,
     onWordsChange,
     onStyleChange,
     onDelete,
     onAddBlockAfter,
+    onEditingChange,
 }: iTextBlockComponentProps) => {
     const [hoveredWordId, setHoveredWordId] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -70,7 +84,15 @@ export const TextBlockComponent = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showStyleMenu]);
 
-    // Handle width resizing
+    // Handle width resizing with debounce for performance
+    const debouncedStyleChange = useMemo(
+        () =>
+            debounce((id: string, style: Partial<iTextBlock['style']>) => {
+                onStyleChange(id, style);
+            }, 16), // ~60fps
+        [onStyleChange]
+    );
+
     useEffect(() => {
         if (!isResizing) return;
 
@@ -86,7 +108,7 @@ export const TextBlockComponent = ({
             const newWidth = ((e.clientX - blockRect.left) / containerRect.width) * 100;
             const clampedWidth = Math.max(30, Math.min(100, newWidth));
 
-            onStyleChange(block.id, { widthPercent: clampedWidth });
+            debouncedStyleChange(block.id, { widthPercent: clampedWidth });
         };
 
         const handleMouseUp = () => {
@@ -100,7 +122,7 @@ export const TextBlockComponent = ({
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isResizing, block.id, onStyleChange]);
+    }, [isResizing, block.id, debouncedStyleChange]);
 
     // Detect when mouse is near right edge of block
     const handleMouseMoveOnBlock = (e: React.MouseEvent) => {
@@ -270,17 +292,25 @@ export const TextBlockComponent = ({
         };
 
         // Create new words with preserved formatting
+        // Apply selectedSize to new words that don't have existing formatting
         const newWords: iWord[] = allWords.map((text: string, index: number) => {
             if (text === '\n') {
                 return createWord('\n'); // Newline word
             }
             const format = findBestFormat(text, index);
-            return format ? createWord(text, format) : createWord(text);
+            if (format) {
+                return createWord(text, format);
+            }
+            // Apply selected size to new words
+            if (selectedSize && selectedSize !== 'normal') {
+                return createWord(text, { fontSize: selectedSize as iWord['format']['fontSize'] });
+            }
+            return createWord(text);
         });
 
         onWordsChange(block.id, newWords);
         setIsEditing(false);
-    }, [editText, block.id, onWordsChange, originalWords]);
+    }, [editText, block.id, onWordsChange, originalWords, selectedSize]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Escape') {

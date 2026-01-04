@@ -14,7 +14,7 @@
  */
 
 // React imports
-import { useState } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 
 // Components
 import FloatingToolbar from './FloatingToolbar';
@@ -22,6 +22,16 @@ import { TextBlockComponent } from './TextBlockComponent';
 
 // Types
 import type { iNote, iTextBlock, iWord, tFormatMode, iHistoryEntry } from '@/types';
+
+// Debounce utility for resize performance
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    return (...args: Parameters<T>) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
+};
 
 interface iNoteEditorProps {
     note: iNote;
@@ -71,6 +81,39 @@ export const NoteEditor = ({
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(note.title);
     const [showHistory, setShowHistory] = useState(false);
+    const [editorWidth, setEditorWidth] = useState(800);
+    const [isResizing, setIsResizing] = useState(false);
+    const editorRef = useRef<HTMLDivElement>(null);
+
+    // Debounced width update for smooth resizing
+    const debouncedSetWidth = useMemo(() => debounce((width: number) => setEditorWidth(width), 16), []);
+
+    // Handle editor resize
+    useEffect(() => {
+        if (!isResizing) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!editorRef.current) return;
+            const editorRect = editorRef.current.getBoundingClientRect();
+            const centerX = editorRect.left + editorRect.width / 2;
+            // Calculate width based on distance from center (symmetric resize)
+            const newWidth = Math.abs(e.clientX - centerX) * 2;
+            const clampedWidth = Math.max(400, Math.min(1400, newWidth));
+            debouncedSetWidth(clampedWidth);
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isResizing, debouncedSetWidth]);
 
     const handleTitleSubmit = () => {
         onTitleChange(titleValue || 'Untitled');
@@ -89,7 +132,7 @@ export const NoteEditor = ({
     };
 
     return (
-        <div className='note-editor'>
+        <div className={`note-editor ${isResizing ? 'note-editor--resizing' : ''}`}>
             <div className='note-editor__toolbar-row'>
                 <FloatingToolbar
                     formatMode={formatMode}
@@ -101,48 +144,63 @@ export const NoteEditor = ({
                 />
             </div>
 
-            <div className='note-editor__header'>
-                {isEditingTitle ? (
-                    <input
-                        className='note-editor__title-input'
-                        value={titleValue}
-                        onChange={(e) => setTitleValue(e.target.value)}
-                        onBlur={handleTitleSubmit}
-                        onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
-                        autoFocus
-                    />
-                ) : (
-                    <h1
-                        className='note-editor__title'
-                        onClick={() => {
-                            setTitleValue(note.title);
-                            setIsEditingTitle(true);
-                        }}
-                    >
-                        {note.title}
-                    </h1>
-                )}
-                <p className='note-editor__date'>Last edited: {formatDate(note.updatedAt)}</p>
-            </div>
+            <div ref={editorRef} className='note-editor__body' style={{ maxWidth: editorWidth }}>
+                {/* Left resize handle */}
+                <div
+                    className='note-editor__resize-handle note-editor__resize-handle--left'
+                    onMouseDown={() => setIsResizing(true)}
+                />
 
-            <div className='note-editor__content'>
-                {note.blocks.map((block) => (
-                    <TextBlockComponent
-                        key={block.id}
-                        block={block}
-                        formatMode={formatMode}
-                        selectedColor={selectedColor}
-                        onWordFormatChange={onWordFormatChange}
-                        onWordsChange={onWordsChange}
-                        onStyleChange={onBlockStyleChange}
-                        onDelete={onBlockDelete}
-                        onAddBlockAfter={onBlockAdd}
-                    />
-                ))}
+                <div className='note-editor__header'>
+                    {isEditingTitle ? (
+                        <input
+                            className='note-editor__title-input'
+                            value={titleValue}
+                            onChange={(e) => setTitleValue(e.target.value)}
+                            onBlur={handleTitleSubmit}
+                            onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
+                            autoFocus
+                        />
+                    ) : (
+                        <h1
+                            className='note-editor__title'
+                            onClick={() => {
+                                setTitleValue(note.title);
+                                setIsEditingTitle(true);
+                            }}
+                        >
+                            {note.title}
+                        </h1>
+                    )}
+                    <p className='note-editor__date'>Last edited: {formatDate(note.updatedAt)}</p>
+                </div>
 
-                <button className='note-editor__add-block' onClick={() => onBlockAdd()}>
-                    + Add block
-                </button>
+                <div className='note-editor__content'>
+                    {note.blocks.map((block) => (
+                        <TextBlockComponent
+                            key={block.id}
+                            block={block}
+                            formatMode={formatMode}
+                            selectedColor={selectedColor}
+                            selectedSize={selectedSize}
+                            onWordFormatChange={onWordFormatChange}
+                            onWordsChange={onWordsChange}
+                            onStyleChange={onBlockStyleChange}
+                            onDelete={onBlockDelete}
+                            onAddBlockAfter={onBlockAdd}
+                        />
+                    ))}
+
+                    <button className='note-editor__add-block' onClick={() => onBlockAdd()}>
+                        + Add block
+                    </button>
+                </div>
+
+                {/* Right resize handle */}
+                <div
+                    className='note-editor__resize-handle note-editor__resize-handle--right'
+                    onMouseDown={() => setIsResizing(true)}
+                />
             </div>
 
             {/* History indicator - bottom center, sticky */}
