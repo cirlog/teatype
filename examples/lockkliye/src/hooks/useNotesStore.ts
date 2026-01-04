@@ -20,7 +20,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { iNote, iFolder, tFormatMode, iNotesState, iWord, iTextBlock, iBlockStyle, iHistoryEntry } from '@/types';
 
 // Util
-import { createNote, createFolder, createBlock, createWord, FORMAT_COLORS, exportNotesAsText, exportNotesAsJson, importNotesFromJson } from '@/types';
+import { createNote, createFolder, createBlock, createWord, FORMAT_COLORS, exportNotesAsText, exportNotesAsJson, exportSettingsAsJson, importFromJson as parseImportJson } from '@/types';
 
 const STORAGE_KEY = 'lockkliye-data';
 const HISTORY_KEY = 'lockkliye-history';
@@ -506,19 +506,65 @@ const useNotesStore: React.FC = () => {
         return exportNotesAsJson(state.notes, state.folders);
     }, [state.notes, state.folders]);
 
+    const exportSettings = useCallback(() => {
+        return exportSettingsAsJson(
+            {
+                lightMode: state.lightMode,
+                sidebarExpanded: state.sidebarExpanded,
+                editorWidth: state.editorWidth,
+                confirmDeletions: state.confirmDeletions,
+            },
+            state.blockPresets
+        );
+    }, [state.lightMode, state.sidebarExpanded, state.editorWidth, state.confirmDeletions, state.blockPresets]);
+
     const importFromJson = useCallback((jsonString: string) => {
-        const result = importNotesFromJson(jsonString);
-        if (result) {
-            setState((prev: iNotesState) => ({
-                ...prev,
-                notes: [...result.notes, ...prev.notes],
-                folders: [...result.folders.filter((f: iFolder) =>
-                    !prev.folders.some((pf: iFolder) => pf.id === f.id)
-                ), ...prev.folders],
-            }));
-            return true;
-        }
-        return false;
+        const result = parseImportJson(jsonString);
+        if (!result) return false;
+
+        setState((prev: iNotesState) => {
+            const newState = { ...prev };
+
+            // Handle notes import (notes or legacy format)
+            if (result.type === 'notes' || result.type === 'legacy') {
+                if (result.notes) {
+                    // Merge notes by ID - skip if ID already exists, otherwise add
+                    const existingIds = new Set(prev.notes.map(n => n.id));
+                    const newNotes = result.notes.filter((n: iNote) => !existingIds.has(n.id));
+                    newState.notes = [...newNotes, ...prev.notes];
+                }
+                if (result.folders) {
+                    // Merge folders by ID - skip if ID already exists
+                    const existingFolderIds = new Set(prev.folders.map(f => f.id));
+                    const newFolders = result.folders.filter((f: iFolder) => !existingFolderIds.has(f.id));
+                    newState.folders = [...newFolders, ...prev.folders];
+                }
+            }
+
+            // Handle settings import (settings or legacy format)
+            if (result.type === 'settings' || result.type === 'legacy') {
+                if (result.settings) {
+                    if (result.settings.lightMode !== undefined) newState.lightMode = result.settings.lightMode;
+                    if (result.settings.sidebarExpanded !== undefined) newState.sidebarExpanded = result.settings.sidebarExpanded;
+                    if (result.settings.editorWidth !== undefined) newState.editorWidth = result.settings.editorWidth;
+                    if (result.settings.confirmDeletions !== undefined) newState.confirmDeletions = result.settings.confirmDeletions;
+                }
+                if (result.blockPresets) {
+                    // Merge presets by ID if present, otherwise by title
+                    const existingPresetIds = new Set(prev.blockPresets.map(p => (p as any).id).filter(Boolean));
+                    const existingTitles = new Set(prev.blockPresets.map(p => p.title));
+                    const newPresets = result.blockPresets.filter((p: iBlockStyle) => {
+                        if ((p as any).id && existingPresetIds.has((p as any).id)) return false;
+                        if (existingTitles.has(p.title)) return false;
+                        return true;
+                    });
+                    newState.blockPresets = [...prev.blockPresets, ...newPresets];
+                }
+            }
+
+            return newState;
+        });
+        return true;
     }, []);
 
     // Clear all data
@@ -636,6 +682,7 @@ const useNotesStore: React.FC = () => {
         // Export/Import
         exportAsText,
         exportAsJson,
+        exportSettings,
         importFromJson,
 
         // Settings

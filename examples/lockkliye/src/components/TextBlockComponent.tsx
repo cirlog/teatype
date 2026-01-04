@@ -184,15 +184,19 @@ export const TextBlockComponent = ({
 
         const effectiveBg = getEffectiveBackground();
 
+        // Always use default border radius
+        styles.borderRadius = '8px';
+
+        // Set border style
         if (blockStyle.borderStyle && blockStyle.borderStyle !== 'none') {
             styles.borderStyle = blockStyle.borderStyle;
             styles.borderWidth = '1px';
-            // Auto-calculate border color based on background
-            styles.borderColor = blockStyle.borderColor || darkenColor(effectiveBg);
         }
 
-        // Always use default border radius
-        styles.borderRadius = '8px';
+        // Always calculate border color based on background (for blocks with borders)
+        if (blockStyle.borderStyle && blockStyle.borderStyle !== 'none') {
+            styles.borderColor = darkenColor(effectiveBg);
+        }
 
         if (blockStyle.backgroundGradient) {
             styles.background = blockStyle.backgroundGradient;
@@ -234,6 +238,7 @@ export const TextBlockComponent = ({
         'linear-gradient(135deg, rgba(247,131,172,0.15) 0%, rgba(177,151,252,0.15) 100%)',
         'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(150,150,150,0.1) 100%)',
         'linear-gradient(135deg, rgba(64,224,208,0.15) 0%, rgba(116,192,252,0.15) 100%)',
+        'linear-gradient(135deg, rgba(255,212,59,0.15) 0%, rgba(105,219,124,0.15) 100%)',
     ];
 
     // Check if block is empty (no content or just empty words)

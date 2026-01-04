@@ -17,6 +17,7 @@
 import ModeCursor from '@/components/ModeCursor';
 import { NoteEditor } from '@/components/NoteEditor';
 import { Sidebar } from '@/components/Sidebar';
+import { ToastContainer, useToast } from '@/components/Toast';
 
 // Hooks
 import useNotesStore from '@/hooks/useNotesStore';
@@ -27,6 +28,7 @@ import type { iBlockStyle } from '@/types';
 
 const NotesApp: React.FC = () => {
     const store = useNotesStore();
+    const toast = useToast();
 
     useKeyboardShortcuts({
         onEscape: () => store.setFormatMode(null),
@@ -104,7 +106,9 @@ const NotesApp: React.FC = () => {
                 onConfirmDeletionsChange={store.setConfirmDeletions}
                 onExportText={store.exportAsText}
                 onExportJson={store.exportAsJson}
+                onExportSettings={store.exportSettings}
                 onImportJson={store.importFromJson}
+                toast={toast}
             />
 
             <main className='notes-app__main'>
@@ -150,6 +154,7 @@ const NotesApp: React.FC = () => {
             </main>
 
             <ModeCursor formatMode={store.formatMode} selectedColor={store.selectedColor} />
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 };

@@ -16,6 +16,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { iNote } from '@/types';
 import { Modal } from './Modal';
+import type { useToast } from './Toast';
 
 interface iSidebarProps {
     notes: iNote[];
@@ -34,7 +35,9 @@ interface iSidebarProps {
     onConfirmDeletionsChange: (value: boolean) => void;
     onExportText: () => string;
     onExportJson: () => string;
+    onExportSettings: () => string;
     onImportJson: (json: string) => boolean;
+    toast: ReturnType<typeof useToast>;
 }
 
 export const Sidebar = ({
@@ -54,7 +57,9 @@ export const Sidebar = ({
     onConfirmDeletionsChange,
     onExportText,
     onExportJson,
+    onExportSettings,
     onImportJson,
+    toast,
 }: iSidebarProps) => {
     const [showSettings, setShowSettings] = useState(false);
     const [isSettingsClosing, setIsSettingsClosing] = useState(false);
@@ -228,9 +233,10 @@ export const Sidebar = ({
                                                 a.download = 'lockkliye-notes.txt';
                                                 a.click();
                                                 URL.revokeObjectURL(url);
+                                                toast.success('Notes exported as text');
                                             }}
                                         >
-                                            📄 Export as Text
+                                            📄 Notes (Text)
                                         </button>
                                         <button
                                             className='sidebar__export-btn'
@@ -243,9 +249,26 @@ export const Sidebar = ({
                                                 a.download = 'lockkliye-notes.json';
                                                 a.click();
                                                 URL.revokeObjectURL(url);
+                                                toast.success('Notes exported as JSON');
                                             }}
                                         >
-                                            💾 Export as JSON
+                                            📝 Notes (JSON)
+                                        </button>
+                                        <button
+                                            className='sidebar__export-btn'
+                                            onClick={() => {
+                                                const json = onExportSettings();
+                                                const blob = new Blob([json], { type: 'application/json' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'lockkliye-settings.json';
+                                                a.click();
+                                                URL.revokeObjectURL(url);
+                                                toast.success('Settings & presets exported');
+                                            }}
+                                        >
+                                            ⚙️ Settings & Presets
                                         </button>
                                     </div>
                                 </div>
@@ -265,9 +288,9 @@ export const Sidebar = ({
                                                     const content = event.target?.result as string;
                                                     const success = onImportJson(content);
                                                     if (success) {
-                                                        alert('Notes imported successfully!');
+                                                        toast.success('Imported successfully!');
                                                     } else {
-                                                        alert('Failed to import notes. Invalid file format.');
+                                                        toast.error('Failed to import. Invalid file format.');
                                                     }
                                                 };
                                                 reader.readAsText(file);

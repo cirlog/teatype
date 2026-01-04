@@ -196,28 +196,114 @@ const deserializeNote = (data: string): iNote => JSON.parse(data);
 const exportNotesAsText = (notes: iNote[]): string => {
     return notes.map(note => {
         const title = `# ${note.title}\n`;
-        const content = note.blocks.map(block =>
-            block.words.map(w => w.text).join(' ')
-        ).join('\n\n');
+        const content = note.blocks.map(block => {
+            const blockTitle = block.style.title ? `[${block.style.title}]\n` : '';
+            return blockTitle + block.words.map(w => w.text).join(' ');
+        }).join('\n\n');
         return title + content;
     }).join('\n\n---\n\n');
 };
 
-// Export notes as JSON (preserves formatting)
+// Export data types for separate JSON exports
+interface iNotesExportData {
+    version: number;
+    type: 'notes';
+    exportedAt: number;
+    notes: iNote[];
+    folders: iFolder[];
+}
+
+interface iSettingsExportData {
+    version: number;
+    type: 'settings';
+    exportedAt: number;
+    settings: {
+        lightMode: boolean;
+        sidebarExpanded: boolean;
+        editorWidth: number;
+        confirmDeletions: boolean;
+    };
+    blockPresets: iBlockStyle[];
+}
+
+// Export notes as JSON (notes and folders only)
 const exportNotesAsJson = (notes: iNote[], folders: iFolder[]): string => {
-    return JSON.stringify({ version: 1, exportedAt: Date.now(), notes, folders }, null, 2);
+    const exportData: iNotesExportData = {
+        version: 1,
+        type: 'notes',
+        exportedAt: Date.now(),
+        notes,
+        folders,
+    };
+    return JSON.stringify(exportData, null, 2);
 };
 
-// Import notes from JSON
-const importNotesFromJson = (jsonString: string): { notes: iNote[], folders: iFolder[] } | null => {
+// Export settings as JSON (settings and presets)
+const exportSettingsAsJson = (
+    settings: {
+        lightMode: boolean;
+        sidebarExpanded: boolean;
+        editorWidth: number;
+        confirmDeletions: boolean;
+    },
+    blockPresets: iBlockStyle[]
+): string => {
+    const exportData: iSettingsExportData = {
+        version: 1,
+        type: 'settings',
+        exportedAt: Date.now(),
+        settings,
+        blockPresets,
+    };
+    return JSON.stringify(exportData, null, 2);
+};
+
+// Import from JSON - handles notes, settings, or legacy combined format
+// Returns parsed data with type indicator for proper merging
+const importFromJson = (jsonString: string): {
+    type: 'notes' | 'settings' | 'legacy';
+    notes?: iNote[];
+    folders?: iFolder[];
+    settings?: {
+        lightMode?: boolean;
+        sidebarExpanded?: boolean;
+        editorWidth?: number;
+        confirmDeletions?: boolean;
+    };
+    blockPresets?: iBlockStyle[];
+} | null => {
     try {
         const data = JSON.parse(jsonString);
-        if (data.version && data.notes) {
+        if (!data.version) return null;
+
+        // New format with type field
+        if (data.type === 'notes') {
             return {
-                notes: data.notes,
+                type: 'notes',
+                notes: data.notes || [],
                 folders: data.folders || [],
             };
         }
+
+        if (data.type === 'settings') {
+            return {
+                type: 'settings',
+                settings: data.settings,
+                blockPresets: data.blockPresets || [],
+            };
+        }
+
+        // Legacy format (v1/v2 without type field) - treat as combined
+        if (data.notes) {
+            return {
+                type: 'legacy',
+                notes: data.notes,
+                folders: data.folders || [],
+                settings: data.settings,
+                blockPresets: data.settings?.blockPresets,
+            };
+        }
+
         return null;
     } catch {
         return null;
@@ -249,6 +335,7 @@ export {
     deserializeNote,
     exportNotesAsJson,
     exportNotesAsText,
-    importNotesFromJson,
+    exportSettingsAsJson,
+    importFromJson,
     serializeNote,
 };
