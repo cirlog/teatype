@@ -29,6 +29,7 @@ const NotesApp: React.FC = () => {
         onEscape: () => store.setFormatMode(null),
         onFormatToggle: store.toggleFormatMode,
         onUndo: store.undo,
+        onRedo: store.redo,
     });
 
     const handleWordFormatChange = (
@@ -72,16 +73,25 @@ const NotesApp: React.FC = () => {
     };
 
     return (
-        <div className={`notes-app ${store.sidebarExpanded ? '' : 'notes-app--fullscreen'}`}>
+        <div
+            className={`notes-app ${store.sidebarExpanded ? '' : 'notes-app--fullscreen'} ${
+                store.lightMode ? 'light-mode' : ''
+            }`}
+        >
             <Sidebar
                 notes={store.notes}
                 activeNoteId={store.activeNoteId}
                 expanded={store.sidebarExpanded}
+                lightMode={store.lightMode}
                 onToggle={store.toggleSidebar}
                 onNoteSelect={store.setActiveNote}
                 onCreateNote={() => store.createNewNote()}
                 onDeleteNote={store.deleteNote}
                 onClearAllData={store.clearAllData}
+                onToggleLightMode={store.toggleLightMode}
+                onExportText={store.exportAsText}
+                onExportJson={store.exportAsJson}
+                onImportJson={store.importFromJson}
             />
 
             <main className='notes-app__main'>
@@ -90,6 +100,10 @@ const NotesApp: React.FC = () => {
                         note={store.activeNote}
                         formatMode={store.formatMode}
                         selectedColor={store.selectedColor}
+                        historyCount={store.historyCount}
+                        redoCount={store.redoCount}
+                        canUndo={store.canUndo}
+                        canRedo={store.canRedo}
                         onTitleChange={handleTitleChange}
                         onWordFormatChange={handleWordFormatChange}
                         onWordsChange={handleWordsChange}
@@ -98,6 +112,9 @@ const NotesApp: React.FC = () => {
                         onBlockAdd={handleBlockAdd}
                         onFormatModeChange={store.setFormatMode}
                         onColorChange={store.setSelectedColor}
+                        onUndo={store.undo}
+                        onRedo={store.redo}
+                        getHistory={store.getActiveNoteHistory}
                     />
                 ) : (
                     <div className='notes-app__empty'>

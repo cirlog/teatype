@@ -871,3 +871,284 @@ body {
         transform: scale(1);
     }
 }
+
+// Note Editor Toolbar Row
+.note-editor__toolbar-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 24px;
+}
+
+.note-editor__history-indicator {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.note-editor__history-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--bg-glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all var(--transition);
+    backdrop-filter: blur(10px);
+
+    &:hover:not(&--disabled) {
+        background: var(--bg-hover);
+        color: var(--text-primary);
+    }
+
+    &--disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.note-editor__history-count {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.note-editor__history-label {
+    color: var(--text-tertiary);
+}
+
+.note-editor__undo-btn,
+.note-editor__redo-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all var(--transition);
+    backdrop-filter: blur(10px);
+
+    &:hover:not(&--disabled) {
+        background: var(--bg-hover);
+        color: var(--text-primary);
+    }
+
+    &--disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.note-editor__history-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    min-width: 250px;
+    max-height: 300px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    z-index: 200;
+    overflow: hidden;
+}
+
+.note-editor__history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+
+    button {
+        background: none;
+        border: none;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0;
+        line-height: 1;
+
+        &:hover {
+            color: var(--text-primary);
+        }
+    }
+}
+
+.note-editor__history-list {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.note-editor__history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: var(--bg-hover);
+    }
+}
+
+.note-editor__history-item-desc {
+    color: var(--text-primary);
+}
+
+.note-editor__history-item-time {
+    color: var(--text-tertiary);
+    font-family: monospace;
+}
+
+// Text Block Resize Handle
+.text-block {
+    &--resizing {
+        cursor: ew-resize;
+    }
+
+    &__resize-handle {
+        position: absolute;
+        top: 0;
+        right: -4px;
+        width: 8px;
+        height: 100%;
+        cursor: ew-resize;
+        background: transparent;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 2px;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        &:hover::after {
+            opacity: 1;
+        }
+    }
+}
+
+// Sidebar Export/Import Buttons
+.sidebar__settings-section {
+    margin-bottom: 12px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.sidebar__export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebar__export-btn,
+.sidebar__import-btn,
+.sidebar__toggle-light-mode-btn {
+    padding: 10px 16px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: left;
+
+    &:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--border-strong);
+    }
+}
+
+.sidebar__toggle-light-mode-btn {
+    background: var(--bg-tertiary);
+}
+
+// Light Mode Theme
+.notes-app.light-mode {
+    --bg-primary: #f5f5f7;
+    --bg-gradient: linear-gradient(135deg, #f5f5f7 0%, #ffffff 25%, #fafafa 50%, #ffffff 75%, #f5f5f7 100%);
+    --bg-secondary: rgba(255, 255, 255, 0.95);
+    --bg-tertiary: #e8e8ed;
+    --bg-hover: #d1d1d6;
+    --bg-glass: rgba(255, 255, 255, 0.8);
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #8e8e93;
+    --accent: #ff9500;
+    --accent-hover: #cc7700;
+    --accent-glow: rgba(255, 149, 0, 0.2);
+    --danger: #ff3b30;
+    --danger-hover: #cc2f26;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.15);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.5);
+
+    background: var(--bg-gradient);
+
+    .sidebar {
+        background: var(--bg-secondary);
+        border-right-color: var(--border);
+    }
+
+    .floating-toolbar__inner {
+        background: var(--bg-glass);
+        border-color: var(--glass-border);
+    }
+
+    .text-block {
+        &--editing {
+            background: var(--bg-tertiary);
+        }
+
+        &__input {
+            color: var(--text-primary);
+        }
+    }
+
+    .word--mode-active:hover {
+        background: rgba(255, 149, 0, 0.15);
+        box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.2);
+    }
+
+    .mode-cursor {
+        background: var(--bg-secondary);
+        box-shadow: var(--shadow);
+    }
+
+    .note-editor__history-btn,
+    .note-editor__undo-btn,
+    .note-editor__redo-btn {
+        background: var(--bg-glass);
+        border-color: var(--glass-border);
+    }
+}

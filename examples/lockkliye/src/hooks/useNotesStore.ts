@@ -20,17 +20,20 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { iNote, iFolder, tFormatMode, iNotesState, iWord, iTextBlock, iBlockStyle, iHistoryEntry } from '@/types';
 
 // Util
-import { createNote, createFolder, createBlock, createWord, FORMAT_COLORS } from '@/types';
+import { createNote, createFolder, createBlock, createWord, FORMAT_COLORS, exportNotesAsText, exportNotesAsJson, importNotesFromJson } from '@/types';
 
 const STORAGE_KEY = 'lockkliye-data';
 const HISTORY_KEY = 'lockkliye-history';
+const REDO_KEY = 'lockkliye-redo';
 const MAX_HISTORY_SIZE = 100;
 
 const getInitialState = (): iNotesState => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
         try {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            // Ensure lightMode exists
+            return { ...parsed, lightMode: parsed.lightMode ?? false };
         } catch {
             // Fall through to default state
         }
@@ -83,6 +86,7 @@ const getInitialState = (): iNotesState => {
         sidebarExpanded: true,
         formatMode: null,
         selectedColor: FORMAT_COLORS[0],
+        lightMode: false,
     };
 };
 
@@ -98,9 +102,22 @@ const getInitialHistory = (): iHistoryEntry[] => {
     return [];
 };
 
+const getInitialRedo = (): iHistoryEntry[] => {
+    const stored = localStorage.getItem(REDO_KEY);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch {
+            return [];
+        }
+    }
+    return [];
+};
+
 const useNotesStore: React.FC = () => {
     const [state, setState] = useState<iNotesState>(getInitialState);
     const [history, setHistory] = useState<iHistoryEntry[]>(getInitialHistory);
+    const [redoStack, setRedoStack] = useState<iHistoryEntry[]>(getInitialRedo);
     const isUndoing = useRef(false);
 
     // Persist to localStorage
@@ -113,14 +130,24 @@ const useNotesStore: React.FC = () => {
         localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     }, [history]);
 
-    // Save state to history before modifications
-    const saveToHistory = useCallback((notes: iNote[]) => {
+    // Persist redo to localStorage
+    useEffect(() => {
+        localStorage.setItem(REDO_KEY, JSON.stringify(redoStack));
+    }, [redoStack]);
+
+    // Save state to history before modifications (per-note)
+    const saveToHistory = useCallback((noteId: string, description: string) => {
         if (isUndoing.current) return;
 
-        setHistory(prev => {
+        const note = state.notes.find((n: iNote) => n.id === noteId);
+        if (!note) return;
+
+        setHistory((prev: iHistoryEntry[]) => {
             const newEntry: iHistoryEntry = {
-                notes: JSON.parse(JSON.stringify(notes)), // Deep clone
+                noteId,
+                note: JSON.parse(JSON.stringify(note)), // Deep clone
                 timestamp: Date.now(),
+                description,
             };
             const newHistory = [...prev, newEntry];
             // Limit history size
@@ -129,61 +156,117 @@ const useNotesStore: React.FC = () => {
             }
             return newHistory;
         });
-    }, []);
 
-    // Undo - restore previous state
+        // Clear redo stack on new change
+        setRedoStack([]);
+    }, [state.notes]);
+
+    // Get history for active note
+    const getActiveNoteHistory = useCallback(() => {
+        if (!state.activeNoteId) return [];
+        return history.filter((h: iHistoryEntry) => h.noteId === state.activeNoteId);
+    }, [history, state.activeNoteId]);
+
+    // Undo - restore previous state for active note
     const undo = useCallback(() => {
-        if (history.length === 0) return;
+        const noteHistory = getActiveNoteHistory();
+        if (noteHistory.length === 0) return;
 
         isUndoing.current = true;
-        const previousState = history[history.length - 1];
+        const previousEntry = noteHistory[noteHistory.length - 1];
 
-        setState(prev => ({
+        // Save current state to redo stack
+        const currentNote = state.notes.find((n: iNote) => n.id === state.activeNoteId);
+        if (currentNote) {
+            setRedoStack((prev: iHistoryEntry[]) => [...prev, {
+                noteId: currentNote.id,
+                note: JSON.parse(JSON.stringify(currentNote)),
+                timestamp: Date.now(),
+                description: 'Redo',
+            }]);
+        }
+
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: previousState.notes,
+            notes: prev.notes.map((n: iNote) =>
+                n.id === previousEntry.noteId ? previousEntry.note : n
+            ),
         }));
 
-        setHistory(prev => prev.slice(0, -1));
+        setHistory((prev: iHistoryEntry[]) => prev.filter((h: iHistoryEntry) => h !== previousEntry));
 
-        // Reset flag after state update
         setTimeout(() => {
             isUndoing.current = false;
         }, 0);
-    }, [history]);
+    }, [getActiveNoteHistory, state.notes, state.activeNoteId]);
 
-    // Check if undo is available
-    const canUndo = history.length > 0;
+    // Redo - restore from redo stack
+    const redo = useCallback(() => {
+        const noteRedos = redoStack.filter((r: iHistoryEntry) => r.noteId === state.activeNoteId);
+        if (noteRedos.length === 0) return;
 
-    const activeNote = state.notes.find(n => n.id === state.activeNoteId) || null;
+        isUndoing.current = true;
+        const redoEntry = noteRedos[noteRedos.length - 1];
+
+        // Save current state to history
+        const currentNote = state.notes.find((n: iNote) => n.id === state.activeNoteId);
+        if (currentNote) {
+            setHistory((prev: iHistoryEntry[]) => [...prev, {
+                noteId: currentNote.id,
+                note: JSON.parse(JSON.stringify(currentNote)),
+                timestamp: Date.now(),
+                description: 'Before redo',
+            }]);
+        }
+
+        setState((prev: iNotesState) => ({
+            ...prev,
+            notes: prev.notes.map((n: iNote) =>
+                n.id === redoEntry.noteId ? redoEntry.note : n
+            ),
+        }));
+
+        setRedoStack((prev: iHistoryEntry[]) => prev.filter((r: iHistoryEntry) => r !== redoEntry));
+
+        setTimeout(() => {
+            isUndoing.current = false;
+        }, 0);
+    }, [redoStack, state.notes, state.activeNoteId]);
+
+    // Check if undo/redo is available
+    const canUndo = getActiveNoteHistory().length > 0;
+    const canRedo = redoStack.filter((r: iHistoryEntry) => r.noteId === state.activeNoteId).length > 0;
+    const historyCount = getActiveNoteHistory().length;
+    const redoCount = redoStack.filter((r: iHistoryEntry) => r.noteId === state.activeNoteId).length;
+
+    const activeNote = state.notes.find((n: iNote) => n.id === state.activeNoteId) || null;
 
     // Note actions
     const createNewNote = useCallback((folderId?: string) => {
-        saveToHistory(state.notes);
         const note = createNote('Untitled', folderId || state.activeFolderId);
-        setState(prev => ({
+        setState((prev: iNotesState) => ({
             ...prev,
             notes: [note, ...prev.notes],
             activeNoteId: note.id,
         }));
         return note;
-    }, [state.activeFolderId, state.notes, saveToHistory]);
+    }, [state.activeFolderId]);
 
     const updateNote = useCallback((noteId: string, updates: Partial<iNote>) => {
-        saveToHistory(state.notes);
-        setState(prev => ({
+        saveToHistory(noteId, 'Update note');
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(n =>
+            notes: prev.notes.map((n: iNote) =>
                 n.id === noteId
                     ? { ...n, ...updates, updatedAt: Date.now() }
                     : n
             ),
         }));
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
 
     const deleteNote = useCallback((noteId: string) => {
-        saveToHistory(state.notes);
-        setState(prev => {
-            const newNotes = prev.notes.filter(n => n.id !== noteId);
+        setState((prev: iNotesState) => {
+            const newNotes = prev.notes.filter((n: iNote) => n.id !== noteId);
             return {
                 ...prev,
                 notes: newNotes,
@@ -192,16 +275,19 @@ const useNotesStore: React.FC = () => {
                     : prev.activeNoteId,
             };
         });
-    }, [state.notes, saveToHistory]);
+        // Clear history for deleted note
+        setHistory((prev: iHistoryEntry[]) => prev.filter((h: iHistoryEntry) => h.noteId !== noteId));
+        setRedoStack((prev: iHistoryEntry[]) => prev.filter((r: iHistoryEntry) => r.noteId !== noteId));
+    }, []);
 
     const setActiveNote = useCallback((noteId: string | null) => {
-        setState(prev => ({ ...prev, activeNoteId: noteId }));
+        setState((prev: iNotesState) => ({ ...prev, activeNoteId: noteId }));
     }, []);
 
     // Folder actions
     const createNewFolder = useCallback((name: string) => {
         const folder = createFolder(name);
-        setState(prev => ({
+        setState((prev: iNotesState) => ({
             ...prev,
             folders: [...prev.folders, folder],
         }));
@@ -209,51 +295,60 @@ const useNotesStore: React.FC = () => {
     }, []);
 
     const updateFolder = useCallback((folderId: string, updates: Partial<iFolder>) => {
-        setState(prev => ({
+        setState((prev: iNotesState) => ({
             ...prev,
-            folders: prev.folders.map(f =>
+            folders: prev.folders.map((f: iFolder) =>
                 f.id === folderId ? { ...f, ...updates } : f
             ),
         }));
     }, []);
 
     const deleteFolder = useCallback((folderId: string) => {
-        setState(prev => ({
+        setState((prev: iNotesState) => ({
             ...prev,
-            folders: prev.folders.filter(f => f.id !== folderId),
-            notes: prev.notes.map(n =>
+            folders: prev.folders.filter((f: iFolder) => f.id !== folderId),
+            notes: prev.notes.map((n: iNote) =>
                 n.folderId === folderId ? { ...n, folderId: null } : n
             ),
         }));
     }, []);
 
     const setActiveFolder = useCallback((folderId: string | null) => {
-        setState(prev => ({ ...prev, activeFolderId: folderId }));
+        setState((prev: iNotesState) => ({ ...prev, activeFolderId: folderId }));
     }, []);
 
     // Sidebar
     const toggleSidebar = useCallback(() => {
-        setState(prev => ({ ...prev, sidebarExpanded: !prev.sidebarExpanded }));
+        setState((prev: iNotesState) => ({ ...prev, sidebarExpanded: !prev.sidebarExpanded }));
     }, []);
 
     const setSidebarExpanded = useCallback((expanded: boolean) => {
-        setState(prev => ({ ...prev, sidebarExpanded: expanded }));
+        setState((prev: iNotesState) => ({ ...prev, sidebarExpanded: expanded }));
     }, []);
 
     // Format mode
     const setFormatMode = useCallback((mode: tFormatMode) => {
-        setState(prev => ({ ...prev, formatMode: mode }));
+        setState((prev: iNotesState) => ({ ...prev, formatMode: mode }));
     }, []);
 
     const toggleFormatMode = useCallback((mode: tFormatMode) => {
-        setState(prev => ({
+        setState((prev: iNotesState) => ({
             ...prev,
             formatMode: prev.formatMode === mode ? null : mode,
         }));
     }, []);
 
     const setSelectedColor = useCallback((color: string) => {
-        setState(prev => ({ ...prev, selectedColor: color }));
+        setState((prev: iNotesState) => ({ ...prev, selectedColor: color }));
+    }, []);
+
+    // Light mode toggle
+    const setLightMode = useCallback((lightMode: boolean) => {
+        setState((prev: iNotesState) => ({ ...prev, lightMode }));
+    }, []);
+
+    const toggleLightMode = useCallback(() => {
+        setState((prev: iNotesState) => ({ ...prev, lightMode: !prev.lightMode }));
     }, []);
 
     // Word formatting
@@ -263,19 +358,19 @@ const useNotesStore: React.FC = () => {
         wordId: string,
         formatUpdates: Partial<iWord['format']>
     ) => {
-        saveToHistory(state.notes);
-        setState(prev => ({
+        saveToHistory(noteId, 'Format word');
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(note => {
+            notes: prev.notes.map((note: iNote) => {
                 if (note.id !== noteId) return note;
                 return {
                     ...note,
                     updatedAt: Date.now(),
-                    blocks: note.blocks.map(block => {
+                    blocks: note.blocks.map((block: iTextBlock) => {
                         if (block.id !== blockId) return block;
                         return {
                             ...block,
-                            words: block.words.map(word => {
+                            words: block.words.map((word: iWord) => {
                                 if (word.id !== wordId) return word;
                                 return {
                                     ...word,
@@ -287,55 +382,55 @@ const useNotesStore: React.FC = () => {
                 };
             }),
         }));
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
 
     // Block operations
     const addBlock = useCallback((noteId: string, afterBlockId?: string, style?: iBlockStyle) => {
-        saveToHistory(state.notes);
+        saveToHistory(noteId, 'Add block');
         const newBlock = createBlock([createWord('')], style);
-        setState(prev => ({
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(note => {
+            notes: prev.notes.map((note: iNote) => {
                 if (note.id !== noteId) return note;
                 if (!afterBlockId) {
                     return { ...note, blocks: [...note.blocks, newBlock], updatedAt: Date.now() };
                 }
-                const idx = note.blocks.findIndex(b => b.id === afterBlockId);
+                const idx = note.blocks.findIndex((b: iTextBlock) => b.id === afterBlockId);
                 const newBlocks = [...note.blocks];
                 newBlocks.splice(idx + 1, 0, newBlock);
                 return { ...note, blocks: newBlocks, updatedAt: Date.now() };
             }),
         }));
         return newBlock;
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
 
     const updateBlock = useCallback((noteId: string, blockId: string, updates: Partial<iTextBlock>) => {
-        saveToHistory(state.notes);
-        setState(prev => ({
+        saveToHistory(noteId, 'Update block');
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(note => {
+            notes: prev.notes.map((note: iNote) => {
                 if (note.id !== noteId) return note;
                 return {
                     ...note,
                     updatedAt: Date.now(),
-                    blocks: note.blocks.map(block =>
+                    blocks: note.blocks.map((block: iTextBlock) =>
                         block.id === blockId ? { ...block, ...updates } : block
                     ),
                 };
             }),
         }));
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
 
     const updateBlockStyle = useCallback((noteId: string, blockId: string, style: Partial<iBlockStyle>) => {
-        saveToHistory(state.notes);
-        setState(prev => ({
+        saveToHistory(noteId, 'Update block style');
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(note => {
+            notes: prev.notes.map((note: iNote) => {
                 if (note.id !== noteId) return note;
                 return {
                     ...note,
                     updatedAt: Date.now(),
-                    blocks: note.blocks.map(block =>
+                    blocks: note.blocks.map((block: iTextBlock) =>
                         block.id === blockId
                             ? { ...block, style: { ...block.style, ...style } }
                             : block
@@ -343,15 +438,15 @@ const useNotesStore: React.FC = () => {
                 };
             }),
         }));
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
 
     const deleteBlock = useCallback((noteId: string, blockId: string) => {
-        saveToHistory(state.notes);
-        setState(prev => ({
+        saveToHistory(noteId, 'Delete block');
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(note => {
+            notes: prev.notes.map((note: iNote) => {
                 if (note.id !== noteId) return note;
-                const newBlocks = note.blocks.filter(b => b.id !== blockId);
+                const newBlocks = note.blocks.filter((b: iTextBlock) => b.id !== blockId);
                 // Keep at least one block
                 if (newBlocks.length === 0) {
                     newBlocks.push(createBlock([createWord('')]));
@@ -359,31 +454,57 @@ const useNotesStore: React.FC = () => {
                 return { ...note, blocks: newBlocks, updatedAt: Date.now() };
             }),
         }));
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
 
     // Update words in a block (for typing)
     const setBlockWords = useCallback((noteId: string, blockId: string, words: iWord[]) => {
-        saveToHistory(state.notes);
-        setState(prev => ({
+        saveToHistory(noteId, 'Edit text');
+        setState((prev: iNotesState) => ({
             ...prev,
-            notes: prev.notes.map(note => {
+            notes: prev.notes.map((note: iNote) => {
                 if (note.id !== noteId) return note;
                 return {
                     ...note,
                     updatedAt: Date.now(),
-                    blocks: note.blocks.map(block =>
+                    blocks: note.blocks.map((block: iTextBlock) =>
                         block.id === blockId ? { ...block, words } : block
                     ),
                 };
             }),
         }));
-    }, [state.notes, saveToHistory]);
+    }, [saveToHistory]);
+
+    // Export functions
+    const exportAsText = useCallback(() => {
+        return exportNotesAsText(state.notes);
+    }, [state.notes]);
+
+    const exportAsJson = useCallback(() => {
+        return exportNotesAsJson(state.notes, state.folders);
+    }, [state.notes, state.folders]);
+
+    const importFromJson = useCallback((jsonString: string) => {
+        const result = importNotesFromJson(jsonString);
+        if (result) {
+            setState((prev: iNotesState) => ({
+                ...prev,
+                notes: [...result.notes, ...prev.notes],
+                folders: [...result.folders.filter((f: iFolder) =>
+                    !prev.folders.some((pf: iFolder) => pf.id === f.id)
+                ), ...prev.folders],
+            }));
+            return true;
+        }
+        return false;
+    }, []);
 
     // Clear all data
     const clearAllData = useCallback(() => {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(HISTORY_KEY);
+        localStorage.removeItem(REDO_KEY);
         setHistory([]);
+        setRedoStack([]);
         setState(getInitialState());
     }, []);
 
@@ -392,6 +513,9 @@ const useNotesStore: React.FC = () => {
         ...state,
         activeNote,
         canUndo,
+        canRedo,
+        historyCount,
+        redoCount,
 
         // Note actions
         createNewNote,
@@ -414,6 +538,10 @@ const useNotesStore: React.FC = () => {
         toggleFormatMode,
         setSelectedColor,
 
+        // Light mode
+        setLightMode,
+        toggleLightMode,
+
         // Word/Block operations
         updateWordFormat,
         addBlock,
@@ -424,6 +552,13 @@ const useNotesStore: React.FC = () => {
 
         // History
         undo,
+        redo,
+        getActiveNoteHistory,
+
+        // Export/Import
+        exportAsText,
+        exportAsJson,
+        importFromJson,
 
         // Dev
         clearAllData,

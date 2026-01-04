@@ -51,6 +51,7 @@ interface iBlockStyle {
     backgroundColor?: string;
     backgroundGradient?: string;
     transparent?: boolean;
+    widthPercent?: number; // User-adjustable width as percentage (0-100)
 }
 
 // Text block containing words
@@ -80,6 +81,20 @@ interface iFolder {
     expanded?: boolean;
 }
 
+// History entry for undo/redo functionality
+interface iHistoryEntry {
+    noteId: string;
+    note: iNote;
+    timestamp: number;
+    description: string;
+}
+
+// App settings
+interface iAppSettings {
+    lightMode: boolean;
+    sidebarExpanded: boolean;
+}
+
 // App state
 interface iNotesState {
     notes: iNote[];
@@ -89,12 +104,7 @@ interface iNotesState {
     sidebarExpanded: boolean;
     formatMode: tFormatMode;
     selectedColor: string;
-}
-
-// History entry for undo functionality
-interface iHistoryEntry {
-    notes: iNote[];
-    timestamp: number;
+    lightMode: boolean;
 }
 
 // Predefined colors for formatting
@@ -167,7 +177,40 @@ const serializeNote = (note: iNote): string => JSON.stringify(note);
 // Deserialize note from storage
 const deserializeNote = (data: string): iNote => JSON.parse(data);
 
+// Export notes as plain text
+const exportNotesAsText = (notes: iNote[]): string => {
+    return notes.map(note => {
+        const title = `# ${note.title}\n`;
+        const content = note.blocks.map(block =>
+            block.words.map(w => w.text).join(' ')
+        ).join('\n\n');
+        return title + content;
+    }).join('\n\n---\n\n');
+};
+
+// Export notes as JSON (preserves formatting)
+const exportNotesAsJson = (notes: iNote[], folders: iFolder[]): string => {
+    return JSON.stringify({ version: 1, exportedAt: Date.now(), notes, folders }, null, 2);
+};
+
+// Import notes from JSON
+const importNotesFromJson = (jsonString: string): { notes: iNote[], folders: iFolder[] } | null => {
+    try {
+        const data = JSON.parse(jsonString);
+        if (data.version && data.notes) {
+            return {
+                notes: data.notes,
+                folders: data.folders || [],
+            };
+        }
+        return null;
+    } catch {
+        return null;
+    }
+};
+
 export type {
+    iAppSettings,
     iBlockStyle,
     iFolder,
     iHistoryEntry,
@@ -189,5 +232,8 @@ export {
     createNote,
     createWord,
     deserializeNote,
+    exportNotesAsJson,
+    exportNotesAsText,
+    importNotesFromJson,
     serializeNote,
 };

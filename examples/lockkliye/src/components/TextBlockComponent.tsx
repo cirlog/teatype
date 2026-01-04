@@ -50,12 +50,82 @@ export const TextBlockComponent = ({
     const [editText, setEditText] = useState('');
     const [originalWords, setOriginalWords] = useState<iWordWithFormat[]>([]);
     const [showStyleMenu, setShowStyleMenu] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+    const [isNearEdge, setIsNearEdge] = useState(false);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const styleMenuRef = useRef<HTMLDivElement>(null);
+    const blockRef = useRef<HTMLDivElement>(null);
 
     const blockStyle = block.style;
 
+    // Close style menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (showStyleMenu && styleMenuRef.current && !styleMenuRef.current.contains(e.target as Node)) {
+                setShowStyleMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showStyleMenu]);
+
+    // Handle width resizing
+    useEffect(() => {
+        if (!isResizing) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!blockRef.current) return;
+            const container = blockRef.current.parentElement;
+            if (!container) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const blockRect = blockRef.current.getBoundingClientRect();
+
+            // Calculate new width as percentage of container
+            const newWidth = ((e.clientX - blockRect.left) / containerRect.width) * 100;
+            const clampedWidth = Math.max(30, Math.min(100, newWidth));
+
+            onStyleChange(block.id, { widthPercent: clampedWidth });
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isResizing, block.id, onStyleChange]);
+
+    // Detect when mouse is near right edge of block
+    const handleMouseMoveOnBlock = (e: React.MouseEvent) => {
+        if (!blockRef.current || isEditing) {
+            setIsNearEdge(false);
+            return;
+        }
+        const rect = blockRef.current.getBoundingClientRect();
+        const nearEdgeThreshold = 15;
+        const isNear = rect.right - e.clientX < nearEdgeThreshold;
+        setIsNearEdge(isNear);
+    };
+
+    const handleMouseLeave = () => {
+        if (!isResizing) {
+            setIsNearEdge(false);
+        }
+    };
+
     const getBlockStyles = (): React.CSSProperties => {
         const styles: React.CSSProperties = {};
+
+        if (blockStyle.widthPercent) {
+            styles.width = `${blockStyle.widthPercent}%`;
+        }
 
         if (blockStyle.borderStyle && blockStyle.borderStyle !== 'none') {
             styles.borderStyle = blockStyle.borderStyle;
@@ -132,7 +202,7 @@ export const TextBlockComponent = ({
             }
 
             // 2. Exact match anywhere
-            const exactMatch = originalWords.find((ow) => ow.text === newWord);
+            const exactMatch = originalWords.find((ow: iWordWithFormat) => ow.text === newWord);
             if (exactMatch) {
                 return exactMatch.format;
             }
@@ -183,7 +253,7 @@ export const TextBlockComponent = ({
         };
 
         // Create new words with preserved formatting
-        const newWords: iWord[] = newTexts.map((text, index) => {
+        const newWords: iWord[] = newTexts.map((text: string, index: number) => {
             const format = findBestFormat(text, index);
             return format ? createWord(text, format) : createWord(text);
         });
@@ -194,16 +264,25 @@ export const TextBlockComponent = ({
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Escape') {
-            setIsEditing(false);
-        } else if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
             finishEditing();
         } else if (e.key === 'Enter' && e.shiftKey) {
-            // Add new block
+            // Shift+Enter: Add new block
             e.preventDefault();
             finishEditing();
             onAddBlockAfter(block.id);
         }
+        // Regular Enter creates newline (default behavior, no need to prevent)
+    };
+
+    // Handle text changes, including bullet conversion
+    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        let newText = e.target.value;
+
+        // Convert "- " at the start of a line to bullet point
+        newText = newText.replace(/^- /gm, '• ');
+        newText = newText.replace(/\n- /g, '\n• ');
+
+        setEditText(newText);
     };
 
     // Auto-resize textarea to fit content
@@ -246,7 +325,26 @@ export const TextBlockComponent = ({
     ];
 
     return (
-        <div className={`text-block ${isEditing ? 'text-block--editing' : ''}`} style={getBlockStyles()}>
+        <div
+            ref={blockRef}
+            className={`text-block ${isEditing ? 'text-block--editing' : ''} ${
+                isNearEdge || isResizing ? 'text-block--resizing' : ''
+            }`}
+            style={getBlockStyles()}
+            onMouseMove={handleMouseMoveOnBlock}
+            onMouseLeave={handleMouseLeave}
+        >
+            {/* Width resize handle */}
+            {(isNearEdge || isResizing) && !isEditing && (
+                <div
+                    className='text-block__resize-handle'
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        setIsResizing(true);
+                    }}
+                />
+            )}
+
             <div className='text-block__controls'>
                 <button
                     className='text-block__style-btn'
@@ -268,7 +366,7 @@ export const TextBlockComponent = ({
             </div>
 
             {showStyleMenu && (
-                <div className='text-block__style-menu'>
+                <div className='text-block__style-menu' ref={styleMenuRef}>
                     <div className='style-menu__section'>
                         <span className='style-menu__label'>Border</span>
                         <div className='style-menu__options'>
@@ -337,10 +435,11 @@ export const TextBlockComponent = ({
                     ref={inputRef}
                     className='text-block__input'
                     value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
+                    onChange={handleTextChange}
                     onBlur={finishEditing}
                     onKeyDown={handleKeyDown}
                     placeholder='Type something...'
+                    rows={1}
                 />
             ) : (
                 <div className='text-block__content' onClick={startEditing}>

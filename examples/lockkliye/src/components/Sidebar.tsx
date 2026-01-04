@@ -13,31 +13,43 @@
  * all copies or substantial portions of the Software.
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { iNote } from '@/types';
 
 interface iSidebarProps {
     notes: iNote[];
     activeNoteId: string | null;
     expanded: boolean;
+    lightMode: boolean;
     onToggle: () => void;
     onNoteSelect: (noteId: string) => void;
     onCreateNote: () => void;
     onDeleteNote: (noteId: string) => void;
     onClearAllData: () => void;
+    onToggleLightMode: () => void;
+    onExportText: () => string;
+    onExportJson: () => string;
+    onImportJson: (json: string) => boolean;
 }
 
 export const Sidebar = ({
     notes,
     activeNoteId,
     expanded,
+    lightMode,
     onToggle,
     onNoteSelect,
     onCreateNote,
     onDeleteNote,
     onClearAllData,
+    onToggleLightMode,
+    onExportText,
+    onExportJson,
+    onImportJson,
 }: iSidebarProps) => {
     const [showSettings, setShowSettings] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const formatDate = (timestamp: number) => {
         const date = new Date(timestamp);
         const now = new Date();
@@ -132,6 +144,83 @@ export const Sidebar = ({
 
                         {showSettings && (
                             <div className='sidebar__settings'>
+                                <div className='sidebar__settings-section'>
+                                    <span className='sidebar__settings-label'>Appearance</span>
+                                    <button className='sidebar__toggle-light-mode-btn' onClick={onToggleLightMode}>
+                                        {lightMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                                    </button>
+                                </div>
+
+                                <div className='sidebar__settings-section'>
+                                    <span className='sidebar__settings-label'>Export</span>
+                                    <div className='sidebar__export-buttons'>
+                                        <button
+                                            className='sidebar__export-btn'
+                                            onClick={() => {
+                                                const text = onExportText();
+                                                const blob = new Blob([text], { type: 'text/plain' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'lockkliye-notes.txt';
+                                                a.click();
+                                                URL.revokeObjectURL(url);
+                                            }}
+                                        >
+                                            📄 Export as Text
+                                        </button>
+                                        <button
+                                            className='sidebar__export-btn'
+                                            onClick={() => {
+                                                const json = onExportJson();
+                                                const blob = new Blob([json], { type: 'application/json' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'lockkliye-notes.json';
+                                                a.click();
+                                                URL.revokeObjectURL(url);
+                                            }}
+                                        >
+                                            💾 Export as JSON
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className='sidebar__settings-section'>
+                                    <span className='sidebar__settings-label'>Import</span>
+                                    <input
+                                        type='file'
+                                        ref={fileInputRef}
+                                        accept='.json'
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const content = event.target?.result as string;
+                                                    const success = onImportJson(content);
+                                                    if (success) {
+                                                        alert('Notes imported successfully!');
+                                                    } else {
+                                                        alert('Failed to import notes. Invalid file format.');
+                                                    }
+                                                };
+                                                reader.readAsText(file);
+                                            }
+                                            // Reset input
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                    <button
+                                        className='sidebar__import-btn'
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        📥 Import from JSON
+                                    </button>
+                                </div>
+
                                 <div className='sidebar__settings-section'>
                                     <span className='sidebar__settings-label'>Developer</span>
                                     <button

@@ -24,6 +24,7 @@ interface iUseKeyboardShortcutsProps {
     onEscape: () => void;
     onFormatToggle: (mode: tFormatMode) => void;
     onUndo?: () => void;
+    onRedo?: () => void;
 }
 
 const useKeyboardShortcuts: React.FC<iUseKeyboardShortcutsProps> = (props) => {
@@ -42,6 +43,13 @@ const useKeyboardShortcuts: React.FC<iUseKeyboardShortcutsProps> = (props) => {
             return;
         }
 
+        // Check for redo (Ctrl+Shift+Z or Ctrl+Y)
+        if ((shortcut === 'ctrl+shift+z' || shortcut === 'ctrl+y') && props.onRedo) {
+            e.preventDefault();
+            props.onRedo();
+            return;
+        }
+
         // Check for undo (Ctrl+Z)
         if (shortcut === 'ctrl+z' && props.onUndo) {
             e.preventDefault();
@@ -56,7 +64,7 @@ const useKeyboardShortcuts: React.FC<iUseKeyboardShortcutsProps> = (props) => {
 
             props.onFormatToggle(mode);
         }
-    }, [props.onFormatToggle, props.onEscape, props.onUndo]);
+    }, [props.onFormatToggle, props.onEscape, props.onUndo, props.onRedo]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);

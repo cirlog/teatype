@@ -21,12 +21,16 @@ import FloatingToolbar from './FloatingToolbar';
 import { TextBlockComponent } from './TextBlockComponent';
 
 // Types
-import type { iNote, iTextBlock, iWord, tFormatMode } from '@/types';
+import type { iNote, iTextBlock, iWord, tFormatMode, iHistoryEntry } from '@/types';
 
 interface iNoteEditorProps {
     note: iNote;
     formatMode: tFormatMode;
     selectedColor: string;
+    historyCount: number;
+    redoCount: number;
+    canUndo: boolean;
+    canRedo: boolean;
     onTitleChange: (title: string) => void;
     onWordFormatChange: (blockId: string, wordId: string, format: Partial<iWord['format']>) => void;
     onWordsChange: (blockId: string, words: iWord[]) => void;
@@ -35,12 +39,19 @@ interface iNoteEditorProps {
     onBlockAdd: (afterBlockId?: string) => void;
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
+    onUndo: () => void;
+    onRedo: () => void;
+    getHistory: () => iHistoryEntry[];
 }
 
 export const NoteEditor = ({
     note,
     formatMode,
     selectedColor,
+    historyCount,
+    redoCount: _redoCount,
+    canUndo,
+    canRedo,
     onTitleChange,
     onWordFormatChange,
     onWordsChange,
@@ -49,9 +60,13 @@ export const NoteEditor = ({
     onBlockAdd,
     onFormatModeChange,
     onColorChange,
+    onUndo,
+    onRedo,
+    getHistory,
 }: iNoteEditorProps) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(note.title);
+    const [showHistory, setShowHistory] = useState(false);
 
     const handleTitleSubmit = () => {
         onTitleChange(titleValue || 'Untitled');
@@ -71,12 +86,71 @@ export const NoteEditor = ({
 
     return (
         <div className='note-editor'>
-            <FloatingToolbar
-                formatMode={formatMode}
-                selectedColor={selectedColor}
-                onFormatModeChange={onFormatModeChange}
-                onColorChange={onColorChange}
-            />
+            <div className='note-editor__toolbar-row'>
+                <div className='note-editor__history-indicator'>
+                    <button
+                        className={`note-editor__history-btn ${
+                            historyCount === 0 ? 'note-editor__history-btn--disabled' : ''
+                        }`}
+                        onClick={() => historyCount > 0 && setShowHistory(!showHistory)}
+                        disabled={historyCount === 0}
+                        title={`${historyCount} change${historyCount !== 1 ? 's' : ''} - Click to view history`}
+                    >
+                        <span className='note-editor__history-count'>{historyCount}</span>
+                        <span className='note-editor__history-label'>changes</span>
+                    </button>
+
+                    <button
+                        className={`note-editor__undo-btn ${!canUndo ? 'note-editor__undo-btn--disabled' : ''}`}
+                        onClick={onUndo}
+                        disabled={!canUndo}
+                        title='Undo (Ctrl+Z)'
+                    >
+                        ↩
+                    </button>
+                    <button
+                        className={`note-editor__redo-btn ${!canRedo ? 'note-editor__redo-btn--disabled' : ''}`}
+                        onClick={onRedo}
+                        disabled={!canRedo}
+                        title='Redo (Ctrl+Shift+Z)'
+                    >
+                        ↪
+                    </button>
+
+                    {showHistory && historyCount > 0 && (
+                        <div className='note-editor__history-dropdown'>
+                            <div className='note-editor__history-header'>
+                                <span>History ({historyCount})</span>
+                                <button onClick={() => setShowHistory(false)}>×</button>
+                            </div>
+                            <div className='note-editor__history-list'>
+                                {getHistory()
+                                    .slice()
+                                    .reverse()
+                                    .map((entry) => (
+                                        <div key={entry.timestamp} className='note-editor__history-item'>
+                                            <span className='note-editor__history-item-desc'>{entry.description}</span>
+                                            <span className='note-editor__history-item-time'>
+                                                {new Date(entry.timestamp).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                })}
+                                            </span>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <FloatingToolbar
+                    formatMode={formatMode}
+                    selectedColor={selectedColor}
+                    onFormatModeChange={onFormatModeChange}
+                    onColorChange={onColorChange}
+                />
+            </div>
 
             <div className='note-editor__header'>
                 {isEditingTitle ? (
