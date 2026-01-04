@@ -27,6 +27,7 @@ interface iNoteEditorProps {
     note: iNote;
     formatMode: tFormatMode;
     selectedColor: string;
+    selectedSize: string;
     historyCount: number;
     redoCount: number;
     canUndo: boolean;
@@ -39,6 +40,7 @@ interface iNoteEditorProps {
     onBlockAdd: (afterBlockId?: string) => void;
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
+    onSizeChange: (size: string) => void;
     onUndo: () => void;
     onRedo: () => void;
     getHistory: () => iHistoryEntry[];
@@ -48,6 +50,7 @@ export const NoteEditor = ({
     note,
     formatMode,
     selectedColor,
+    selectedSize,
     historyCount,
     redoCount: _redoCount,
     canUndo,
@@ -60,6 +63,7 @@ export const NoteEditor = ({
     onBlockAdd,
     onFormatModeChange,
     onColorChange,
+    onSizeChange,
     onUndo,
     onRedo,
     getHistory,
@@ -87,68 +91,13 @@ export const NoteEditor = ({
     return (
         <div className='note-editor'>
             <div className='note-editor__toolbar-row'>
-                <div className='note-editor__history-indicator'>
-                    <button
-                        className={`note-editor__history-btn ${
-                            historyCount === 0 ? 'note-editor__history-btn--disabled' : ''
-                        }`}
-                        onClick={() => historyCount > 0 && setShowHistory(!showHistory)}
-                        disabled={historyCount === 0}
-                        title={`${historyCount} change${historyCount !== 1 ? 's' : ''} - Click to view history`}
-                    >
-                        <span className='note-editor__history-count'>{historyCount}</span>
-                        <span className='note-editor__history-label'>changes</span>
-                    </button>
-
-                    <button
-                        className={`note-editor__undo-btn ${!canUndo ? 'note-editor__undo-btn--disabled' : ''}`}
-                        onClick={onUndo}
-                        disabled={!canUndo}
-                        title='Undo (Ctrl+Z)'
-                    >
-                        ↩
-                    </button>
-                    <button
-                        className={`note-editor__redo-btn ${!canRedo ? 'note-editor__redo-btn--disabled' : ''}`}
-                        onClick={onRedo}
-                        disabled={!canRedo}
-                        title='Redo (Ctrl+Shift+Z)'
-                    >
-                        ↪
-                    </button>
-
-                    {showHistory && historyCount > 0 && (
-                        <div className='note-editor__history-dropdown'>
-                            <div className='note-editor__history-header'>
-                                <span>History ({historyCount})</span>
-                                <button onClick={() => setShowHistory(false)}>×</button>
-                            </div>
-                            <div className='note-editor__history-list'>
-                                {getHistory()
-                                    .slice()
-                                    .reverse()
-                                    .map((entry) => (
-                                        <div key={entry.timestamp} className='note-editor__history-item'>
-                                            <span className='note-editor__history-item-desc'>{entry.description}</span>
-                                            <span className='note-editor__history-item-time'>
-                                                {new Date(entry.timestamp).toLocaleTimeString([], {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                    second: '2-digit',
-                                                })}
-                                            </span>
-                                        </div>
-                                    ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
                 <FloatingToolbar
                     formatMode={formatMode}
                     selectedColor={selectedColor}
+                    selectedSize={selectedSize}
                     onFormatModeChange={onFormatModeChange}
                     onColorChange={onColorChange}
+                    onSizeChange={onSizeChange}
                 />
             </div>
 
@@ -194,6 +143,67 @@ export const NoteEditor = ({
                 <button className='note-editor__add-block' onClick={() => onBlockAdd()}>
                     + Add block
                 </button>
+            </div>
+
+            {/* History indicator - bottom center, sticky */}
+            <div className='note-editor__history-bar'>
+                <div className='note-editor__history-indicator'>
+                    <button
+                        className={`note-editor__undo-btn ${!canUndo ? 'note-editor__undo-btn--disabled' : ''}`}
+                        onClick={onUndo}
+                        disabled={!canUndo}
+                        title='Undo (Ctrl+Z)'
+                    >
+                        ↩
+                    </button>
+
+                    <button
+                        className={`note-editor__history-btn ${
+                            historyCount === 0 ? 'note-editor__history-btn--disabled' : ''
+                        }`}
+                        onClick={() => historyCount > 0 && setShowHistory(!showHistory)}
+                        disabled={historyCount === 0}
+                        title={`${historyCount} change${historyCount !== 1 ? 's' : ''} - Click to view history`}
+                    >
+                        <span className='note-editor__history-count'>{historyCount}</span>
+                        <span className='note-editor__history-label'>changes</span>
+                    </button>
+
+                    <button
+                        className={`note-editor__redo-btn ${!canRedo ? 'note-editor__redo-btn--disabled' : ''}`}
+                        onClick={onRedo}
+                        disabled={!canRedo}
+                        title='Redo (Ctrl+Shift+Z)'
+                    >
+                        ↪
+                    </button>
+
+                    {showHistory && historyCount > 0 && (
+                        <div className='note-editor__history-dropdown note-editor__history-dropdown--above'>
+                            <div className='note-editor__history-header'>
+                                <span>History ({historyCount})</span>
+                                <button onClick={() => setShowHistory(false)}>×</button>
+                            </div>
+                            <div className='note-editor__history-list'>
+                                {getHistory()
+                                    .slice()
+                                    .reverse()
+                                    .map((entry) => (
+                                        <div key={entry.timestamp} className='note-editor__history-item'>
+                                            <span className='note-editor__history-item-desc'>{entry.description}</span>
+                                            <span className='note-editor__history-item-time'>
+                                                {new Date(entry.timestamp).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                })}
+                                            </span>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

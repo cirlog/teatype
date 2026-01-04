@@ -45,8 +45,14 @@ export const WordComponent = ({
         if (f.highlight) s.backgroundColor = f.highlight;
 
         switch (f.fontSize) {
+            case 'tiny':
+                s.fontSize = '0.75em';
+                break;
             case 'smaller':
                 s.fontSize = '0.85em';
+                break;
+            case 'large':
+                s.fontSize = '1.1em';
                 break;
             case 'larger':
                 s.fontSize = '1.25em';

@@ -31,8 +31,6 @@ const loadSSLCertificate = (certPath: string, keyPath: string): { cert: Buffer; 
     }
 };
 
-const sslConfig = loadSSLCertificate('ssl.crt', 'ssl.key');
-
 export const getBaseViteConfig = (): UserConfig => ({
     plugins: [react(), eslint()],
     resolve: {
@@ -41,20 +39,11 @@ export const getBaseViteConfig = (): UserConfig => ({
             '@teatype': resolve(__dirname, '../../ts'),
         },
     },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                additionalData: [
-                ].join('\n'),
-            },
-        },
-    },
     server: {
         cors: true,
         host: '0.0.0.0',
         port: 5173,
         open: false,
-        // https: sslConfig ? { cert: sslConfig.cert, key: sslConfig.key } : false,
     },
 });
 

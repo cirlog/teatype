@@ -32,8 +32,12 @@ const getInitialState = (): iNotesState => {
     if (stored) {
         try {
             const parsed = JSON.parse(stored);
-            // Ensure lightMode exists
-            return { ...parsed, lightMode: parsed.lightMode ?? false };
+            // Ensure lightMode and selectedSize exist
+            return {
+                ...parsed,
+                lightMode: parsed.lightMode ?? false,
+                selectedSize: parsed.selectedSize ?? 'normal',
+            };
         } catch {
             // Fall through to default state
         }
@@ -86,6 +90,7 @@ const getInitialState = (): iNotesState => {
         sidebarExpanded: true,
         formatMode: null,
         selectedColor: FORMAT_COLORS[0],
+        selectedSize: 'normal',
         lightMode: false,
     };
 };
@@ -342,6 +347,10 @@ const useNotesStore: React.FC = () => {
         setState((prev: iNotesState) => ({ ...prev, selectedColor: color }));
     }, []);
 
+    const setSelectedSize = useCallback((size: string) => {
+        setState((prev: iNotesState) => ({ ...prev, selectedSize: size }));
+    }, []);
+
     // Light mode toggle
     const setLightMode = useCallback((lightMode: boolean) => {
         setState((prev: iNotesState) => ({ ...prev, lightMode }));
@@ -537,6 +546,7 @@ const useNotesStore: React.FC = () => {
         setFormatMode,
         toggleFormatMode,
         setSelectedColor,
+        setSelectedSize,
 
         // Light mode
         setLightMode,

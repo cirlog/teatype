@@ -15,12 +15,6 @@
 
 // Notes Dark Mode Theme
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
 :root {
     --bg-primary: #0a0a0b;
     --bg-gradient: linear-gradient(135deg, #0a0a0b 0%, #141416 25%, #1a1a1d 50%, #141416 75%, #0a0a0b 100%);
@@ -519,6 +513,94 @@ body {
         font-size: 12px;
         color: var(--text-tertiary);
     }
+
+    // Size preset dropdown
+    &__size-wrapper {
+        position: relative;
+    }
+
+    &__size-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow);
+        z-index: 300;
+        min-width: 140px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__size-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all var(--transition);
+        text-align: left;
+        width: 100%;
+        font-family: inherit;
+
+        &:hover {
+            background: var(--bg-hover);
+        }
+
+        &--active {
+            background: var(--accent);
+            color: white;
+
+            &:hover {
+                background: var(--accent-hover);
+            }
+        }
+    }
+
+    &__size-preview {
+        font-family: inherit;
+
+        &--huge {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        &--larger {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        &--large {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        &--normal {
+            font-size: 13px;
+        }
+
+        &--smaller {
+            font-size: 11px;
+        }
+
+        &--tiny {
+            font-size: 10px;
+        }
+    }
+
+    &__size-shortcut {
+        font-size: 10px;
+        color: var(--text-tertiary);
+        font-family: monospace;
+    }
 }
 
 // Note Editor
@@ -670,16 +752,20 @@ body {
 
     &__style-menu {
         position: absolute;
-        top: 100%;
         right: 8px;
+        top: 100%;
+
         margin-top: 8px;
+        min-width: 200px;
         padding: 16px;
+
         background: var(--bg-secondary);
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
+        backdrop-filter: blur(0.25rem);
         box-shadow: var(--shadow);
+
         z-index: 50;
-        min-width: 200px;
     }
 
     &__content {
@@ -819,6 +905,7 @@ body {
     border-radius: 2px;
     transition: all 150ms ease;
     cursor: default;
+    color: var(--text-primary);
 
     &--mode-active {
         cursor: pointer;
@@ -876,6 +963,7 @@ body {
 .note-editor__toolbar-row {
     display: flex;
     align-items: flex-start;
+    margin: 0 auto;
     gap: 12px;
     padding: 16px 24px;
 }
@@ -885,6 +973,31 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+// History bar - bottom center, sticky
+.note-editor__history-bar {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    background: linear-gradient(to top, var(--bg-primary) 0%, transparent 100%);
+    z-index: 100;
+    pointer-events: none;
+
+    .note-editor__history-indicator {
+        pointer-events: auto;
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 8px 16px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
 }
 
 .note-editor__history-btn {
@@ -950,9 +1063,11 @@ body {
 
 .note-editor__history-dropdown {
     position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 8px;
+    top: auto;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
     min-width: 250px;
     max-height: 300px;
     background: var(--bg-secondary);
@@ -1135,6 +1250,13 @@ body {
         }
     }
 
+    .word {
+        // Force text colors to dark in light mode (override inline white)
+        &:not([style*='color']) {
+            color: var(--text-primary);
+        }
+    }
+
     .word--mode-active:hover {
         background: rgba(255, 149, 0, 0.15);
         box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.2);
@@ -1143,6 +1265,11 @@ body {
     .mode-cursor {
         background: var(--bg-secondary);
         box-shadow: var(--shadow);
+    }
+
+    .note-editor__title,
+    .note-editor__date {
+        color: var(--text-primary);
     }
 
     .note-editor__history-btn,

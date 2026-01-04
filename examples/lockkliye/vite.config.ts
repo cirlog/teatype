@@ -26,13 +26,6 @@ export const getBaseViteConfig = (): UserConfig => ({
             '@teatype': resolve(__dirname, '../../ts'),
         },
     },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                additionalData: `@use "${resolve(__dirname, '../../ts/style/globvars')}" as *;\n`,
-            },
-        },
-    },
     server: {
         cors: true,
         host: '0.0.0.0',

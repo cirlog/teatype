@@ -14,13 +14,16 @@
  */
 
 // Types
+import { useState } from 'react';
 import { FORMAT_COLORS, tFormatMode } from '@/types';
 
 interface iFloatingToolbarProps {
     formatMode: tFormatMode;
     selectedColor: string;
+    selectedSize: string;
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
+    onSizeChange: (size: string) => void;
 }
 
 interface iToolButton {
@@ -30,13 +33,26 @@ interface iToolButton {
     shortcut?: string;
 }
 
+interface iSizePreset {
+    id: string;
+    label: string;
+    fontSize: string;
+}
+
+const SIZE_PRESETS: iSizePreset[] = [
+    { id: 'title', label: 'Title', fontSize: 'huge' },
+    { id: 'heading', label: 'Heading', fontSize: 'larger' },
+    { id: 'subheading', label: 'Subheading', fontSize: 'large' },
+    { id: 'body', label: 'Body', fontSize: 'normal' },
+    { id: 'small', label: 'Small', fontSize: 'smaller' },
+    { id: 'caption', label: 'Caption', fontSize: 'tiny' },
+];
+
 const tools: iToolButton[] = [
     { mode: 'bold', icon: 'B', label: 'Bold', shortcut: 'Ctrl+B' },
     { mode: 'italic', icon: 'I', label: 'Italic', shortcut: 'Ctrl+I' },
     { mode: 'underline', icon: 'U', label: 'Underline', shortcut: 'Ctrl+U' },
     { mode: 'strikethrough', icon: 'S', label: 'Strikethrough', shortcut: 'Ctrl+Shift+S' },
-    { mode: 'larger', icon: 'A+', label: 'Larger', shortcut: 'Ctrl+]' },
-    { mode: 'smaller', icon: 'A-', label: 'Smaller', shortcut: 'Ctrl+[' },
     { mode: 'color', icon: '◉', label: 'Text Color', shortcut: 'Ctrl+Shift+C' },
     { mode: 'highlight', icon: '◌', label: 'Highlight', shortcut: 'Ctrl+Shift+H' },
 ];
@@ -44,9 +60,13 @@ const tools: iToolButton[] = [
 const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
     formatMode,
     selectedColor,
+    selectedSize,
     onFormatModeChange,
     onColorChange,
+    onSizeChange,
 }) => {
+    const [showSizeMenu, setShowSizeMenu] = useState(false);
+
     return (
         <div className='floating-toolbar'>
             <div className='floating-toolbar__inner'>
@@ -72,6 +92,44 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                             </span>
                         </button>
                     ))}
+
+                    {/* Size button with dropdown */}
+                    <div className='floating-toolbar__size-wrapper'>
+                        <button
+                            className={`floating-toolbar__btn floating-toolbar__btn--size ${
+                                showSizeMenu ? 'floating-toolbar__btn--active' : ''
+                            }`}
+                            onClick={() => setShowSizeMenu(!showSizeMenu)}
+                            title='Text Size'
+                        >
+                            <span className='floating-toolbar__icon'>Aa</span>
+                        </button>
+
+                        {showSizeMenu && (
+                            <div className='floating-toolbar__size-menu'>
+                                {SIZE_PRESETS.map((preset) => (
+                                    <button
+                                        key={preset.id}
+                                        className={`floating-toolbar__size-option ${
+                                            selectedSize === preset.fontSize
+                                                ? 'floating-toolbar__size-option--active'
+                                                : ''
+                                        }`}
+                                        onClick={() => {
+                                            onSizeChange(preset.fontSize);
+                                            setShowSizeMenu(false);
+                                        }}
+                                    >
+                                        <span
+                                            className={`floating-toolbar__size-preview floating-toolbar__size-preview--${preset.id}`}
+                                        >
+                                            {preset.label}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className='floating-toolbar__divider' />

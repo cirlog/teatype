@@ -162,7 +162,13 @@ export const TextBlockComponent = ({
 
     const startEditing = () => {
         if (formatMode) return; // Don't edit in format mode
-        const text = block.words.map((w) => w.text).join(' ');
+        // Join words with spaces, but convert newline words to actual newlines
+        const text = block.words
+            .map((w) => (w.text === '\n' ? '\n' : w.text))
+            .join(' ')
+            .replace(/ \n /g, '\n')
+            .replace(/ \n/g, '\n')
+            .replace(/\n /g, '\n');
         // Store original words with their formatting
         setOriginalWords(block.words.map((w) => ({ text: w.text, format: { ...w.format } })));
         setEditText(text);
@@ -170,10 +176,21 @@ export const TextBlockComponent = ({
     };
 
     const finishEditing = useCallback(() => {
-        // Parse new text into words
-        const newTexts = editText.split(/\s+/).filter(Boolean);
+        // Split by whitespace but preserve newlines as separate "words"
+        // First, normalize newlines and split
+        const lines = editText.split('\n');
+        const allWords: string[] = [];
 
-        if (newTexts.length === 0) {
+        lines.forEach((line: string, lineIndex: number) => {
+            const wordsInLine = line.split(/\s+/).filter(Boolean);
+            allWords.push(...wordsInLine);
+            // Add newline marker between lines (except for last line)
+            if (lineIndex < lines.length - 1) {
+                allWords.push('\n');
+            }
+        });
+
+        if (allWords.length === 0 || (allWords.length === 1 && allWords[0] === '\n')) {
             onWordsChange(block.id, [createWord('')]);
             setIsEditing(false);
             return;
@@ -240,9 +257,9 @@ export const TextBlockComponent = ({
             }
 
             // 5. If word count increased (split happened), check adjacent original words
-            if (newTexts.length > originalWords.length) {
+            if (allWords.length > originalWords.length) {
                 // Map new word index back to approximate original position
-                const ratio = originalWords.length / newTexts.length;
+                const ratio = originalWords.length / allWords.length;
                 const approxOrigIndex = Math.floor(wordIndex * ratio);
                 if (approxOrigIndex < originalWords.length) {
                     return originalWords[approxOrigIndex].format;
@@ -253,7 +270,10 @@ export const TextBlockComponent = ({
         };
 
         // Create new words with preserved formatting
-        const newWords: iWord[] = newTexts.map((text: string, index: number) => {
+        const newWords: iWord[] = allWords.map((text: string, index: number) => {
+            if (text === '\n') {
+                return createWord('\n'); // Newline word
+            }
             const format = findBestFormat(text, index);
             return format ? createWord(text, format) : createWord(text);
         });
@@ -445,15 +465,21 @@ export const TextBlockComponent = ({
                 <div className='text-block__content' onClick={startEditing}>
                     {block.words.map((word, idx) => (
                         <span key={word.id}>
-                            <WordComponent
-                                word={word}
-                                formatMode={formatMode}
-                                selectedColor={selectedColor}
-                                isHovered={hoveredWordId === word.id}
-                                onHover={setHoveredWordId}
-                                onClick={handleWordClick}
-                            />
-                            {idx < block.words.length - 1 && ' '}
+                            {word.text === '\n' ? (
+                                <br />
+                            ) : (
+                                <>
+                                    <WordComponent
+                                        word={word}
+                                        formatMode={formatMode}
+                                        selectedColor={selectedColor}
+                                        isHovered={hoveredWordId === word.id}
+                                        onHover={setHoveredWordId}
+                                        onClick={handleWordClick}
+                                    />
+                                    {idx < block.words.length - 1 && block.words[idx + 1]?.text !== '\n' && ' '}
+                                </>
+                            )}
                         </span>
                     ))}
                     {block.words.length === 0 || (block.words.length === 1 && !block.words[0].text) ? (

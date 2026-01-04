@@ -33,7 +33,7 @@ interface iWordFormat {
     strikethrough?: boolean;
     color?: string;
     highlight?: string;
-    fontSize?: 'smaller' | 'normal' | 'larger' | 'huge';
+    fontSize?: 'tiny' | 'smaller' | 'normal' | 'large' | 'larger' | 'huge';
 }
 
 // Each word is its own component with formatting
@@ -104,6 +104,7 @@ interface iNotesState {
     sidebarExpanded: boolean;
     formatMode: tFormatMode;
     selectedColor: string;
+    selectedSize: string;
     lightMode: boolean;
 }
 

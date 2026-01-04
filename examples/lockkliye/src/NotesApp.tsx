@@ -100,6 +100,7 @@ const NotesApp: React.FC = () => {
                         note={store.activeNote}
                         formatMode={store.formatMode}
                         selectedColor={store.selectedColor}
+                        selectedSize={store.selectedSize}
                         historyCount={store.historyCount}
                         redoCount={store.redoCount}
                         canUndo={store.canUndo}
@@ -112,6 +113,7 @@ const NotesApp: React.FC = () => {
                         onBlockAdd={handleBlockAdd}
                         onFormatModeChange={store.setFormatMode}
                         onColorChange={store.setSelectedColor}
+                        onSizeChange={store.setSelectedSize}
                         onUndo={store.undo}
                         onRedo={store.redo}
                         getHistory={store.getActiveNoteHistory}

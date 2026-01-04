@@ -21,6 +21,8 @@ import ReactDOM from 'react-dom/client';
 import NotesApp from './src/NotesApp';
 
 // Style
+import '@teatype/style/globstyle.scss';
+import '@teatype/style/globvars.scss';
 import '@/style/NotesApp.scss';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
