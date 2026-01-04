@@ -264,7 +264,11 @@ export const NoteEditor = ({
                                                         className='note-editor__preset-delete'
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setDeletePresetIndex(index);
+                                                            if (confirmDeletions) {
+                                                                setDeletePresetIndex(index);
+                                                            } else {
+                                                                onRemoveBlockPreset(index);
+                                                            }
                                                         }}
                                                         title='Delete preset'
                                                     >
