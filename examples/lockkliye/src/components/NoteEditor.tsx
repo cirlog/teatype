@@ -133,7 +133,8 @@ export const NoteEditor = ({
 
     return (
         <div className={`note-editor ${isResizing ? 'note-editor--resizing' : ''}`}>
-            <div className='note-editor__toolbar-row'>
+            {/* Floating toolbar - fixed at top, overlays content */}
+            <div className='note-editor__toolbar-overlay'>
                 <FloatingToolbar
                     formatMode={formatMode}
                     selectedColor={selectedColor}
@@ -203,8 +204,8 @@ export const NoteEditor = ({
                 />
             </div>
 
-            {/* History indicator - bottom center, sticky */}
-            <div className='note-editor__history-bar'>
+            {/* History indicator - fixed at bottom, overlays content */}
+            <div className='note-editor__history-overlay'>
                 <div className='note-editor__history-indicator'>
                     <button
                         className={`note-editor__undo-btn ${!canUndo ? 'note-editor__undo-btn--disabled' : ''}`}
@@ -237,7 +238,7 @@ export const NoteEditor = ({
                     </button>
 
                     {showHistory && historyCount > 0 && (
-                        <div className='note-editor__history-dropdown note-editor__history-dropdown--above'>
+                        <div className='note-editor__history-dropdown'>
                             <div className='note-editor__history-header'>
                                 <span>History ({historyCount})</span>
                                 <button onClick={() => setShowHistory(false)}>×</button>

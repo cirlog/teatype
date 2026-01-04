@@ -21,8 +21,12 @@ type tFormatMode =
     | 'strikethrough'
     | 'color'
     | 'highlight'
+    | 'huge'
     | 'larger'
+    | 'large'
+    | 'normal'
     | 'smaller'
+    | 'tiny'
     | null;
 
 // Word-level formatting attributes

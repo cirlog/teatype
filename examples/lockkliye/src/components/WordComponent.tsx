@@ -81,10 +81,18 @@ export const WordComponent = ({
                 return { color: selectedColor };
             case 'highlight':
                 return { backgroundColor: selectedColor + '40' };
-            case 'larger':
-                return { fontSize: '1.25em' };
+            case 'tiny':
+                return { fontSize: '0.75em' };
             case 'smaller':
                 return { fontSize: '0.85em' };
+            case 'normal':
+                return { fontSize: '1em' };
+            case 'large':
+                return { fontSize: '1.1em' };
+            case 'larger':
+                return { fontSize: '1.25em' };
+            case 'huge':
+                return { fontSize: '1.5em' };
             default:
                 return {};
         }
@@ -131,16 +139,19 @@ export const applyFormatMode = (
             return { color: currentFormat.color === selectedColor ? undefined : selectedColor };
         case 'highlight':
             return { highlight: currentFormat.highlight ? undefined : selectedColor + '40' };
-        case 'larger': {
-            const sizes: Array<iWordFormat['fontSize']> = ['smaller', 'normal', 'larger', 'huge'];
-            const currentIdx = sizes.indexOf(currentFormat.fontSize || 'normal');
-            return { fontSize: sizes[Math.min(currentIdx + 1, sizes.length - 1)] };
-        }
-        case 'smaller': {
-            const sizes: Array<iWordFormat['fontSize']> = ['smaller', 'normal', 'larger', 'huge'];
-            const currentIdx = sizes.indexOf(currentFormat.fontSize || 'normal');
-            return { fontSize: sizes[Math.max(currentIdx - 1, 0)] };
-        }
+        // Size modes - directly set the size
+        case 'tiny':
+            return { fontSize: 'tiny' };
+        case 'smaller':
+            return { fontSize: 'smaller' };
+        case 'normal':
+            return { fontSize: 'normal' };
+        case 'large':
+            return { fontSize: 'large' };
+        case 'larger':
+            return { fontSize: 'larger' };
+        case 'huge':
+            return { fontSize: 'huge' };
         default:
             return {};
     }

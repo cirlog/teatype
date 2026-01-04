@@ -335,6 +335,76 @@ export const TextBlockComponent = ({
         setEditText(newText);
     };
 
+    // Apply formatting to selected text when format mode is activated during editing
+    const applyFormattingToSelection = useCallback(() => {
+        if (!isEditing || !formatMode || !inputRef.current) return;
+
+        const textarea = inputRef.current;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        // Only apply if there's a selection
+        if (start === end) return;
+
+        const selectedText = editText.substring(start, end);
+        if (!selectedText.trim()) return;
+
+        // Find which words in originalWords overlap with the selection
+        // Build character position map
+        let charPos = 0;
+        const wordPositions: Array<{ wordIdx: number; start: number; end: number }> = [];
+
+        originalWords.forEach((word: iWordWithFormat, idx: number) => {
+            if (word.text === '\n') {
+                wordPositions.push({ wordIdx: idx, start: charPos, end: charPos + 1 });
+                charPos += 1;
+            } else {
+                wordPositions.push({ wordIdx: idx, start: charPos, end: charPos + word.text.length });
+                charPos += word.text.length + 1; // +1 for space
+            }
+        });
+
+        // Find overlapping words
+        const affectedWordIndices: number[] = [];
+        wordPositions.forEach((wp) => {
+            // Check if word overlaps with selection
+            if (wp.start < end && wp.end > start) {
+                affectedWordIndices.push(wp.wordIdx);
+            }
+        });
+
+        if (affectedWordIndices.length === 0) return;
+
+        // Apply formatting to affected words
+        const updatedWords = originalWords.map((word: iWordWithFormat, idx: number) => {
+            if (affectedWordIndices.includes(idx)) {
+                const updates = applyFormatMode(word.format, formatMode, selectedColor);
+                return { ...word, format: { ...word.format, ...updates } };
+            }
+            return word;
+        });
+
+        setOriginalWords(updatedWords);
+
+        // Also update the actual block words
+        const newBlockWords = block.words.map((word, idx) => {
+            if (affectedWordIndices.includes(idx) && idx < updatedWords.length) {
+                const updates = applyFormatMode(word.format, formatMode, selectedColor);
+                return { ...word, format: { ...word.format, ...updates } };
+            }
+            return word;
+        });
+
+        onWordsChange(block.id, newBlockWords);
+    }, [isEditing, formatMode, editText, originalWords, selectedColor, block.id, block.words, onWordsChange]);
+
+    // Watch for format mode changes while editing - apply to selection
+    useEffect(() => {
+        if (isEditing && formatMode) {
+            applyFormattingToSelection();
+        }
+    }, [formatMode, isEditing, applyFormattingToSelection]);
+
     // Auto-resize textarea to fit content
     const autoResizeTextarea = useCallback(() => {
         if (inputRef.current) {

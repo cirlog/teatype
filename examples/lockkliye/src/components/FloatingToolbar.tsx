@@ -57,6 +57,9 @@ const tools: iToolButton[] = [
     { mode: 'highlight', icon: '◌', label: 'Highlight', shortcut: 'Ctrl+Shift+H' },
 ];
 
+// Size modes that can be set as format mode
+const SIZE_MODES = ['huge', 'larger', 'large', 'normal', 'smaller', 'tiny'] as const;
+
 const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
     formatMode,
     selectedColor,
@@ -66,6 +69,9 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
     onSizeChange,
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
+
+    // Check if current format mode is a size mode
+    const isSizeMode = SIZE_MODES.includes(formatMode as (typeof SIZE_MODES)[number]);
 
     return (
         <div className='floating-toolbar'>
@@ -97,7 +103,7 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                     <div className='floating-toolbar__size-wrapper'>
                         <button
                             className={`floating-toolbar__btn floating-toolbar__btn--size ${
-                                showSizeMenu ? 'floating-toolbar__btn--active' : ''
+                                showSizeMenu || isSizeMode ? 'floating-toolbar__btn--active' : ''
                             }`}
                             onClick={() => setShowSizeMenu(!showSizeMenu)}
                             title='Text Size'
@@ -111,17 +117,19 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                                     <button
                                         key={preset.id}
                                         className={`floating-toolbar__size-option ${
-                                            selectedSize === preset.fontSize
+                                            formatMode === preset.fontSize
                                                 ? 'floating-toolbar__size-option--active'
                                                 : ''
                                         }`}
                                         onClick={() => {
+                                            // Set format mode to the size so clicking words applies this size
+                                            onFormatModeChange(preset.fontSize as tFormatMode);
                                             onSizeChange(preset.fontSize);
                                             setShowSizeMenu(false);
                                         }}
                                     >
                                         <span
-                                            className={`floating-toolbar__size-preview floating-toolbar__size-preview--${preset.id}`}
+                                            className={`floating-toolbar__size-preview floating-toolbar__size-preview--${preset.fontSize}`}
                                         >
                                             {preset.label}
                                         </span>

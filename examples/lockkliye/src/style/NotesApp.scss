@@ -390,18 +390,14 @@ body {
 
 // Floating Toolbar
 .floating-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    padding: 16px 24px;
-    background: transparent;
+    display: flex;
+    justify-content: center;
 
     &__inner {
         display: flex;
         align-items: center;
         gap: 16px;
         max-width: 800px;
-        margin: 0 auto;
         padding: 10px 18px;
         background: var(--bg-glass);
         backdrop-filter: blur(20px) saturate(180%);
@@ -526,8 +522,10 @@ body {
         top: calc(100% + 8px);
         left: 50%;
         transform: translateX(-50%);
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid var(--glass-border);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow);
         z-index: 300;
@@ -607,6 +605,7 @@ body {
 
 // Note Editor
 .note-editor {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -615,6 +614,45 @@ body {
     &--resizing {
         cursor: ew-resize;
         user-select: none;
+    }
+
+    // Toolbar overlay - fixed at top, blurry background
+    &__toolbar-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 16px 24px;
+        pointer-events: none;
+
+        .floating-toolbar {
+            pointer-events: auto;
+        }
+    }
+
+    // History overlay - fixed at bottom, blurry background
+    &__history-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: center;
+        padding: 16px;
+        pointer-events: none;
+    }
+
+    &__history-indicator {
+        pointer-events: auto;
+
+        position: relative;
+
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
     }
 
     &__body {
@@ -626,6 +664,27 @@ body {
         width: 100%;
         overflow-y: auto;
         transition: max-width 50ms ease-out;
+        // Add padding for toolbar and history bar overlay
+        padding-top: 80px;
+        padding-bottom: 70px;
+
+        // Custom scrollbar
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: var(--bg-hover);
+            border-radius: 4px;
+
+            &:hover {
+                background: var(--border-strong);
+            }
+        }
     }
 
     &__resize-handle {
@@ -676,7 +735,7 @@ body {
     }
 
     &__header {
-        padding: 32px 48px 16px;
+        padding: 16px 48px;
         width: 100%;
     }
 
@@ -718,21 +777,8 @@ body {
 
     &__content {
         flex: 1;
-        padding: 16px 48px 48px;
+        padding: 16px 48px 16px;
         width: 100%;
-
-        &::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        &::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            background: var(--bg-hover);
-            border-radius: 4px;
-        }
     }
 
     &__add-block {
@@ -813,19 +859,22 @@ body {
     &__style-menu {
         position: absolute;
         right: 8px;
-        top: 100%;
-
+        top: 32px;
         margin-top: 8px;
         min-width: 200px;
         padding: 16px;
 
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid var(--glass-border);
         border-radius: var(--radius-md);
-        backdrop-filter: blur(0.25rem);
         box-shadow: var(--shadow);
 
         z-index: 50;
+
+        // Smooth open animation
+        animation: styleMenuOpen 200ms ease-out;
     }
 
     &__content {
@@ -1019,49 +1068,29 @@ body {
     }
 }
 
-// Note Editor Toolbar Row
-.note-editor__toolbar-row {
-    display: flex;
-    align-items: flex-start;
-    margin: 0 auto;
-    gap: 12px;
-    padding: 16px 24px;
-}
-
-.note-editor__history-indicator {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-// History bar - bottom center, sticky
-.note-editor__history-bar {
-    pointer-events: none;
-
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-
-    display: flex;
-    justify-content: center;
-    padding: 16px;
-
-    z-index: 100;
-
-    .note-editor__history-indicator {
-        pointer-events: auto;
-        background: var(--bg-glass);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        padding: 8px 16px;
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+@keyframes styleMenuOpen {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
+@keyframes dropdownOpen {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+// Note Editor history button styles
 .note-editor__history-btn {
     display: flex;
     align-items: center;
@@ -1125,19 +1154,21 @@ body {
 
 .note-editor__history-dropdown {
     position: absolute;
-    top: auto;
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     margin-bottom: 8px;
     min-width: 250px;
     max-height: 300px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow);
     z-index: 200;
     overflow: hidden;
+    animation: dropdownOpen 200ms ease-out;
 }
 
 .note-editor__history-header {
