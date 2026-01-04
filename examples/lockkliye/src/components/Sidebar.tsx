@@ -17,6 +17,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { iNote } from '@/types';
 import { Modal } from './Modal';
 import type { useToast } from './Toast';
+import { generateShortText, generateLongText, generateTitle, copyToClipboard } from '@/util/randomGenerator';
 
 interface iSidebarProps {
     notes: iNote[];
@@ -36,8 +37,10 @@ interface iSidebarProps {
     onExportText: () => string;
     onExportJson: () => string;
     onExportSettings: () => string;
+    onExportHistory: () => string;
     onImportNotes: (json: string) => boolean;
     onImportSettings: (json: string) => boolean;
+    onCreateRandomNote: () => void;
     toast: ReturnType<typeof useToast>;
 }
 
@@ -59,8 +62,10 @@ export const Sidebar = ({
     onExportText,
     onExportJson,
     onExportSettings,
+    onExportHistory,
     onImportNotes,
     onImportSettings,
+    onCreateRandomNote,
     toast,
 }: iSidebarProps) => {
     const [showSettings, setShowSettings] = useState(false);
@@ -273,6 +278,22 @@ export const Sidebar = ({
                                         >
                                             ⚙️ Settings & Presets
                                         </button>
+                                        <button
+                                            className='sidebar__export-btn'
+                                            onClick={() => {
+                                                const json = onExportHistory();
+                                                const blob = new Blob([json], { type: 'application/json' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'lockkliye-history.json';
+                                                a.click();
+                                                URL.revokeObjectURL(url);
+                                                toast.success('History exported');
+                                            }}
+                                        >
+                                            📜 History
+                                        </button>
                                     </div>
                                 </div>
 
@@ -351,6 +372,46 @@ export const Sidebar = ({
                                             />
                                             Show delete confirmations
                                         </label>
+                                    </div>
+                                    <div className='sidebar__dev-buttons'>
+                                        <span className='sidebar__dev-label'>Text Generators</span>
+                                        <button
+                                            className='sidebar__dev-btn'
+                                            onClick={async () => {
+                                                const text = generateShortText();
+                                                const success = await copyToClipboard(text);
+                                                if (success) toast.success('Short text copied!');
+                                                else toast.error('Failed to copy');
+                                            }}
+                                        >
+                                            📋 Short Text
+                                        </button>
+                                        <button
+                                            className='sidebar__dev-btn'
+                                            onClick={async () => {
+                                                const text = generateLongText();
+                                                const success = await copyToClipboard(text);
+                                                if (success) toast.success('Long text copied!');
+                                                else toast.error('Failed to copy');
+                                            }}
+                                        >
+                                            📋 Long Text
+                                        </button>
+                                        <button
+                                            className='sidebar__dev-btn'
+                                            onClick={async () => {
+                                                const text = generateTitle();
+                                                const success = await copyToClipboard(text);
+                                                if (success) toast.success('Title copied!');
+                                                else toast.error('Failed to copy');
+                                            }}
+                                        >
+                                            📋 Title
+                                        </button>
+                                        <span className='sidebar__dev-label'>Note Generator</span>
+                                        <button className='sidebar__dev-btn' onClick={onCreateRandomNote}>
+                                            🎲 Random Note
+                                        </button>
                                     </div>
                                     <button
                                         className='sidebar__clear-data-btn'

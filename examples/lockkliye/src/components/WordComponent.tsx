@@ -43,6 +43,11 @@ export const WordComponent = ({
         if (f.strikethrough) s.textDecoration = (s.textDecoration || '') + ' line-through';
         if (f.color) s.color = f.color;
         if (f.highlight) s.backgroundColor = f.highlight;
+        if (f.link) {
+            s.color = s.color || '#0a84ff';
+            s.textDecoration = (s.textDecoration || '') + ' underline';
+            s.cursor = 'pointer';
+        }
 
         switch (f.fontSize) {
             case 'tiny':
@@ -139,6 +144,10 @@ export const applyFormatMode = (
             return { color: currentFormat.color === selectedColor ? undefined : selectedColor };
         case 'highlight':
             return { highlight: currentFormat.highlight ? undefined : selectedColor + '40' };
+        case 'link':
+            // Link mode is handled specially - this toggles the link off if already set
+            // Setting a link is handled by the LinkModal component
+            return currentFormat.link ? { link: undefined } : {};
         // Size modes - directly set the size
         case 'tiny':
             return { fontSize: 'tiny' };

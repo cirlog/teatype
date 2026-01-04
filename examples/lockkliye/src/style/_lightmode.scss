@@ -84,4 +84,61 @@
         background: var(--bg-glass);
         border-color: var(--glass-border);
     }
+
+    .note-editor__history-header {
+        color: var(--text-primary);
+    }
+
+    .note-editor__history-dropdown {
+        background: var(--bg-glass);
+    }
+
+    .floating-toolbar__size-menu {
+        background: var(--bg-glass);
+        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    }
+
+    .floating-toolbar__size-option {
+        color: var(--text-primary);
+
+        &:hover {
+            background: var(--bg-hover);
+        }
+    }
+
+    .floating-toolbar__size-shortcut {
+        color: var(--text-tertiary);
+    }
+
+    .toast {
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    }
+
+    .toast__message {
+        color: var(--text-primary);
+    }
+
+    .link-modal {
+        background: var(--bg-glass);
+        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+
+        &__word {
+            color: var(--text-secondary);
+        }
+
+        &__input {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+
+            &::placeholder {
+                color: var(--text-secondary);
+            }
+        }
+
+        &__btn--secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+    }
 }

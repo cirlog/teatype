@@ -27,6 +27,7 @@ type tFormatMode =
     | 'normal'
     | 'smaller'
     | 'tiny'
+    | 'link'
     | null;
 
 // Word-level formatting attributes
@@ -38,6 +39,7 @@ interface iWordFormat {
     color?: string;
     highlight?: string;
     fontSize?: 'tiny' | 'smaller' | 'normal' | 'large' | 'larger' | 'huge';
+    link?: string; // URL for hyperlinks
 }
 
 // Each word is its own component with formatting
@@ -151,6 +153,7 @@ const SHORTCUTS: Record<string, tFormatMode> = {
     'ctrl+shift+s': 'strikethrough',
     'ctrl+shift+c': 'color',
     'ctrl+shift+h': 'highlight',
+    'ctrl+k': 'link',
     'ctrl+]': 'larger',
     'ctrl+[': 'smaller',
 };

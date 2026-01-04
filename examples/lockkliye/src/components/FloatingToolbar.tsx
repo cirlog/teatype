@@ -56,6 +56,7 @@ const tools: iToolButton[] = [
     { mode: 'strikethrough', icon: 'S', label: 'Strikethrough', shortcut: 'Ctrl+Shift+S' },
     { mode: 'color', icon: '◉', label: 'Text Color', shortcut: 'Ctrl+Shift+C' },
     { mode: 'highlight', icon: '◌', label: 'Highlight', shortcut: 'Ctrl+Shift+H' },
+    { mode: 'link', icon: '🔗', label: 'Hyperlink', shortcut: 'Ctrl+K' },
 ];
 
 // Size modes that can be set as format mode

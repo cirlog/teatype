@@ -107,8 +107,10 @@ const NotesApp: React.FC = () => {
                 onExportText={store.exportAsText}
                 onExportJson={store.exportAsJson}
                 onExportSettings={store.exportSettings}
+                onExportHistory={store.exportHistory}
                 onImportNotes={store.importNotes}
                 onImportSettings={store.importSettings}
+                onCreateRandomNote={store.createRandomNote}
                 toast={toast}
             />
 

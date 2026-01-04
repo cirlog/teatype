@@ -212,9 +212,11 @@
     &__footer {
         padding: 12px;
         border-top: 1px solid var(--border);
-        flex-shrink: 0;
-        max-height: 50%;
+        flex-shrink: 1;
+        min-height: 0;
         overflow-y: auto;
+        display: flex;
+        flex-direction: column;
 
         &::-webkit-scrollbar {
             width: 6px;
@@ -257,7 +259,21 @@
         border-radius: var(--radius-md);
         animation: settingsSlideIn 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
         transform-origin: top;
-        overflow: hidden;
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: var(--bg-hover);
+            border-radius: 3px;
+        }
 
         &--closing {
             animation: settingsSlideOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -402,6 +418,42 @@
             cursor: pointer;
         }
     }
+
+    &__dev-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 4px;
+    }
+
+    &__dev-label {
+        font-size: 10px;
+        color: var(--text-tertiary);
+        margin-top: 8px;
+        margin-bottom: 2px;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    &__dev-btn {
+        padding: 8px 12px;
+        background: var(--bg-hover);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all var(--transition);
+        text-align: left;
+
+        &:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--accent);
+        }
+    }
 }
 
 @keyframes settingsSlideIn {
@@ -414,7 +466,7 @@
     }
     to {
         opacity: 1;
-        max-height: 500px;
+        max-height: 1000px;
         padding-top: 12px;
         padding-bottom: 12px;
         margin-top: 8px;
@@ -424,7 +476,7 @@
 @keyframes settingsSlideOut {
     from {
         opacity: 1;
-        max-height: 500px;
+        max-height: 1000px;
         padding-top: 12px;
         padding-bottom: 12px;
         margin-top: 8px;

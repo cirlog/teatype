@@ -138,15 +138,15 @@
 
     &__size-menu {
         position: absolute;
-        top: calc(100% + 12px);
+        top: calc(100% + 16px);
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(30, 30, 35, 0.85);
-        backdrop-filter: blur(30px) saturate(200%);
-        -webkit-backdrop-filter: blur(30px) saturate(200%);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid var(--glass-border);
         border-radius: var(--radius-md);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 var(--glass-highlight);
         z-index: 300;
         min-width: 140px;
         padding: 6px;

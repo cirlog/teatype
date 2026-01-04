@@ -21,6 +21,7 @@ import { iNote, iFolder, tFormatMode, iNotesState, iWord, iTextBlock, iBlockStyl
 
 // Util
 import { createNote, createFolder, createBlock, createWord, FORMAT_COLORS, exportNotesAsText, exportNotesAsJson, exportSettingsAsJson, importFromJson as parseImportJson } from '@/types';
+import { generateRandomNote } from '@/util/randomGenerator';
 
 const STORAGE_KEY = 'lockkliye-data';
 const HISTORY_KEY = 'lockkliye-history';
@@ -46,40 +47,162 @@ const getInitialState = (): iNotesState => {
 
     // Create default state with sample data
     const defaultFolder = createFolder('All Notes');
-    const sampleNote = createNote('Welcome to Notes', defaultFolder.id);
+    const sampleNote = createNote('Welcome to Lockkliye', defaultFolder.id);
     sampleNote.blocks = [
+        // Title block
         createBlock([
-            createWord('Welcome', { bold: true, fontSize: 'larger' }),
+            createWord('Welcome', { bold: true, fontSize: 'huge', color: '#74c0fc' }),
             createWord('to'),
-            createWord('Lockkliye', { italic: true, color: '#74c0fc' }),
-            createWord('Notes', { bold: true, color: '#74c0fc' }),
+            createWord('Lockkliye', { bold: true, fontSize: 'huge', color: '#ff9500' }),
         ]),
+        // Introduction
         createBlock([
-            createWord('Try'),
-            createWord('these'),
-            createWord('shortcuts:'),
-        ]),
-        createBlock([
-            createWord('CTRL+B', { bold: true, highlight: 'rgba(255,212,59,0.3)' }),
-            createWord('for'),
-            createWord('bold', { bold: true }),
-            createWord('mode'),
+            createWord('A', { fontSize: 'large' }),
+            createWord('modern', { fontSize: 'large' }),
+            createWord('note-taking', { fontSize: 'large', italic: true }),
+            createWord('app', { fontSize: 'large' }),
+            createWord('with', { fontSize: 'large' }),
+            createWord('rich', { fontSize: 'large', bold: true }),
+            createWord('formatting', { fontSize: 'large', bold: true }),
+            createWord('capabilities.', { fontSize: 'large' }),
         ], {
-            borderStyle: 'solid',
-            borderColor: 'rgba(255,212,59,0.5)',
-            borderRadius: 8,
-            backgroundColor: 'rgba(255,212,59,0.1)',
-        }),
-        createBlock([
-            createWord('CTRL+I', { bold: true, highlight: 'rgba(116,192,252,0.3)' }),
-            createWord('for'),
-            createWord('italic', { italic: true }),
-            createWord('mode'),
-        ], {
-            borderStyle: 'solid',
-            borderColor: 'rgba(116,192,252,0.5)',
-            borderRadius: 8,
             backgroundColor: 'rgba(116,192,252,0.1)',
+            borderRadius: 12,
+        }),
+        // Shortcuts section header
+        createBlock([
+            createWord('⌨️', { fontSize: 'larger' }),
+            createWord('Keyboard', { bold: true, fontSize: 'larger' }),
+            createWord('Shortcuts', { bold: true, fontSize: 'larger' }),
+        ]),
+        // Shortcuts list
+        createBlock([
+            createWord('•'),
+            createWord('CTRL+B', { bold: true, highlight: 'rgba(255,212,59,0.3)' }),
+            createWord('→'),
+            createWord('Bold', { bold: true }),
+            createWord('text'),
+            createWord('\n'),
+            createWord('•'),
+            createWord('CTRL+I', { bold: true, highlight: 'rgba(116,192,252,0.3)' }),
+            createWord('→'),
+            createWord('Italic', { italic: true }),
+            createWord('text'),
+            createWord('\n'),
+            createWord('•'),
+            createWord('CTRL+U', { bold: true, highlight: 'rgba(177,151,252,0.3)' }),
+            createWord('→'),
+            createWord('Underline', { underline: true }),
+            createWord('text'),
+            createWord('\n'),
+            createWord('•'),
+            createWord('CTRL+K', { bold: true, highlight: 'rgba(105,219,124,0.3)' }),
+            createWord('→'),
+            createWord('Add', {}),
+            createWord('hyperlink', { link: 'https://example.com', color: '#0a84ff' }),
+        ], {
+            borderStyle: 'solid',
+            borderRadius: 8,
+            backgroundColor: 'rgba(255,255,255,0.05)',
+        }),
+        // Features section
+        createBlock([
+            createWord('✨', { fontSize: 'larger' }),
+            createWord('Features', { bold: true, fontSize: 'larger' }),
+        ]),
+        // Feature: Text sizes
+        createBlock([
+            createWord('Text', { fontSize: 'tiny' }),
+            createWord('in', { fontSize: 'smaller' }),
+            createWord('different', {}),
+            createWord('sizes:', { fontSize: 'large' }),
+            createWord('tiny,', { fontSize: 'tiny' }),
+            createWord('smaller,', { fontSize: 'smaller' }),
+            createWord('normal,', {}),
+            createWord('large,', { fontSize: 'large' }),
+            createWord('larger,', { fontSize: 'larger' }),
+            createWord('huge', { fontSize: 'huge' }),
+        ], {
+            title: 'Text Sizes',
+            borderStyle: 'dashed',
+            borderRadius: 6,
+            backgroundColor: 'rgba(255,169,77,0.1)',
+        }),
+        // Feature: Colors
+        createBlock([
+            createWord('Colorful', { color: '#ff6b6b', bold: true }),
+            createWord('text', { color: '#ffa94d' }),
+            createWord('with', { color: '#ffd43b' }),
+            createWord('highlights', { highlight: 'rgba(105,219,124,0.4)' }),
+            createWord('and', { color: '#74c0fc' }),
+            createWord('backgrounds', { highlight: 'rgba(177,151,252,0.4)' }),
+        ], {
+            title: 'Colors',
+            borderStyle: 'solid',
+            borderRadius: 10,
+            backgroundGradient: 'linear-gradient(135deg, rgba(116,192,252,0.1) 0%, rgba(177,151,252,0.1) 100%)',
+        }),
+        // Feature: Blocks
+        createBlock([
+            createWord('Blocks'),
+            createWord('can'),
+            createWord('have'),
+            createWord('different'),
+            createWord('styles:'),
+            createWord('borders,'),
+            createWord('backgrounds,'),
+            createWord('gradients,'),
+            createWord('and'),
+            createWord('corner'),
+            createWord('radius!'),
+        ], {
+            title: 'Block Styling',
+            borderStyle: 'dotted',
+            borderRadius: 16,
+            backgroundGradient: 'linear-gradient(135deg, rgba(255,107,107,0.15) 0%, rgba(255,169,77,0.15) 100%)',
+        }),
+        // Tips section
+        createBlock([
+            createWord('💡', { fontSize: 'larger' }),
+            createWord('Tips', { bold: true, fontSize: 'larger' }),
+        ]),
+        createBlock([
+            createWord('•'),
+            createWord('Click'),
+            createWord('◐'),
+            createWord('on'),
+            createWord('a'),
+            createWord('block'),
+            createWord('to'),
+            createWord('customize'),
+            createWord('its'),
+            createWord('style'),
+            createWord('\n'),
+            createWord('•'),
+            createWord('Use'),
+            createWord('Shift+Enter'),
+            createWord('to'),
+            createWord('create'),
+            createWord('a'),
+            createWord('new'),
+            createWord('block'),
+            createWord('\n'),
+            createWord('•'),
+            createWord('Escape'),
+            createWord('to'),
+            createWord('exit'),
+            createWord('formatting'),
+            createWord('mode'),
+            createWord('\n'),
+            createWord('•'),
+            createWord('CTRL+Z'),
+            createWord('to'),
+            createWord('undo'),
+            createWord('changes'),
+        ], {
+            borderStyle: 'solid',
+            borderRadius: 4,
+            backgroundColor: 'rgba(105,219,124,0.1)',
         }),
     ];
 
@@ -621,6 +744,34 @@ const useNotesStore = () => {
         return true;
     }, []);
 
+    // Export history as JSON (separate file with note ID references)
+    const exportHistory = useCallback(() => {
+        const historyExport = {
+            type: 'lockkliye-history',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            entries: history.map((entry: iHistoryEntry) => ({
+                noteId: entry.noteId,
+                timestamp: entry.timestamp,
+                description: entry.description,
+                // Store full note snapshot
+                noteSnapshot: entry.note,
+            })),
+        };
+        return JSON.stringify(historyExport, null, 2);
+    }, [history]);
+
+    // Create a random note for testing (without pushing to history)
+    const createRandomNote = useCallback(() => {
+        const note = generateRandomNote();
+        setState((prev: iNotesState) => ({
+            ...prev,
+            notes: [note, ...prev.notes],
+            activeNoteId: note.id,
+        }));
+        return note;
+    }, []);
+
     // Clear all data
     const clearAllData = useCallback(() => {
         localStorage.removeItem(STORAGE_KEY);
@@ -737,6 +888,7 @@ const useNotesStore = () => {
         exportAsText,
         exportAsJson,
         exportSettings,
+        exportHistory,
         importFromJson,
         importNotes,
         importSettings,
@@ -752,6 +904,7 @@ const useNotesStore = () => {
 
         // Dev
         clearAllData,
+        createRandomNote,
     };
 };
 

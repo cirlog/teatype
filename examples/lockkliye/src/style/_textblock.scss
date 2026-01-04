@@ -176,6 +176,25 @@
     word-wrap: break-word;
     tab-size: 4;
 
+    &__word {
+        position: relative;
+    }
+
+    &__linked {
+        position: relative;
+        cursor: pointer;
+    }
+
+    &__link-indicator {
+        position: absolute;
+        top: -6px;
+        right: -4px;
+        font-size: 8px;
+        line-height: 1;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
     &:empty::before {
         content: attr(data-placeholder);
         color: var(--text-tertiary);
@@ -193,7 +212,7 @@
         caret-color: transparent;
 
         span[data-word-id] {
-            cursor: pointer;
+            cursor: crosshair;
             border-radius: 2px;
             transition: background-color 100ms ease;
 
@@ -424,6 +443,51 @@
         font-size: 11px;
         color: var(--text-secondary);
         min-width: 30px;
+    }
+
+    &__slider-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__slider {
+        flex: 1;
+        height: 4px;
+        background: var(--bg-tertiary);
+        border-radius: 2px;
+        appearance: none;
+        cursor: pointer;
+
+        &::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform var(--transition);
+
+            &:hover {
+                transform: scale(1.15);
+            }
+        }
+
+        &::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    }
+
+    &__slider-value {
+        font-size: 11px;
+        color: var(--text-secondary);
+        min-width: 30px;
+        text-align: right;
     }
 
     input[type='range'] {

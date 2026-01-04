@@ -184,8 +184,8 @@ export const TextBlockComponent = ({
 
         const effectiveBg = getEffectiveBackground();
 
-        // Always use default border radius
-        styles.borderRadius = '8px';
+        // Use border radius from style or default to 8
+        styles.borderRadius = `${blockStyle.borderRadius ?? 8}px`;
 
         // Set border style
         if (blockStyle.borderStyle && blockStyle.borderStyle !== 'none') {
@@ -395,6 +395,23 @@ export const TextBlockComponent = ({
                                         {style}
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+                        <div className='style-menu__section'>
+                            <span className='style-menu__label'>Corner Radius</span>
+                            <div className='style-menu__slider-row'>
+                                <input
+                                    type='range'
+                                    className='style-menu__slider'
+                                    min='0'
+                                    max='20'
+                                    step='2'
+                                    value={blockStyle.borderRadius ?? 8}
+                                    onChange={(e) =>
+                                        onStyleChange(block.id, { borderRadius: parseInt(e.target.value) })
+                                    }
+                                />
+                                <span className='style-menu__slider-value'>{blockStyle.borderRadius ?? 8}px</span>
                             </div>
                         </div>
                         <div className='style-menu__section'>

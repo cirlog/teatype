@@ -18,6 +18,7 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 
 // Components
 import { applyFormatMode } from '@/components/WordComponent';
+import LinkModal from '@/components/LinkModal';
 
 // Types
 import { createWord, iWord, iWordFormat, tFormatMode } from '@/types';
@@ -33,6 +34,15 @@ interface iRichTextEditorProps {
     placeholder?: string;
 }
 
+// Link modal state
+interface iLinkModalState {
+    isOpen: boolean;
+    wordId: string | null;
+    currentLink?: string;
+    wordText: string;
+    position: { x: number; y: number };
+}
+
 // Generate inline styles from word format
 const getWordStyle = (format: iWordFormat): React.CSSProperties => {
     const style: React.CSSProperties = {};
@@ -44,6 +54,11 @@ const getWordStyle = (format: iWordFormat): React.CSSProperties => {
     // 'inherit' means use the default text color, so don't set any color style
     if (format.color && format.color !== 'inherit') style.color = format.color;
     if (format.highlight) style.backgroundColor = format.highlight;
+    if (format.link) {
+        if (!format.color || format.color === 'inherit') style.color = '#0a84ff';
+        style.textDecoration = (style.textDecoration || '') + ' underline';
+        style.cursor = 'pointer';
+    }
 
     switch (format.fontSize) {
         case 'tiny':
@@ -90,6 +105,15 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
     const [isFocused, setIsFocused] = useState(false);
     const wordsRef = useRef(words);
 
+    // Link modal state
+    const [linkModal, setLinkModal] = useState<iLinkModalState>({
+        isOpen: false,
+        wordId: null,
+        currentLink: undefined,
+        wordText: '',
+        position: { x: 0, y: 0 },
+    });
+
     // Keep wordsRef in sync
     useEffect(() => {
         wordsRef.current = words;
@@ -117,7 +141,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 }
 
                 if (word.text === '\t') {
-                    return '<span class="rich-text-editor__tab">\t</span>';
+                    return `<span data-word-id="${word.id}" class="rich-text-editor__tab">\t</span>`;
                 }
 
                 const style = getWordStyle(word.format);
@@ -127,10 +151,16 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                         ? ' '
                         : '';
 
-                if (styleStr) {
-                    return `<span data-word-id="${word.id}" style="${styleStr}">${word.text}</span>${space}`;
+                // Add link indicator for hyperlinked words
+                const linkClass = word.format.link ? ' rich-text-editor__linked' : '';
+                const linkIndicator = word.format.link
+                    ? '<span class="rich-text-editor__link-indicator">🔗</span>'
+                    : '';
+
+                if (styleStr || linkClass) {
+                    return `<span data-word-id="${word.id}" class="rich-text-editor__word${linkClass}" style="${styleStr}">${word.text}${linkIndicator}</span>${space}`;
                 }
-                return `<span data-word-id="${word.id}">${word.text}</span>${space}`;
+                return `<span data-word-id="${word.id}" class="rich-text-editor__word">${word.text}</span>${space}`;
             })
             .join('');
     }, []);
@@ -524,10 +554,10 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 return;
             }
 
-            // Handle Tab key - insert tab character
+            // Handle Tab key - insert 4 spaces instead of tab character
             if (e.key === 'Tab') {
                 e.preventDefault();
-                document.execCommand('insertText', false, '\t');
+                document.execCommand('insertText', false, '    ');
                 return;
             }
 
@@ -543,9 +573,107 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         document.execCommand('insertText', false, text);
     }, []);
 
+    // Handle saving a link to a word
+    const handleLinkSave = useCallback(
+        (url: string) => {
+            if (!linkModal.wordId) return;
+
+            const newWords = wordsRef.current.map((word) => {
+                if (word.id === linkModal.wordId) {
+                    return { ...word, format: { ...word.format, link: url } };
+                }
+                return word;
+            });
+
+            wordsRef.current = newWords;
+            onWordsChange(newWords);
+            updateDOMContent(newWords);
+        },
+        [linkModal.wordId, onWordsChange, updateDOMContent]
+    );
+
+    // Handle deleting a link from a word
+    const handleLinkDelete = useCallback(() => {
+        if (!linkModal.wordId) return;
+
+        const newWords = wordsRef.current.map((word) => {
+            if (word.id === linkModal.wordId) {
+                const { link: _, ...restFormat } = word.format;
+                return { ...word, format: restFormat };
+            }
+            return word;
+        });
+
+        wordsRef.current = newWords;
+        onWordsChange(newWords);
+        updateDOMContent(newWords);
+    }, [linkModal.wordId, onWordsChange, updateDOMContent]);
+
+    // Close link modal
+    const handleLinkModalClose = useCallback(() => {
+        setLinkModal({
+            isOpen: false,
+            wordId: null,
+            currentLink: undefined,
+            wordText: '',
+            position: { x: 0, y: 0 },
+        });
+    }, []);
+
+    // Open link modal for a word
+    const openLinkModal = useCallback((wordId: string, wordSpan: Element) => {
+        const word = wordsRef.current.find((w) => w.id === wordId);
+        if (!word) return;
+
+        const rect = wordSpan.getBoundingClientRect();
+        setLinkModal({
+            isOpen: true,
+            wordId,
+            currentLink: word.format.link,
+            wordText: word.text,
+            position: {
+                x: rect.left + rect.width / 2,
+                y: rect.top,
+            },
+        });
+    }, []);
+
     // Handle click on words when in format mode (for selection-based formatting)
+    // Also handles link clicks (Ctrl+click to open, click to edit)
     const handleClick = useCallback(
-        (_e: React.MouseEvent) => {
+        (e: React.MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const wordSpan = target.closest('span[data-word-id]');
+
+            if (wordSpan) {
+                const wordId = wordSpan.getAttribute('data-word-id');
+                if (wordId) {
+                    const word = wordsRef.current.find((w) => w.id === wordId);
+
+                    // Check if it's a linked word
+                    if (word?.format.link) {
+                        if (e.ctrlKey || e.metaKey) {
+                            // Ctrl+click opens the link
+                            e.preventDefault();
+                            window.open(word.format.link, '_blank', 'noopener,noreferrer');
+                            return;
+                        } else if (!formatMode) {
+                            // Regular click on linked word opens edit modal (only when not in format mode)
+                            e.preventDefault();
+                            openLinkModal(wordId, wordSpan);
+                            return;
+                        }
+                    }
+
+                    // Handle link format mode - open modal for adding link
+                    if (formatMode === 'link') {
+                        e.preventDefault();
+                        openLinkModal(wordId, wordSpan);
+                        return;
+                    }
+                }
+            }
+
             if (!formatMode || !editorRef.current) return;
 
             // In edit mode with selection, apply formatting to selection
@@ -557,13 +685,16 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 }
             }
         },
-        [formatMode, isFocused, applyFormattingToSelection]
+        [formatMode, isFocused, applyFormattingToSelection, openLinkModal]
     );
 
     // Handle mousedown for format mode clicking
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (!formatMode || !editorRef.current) return;
+
+            // Link mode is handled by handleClick to open modal
+            if (formatMode === 'link') return;
 
             const target = e.target as HTMLElement;
             const wordSpan = target.closest('span[data-word-id]');
@@ -649,25 +780,36 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
     };
 
     return (
-        <div
-            ref={editorRef}
-            className={`rich-text-editor ${isFocused ? 'rich-text-editor--focused' : ''} ${
-                formatMode ? 'rich-text-editor--format-mode' : ''
-            }`}
-            contentEditable={!formatMode || isFocused}
-            suppressContentEditableWarning
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onClick={handleClick}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onSelect={handleSelectStart}
-            spellCheck={false}
-            style={formatMode && !isFocused ? { userSelect: 'none', caretColor: 'transparent' } : undefined}
-        />
+        <>
+            <div
+                ref={editorRef}
+                className={`rich-text-editor ${isFocused ? 'rich-text-editor--focused' : ''} ${
+                    formatMode ? 'rich-text-editor--format-mode' : ''
+                }`}
+                contentEditable={!formatMode || isFocused}
+                suppressContentEditableWarning
+                onInput={handleInput}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onClick={handleClick}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onSelect={handleSelectStart}
+                spellCheck={false}
+                style={formatMode && !isFocused ? { userSelect: 'none', caretColor: 'transparent' } : undefined}
+            />
+            <LinkModal
+                isOpen={linkModal.isOpen}
+                currentLink={linkModal.currentLink}
+                wordText={linkModal.wordText}
+                position={linkModal.position}
+                onSave={handleLinkSave}
+                onDelete={handleLinkDelete}
+                onClose={handleLinkModalClose}
+            />
+        </>
     );
 };
 
