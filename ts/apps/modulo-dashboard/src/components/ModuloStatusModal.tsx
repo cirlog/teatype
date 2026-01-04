@@ -14,13 +14,13 @@
  */
 
 // Components
-import { StatusCard } from '@/components/StatusCard';
+import { StatusCard } from './StatusCard';
 
 // Hooks
-import { useStatusPulse } from '@/hooks/useStatusPulse';
+import { useStatusPulse } from '../hooks/useStatusPulse';
 
 // Style
-import '@/components/style/ModuloStatusModal.scss';
+import './style/ModuloStatusModal.scss';
 
 const HeroTags = ({ name, pod, type }: { name: string; pod: number; type: string }) => {
     return (

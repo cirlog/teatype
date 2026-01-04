@@ -128,7 +128,7 @@ Gemfile.lock
 # Fonts
 *.eot
 *.otf
-*.ttf
+# *.ttf
 *.woff
 *.woff2
 

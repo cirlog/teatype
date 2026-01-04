@@ -52,7 +52,10 @@
         "noUncheckedSideEffectImports": true,
 
         // Path mapping for cleaner imports - @/* maps to the src directory
-        "paths": { "@/*": ["./src/*"] }
+        "paths": {
+            "@/*": ["./src/*"],
+            "@teatype/*": ["../../ts/*"]
+        }
     },
     // Files and directories to include in the compilation
     "include": ["src", "*.tsx", "*.ts", "vite-env.d.ts"]

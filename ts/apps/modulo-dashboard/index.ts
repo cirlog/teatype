@@ -14,21 +14,4 @@
  */
 
 // Components
-import { TeaTypeApp } from '@teatype';
-
-const StudentDB = () => {
-    return (
-        <TeaTypeApp
-            eyebrow={'Realtime module vitals'}
-            title={'Operations Pulse'}
-            description={
-                'A lightweight dashboard pinging the backend status endpoint. Rebuilt in React + Vite for faster iteration.'
-            }
-            unit={'teatype'}
-            pod={0}
-            type={'app'}
-        />
-    );
-};
-
-export default StudentDB;
+export { default as ModuloStatusModal } from './src/components/ModuloStatusModal';

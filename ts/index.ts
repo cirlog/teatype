@@ -13,18 +13,5 @@
  * all copies or substantial portions of the Software.
  */
 
-// React imports
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-
 // Components
-import App from './src/ModuloDashboard';
-
-// Style
-import '@/style/global.scss';
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>,
-);
+export { TeaTypeApp } from './components/TeaTypeApp';

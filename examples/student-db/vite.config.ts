@@ -38,6 +38,15 @@ export const getBaseViteConfig = (): UserConfig => ({
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
+            '@teatype': resolve(__dirname, '../../ts'),
+        },
+    },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                additionalData: [
+                ].join('\n'),
+            },
         },
     },
     server: {
