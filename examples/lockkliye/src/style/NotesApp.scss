@@ -918,6 +918,59 @@ body {
     }
 }
 
+// Rich Text Editor (WYSIWYG)
+.rich-text-editor {
+    width: 100%;
+    min-height: 24px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.8;
+    font-family: inherit;
+    outline: none;
+    cursor: text;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+
+    &:empty::before {
+        content: attr(data-placeholder);
+        color: var(--text-tertiary);
+        font-style: italic;
+        pointer-events: none;
+    }
+
+    &--focused {
+        // Subtle focus indication
+    }
+
+    &--format-mode {
+        cursor: crosshair;
+
+        span[data-word-id] {
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background-color 100ms ease;
+
+            &:hover {
+                background-color: rgba(255, 149, 0, 0.2);
+            }
+        }
+    }
+
+    &__placeholder {
+        color: var(--text-tertiary);
+        font-style: italic;
+        pointer-events: none;
+    }
+
+    // Word spans
+    span[data-word-id] {
+        // Inline display for words
+    }
+}
+
 // Style Menu
 .style-menu {
     &__section {

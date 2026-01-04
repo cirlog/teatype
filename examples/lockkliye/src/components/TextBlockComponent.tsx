@@ -13,10 +13,9 @@
  * all copies or substantial portions of the Software.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { iTextBlock, tFormatMode, iWord } from '@/types';
-import { createWord } from '@/types';
-import { WordComponent, applyFormatMode } from './WordComponent';
+import { RichTextEditor } from './RichTextEditor';
 
 interface iTextBlockComponentProps {
     block: iTextBlock;
@@ -31,32 +30,19 @@ interface iTextBlockComponentProps {
     onEditingChange?: (blockId: string, isEditing: boolean) => void;
 }
 
-// Helper to serialize words to editable text while preserving format info
-interface iWordWithFormat {
-    text: string;
-    format: iWord['format'];
-}
-
 export const TextBlockComponent = ({
     block,
     formatMode,
     selectedColor,
     selectedSize,
-    onWordFormatChange,
     onWordsChange,
     onStyleChange,
     onDelete,
     onAddBlockAfter,
-    onEditingChange,
 }: iTextBlockComponentProps) => {
-    const [hoveredWordId, setHoveredWordId] = useState<string | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editText, setEditText] = useState('');
-    const [originalWords, setOriginalWords] = useState<iWordWithFormat[]>([]);
     const [showStyleMenu, setShowStyleMenu] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [isNearEdge, setIsNearEdge] = useState(false);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
     const styleMenuRef = useRef<HTMLDivElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +60,7 @@ export const TextBlockComponent = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showStyleMenu]);
 
+    // Handle width resizing
     useEffect(() => {
         if (!isResizing) return;
 
@@ -112,7 +99,7 @@ export const TextBlockComponent = ({
 
     // Detect when mouse is near right edge of block
     const handleMouseMoveOnBlock = (e: React.MouseEvent) => {
-        if (!blockRef.current || isEditing) {
+        if (!blockRef.current) {
             setIsNearEdge(false);
             return;
         }
@@ -158,260 +145,6 @@ export const TextBlockComponent = ({
         return styles;
     };
 
-    const handleWordClick = (wordId: string) => {
-        if (formatMode) {
-            const word = block.words.find((w) => w.id === wordId);
-            if (word) {
-                const updates = applyFormatMode(word.format, formatMode, selectedColor);
-                onWordFormatChange(block.id, wordId, updates);
-            }
-        }
-    };
-
-    const startEditing = () => {
-        if (formatMode) return; // Don't edit in format mode
-        // Join words with spaces, but convert newline words to actual newlines
-        const text = block.words
-            .map((w) => (w.text === '\n' ? '\n' : w.text))
-            .join(' ')
-            .replace(/ \n /g, '\n')
-            .replace(/ \n/g, '\n')
-            .replace(/\n /g, '\n');
-        // Store original words with their formatting
-        setOriginalWords(block.words.map((w) => ({ text: w.text, format: { ...w.format } })));
-        setEditText(text);
-        setIsEditing(true);
-    };
-
-    const finishEditing = useCallback(() => {
-        // Split by whitespace but preserve newlines as separate "words"
-        // First, normalize newlines and split
-        const lines = editText.split('\n');
-        const allWords: string[] = [];
-
-        lines.forEach((line: string, lineIndex: number) => {
-            const wordsInLine = line.split(/\s+/).filter(Boolean);
-            allWords.push(...wordsInLine);
-            // Add newline marker between lines (except for last line)
-            if (lineIndex < lines.length - 1) {
-                allWords.push('\n');
-            }
-        });
-
-        if (allWords.length === 0 || (allWords.length === 1 && allWords[0] === '\n')) {
-            onWordsChange(block.id, [createWord('')]);
-            setIsEditing(false);
-            return;
-        }
-
-        // Build a character-to-format map from original text
-        // Each character position maps to its word's format
-        const charFormatMap: Array<iWord['format'] | null> = [];
-        let charIndex = 0;
-
-        for (let i = 0; i < originalWords.length; i++) {
-            const word = originalWords[i];
-            for (let j = 0; j < word.text.length; j++) {
-                charFormatMap[charIndex++] = word.format;
-            }
-            if (i < originalWords.length - 1) {
-                charFormatMap[charIndex++] = null; // space has no format
-            }
-        }
-
-        // Helper to find the best matching format for a new word
-        const findBestFormat = (newWord: string, wordIndex: number): iWord['format'] | null => {
-            // 1. Exact match at same position
-            if (wordIndex < originalWords.length && originalWords[wordIndex].text === newWord) {
-                return originalWords[wordIndex].format;
-            }
-
-            // 2. Exact match anywhere
-            const exactMatch = originalWords.find((ow: iWordWithFormat) => ow.text === newWord);
-            if (exactMatch) {
-                return exactMatch.format;
-            }
-
-            // 3. Check if new word is a substring of any original word (word was split)
-            for (const ow of originalWords) {
-                if (ow.text.includes(newWord) || newWord.includes(ow.text)) {
-                    return ow.format;
-                }
-            }
-
-            // 4. Check if new word is similar to original at same position (letters added/removed)
-            if (wordIndex < originalWords.length) {
-                const orig = originalWords[wordIndex].text;
-                // If they share a common prefix or suffix of at least 2 chars, consider it the same word
-                const minLen = Math.min(orig.length, newWord.length);
-                if (minLen >= 2) {
-                    // Check common prefix
-                    let prefixLen = 0;
-                    for (let i = 0; i < minLen; i++) {
-                        if (orig[i] === newWord[i]) prefixLen++;
-                        else break;
-                    }
-                    // Check common suffix
-                    let suffixLen = 0;
-                    for (let i = 0; i < minLen; i++) {
-                        if (orig[orig.length - 1 - i] === newWord[newWord.length - 1 - i]) suffixLen++;
-                        else break;
-                    }
-                    // If significant overlap, preserve format
-                    if (prefixLen >= 2 || suffixLen >= 2 || prefixLen + suffixLen >= minLen) {
-                        return originalWords[wordIndex].format;
-                    }
-                }
-            }
-
-            // 5. If word count increased (split happened), check adjacent original words
-            if (allWords.length > originalWords.length) {
-                // Map new word index back to approximate original position
-                const ratio = originalWords.length / allWords.length;
-                const approxOrigIndex = Math.floor(wordIndex * ratio);
-                if (approxOrigIndex < originalWords.length) {
-                    return originalWords[approxOrigIndex].format;
-                }
-            }
-
-            return null;
-        };
-
-        // Create new words with preserved formatting
-        // Apply selectedSize to new words that don't have existing formatting
-        const newWords: iWord[] = allWords.map((text: string, index: number) => {
-            if (text === '\n') {
-                return createWord('\n'); // Newline word
-            }
-            const format = findBestFormat(text, index);
-            if (format) {
-                return createWord(text, format);
-            }
-            // Apply selected size to new words
-            if (selectedSize && selectedSize !== 'normal') {
-                return createWord(text, { fontSize: selectedSize as iWord['format']['fontSize'] });
-            }
-            return createWord(text);
-        });
-
-        onWordsChange(block.id, newWords);
-        setIsEditing(false);
-    }, [editText, block.id, onWordsChange, originalWords, selectedSize]);
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            finishEditing();
-        } else if (e.key === 'Enter' && e.shiftKey) {
-            // Shift+Enter: Add new block
-            e.preventDefault();
-            finishEditing();
-            onAddBlockAfter(block.id);
-        }
-        // Regular Enter creates newline (default behavior, no need to prevent)
-    };
-
-    // Handle text changes, including bullet conversion
-    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        let newText = e.target.value;
-
-        // Convert "- " at the start of a line to bullet point
-        newText = newText.replace(/^- /gm, '• ');
-        newText = newText.replace(/\n- /g, '\n• ');
-
-        setEditText(newText);
-    };
-
-    // Apply formatting to selected text when format mode is activated during editing
-    const applyFormattingToSelection = useCallback(() => {
-        if (!isEditing || !formatMode || !inputRef.current) return;
-
-        const textarea = inputRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-
-        // Only apply if there's a selection
-        if (start === end) return;
-
-        const selectedText = editText.substring(start, end);
-        if (!selectedText.trim()) return;
-
-        // Find which words in originalWords overlap with the selection
-        // Build character position map
-        let charPos = 0;
-        const wordPositions: Array<{ wordIdx: number; start: number; end: number }> = [];
-
-        originalWords.forEach((word: iWordWithFormat, idx: number) => {
-            if (word.text === '\n') {
-                wordPositions.push({ wordIdx: idx, start: charPos, end: charPos + 1 });
-                charPos += 1;
-            } else {
-                wordPositions.push({ wordIdx: idx, start: charPos, end: charPos + word.text.length });
-                charPos += word.text.length + 1; // +1 for space
-            }
-        });
-
-        // Find overlapping words
-        const affectedWordIndices: number[] = [];
-        wordPositions.forEach((wp) => {
-            // Check if word overlaps with selection
-            if (wp.start < end && wp.end > start) {
-                affectedWordIndices.push(wp.wordIdx);
-            }
-        });
-
-        if (affectedWordIndices.length === 0) return;
-
-        // Apply formatting to affected words
-        const updatedWords = originalWords.map((word: iWordWithFormat, idx: number) => {
-            if (affectedWordIndices.includes(idx)) {
-                const updates = applyFormatMode(word.format, formatMode, selectedColor);
-                return { ...word, format: { ...word.format, ...updates } };
-            }
-            return word;
-        });
-
-        setOriginalWords(updatedWords);
-
-        // Also update the actual block words
-        const newBlockWords = block.words.map((word, idx) => {
-            if (affectedWordIndices.includes(idx) && idx < updatedWords.length) {
-                const updates = applyFormatMode(word.format, formatMode, selectedColor);
-                return { ...word, format: { ...word.format, ...updates } };
-            }
-            return word;
-        });
-
-        onWordsChange(block.id, newBlockWords);
-    }, [isEditing, formatMode, editText, originalWords, selectedColor, block.id, block.words, onWordsChange]);
-
-    // Watch for format mode changes while editing - apply to selection
-    useEffect(() => {
-        if (isEditing && formatMode) {
-            applyFormattingToSelection();
-        }
-    }, [formatMode, isEditing, applyFormattingToSelection]);
-
-    // Auto-resize textarea to fit content
-    const autoResizeTextarea = useCallback(() => {
-        if (inputRef.current) {
-            inputRef.current.style.height = 'auto';
-            inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-        }
-    }, []);
-
-    useEffect(() => {
-        if (isEditing && inputRef.current) {
-            inputRef.current.focus();
-            inputRef.current.selectionStart = inputRef.current.value.length;
-            autoResizeTextarea();
-        }
-    }, [isEditing, autoResizeTextarea]);
-
-    // Resize on text change
-    useEffect(() => {
-        autoResizeTextarea();
-    }, [editText, autoResizeTextarea]);
-
     const borderStyles = ['none', 'solid', 'dashed', 'dotted', 'double'] as const;
     const bgColors = [
         'transparent',
@@ -433,15 +166,13 @@ export const TextBlockComponent = ({
     return (
         <div
             ref={blockRef}
-            className={`text-block ${isEditing ? 'text-block--editing' : ''} ${
-                isNearEdge || isResizing ? 'text-block--resizing' : ''
-            }`}
+            className={`text-block ${isNearEdge || isResizing ? 'text-block--resizing' : ''}`}
             style={getBlockStyles()}
             onMouseMove={handleMouseMoveOnBlock}
             onMouseLeave={handleMouseLeave}
         >
             {/* Width resize handle */}
-            {(isNearEdge || isResizing) && !isEditing && (
+            {(isNearEdge || isResizing) && (
                 <div
                     className='text-block__resize-handle'
                     onMouseDown={(e) => {
@@ -536,43 +267,15 @@ export const TextBlockComponent = ({
                 </div>
             )}
 
-            {isEditing ? (
-                <textarea
-                    ref={inputRef}
-                    className='text-block__input'
-                    value={editText}
-                    onChange={handleTextChange}
-                    onBlur={finishEditing}
-                    onKeyDown={handleKeyDown}
-                    placeholder='Type something...'
-                    rows={1}
-                />
-            ) : (
-                <div className='text-block__content' onClick={startEditing}>
-                    {block.words.map((word, idx) => (
-                        <span key={word.id}>
-                            {word.text === '\n' ? (
-                                <br />
-                            ) : (
-                                <>
-                                    <WordComponent
-                                        word={word}
-                                        formatMode={formatMode}
-                                        selectedColor={selectedColor}
-                                        isHovered={hoveredWordId === word.id}
-                                        onHover={setHoveredWordId}
-                                        onClick={handleWordClick}
-                                    />
-                                    {idx < block.words.length - 1 && block.words[idx + 1]?.text !== '\n' && ' '}
-                                </>
-                            )}
-                        </span>
-                    ))}
-                    {block.words.length === 0 || (block.words.length === 1 && !block.words[0].text) ? (
-                        <span className='text-block__placeholder'>Click to edit...</span>
-                    ) : null}
-                </div>
-            )}
+            <RichTextEditor
+                words={block.words}
+                formatMode={formatMode}
+                selectedColor={selectedColor}
+                selectedSize={selectedSize}
+                onWordsChange={(newWords) => onWordsChange(block.id, newWords)}
+                onAddBlockAfter={() => onAddBlockAfter(block.id)}
+                placeholder='Click to edit...'
+            />
         </div>
     );
 };
