@@ -498,6 +498,12 @@ body {
             border-color: var(--accent);
             box-shadow: 0 0 0 2px var(--bg-tertiary);
         }
+
+        // Inherit color - shows as white in dark mode, black in light mode
+        &--inherit {
+            background-color: var(--text-primary);
+            border: 2px solid var(--border-strong);
+        }
     }
 
     &__status {

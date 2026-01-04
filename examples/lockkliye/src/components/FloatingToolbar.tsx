@@ -86,7 +86,11 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                             }`}
                             onClick={() => onFormatModeChange(formatMode === tool.mode ? null : tool.mode)}
                             title={`${tool.label}${tool.shortcut ? ` (${tool.shortcut})` : ''}`}
-                            style={tool.mode === 'color' ? { color: selectedColor } : undefined}
+                            style={
+                                tool.mode === 'color' && selectedColor !== 'inherit'
+                                    ? { color: selectedColor }
+                                    : undefined
+                            }
                         >
                             <span
                                 className={`floating-toolbar__icon ${
@@ -149,10 +153,10 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                             key={color}
                             className={`floating-toolbar__color ${
                                 selectedColor === color ? 'floating-toolbar__color--active' : ''
-                            }`}
-                            style={{ backgroundColor: color }}
+                            } ${color === 'inherit' ? 'floating-toolbar__color--inherit' : ''}`}
+                            style={color !== 'inherit' ? { backgroundColor: color } : undefined}
                             onClick={() => onColorChange(color)}
-                            title={`Color: ${color}`}
+                            title={color === 'inherit' ? 'Default Color' : `Color: ${color}`}
                         />
                     ))}
                 </div>

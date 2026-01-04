@@ -117,6 +117,7 @@ const NotesApp: React.FC = () => {
                         onFormatModeChange={store.setFormatMode}
                         onColorChange={store.setSelectedColor}
                         onSizeChange={store.setSelectedSize}
+                        onClearFormatMode={() => store.setFormatMode(null)}
                         onUndo={store.undo}
                         onRedo={store.redo}
                         getHistory={store.getActiveNoteHistory}

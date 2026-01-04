@@ -13,10 +13,14 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { useRef, useCallback, useEffect, useState } from 'react';
-import type { iWord, iWordFormat, tFormatMode } from '@/types';
-import { createWord } from '@/types';
-import { applyFormatMode } from './WordComponent';
+
+// Components
+import { applyFormatMode } from '@/components/WordComponent';
+
+// Types
+import { createWord, iWord, iWordFormat, tFormatMode } from '@/types';
 
 interface iRichTextEditorProps {
     words: iWord[];
@@ -25,6 +29,7 @@ interface iRichTextEditorProps {
     selectedSize: string;
     onWordsChange: (words: iWord[]) => void;
     onAddBlockAfter: () => void;
+    onClearFormatMode?: () => void;
     placeholder?: string;
 }
 
@@ -36,7 +41,8 @@ const getWordStyle = (format: iWordFormat): React.CSSProperties => {
     if (format.italic) style.fontStyle = 'italic';
     if (format.underline) style.textDecoration = (style.textDecoration || '') + ' underline';
     if (format.strikethrough) style.textDecoration = (style.textDecoration || '') + ' line-through';
-    if (format.color) style.color = format.color;
+    // 'inherit' means use the default text color, so don't set any color style
+    if (format.color && format.color !== 'inherit') style.color = format.color;
     if (format.highlight) style.backgroundColor = format.highlight;
 
     switch (format.fontSize) {
@@ -77,6 +83,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
     selectedSize: _selectedSize,
     onWordsChange,
     onAddBlockAfter,
+    onClearFormatMode,
     placeholder = 'Click to edit...',
 }) => {
     const editorRef = useRef<HTMLDivElement>(null);
@@ -87,6 +94,15 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
     useEffect(() => {
         wordsRef.current = words;
     }, [words]);
+
+    // Update DOM to reflect words - call this after formatting
+    const updateDOMContent = useCallback((wordList: iWord[]) => {
+        if (!editorRef.current) return;
+        const html = renderWordsAsHTML(wordList);
+        if (html) {
+            editorRef.current.innerHTML = html;
+        }
+    }, []);
 
     // Render words as HTML with formatting
     const renderWordsAsHTML = useCallback((wordList: iWord[]): string => {
@@ -195,25 +211,13 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
         element.childNodes.forEach((child) => processNode(child));
 
-        // Clean up: remove consecutive newlines, trailing newlines
-        const cleaned: iWord[] = [];
-        result.forEach((word) => {
-            if (word.text === '\n') {
-                // Don't add consecutive newlines or leading newlines
-                if (cleaned.length > 0 && cleaned[cleaned.length - 1].text !== '\n') {
-                    cleaned.push(word);
-                }
-            } else {
-                cleaned.push(word);
-            }
-        });
-
-        // Remove trailing newline
-        if (cleaned.length > 0 && cleaned[cleaned.length - 1].text === '\n') {
-            cleaned.pop();
+        // Clean up: only remove truly empty results
+        // Keep empty lines (newlines) as they are intentional
+        if (result.length === 0) {
+            return [createWord('')];
         }
 
-        return cleaned.length > 0 ? cleaned : [createWord('')];
+        return result;
     }, []);
 
     // Save cursor position
@@ -336,22 +340,44 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             return word;
         });
 
+        // Update words ref immediately for instant update
+        wordsRef.current = newWords;
+
+        // Update state
         onWordsChange(newWords);
 
-        // Restore cursor after React re-render
+        // Instantly update DOM to show changes
+        updateDOMContent(newWords);
+
+        // Restore cursor after DOM update
         requestAnimationFrame(() => {
             if (savedCursor) {
                 restoreCursorPosition(savedCursor);
             }
+            // Clear format mode after applying (one-shot behavior)
+            if (onClearFormatMode) {
+                onClearFormatMode();
+            }
         });
 
         return true;
-    }, [formatMode, selectedColor, getSelectedWordIds, saveCursorPosition, restoreCursorPosition, onWordsChange]);
+    }, [
+        formatMode,
+        selectedColor,
+        getSelectedWordIds,
+        saveCursorPosition,
+        restoreCursorPosition,
+        onWordsChange,
+        updateDOMContent,
+        onClearFormatMode,
+    ]);
 
     // Apply formatting to a single word by ID
     const applyFormattingToWord = useCallback(
         (wordId: string) => {
             if (!formatMode) return;
+
+            const savedCursor = saveCursorPosition();
 
             const newWords = wordsRef.current.map((word) => {
                 if (word.id === wordId) {
@@ -361,9 +387,34 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 return word;
             });
 
+            // Update words ref immediately
+            wordsRef.current = newWords;
+
             onWordsChange(newWords);
+
+            // Instantly update DOM
+            updateDOMContent(newWords);
+
+            // Restore cursor and clear format mode
+            requestAnimationFrame(() => {
+                if (savedCursor) {
+                    restoreCursorPosition(savedCursor);
+                }
+                // Clear format mode after applying (one-shot behavior)
+                if (onClearFormatMode) {
+                    onClearFormatMode();
+                }
+            });
         },
-        [formatMode, selectedColor, onWordsChange]
+        [
+            formatMode,
+            selectedColor,
+            onWordsChange,
+            saveCursorPosition,
+            restoreCursorPosition,
+            updateDOMContent,
+            onClearFormatMode,
+        ]
     );
 
     // Track previous format mode to detect changes

@@ -28,6 +28,7 @@ interface iTextBlockComponentProps {
     onDelete: (blockId: string) => void;
     onAddBlockAfter: (blockId: string) => void;
     onEditingChange?: (blockId: string, isEditing: boolean) => void;
+    onClearFormatMode?: () => void;
 }
 
 export const TextBlockComponent = ({
@@ -39,6 +40,7 @@ export const TextBlockComponent = ({
     onStyleChange,
     onDelete,
     onAddBlockAfter,
+    onClearFormatMode,
 }: iTextBlockComponentProps) => {
     const [showStyleMenu, setShowStyleMenu] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
@@ -274,6 +276,7 @@ export const TextBlockComponent = ({
                 selectedSize={selectedSize}
                 onWordsChange={(newWords) => onWordsChange(block.id, newWords)}
                 onAddBlockAfter={() => onAddBlockAfter(block.id)}
+                onClearFormatMode={onClearFormatMode}
                 placeholder='Click to edit...'
             />
         </div>

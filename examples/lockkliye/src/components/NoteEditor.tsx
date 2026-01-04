@@ -42,6 +42,7 @@ interface iNoteEditorProps {
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
     onSizeChange: (size: string) => void;
+    onClearFormatMode: () => void;
     onUndo: () => void;
     onRedo: () => void;
     getHistory: () => iHistoryEntry[];
@@ -66,6 +67,7 @@ export const NoteEditor = ({
     onFormatModeChange,
     onColorChange,
     onSizeChange,
+    onClearFormatMode,
     onUndo,
     onRedo,
     getHistory,
@@ -143,6 +145,7 @@ export const NoteEditor = ({
                             onStyleChange={onBlockStyleChange}
                             onDelete={onBlockDelete}
                             onAddBlockAfter={onBlockAdd}
+                            onClearFormatMode={onClearFormatMode}
                         />
                     ))}
 

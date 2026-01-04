@@ -114,8 +114,9 @@ interface iNotesState {
 }
 
 // Predefined colors for formatting
+// 'inherit' is a special value that uses the default text color (white in dark mode, black in light mode)
 const FORMAT_COLORS = [
-    '#ffffff', // white
+    'inherit', // default text color (adapts to theme)
     '#ff6b6b', // red
     '#ffa94d', // orange
     '#ffd43b', // yellow
