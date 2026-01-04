@@ -522,18 +522,19 @@ body {
         top: calc(100% + 8px);
         left: 50%;
         transform: translateX(-50%);
-        background: var(--bg-glass);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid var(--glass-border);
+        background: rgba(30, 30, 35, 0.85);
+        backdrop-filter: blur(30px) saturate(200%);
+        -webkit-backdrop-filter: blur(30px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: var(--radius-md);
-        box-shadow: var(--shadow);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         z-index: 300;
         min-width: 140px;
         padding: 6px;
         display: flex;
         flex-direction: column;
         gap: 4px;
+        animation: styleMenuOpen 200ms ease-out;
     }
 
     &__size-option {
@@ -662,27 +663,34 @@ body {
         flex: 1;
         margin: 0 auto;
         width: 100%;
-        overflow-y: auto;
+        overflow-y: overlay;
+        overflow-x: hidden;
         transition: max-width 50ms ease-out;
         // Add padding for toolbar and history bar overlay
         padding-top: 80px;
         padding-bottom: 70px;
 
-        // Custom scrollbar
+        // Custom scrollbar - overlay style so it doesn't take up space
         &::-webkit-scrollbar {
             width: 8px;
+            background: transparent;
         }
 
         &::-webkit-scrollbar-track {
             background: transparent;
+            margin-top: 80px;
+            margin-bottom: 70px;
         }
 
         &::-webkit-scrollbar-thumb {
-            background: var(--bg-hover);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
 
             &:hover {
-                background: var(--border-strong);
+                background: rgba(255, 255, 255, 0.25);
+                background-clip: padding-box;
             }
         }
     }
@@ -1127,19 +1135,22 @@ body {
 
 .note-editor__undo-btn,
 .note-editor__redo-btn {
+    cursor: pointer;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
     height: 32px;
+    width: 32px;
+
+    backdrop-filter: blur(10px);
     background: var(--bg-glass);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
-    cursor: pointer;
     font-size: 14px;
+
     transition: all var(--transition);
-    backdrop-filter: blur(10px);
 
     &:hover:not(&--disabled) {
         background: var(--bg-hover);
@@ -1198,6 +1209,24 @@ body {
 .note-editor__history-list {
     max-height: 240px;
     overflow-y: auto;
+
+    // Custom scrollbar matching the app
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--bg-hover);
+        border-radius: 3px;
+
+        &:hover {
+            background: var(--border-strong);
+        }
+    }
 }
 
 .note-editor__history-item {
