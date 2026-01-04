@@ -285,8 +285,8 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: 100%;
-        margin-top: 8px;
+        bottom: 100%;
+        margin-bottom: 8px;
         padding: 8px;
         background: var(--bg-glass);
         backdrop-filter: blur(20px) saturate(180%);
