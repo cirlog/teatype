@@ -55,6 +55,8 @@ interface iBlockStyle {
     borderRadius?: number;
     backgroundColor?: string;
     backgroundGradient?: string;
+    customColor?: string; // Per-block custom color (last in row)
+    customGradient?: string; // Per-block custom gradient (last in row)
     transparent?: boolean;
     widthPercent?: number; // User-adjustable width as percentage (0-100)
 }
@@ -113,8 +115,6 @@ interface iNotesState {
     lightMode: boolean;
     editorWidth: number; // percentage 50-100
     confirmDeletions: boolean; // Show confirmation dialogs for deletions
-    customColors: string[]; // User-defined custom colors
-    customGradients: string[]; // User-defined custom gradients
     blockPresets: iBlockStyle[]; // Saved block presets
 }
 

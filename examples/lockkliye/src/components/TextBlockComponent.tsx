@@ -14,8 +14,9 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import type { iTextBlock, tFormatMode, iWord } from '@/types';
+import type { iTextBlock, tFormatMode, iWord, iBlockStyle } from '@/types';
 import { RichTextEditor } from './RichTextEditor';
+import { Modal } from './Modal';
 
 interface iTextBlockComponentProps {
     block: iTextBlock;
@@ -29,6 +30,7 @@ interface iTextBlockComponentProps {
     onAddBlockAfter: (blockId: string) => void;
     onEditingChange?: (blockId: string, isEditing: boolean) => void;
     onClearFormatMode?: () => void;
+    onSaveAsPreset?: (style: iBlockStyle) => void;
 }
 
 export const TextBlockComponent = ({
@@ -41,17 +43,10 @@ export const TextBlockComponent = ({
     onDelete,
     onAddBlockAfter,
     onClearFormatMode,
+    onSaveAsPreset,
     confirmDeletions = true,
-    customColors = [],
-    customGradients = [],
-    onAddCustomColor,
-    onAddCustomGradient,
 }: iTextBlockComponentProps & {
     confirmDeletions?: boolean;
-    customColors?: string[];
-    customGradients?: string[];
-    onAddCustomColor?: (color: string) => void;
-    onAddCustomGradient?: (gradient: string) => void;
 }) => {
     const [showStyleMenu, setShowStyleMenu] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
@@ -63,6 +58,7 @@ export const TextBlockComponent = ({
     const [customColorAlpha, setCustomColorAlpha] = useState(100);
     const [customGradientFrom, setCustomGradientFrom] = useState('#ff0000');
     const [customGradientTo, setCustomGradientTo] = useState('#0000ff');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const styleMenuRef = useRef<HTMLDivElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
 
@@ -135,6 +131,50 @@ export const TextBlockComponent = ({
         }
     };
 
+    // Extract color from rgba or gradient for border/title
+    const extractPrimaryColor = (colorStr: string | undefined): string | null => {
+        if (!colorStr) return null;
+        // Match rgba(r,g,b,a)
+        const rgbaMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (rgbaMatch) {
+            return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+        }
+        // Match hex
+        if (colorStr.startsWith('#')) {
+            return colorStr;
+        }
+        // Match gradient - extract first color
+        const gradMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (gradMatch) {
+            return `rgb(${gradMatch[1]}, ${gradMatch[2]}, ${gradMatch[3]})`;
+        }
+        return null;
+    };
+
+    // Darken a color for borders
+    const darkenColor = (colorStr: string | undefined, amount: number = 0.3): string => {
+        if (!colorStr || colorStr === 'transparent') return 'rgba(100, 100, 100, 0.4)';
+        const rgbaMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (rgbaMatch) {
+            const r = Math.max(0, parseInt(rgbaMatch[1]) - 50);
+            const g = Math.max(0, parseInt(rgbaMatch[2]) - 50);
+            const b = Math.max(0, parseInt(rgbaMatch[3]) - 50);
+            const a = Math.min(1, parseFloat(rgbaMatch[4] || '1') + amount);
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        return 'rgba(100, 100, 100, 0.4)';
+    };
+
+    // Get the effective background for determining border/title color
+    const getEffectiveBackground = () => {
+        return (
+            blockStyle.backgroundGradient ||
+            blockStyle.backgroundColor ||
+            blockStyle.customGradient ||
+            blockStyle.customColor
+        );
+    };
+
     const getBlockStyles = (): React.CSSProperties => {
         const styles: React.CSSProperties = {};
 
@@ -142,10 +182,13 @@ export const TextBlockComponent = ({
             styles.width = `${blockStyle.widthPercent}%`;
         }
 
+        const effectiveBg = getEffectiveBackground();
+
         if (blockStyle.borderStyle && blockStyle.borderStyle !== 'none') {
             styles.borderStyle = blockStyle.borderStyle;
             styles.borderWidth = '1px';
-            styles.borderColor = blockStyle.borderColor || 'rgba(255,255,255,0.2)';
+            // Auto-calculate border color based on background
+            styles.borderColor = blockStyle.borderColor || darkenColor(effectiveBg);
         }
 
         if (blockStyle.borderRadius) {
@@ -163,6 +206,14 @@ export const TextBlockComponent = ({
         }
 
         return styles;
+    };
+
+    // Get title color based on block background
+    const getTitleColor = (): string | undefined => {
+        const effectiveBg = getEffectiveBackground();
+        const primary = extractPrimaryColor(effectiveBg);
+        if (primary) return primary;
+        return undefined; // Will use CSS default
     };
 
     const borderStyles = ['none', 'solid', 'dashed', 'dotted', 'double'] as const;
@@ -188,9 +239,7 @@ export const TextBlockComponent = ({
 
     const handleDelete = () => {
         if (confirmDeletions) {
-            if (confirm('Are you sure you want to delete this block?')) {
-                onDelete(block.id);
-            }
+            setShowDeleteModal(true);
         } else {
             onDelete(block.id);
         }
@@ -202,21 +251,49 @@ export const TextBlockComponent = ({
         onStyleChange(block.id, { title: title || undefined });
     };
 
-    const handleAddCustomColor = () => {
+    // Set custom color for this block only (last in row)
+    const handleSetCustomColor = () => {
         if (customColorInput) {
             const alpha = customColorAlpha / 100;
             const rgba = hexToRgba(customColorInput, alpha);
-            onAddCustomColor?.(rgba);
-            onStyleChange(block.id, { backgroundColor: rgba, backgroundGradient: '' });
+            onStyleChange(block.id, {
+                customColor: rgba,
+                backgroundColor: rgba,
+                backgroundGradient: '',
+                customGradient: '',
+            });
             setShowCustomColorPicker(false);
         }
     };
 
-    const handleAddCustomGradient = () => {
+    // Clear custom color for this block
+    const handleClearCustomColor = () => {
+        onStyleChange(block.id, { customColor: undefined, backgroundColor: 'transparent', backgroundGradient: '' });
+    };
+
+    // Set custom gradient for this block only (last in row)
+    const handleSetCustomGradient = () => {
         const gradient = `linear-gradient(135deg, ${customGradientFrom} 0%, ${customGradientTo} 100%)`;
-        onAddCustomGradient?.(gradient);
-        onStyleChange(block.id, { backgroundGradient: gradient, backgroundColor: '' });
+        onStyleChange(block.id, {
+            customGradient: gradient,
+            backgroundGradient: gradient,
+            backgroundColor: '',
+            customColor: '',
+        });
         setShowCustomGradientPicker(false);
+    };
+
+    // Clear custom gradient for this block
+    const handleClearCustomGradient = () => {
+        onStyleChange(block.id, { customGradient: undefined, backgroundGradient: '', backgroundColor: 'transparent' });
+    };
+
+    // Save current block style as a preset
+    const handleSaveAsPreset = () => {
+        if (onSaveAsPreset) {
+            onSaveAsPreset({ ...blockStyle });
+            setShowStyleMenu(false);
+        }
     };
 
     // Helper to convert hex to rgba
@@ -228,222 +305,262 @@ export const TextBlockComponent = ({
     };
 
     return (
-        <div
-            ref={blockRef}
-            className={`text-block ${isNearEdge || isResizing ? 'text-block--resizing' : ''} ${
-                blockStyle.title ? 'text-block--has-title' : ''
-            }`}
-            style={getBlockStyles()}
-            onMouseMove={handleMouseMoveOnBlock}
-            onMouseLeave={handleMouseLeave}
-        >
-            {/* Block title (legend-style) */}
-            {blockStyle.title && <span className='text-block__title'>{blockStyle.title}</span>}
+        <>
+            <div
+                ref={blockRef}
+                className={`text-block ${isNearEdge || isResizing ? 'text-block--resizing' : ''} ${
+                    blockStyle.title ? 'text-block--has-title' : ''
+                }`}
+                style={getBlockStyles()}
+                onMouseMove={handleMouseMoveOnBlock}
+                onMouseLeave={handleMouseLeave}
+            >
+                {/* Block title (legend-style) with color based on background */}
+                {blockStyle.title && (
+                    <span className='text-block__title' style={{ color: getTitleColor() }}>
+                        {blockStyle.title}
+                    </span>
+                )}
 
-            {/* Width resize handle */}
-            {(isNearEdge || isResizing) && (
-                <div
-                    className='text-block__resize-handle'
-                    onMouseDown={(e) => {
-                        e.preventDefault();
-                        setIsResizing(true);
-                    }}
+                {/* Width resize handle */}
+                {(isNearEdge || isResizing) && (
+                    <div
+                        className='text-block__resize-handle'
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsResizing(true);
+                        }}
+                    />
+                )}
+
+                <div className='text-block__controls'>
+                    <button
+                        className='text-block__style-btn'
+                        onClick={() => setShowStyleMenu(!showStyleMenu)}
+                        title='Block style'
+                    >
+                        ◐
+                    </button>
+                    <button
+                        className='text-block__add-btn'
+                        onClick={() => onAddBlockAfter(block.id)}
+                        title='Add block below'
+                    >
+                        +
+                    </button>
+                    <button className='text-block__delete-btn' onClick={handleDelete} title='Delete block'>
+                        ×
+                    </button>
+                </div>
+
+                {showStyleMenu && (
+                    <div className='text-block__style-menu' ref={styleMenuRef}>
+                        <div className='style-menu__section'>
+                            <span className='style-menu__label'>Title</span>
+                            <input
+                                type='text'
+                                className='style-menu__title-input'
+                                placeholder='Block title (optional)'
+                                value={titleInput}
+                                onChange={handleTitleChange}
+                            />
+                        </div>
+                        <div className='style-menu__section'>
+                            <span className='style-menu__label'>Border</span>
+                            <div className='style-menu__options'>
+                                {borderStyles.map((style) => (
+                                    <button
+                                        key={style}
+                                        className={`style-menu__option ${
+                                            blockStyle.borderStyle === style ? 'style-menu__option--active' : ''
+                                        }`}
+                                        onClick={() => onStyleChange(block.id, { borderStyle: style })}
+                                    >
+                                        {style}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className='style-menu__section'>
+                            <span className='style-menu__label'>Background</span>
+                            <div className='style-menu__colors'>
+                                {bgColors.map((color, i) => (
+                                    <button
+                                        key={i}
+                                        className={`style-menu__color ${
+                                            blockStyle.backgroundColor === color && !blockStyle.customColor
+                                                ? 'style-menu__color--active'
+                                                : ''
+                                        }`}
+                                        style={{ backgroundColor: color || 'transparent' }}
+                                        onClick={() =>
+                                            onStyleChange(block.id, {
+                                                backgroundColor: color,
+                                                backgroundGradient: '',
+                                                customColor: undefined,
+                                                customGradient: undefined,
+                                            })
+                                        }
+                                    />
+                                ))}
+                                {/* Per-block custom color (last in row) */}
+                                {blockStyle.customColor ? (
+                                    <button
+                                        className='style-menu__color style-menu__color--custom style-menu__color--active'
+                                        style={{ backgroundColor: blockStyle.customColor }}
+                                        onClick={handleClearCustomColor}
+                                        title='Click to remove custom color'
+                                    />
+                                ) : (
+                                    <button
+                                        className='style-menu__color style-menu__color--add'
+                                        onClick={() => setShowCustomColorPicker(!showCustomColorPicker)}
+                                        title='Add custom color for this block'
+                                    >
+                                        +
+                                    </button>
+                                )}
+                            </div>
+                            {showCustomColorPicker && (
+                                <div className='style-menu__custom-picker'>
+                                    <input
+                                        type='color'
+                                        value={customColorInput}
+                                        onChange={(e) => setCustomColorInput(e.target.value)}
+                                    />
+                                    <input
+                                        type='range'
+                                        min='0'
+                                        max='100'
+                                        value={customColorAlpha}
+                                        onChange={(e) => setCustomColorAlpha(parseInt(e.target.value))}
+                                        title='Opacity'
+                                    />
+                                    <span className='style-menu__alpha-label'>{customColorAlpha}%</span>
+                                    <button onClick={handleSetCustomColor}>Set</button>
+                                </div>
+                            )}
+                        </div>
+                        <div className='style-menu__section'>
+                            <span className='style-menu__label'>Gradient</span>
+                            <div className='style-menu__colors'>
+                                {gradients.map((grad, i) => (
+                                    <button
+                                        key={i}
+                                        className={`style-menu__color style-menu__color--gradient ${
+                                            blockStyle.backgroundGradient === grad && !blockStyle.customGradient
+                                                ? 'style-menu__color--active'
+                                                : ''
+                                        }`}
+                                        style={{ background: grad || 'transparent' }}
+                                        onClick={() =>
+                                            onStyleChange(block.id, {
+                                                backgroundGradient: grad,
+                                                backgroundColor: '',
+                                                customColor: undefined,
+                                                customGradient: undefined,
+                                            })
+                                        }
+                                    />
+                                ))}
+                                {/* Per-block custom gradient (last in row) */}
+                                {blockStyle.customGradient ? (
+                                    <button
+                                        className='style-menu__color style-menu__color--gradient style-menu__color--custom style-menu__color--active'
+                                        style={{ background: blockStyle.customGradient }}
+                                        onClick={handleClearCustomGradient}
+                                        title='Click to remove custom gradient'
+                                    />
+                                ) : (
+                                    <button
+                                        className='style-menu__color style-menu__color--add'
+                                        onClick={() => setShowCustomGradientPicker(!showCustomGradientPicker)}
+                                        title='Add custom gradient for this block'
+                                    >
+                                        +
+                                    </button>
+                                )}
+                            </div>
+                            {showCustomGradientPicker && (
+                                <div className='style-menu__custom-picker style-menu__custom-picker--gradient'>
+                                    <div className='style-menu__gradient-colors'>
+                                        <label>
+                                            From:
+                                            <input
+                                                type='color'
+                                                value={customGradientFrom}
+                                                onChange={(e) => setCustomGradientFrom(e.target.value)}
+                                            />
+                                        </label>
+                                        <label>
+                                            To:
+                                            <input
+                                                type='color'
+                                                value={customGradientTo}
+                                                onChange={(e) => setCustomGradientTo(e.target.value)}
+                                            />
+                                        </label>
+                                    </div>
+                                    <div
+                                        className='style-menu__gradient-preview'
+                                        style={{
+                                            background: `linear-gradient(135deg, ${customGradientFrom}, ${customGradientTo})`,
+                                        }}
+                                    />
+                                    <button onClick={handleSetCustomGradient}>Set</button>
+                                </div>
+                            )}
+                        </div>
+                        <div className='style-menu__section'>
+                            <span className='style-menu__label'>Radius</span>
+                            <input
+                                type='range'
+                                min='0'
+                                max='24'
+                                value={blockStyle.borderRadius || 0}
+                                onChange={(e) => onStyleChange(block.id, { borderRadius: parseInt(e.target.value) })}
+                            />
+                        </div>
+                        {onSaveAsPreset && (
+                            <div className='style-menu__section'>
+                                <button className='style-menu__save-preset' onClick={handleSaveAsPreset}>
+                                    💾 Save as Preset
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <RichTextEditor
+                    words={block.words}
+                    formatMode={formatMode}
+                    selectedColor={selectedColor}
+                    selectedSize={selectedSize}
+                    onWordsChange={(newWords) => onWordsChange(block.id, newWords)}
+                    onAddBlockAfter={() => onAddBlockAfter(block.id)}
+                    onClearFormatMode={onClearFormatMode}
+                    placeholder='Click to edit...'
                 />
-            )}
-
-            <div className='text-block__controls'>
-                <button
-                    className='text-block__style-btn'
-                    onClick={() => setShowStyleMenu(!showStyleMenu)}
-                    title='Block style'
-                >
-                    ◐
-                </button>
-                <button
-                    className='text-block__add-btn'
-                    onClick={() => onAddBlockAfter(block.id)}
-                    title='Add block below'
-                >
-                    +
-                </button>
-                <button className='text-block__delete-btn' onClick={handleDelete} title='Delete block'>
-                    ×
-                </button>
             </div>
 
-            {showStyleMenu && (
-                <div className='text-block__style-menu' ref={styleMenuRef}>
-                    <div className='style-menu__section'>
-                        <span className='style-menu__label'>Title</span>
-                        <input
-                            type='text'
-                            className='style-menu__title-input'
-                            placeholder='Block title (optional)'
-                            value={titleInput}
-                            onChange={handleTitleChange}
-                        />
-                    </div>
-                    <div className='style-menu__section'>
-                        <span className='style-menu__label'>Border</span>
-                        <div className='style-menu__options'>
-                            {borderStyles.map((style) => (
-                                <button
-                                    key={style}
-                                    className={`style-menu__option ${
-                                        blockStyle.borderStyle === style ? 'style-menu__option--active' : ''
-                                    }`}
-                                    onClick={() => onStyleChange(block.id, { borderStyle: style })}
-                                >
-                                    {style}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div className='style-menu__section'>
-                        <span className='style-menu__label'>Background</span>
-                        <div className='style-menu__colors'>
-                            {bgColors.map((color, i) => (
-                                <button
-                                    key={i}
-                                    className={`style-menu__color ${
-                                        blockStyle.backgroundColor === color ? 'style-menu__color--active' : ''
-                                    }`}
-                                    style={{ backgroundColor: color || 'transparent' }}
-                                    onClick={() =>
-                                        onStyleChange(block.id, { backgroundColor: color, backgroundGradient: '' })
-                                    }
-                                />
-                            ))}
-                            {customColors.map((color, i) => (
-                                <button
-                                    key={`custom-${i}`}
-                                    className={`style-menu__color style-menu__color--custom ${
-                                        blockStyle.backgroundColor === color ? 'style-menu__color--active' : ''
-                                    }`}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() =>
-                                        onStyleChange(block.id, { backgroundColor: color, backgroundGradient: '' })
-                                    }
-                                    title={color}
-                                />
-                            ))}
-                            <button
-                                className='style-menu__color style-menu__color--add'
-                                onClick={() => setShowCustomColorPicker(!showCustomColorPicker)}
-                                title='Add custom color'
-                            >
-                                +
-                            </button>
-                        </div>
-                        {showCustomColorPicker && (
-                            <div className='style-menu__custom-picker'>
-                                <input
-                                    type='color'
-                                    value={customColorInput}
-                                    onChange={(e) => setCustomColorInput(e.target.value)}
-                                />
-                                <input
-                                    type='range'
-                                    min='0'
-                                    max='100'
-                                    value={customColorAlpha}
-                                    onChange={(e) => setCustomColorAlpha(parseInt(e.target.value))}
-                                    title='Opacity'
-                                />
-                                <span className='style-menu__alpha-label'>{customColorAlpha}%</span>
-                                <button onClick={handleAddCustomColor}>Add</button>
-                            </div>
-                        )}
-                    </div>
-                    <div className='style-menu__section'>
-                        <span className='style-menu__label'>Gradient</span>
-                        <div className='style-menu__colors'>
-                            {gradients.map((grad, i) => (
-                                <button
-                                    key={i}
-                                    className={`style-menu__color style-menu__color--gradient ${
-                                        blockStyle.backgroundGradient === grad ? 'style-menu__color--active' : ''
-                                    }`}
-                                    style={{ background: grad || 'transparent' }}
-                                    onClick={() =>
-                                        onStyleChange(block.id, { backgroundGradient: grad, backgroundColor: '' })
-                                    }
-                                />
-                            ))}
-                            {customGradients.map((grad, i) => (
-                                <button
-                                    key={`custom-grad-${i}`}
-                                    className={`style-menu__color style-menu__color--gradient style-menu__color--custom ${
-                                        blockStyle.backgroundGradient === grad ? 'style-menu__color--active' : ''
-                                    }`}
-                                    style={{ background: grad }}
-                                    onClick={() =>
-                                        onStyleChange(block.id, { backgroundGradient: grad, backgroundColor: '' })
-                                    }
-                                    title='Custom gradient'
-                                />
-                            ))}
-                            <button
-                                className='style-menu__color style-menu__color--add'
-                                onClick={() => setShowCustomGradientPicker(!showCustomGradientPicker)}
-                                title='Add custom gradient'
-                            >
-                                +
-                            </button>
-                        </div>
-                        {showCustomGradientPicker && (
-                            <div className='style-menu__custom-picker style-menu__custom-picker--gradient'>
-                                <div className='style-menu__gradient-colors'>
-                                    <label>
-                                        From:
-                                        <input
-                                            type='color'
-                                            value={customGradientFrom}
-                                            onChange={(e) => setCustomGradientFrom(e.target.value)}
-                                        />
-                                    </label>
-                                    <label>
-                                        To:
-                                        <input
-                                            type='color'
-                                            value={customGradientTo}
-                                            onChange={(e) => setCustomGradientTo(e.target.value)}
-                                        />
-                                    </label>
-                                </div>
-                                <div
-                                    className='style-menu__gradient-preview'
-                                    style={{
-                                        background: `linear-gradient(135deg, ${customGradientFrom}, ${customGradientTo})`,
-                                    }}
-                                />
-                                <button onClick={handleAddCustomGradient}>Add</button>
-                            </div>
-                        )}
-                    </div>
-                    <div className='style-menu__section'>
-                        <span className='style-menu__label'>Radius</span>
-                        <input
-                            type='range'
-                            min='0'
-                            max='24'
-                            value={blockStyle.borderRadius || 0}
-                            onChange={(e) => onStyleChange(block.id, { borderRadius: parseInt(e.target.value) })}
-                        />
-                    </div>
-                </div>
-            )}
-
-            <RichTextEditor
-                words={block.words}
-                formatMode={formatMode}
-                selectedColor={selectedColor}
-                selectedSize={selectedSize}
-                onWordsChange={(newWords) => onWordsChange(block.id, newWords)}
-                onAddBlockAfter={() => onAddBlockAfter(block.id)}
-                onClearFormatMode={onClearFormatMode}
-                placeholder='Click to edit...'
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteModal}
+                title='Delete Block'
+                message='Are you sure you want to delete this block?'
+                onClose={() => setShowDeleteModal(false)}
+                buttons={[
+                    { label: 'Cancel', variant: 'secondary', onClick: () => setShowDeleteModal(false) },
+                    {
+                        label: 'Delete',
+                        variant: 'danger',
+                        onClick: () => {
+                            onDelete(block.id);
+                            setShowDeleteModal(false);
+                        },
+                    },
+                ]}
             />
-        </div>
+        </>
     );
 };

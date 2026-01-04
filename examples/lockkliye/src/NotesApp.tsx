@@ -120,8 +120,6 @@ const NotesApp: React.FC = () => {
                         canUndo={store.canUndo}
                         canRedo={store.canRedo}
                         confirmDeletions={store.confirmDeletions}
-                        customColors={store.customColors}
-                        customGradients={store.customGradients}
                         blockPresets={store.blockPresets}
                         onTitleChange={handleTitleChange}
                         onWordFormatChange={handleWordFormatChange}
@@ -137,8 +135,9 @@ const NotesApp: React.FC = () => {
                         onUndo={store.undo}
                         onRedo={store.redo}
                         getHistory={store.getActiveNoteHistory}
-                        onAddCustomColor={store.addCustomColor}
-                        onAddCustomGradient={store.addCustomGradient}
+                        onAddBlockPreset={store.addBlockPreset}
+                        onRemoveBlockPreset={store.removeBlockPreset}
+                        onUpdateBlockPreset={store.updateBlockPreset}
                     />
                 ) : (
                     <div className='notes-app__empty'>

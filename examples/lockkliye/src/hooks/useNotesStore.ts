@@ -95,8 +95,6 @@ const getInitialState = (): iNotesState => {
         lightMode: false,
         editorWidth: 70,
         confirmDeletions: true,
-        customColors: [],
-        customGradients: [],
         blockPresets: [
             // Default presets
             { title: 'Note', borderStyle: 'solid', borderRadius: 8, backgroundColor: 'rgba(255,212,59,0.1)' },
@@ -538,36 +536,6 @@ const useNotesStore: React.FC = () => {
         setState((prev: iNotesState) => ({ ...prev, confirmDeletions: value }));
     }, []);
 
-    // Custom colors management
-    const addCustomColor = useCallback((color: string) => {
-        setState((prev: iNotesState) => ({
-            ...prev,
-            customColors: [...prev.customColors, color],
-        }));
-    }, []);
-
-    const removeCustomColor = useCallback((index: number) => {
-        setState((prev: iNotesState) => ({
-            ...prev,
-            customColors: prev.customColors.filter((_, i) => i !== index),
-        }));
-    }, []);
-
-    // Custom gradients management
-    const addCustomGradient = useCallback((gradient: string) => {
-        setState((prev: iNotesState) => ({
-            ...prev,
-            customGradients: [...prev.customGradients, gradient],
-        }));
-    }, []);
-
-    const removeCustomGradient = useCallback((index: number) => {
-        setState((prev: iNotesState) => ({
-            ...prev,
-            customGradients: prev.customGradients.filter((_, i) => i !== index),
-        }));
-    }, []);
-
     // Block presets management
     const addBlockPreset = useCallback((preset: iBlockStyle) => {
         setState((prev: iNotesState) => ({
@@ -580,6 +548,13 @@ const useNotesStore: React.FC = () => {
         setState((prev: iNotesState) => ({
             ...prev,
             blockPresets: prev.blockPresets.filter((_, i) => i !== index),
+        }));
+    }, []);
+
+    const updateBlockPreset = useCallback((index: number, preset: iBlockStyle) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            blockPresets: prev.blockPresets.map((p, i) => i === index ? preset : p),
         }));
     }, []);
 
@@ -666,15 +641,10 @@ const useNotesStore: React.FC = () => {
         // Settings
         setConfirmDeletions,
 
-        // Custom colors/gradients
-        addCustomColor,
-        removeCustomColor,
-        addCustomGradient,
-        removeCustomGradient,
-
         // Block presets
         addBlockPreset,
         removeBlockPreset,
+        updateBlockPreset,
         addBlockWithPreset,
 
         // Dev

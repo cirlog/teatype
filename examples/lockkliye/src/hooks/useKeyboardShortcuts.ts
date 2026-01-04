@@ -37,8 +37,14 @@ const useKeyboardShortcuts: React.FC<iUseKeyboardShortcutsProps> = (props) => {
         parts.push(e.key.toLowerCase());
         const shortcut = parts.join('+');
 
-        // Check for escape
+        // Check for escape - blur active element and clear format mode
         if (e.key === 'Escape') {
+            // Blur any focused element (defocus text editor)
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+            // Also clear any text selection
+            window.getSelection()?.removeAllRanges();
             props.onEscape();
             return;
         }

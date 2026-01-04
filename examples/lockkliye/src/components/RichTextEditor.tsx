@@ -485,45 +485,28 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
     // Handle click on words when in format mode (for selection-based formatting)
     const handleClick = useCallback(
         (e: React.MouseEvent) => {
-            if (!formatMode || !editorRef.current) return;
-
-            const target = e.target as HTMLElement;
-            const wordSpan = target.closest('span[data-word-id]');
-
-            if (wordSpan) {
-                // Check if there's a selection - apply to selection if present
-                const selection = window.getSelection();
-                const hasSelection = selection && selection.toString().trim().length > 0;
-
-                if (hasSelection) {
-                    e.preventDefault();
-                    // Apply to selection
-                    applyFormattingToSelection();
-                }
-                // Single word clicks are handled by handleMouseDown
+            // In format mode, prevent default click behavior
+            if (formatMode) {
+                e.preventDefault();
+                // Click handling is done in mousedown for instant response
             }
         },
-        [formatMode, applyFormattingToSelection]
+        [formatMode]
     );
 
     // Handle mousedown for non-edit mode single word clicking
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
-            if (!formatMode || !editorRef.current) return;
+            // In format mode, prevent all default behavior to avoid selection/caret
+            if (formatMode) {
+                e.preventDefault();
 
-            const target = e.target as HTMLElement;
-            const wordSpan = target.closest('span[data-word-id]');
+                if (!editorRef.current) return;
 
-            if (wordSpan) {
-                // Check if there's already a selection (user might be extending selection)
-                const selection = window.getSelection();
-                const hasSelection = selection && selection.toString().trim().length > 0;
+                const target = e.target as HTMLElement;
+                const wordSpan = target.closest('span[data-word-id]');
 
-                // Only apply formatting on mousedown if there's no selection
-                // Selection-based formatting is handled by handleClick
-                if (!hasSelection) {
-                    // Prevent the default focus behavior when clicking words in format mode
-                    e.preventDefault();
+                if (wordSpan) {
                     const wordId = wordSpan.getAttribute('data-word-id');
                     if (wordId) {
                         applyFormattingToWord(wordId);
@@ -532,6 +515,28 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             }
         },
         [formatMode, applyFormattingToWord]
+    );
+
+    // Handle mouseup to also prevent selection in format mode
+    const handleMouseUp = useCallback(
+        (e: React.MouseEvent) => {
+            if (formatMode) {
+                e.preventDefault();
+                // Clear any accidental selection
+                window.getSelection()?.removeAllRanges();
+            }
+        },
+        [formatMode]
+    );
+
+    // Handle selectstart to prevent text selection in format mode
+    const handleSelectStart = useCallback(
+        (e: React.SyntheticEvent) => {
+            if (formatMode) {
+                e.preventDefault();
+            }
+        },
+        [formatMode]
     );
 
     // Sync content when words change externally
@@ -579,7 +584,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             className={`rich-text-editor ${isFocused ? 'rich-text-editor--focused' : ''} ${
                 formatMode ? 'rich-text-editor--format-mode' : ''
             }`}
-            contentEditable
+            contentEditable={!formatMode}
             suppressContentEditableWarning
             onInput={handleInput}
             onKeyDown={handleKeyDown}
@@ -588,7 +593,10 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             onBlur={handleBlur}
             onClick={handleClick}
             onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onSelect={handleSelectStart}
             spellCheck={false}
+            style={formatMode ? { userSelect: 'none', caretColor: 'transparent' } : undefined}
         />
     );
 };
