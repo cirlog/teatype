@@ -21,6 +21,7 @@ interface iFloatingToolbarProps {
     formatMode: tFormatMode;
     selectedColor: string;
     selectedSize: string;
+
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
     onSizeChange: (size: string) => void;
