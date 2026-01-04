@@ -602,6 +602,21 @@ const useNotesStore = () => {
         }));
     }, [saveToHistory]);
 
+    const reorderBlocks = useCallback((noteId: string, fromIndex: number, toIndex: number) => {
+        if (fromIndex === toIndex) return;
+        saveToHistory(noteId, 'Reorder blocks');
+        setState((prev: iNotesState) => ({
+            ...prev,
+            notes: prev.notes.map((note: iNote) => {
+                if (note.id !== noteId) return note;
+                const newBlocks = [...note.blocks];
+                const [movedBlock] = newBlocks.splice(fromIndex, 1);
+                newBlocks.splice(toIndex, 0, movedBlock);
+                return { ...note, blocks: newBlocks, updatedAt: Date.now() };
+            }),
+        }));
+    }, [saveToHistory]);
+
     // Update words in a block (for typing)
     const setBlockWords = useCallback((noteId: string, blockId: string, words: iWord[]) => {
         saveToHistory(noteId, 'Edit text');
@@ -877,6 +892,7 @@ const useNotesStore = () => {
         updateBlock,
         updateBlockStyle,
         deleteBlock,
+        reorderBlocks,
         setBlockWords,
 
         // History

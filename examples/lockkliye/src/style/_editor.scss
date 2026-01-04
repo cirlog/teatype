@@ -190,6 +190,63 @@
         width: 100%;
     }
 
+    &__block-wrapper {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+
+        &--dragging {
+            opacity: 0.5;
+        }
+
+        &--drag-over {
+            &::before {
+                content: '';
+                position: absolute;
+                top: -6px;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--accent);
+                border-radius: 2px;
+            }
+        }
+
+        &:hover .note-editor__drag-handle {
+            opacity: 1;
+        }
+    }
+
+    &__drag-handle {
+        position: absolute;
+        left: -28px;
+        top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        opacity: 0;
+        cursor: grab;
+        color: var(--text-tertiary);
+        transition: opacity var(--transition), color var(--transition);
+        user-select: none;
+
+        &:hover {
+            color: var(--text-secondary);
+        }
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    &__drag-icon {
+        font-size: 16px;
+        line-height: 1;
+    }
+
     &__add-buttons {
         display: flex;
         gap: 12px;

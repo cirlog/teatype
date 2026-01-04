@@ -14,7 +14,10 @@
  */
 
 // React imports
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+// External
+import { Flipper, Flipped } from 'react-flip-toolkit';
 
 // Components
 import FloatingToolbar from './FloatingToolbar';
@@ -43,6 +46,7 @@ interface iNoteEditorProps {
     onBlockDelete: (blockId: string) => void;
     onBlockAdd: (afterBlockId?: string) => void;
     onBlockAddWithPreset: (preset: iBlockStyle, afterBlockId?: string) => void;
+    onBlockReorder: (fromIndex: number, toIndex: number) => void;
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
     onSizeChange: (size: string) => void;
@@ -74,6 +78,7 @@ export const NoteEditor = ({
     onBlockDelete,
     onBlockAdd,
     onBlockAddWithPreset,
+    onBlockReorder,
     onFormatModeChange,
     onColorChange,
     onSizeChange,
@@ -92,8 +97,45 @@ export const NoteEditor = ({
     const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
     const [editingPresetTitle, setEditingPresetTitle] = useState('');
     const [deletePresetIndex, setDeletePresetIndex] = useState<number | null>(null);
+    const [draggedBlockIndex, setDraggedBlockIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const presetMenuRef = useRef<HTMLDivElement>(null);
+
+    // Handle drag start
+    const handleDragStart = useCallback((index: number) => {
+        setDraggedBlockIndex(index);
+    }, []);
+
+    // Handle drag over
+    const handleDragOver = useCallback(
+        (e: React.DragEvent, index: number) => {
+            e.preventDefault();
+            if (draggedBlockIndex !== null && draggedBlockIndex !== index) {
+                setDragOverIndex(index);
+            }
+        },
+        [draggedBlockIndex]
+    );
+
+    // Handle drop
+    const handleDrop = useCallback(
+        (e: React.DragEvent, toIndex: number) => {
+            e.preventDefault();
+            if (draggedBlockIndex !== null && draggedBlockIndex !== toIndex) {
+                onBlockReorder(draggedBlockIndex, toIndex);
+            }
+            setDraggedBlockIndex(null);
+            setDragOverIndex(null);
+        },
+        [draggedBlockIndex, onBlockReorder]
+    );
+
+    // Handle drag end
+    const handleDragEnd = useCallback(() => {
+        setDraggedBlockIndex(null);
+        setDragOverIndex(null);
+    }, []);
 
     // Close preset menu on outside click
     useEffect(() => {
@@ -165,23 +207,43 @@ export const NoteEditor = ({
                 </div>
 
                 <div className='note-editor__content'>
-                    {note.blocks.map((block) => (
-                        <TextBlockComponent
-                            key={block.id}
-                            block={block}
-                            formatMode={formatMode}
-                            selectedColor={selectedColor}
-                            selectedSize={selectedSize}
-                            confirmDeletions={confirmDeletions}
-                            onWordFormatChange={onWordFormatChange}
-                            onWordsChange={onWordsChange}
-                            onStyleChange={onBlockStyleChange}
-                            onDelete={onBlockDelete}
-                            onAddBlockAfter={onBlockAdd}
-                            onClearFormatMode={onClearFormatMode}
-                            onSaveAsPreset={onAddBlockPreset}
-                        />
-                    ))}
+                    <Flipper flipKey={note.blocks.map((b) => b.id).join('-')}>
+                        {note.blocks.map((block, index) => (
+                            <Flipped key={block.id} flipId={block.id}>
+                                <div
+                                    className={`note-editor__block-wrapper ${
+                                        dragOverIndex === index ? 'note-editor__block-wrapper--drag-over' : ''
+                                    } ${draggedBlockIndex === index ? 'note-editor__block-wrapper--dragging' : ''}`}
+                                    onDragOver={(e) => handleDragOver(e, index)}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                >
+                                    <div
+                                        className='note-editor__drag-handle'
+                                        draggable
+                                        onDragStart={() => handleDragStart(index)}
+                                        onDragEnd={handleDragEnd}
+                                        title='Drag to reorder'
+                                    >
+                                        <span className='note-editor__drag-icon'>⠿</span>
+                                    </div>
+                                    <TextBlockComponent
+                                        block={block}
+                                        formatMode={formatMode}
+                                        selectedColor={selectedColor}
+                                        selectedSize={selectedSize}
+                                        confirmDeletions={confirmDeletions}
+                                        onWordFormatChange={onWordFormatChange}
+                                        onWordsChange={onWordsChange}
+                                        onStyleChange={onBlockStyleChange}
+                                        onDelete={onBlockDelete}
+                                        onAddBlockAfter={onBlockAdd}
+                                        onClearFormatMode={onClearFormatMode}
+                                        onSaveAsPreset={onAddBlockPreset}
+                                    />
+                                </div>
+                            </Flipped>
+                        ))}
+                    </Flipper>
 
                     <div className='note-editor__add-buttons'>
                         <button className='note-editor__add-block' onClick={() => onBlockAdd()}>

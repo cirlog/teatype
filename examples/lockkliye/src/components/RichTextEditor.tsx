@@ -204,6 +204,11 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 // Split by whitespace while preserving it (including tabs)
                 const parts = text.split(/(\s+)/);
 
+                // Check if this text node is inside a word span with existing ID
+                const parentSpan = node.parentElement;
+                const parentWordId = parentSpan?.tagName === 'SPAN' ? parentSpan.getAttribute('data-word-id') : null;
+                const existingWord = parentWordId ? wordsRef.current.find((w) => w.id === parentWordId) : null;
+
                 parts.forEach((part) => {
                     if (part === '\n' || part.includes('\n')) {
                         // Handle newlines
@@ -251,19 +256,19 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                             }
                         }
                     } else if (part.trim()) {
-                        // Regular word - check if parent has style
-                        const parent = node.parentElement;
-                        let format: iWordFormat = {};
-
-                        if (parent && parent.tagName === 'SPAN') {
-                            const wordId = parent.getAttribute('data-word-id');
-                            const existingWord = wordsRef.current.find((w) => w.id === wordId);
+                        // Regular word - preserve ID and format if from existing word span
+                        if (existingWord && part.trim() === existingWord.text) {
+                            // Preserve the existing word with its ID and format
+                            result.push({ ...existingWord });
+                        } else if (parentSpan && parentSpan.tagName === 'SPAN') {
+                            // Parse format from the existing word or span styles
+                            let format: iWordFormat = {};
 
                             if (existingWord) {
                                 format = { ...existingWord.format };
                             } else {
                                 // Parse styles from the element
-                                const style = parent.style;
+                                const style = parentSpan.style;
                                 if (style.fontWeight === 'bold') format.bold = true;
                                 if (style.fontStyle === 'italic') format.italic = true;
                                 if (style.textDecoration?.includes('underline')) format.underline = true;
@@ -279,9 +284,11 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                                     else if (fs === '1.5em') format.fontSize = 'huge';
                                 }
                             }
-                        }
 
-                        result.push(createWord(part.trim(), format));
+                            result.push(createWord(part.trim(), format));
+                        } else {
+                            result.push(createWord(part.trim()));
+                        }
                     }
                 });
             } else if (node.nodeType === Node.ELEMENT_NODE) {

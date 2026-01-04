@@ -77,6 +77,12 @@ const NotesApp: React.FC = () => {
         }
     };
 
+    const handleBlockReorder = (fromIndex: number, toIndex: number) => {
+        if (store.activeNoteId) {
+            store.reorderBlocks(store.activeNoteId, fromIndex, toIndex);
+        }
+    };
+
     const handleTitleChange = (title: string) => {
         if (store.activeNoteId) {
             store.updateNote(store.activeNoteId, { title });
@@ -135,6 +141,7 @@ const NotesApp: React.FC = () => {
                         onBlockDelete={handleBlockDelete}
                         onBlockAdd={handleBlockAdd}
                         onBlockAddWithPreset={handleBlockAddWithPreset}
+                        onBlockReorder={handleBlockReorder}
                         onFormatModeChange={store.setFormatMode}
                         onColorChange={store.setSelectedColor}
                         onSizeChange={store.setSelectedSize}
