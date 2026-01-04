@@ -64,7 +64,7 @@ const SIZE_MODES = ['huge', 'larger', 'large', 'normal', 'smaller', 'tiny'] as c
 const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
     formatMode,
     selectedColor,
-    selectedSize,
+    selectedSize: _selectedSize,
     onFormatModeChange,
     onColorChange,
     onSizeChange,
@@ -85,6 +85,7 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                                 formatMode === tool.mode ? 'floating-toolbar__btn--active' : ''
                             }`}
                             onClick={() => onFormatModeChange(formatMode === tool.mode ? null : tool.mode)}
+                            onMouseDown={(e) => e.preventDefault()}
                             title={`${tool.label}${tool.shortcut ? ` (${tool.shortcut})` : ''}`}
                             style={
                                 tool.mode === 'color' && selectedColor !== 'inherit'
@@ -111,6 +112,7 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                                 showSizeMenu || isSizeMode ? 'floating-toolbar__btn--active' : ''
                             }`}
                             onClick={() => setShowSizeMenu(!showSizeMenu)}
+                            onMouseDown={(e) => e.preventDefault()}
                             title='Text Size'
                         >
                             <span className='floating-toolbar__icon'>Aa</span>
@@ -132,6 +134,7 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                                             onSizeChange(preset.fontSize);
                                             setShowSizeMenu(false);
                                         }}
+                                        onMouseDown={(e) => e.preventDefault()}
                                     >
                                         <span
                                             className={`floating-toolbar__size-preview floating-toolbar__size-preview--${preset.fontSize}`}
@@ -156,6 +159,7 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                             } ${color === 'inherit' ? 'floating-toolbar__color--inherit' : ''}`}
                             style={color !== 'inherit' ? { backgroundColor: color } : undefined}
                             onClick={() => onColorChange(color)}
+                            onMouseDown={(e) => e.preventDefault()}
                             title={color === 'inherit' ? 'Default Color' : `Color: ${color}`}
                         />
                     ))}

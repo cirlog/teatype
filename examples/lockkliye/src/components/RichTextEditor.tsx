@@ -192,12 +192,17 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 const el = node as HTMLElement;
 
                 if (el.tagName === 'BR') {
-                    result.push(createWord('\n'));
+                    // Only add newline if the last item isn't already a newline
+                    const lastWord = result[result.length - 1];
+                    if (!lastWord || lastWord.text !== '\n') {
+                        result.push(createWord('\n'));
+                    }
                     return;
                 }
 
                 if (el.tagName === 'DIV' && result.length > 0) {
                     // New div means new line (contenteditable behavior)
+                    // Only add if last isn't already a newline
                     const lastWord = result[result.length - 1];
                     if (lastWord && lastWord.text !== '\n') {
                         result.push(createWord('\n'));
@@ -211,8 +216,16 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
         element.childNodes.forEach((child) => processNode(child));
 
-        // Clean up: only remove truly empty results
-        // Keep empty lines (newlines) as they are intentional
+        // Clean up: remove trailing newlines but keep internal ones
+        while (result.length > 0 && result[result.length - 1].text === '\n') {
+            result.pop();
+        }
+
+        // Remove leading newlines
+        while (result.length > 0 && result[0].text === '\n') {
+            result.shift();
+        }
+
         if (result.length === 0) {
             return [createWord('')];
         }
@@ -474,6 +487,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             const wordSpan = target.closest('span[data-word-id]');
 
             if (wordSpan) {
+                e.preventDefault();
                 const wordId = wordSpan.getAttribute('data-word-id');
                 if (wordId) {
                     // Check if there's a selection - if not, apply to clicked word
@@ -490,6 +504,26 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             }
         },
         [formatMode, applyFormattingToWord, applyFormattingToSelection]
+    );
+
+    // Handle mousedown for non-edit mode word clicking
+    const handleMouseDown = useCallback(
+        (e: React.MouseEvent) => {
+            if (!formatMode || !editorRef.current) return;
+
+            const target = e.target as HTMLElement;
+            const wordSpan = target.closest('span[data-word-id]');
+
+            if (wordSpan) {
+                // Prevent the default focus behavior when clicking words in format mode
+                e.preventDefault();
+                const wordId = wordSpan.getAttribute('data-word-id');
+                if (wordId) {
+                    applyFormattingToWord(wordId);
+                }
+            }
+        },
+        [formatMode, applyFormattingToWord]
     );
 
     // Sync content when words change externally
@@ -545,6 +579,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             onClick={handleClick}
+            onMouseDown={handleMouseDown}
             spellCheck={false}
         />
     );
