@@ -54,6 +54,7 @@
         gap: 4px;
         opacity: 0;
         transition: opacity var(--transition);
+        z-index: 10;
     }
 
     &__style-btn,
@@ -71,6 +72,9 @@
         cursor: pointer;
         font-size: 12px;
         transition: all var(--transition);
+
+        // opacity: 0.9;
+        // backdrop-filter: blur(0.25rem);
 
         &:hover {
             background: var(--bg-hover);

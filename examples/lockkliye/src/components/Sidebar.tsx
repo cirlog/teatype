@@ -40,6 +40,7 @@ interface iSidebarProps {
     onExportHistory: () => string;
     onImportNotes: (json: string) => boolean;
     onImportSettings: (json: string) => boolean;
+    onImportHistory: (json: string) => boolean;
     onCreateRandomNote: () => void;
     toast: ReturnType<typeof useToast>;
 }
@@ -65,6 +66,7 @@ export const Sidebar = ({
     onExportHistory,
     onImportNotes,
     onImportSettings,
+    onImportHistory,
     onCreateRandomNote,
     toast,
 }: iSidebarProps) => {
@@ -74,6 +76,7 @@ export const Sidebar = ({
     const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
     const notesInputRef = useRef<HTMLInputElement>(null);
     const settingsInputRef = useRef<HTMLInputElement>(null);
+    const historyInputRef = useRef<HTMLInputElement>(null);
 
     // Handle settings toggle with closing animation
     const handleSettingsToggle = () => {
@@ -345,6 +348,29 @@ export const Sidebar = ({
                                             e.target.value = '';
                                         }}
                                     />
+                                    <input
+                                        type='file'
+                                        ref={historyInputRef}
+                                        accept='.json'
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const content = event.target?.result as string;
+                                                    const success = onImportHistory(content);
+                                                    if (success) {
+                                                        toast.success('History imported successfully!');
+                                                    } else {
+                                                        toast.error('Failed to import history. Invalid file format.');
+                                                    }
+                                                };
+                                                reader.readAsText(file);
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                    />
                                     <div className='sidebar__import-buttons'>
                                         <button
                                             className='sidebar__import-btn'
@@ -357,6 +383,12 @@ export const Sidebar = ({
                                             onClick={() => settingsInputRef.current?.click()}
                                         >
                                             ⚙️ Settings & Presets
+                                        </button>
+                                        <button
+                                            className='sidebar__import-btn'
+                                            onClick={() => historyInputRef.current?.click()}
+                                        >
+                                            📜 History
                                         </button>
                                     </div>
                                 </div>

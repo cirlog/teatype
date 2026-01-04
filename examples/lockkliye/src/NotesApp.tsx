@@ -116,6 +116,7 @@ const NotesApp: React.FC = () => {
                 onExportHistory={store.exportHistory}
                 onImportNotes={store.importNotes}
                 onImportSettings={store.importSettings}
+                onImportHistory={store.importHistory}
                 onCreateRandomNote={store.createRandomNote}
                 toast={toast}
             />

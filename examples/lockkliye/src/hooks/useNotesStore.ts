@@ -776,6 +776,34 @@ const useNotesStore = () => {
         return JSON.stringify(historyExport, null, 2);
     }, [history]);
 
+    // Import history from JSON
+    const importHistory = useCallback((jsonString: string): boolean => {
+        try {
+            const data = JSON.parse(jsonString);
+            if (data.type !== 'lockkliye-history' || !data.entries) {
+                return false;
+            }
+
+            const importedHistory: iHistoryEntry[] = data.entries.map((entry: {
+                noteId: string;
+                timestamp: number;
+                description: string;
+                noteSnapshot: iNote;
+            }) => ({
+                noteId: entry.noteId,
+                timestamp: entry.timestamp,
+                description: entry.description,
+                note: entry.noteSnapshot,
+            }));
+
+            // Merge with existing history or replace
+            setHistory((prev: iHistoryEntry[]) => [...importedHistory, ...prev].slice(0, MAX_HISTORY_SIZE));
+            return true;
+        } catch {
+            return false;
+        }
+    }, []);
+
     // Create a random note for testing (without pushing to history)
     const createRandomNote = useCallback(() => {
         const note = generateRandomNote();
@@ -908,6 +936,7 @@ const useNotesStore = () => {
         importFromJson,
         importNotes,
         importSettings,
+        importHistory,
 
         // Settings
         setConfirmDeletions,
