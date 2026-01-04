@@ -13,7 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { iNote } from '@/types';
 
 interface iSidebarProps {
@@ -52,7 +52,29 @@ export const Sidebar = ({
     onImportJson,
 }: iSidebarProps) => {
     const [showSettings, setShowSettings] = useState(false);
+    const [isSettingsClosing, setIsSettingsClosing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Handle settings toggle with closing animation
+    const handleSettingsToggle = () => {
+        if (showSettings) {
+            // Start closing animation
+            setIsSettingsClosing(true);
+        } else {
+            setShowSettings(true);
+        }
+    };
+
+    // Handle animation end for closing
+    useEffect(() => {
+        if (isSettingsClosing) {
+            const timer = setTimeout(() => {
+                setShowSettings(false);
+                setIsSettingsClosing(false);
+            }, 200); // Match animation duration
+            return () => clearTimeout(timer);
+        }
+    }, [isSettingsClosing]);
 
     const formatDate = (timestamp: number) => {
         const date = new Date(timestamp);
@@ -141,13 +163,15 @@ export const Sidebar = ({
                     </div>
 
                     <div className='sidebar__footer'>
-                        <button className='sidebar__settings-btn' onClick={() => setShowSettings(!showSettings)}>
+                        <button className='sidebar__settings-btn' onClick={handleSettingsToggle}>
                             <span>⚙</span>
                             <span>Settings</span>
                         </button>
 
                         {showSettings && (
-                            <div className='sidebar__settings'>
+                            <div
+                                className={`sidebar__settings ${isSettingsClosing ? 'sidebar__settings--closing' : ''}`}
+                            >
                                 <div className='sidebar__settings-section'>
                                     <span className='sidebar__settings-label'>Appearance</span>
                                     <button className='sidebar__toggle-light-mode-btn' onClick={onToggleLightMode}>

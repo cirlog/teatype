@@ -321,12 +321,12 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
     // Apply formatting to selected words
     const applyFormattingToSelection = useCallback(() => {
-        if (!formatMode || !editorRef.current) return;
+        if (!formatMode || !editorRef.current) return false;
 
         const selectedIds = getSelectedWordIds();
-        if (selectedIds.length === 0) return;
+        if (selectedIds.length === 0) return false;
 
-        const cursorPos = saveCursorPosition();
+        const savedCursor = saveCursorPosition();
 
         const newWords = wordsRef.current.map((word) => {
             if (selectedIds.includes(word.id)) {
@@ -340,18 +340,50 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
         // Restore cursor after React re-render
         requestAnimationFrame(() => {
-            if (cursorPos) {
-                restoreCursorPosition(cursorPos);
+            if (savedCursor) {
+                restoreCursorPosition(savedCursor);
             }
         });
+
+        return true;
     }, [formatMode, selectedColor, getSelectedWordIds, saveCursorPosition, restoreCursorPosition, onWordsChange]);
 
-    // Handle format mode changes - apply to selection
+    // Apply formatting to a single word by ID
+    const applyFormattingToWord = useCallback(
+        (wordId: string) => {
+            if (!formatMode) return;
+
+            const newWords = wordsRef.current.map((word) => {
+                if (word.id === wordId) {
+                    const updates = applyFormatMode(word.format, formatMode, selectedColor);
+                    return { ...word, format: { ...word.format, ...updates } };
+                }
+                return word;
+            });
+
+            onWordsChange(newWords);
+        },
+        [formatMode, selectedColor, onWordsChange]
+    );
+
+    // Track previous format mode to detect changes
+    const prevFormatModeRef = useRef<tFormatMode>(null);
+
+    // Handle format mode changes - apply to selection when format mode is activated
     useEffect(() => {
-        if (formatMode && isFocused) {
-            applyFormattingToSelection();
+        // Only apply if format mode changed from null/different to a new mode
+        if (formatMode && prevFormatModeRef.current !== formatMode) {
+            // Small delay to let selection settle
+            const timer = setTimeout(() => {
+                applyFormattingToSelection();
+            }, 10);
+            prevFormatModeRef.current = formatMode;
+            return () => clearTimeout(timer);
         }
-    }, [formatMode, isFocused, applyFormattingToSelection]);
+        if (!formatMode) {
+            prevFormatModeRef.current = null;
+        }
+    }, [formatMode, applyFormattingToSelection]);
 
     // Handle input changes
     const handleInput = useCallback(() => {
@@ -381,6 +413,33 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         const text = e.clipboardData.getData('text/plain');
         document.execCommand('insertText', false, text);
     }, []);
+
+    // Handle click on words when in format mode
+    const handleClick = useCallback(
+        (e: React.MouseEvent) => {
+            if (!formatMode || !editorRef.current) return;
+
+            const target = e.target as HTMLElement;
+            const wordSpan = target.closest('span[data-word-id]');
+
+            if (wordSpan) {
+                const wordId = wordSpan.getAttribute('data-word-id');
+                if (wordId) {
+                    // Check if there's a selection - if not, apply to clicked word
+                    const selection = window.getSelection();
+                    const hasSelection = selection && selection.toString().trim().length > 0;
+
+                    if (!hasSelection) {
+                        applyFormattingToWord(wordId);
+                    } else {
+                        // Apply to selection
+                        applyFormattingToSelection();
+                    }
+                }
+            }
+        },
+        [formatMode, applyFormattingToWord, applyFormattingToSelection]
+    );
 
     // Sync content when words change externally
     useEffect(() => {
@@ -434,6 +493,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             onPaste={handlePaste}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            onClick={handleClick}
             spellCheck={false}
         />
     );
