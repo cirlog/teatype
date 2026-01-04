@@ -14,7 +14,7 @@
  */
 
 // React imports
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 // Types
 import { iNote, iFolder, tFormatMode, iNotesState, iWord, iTextBlock, iBlockStyle, iHistoryEntry } from '@/types';
@@ -128,7 +128,7 @@ const getInitialRedo = (): iHistoryEntry[] => {
     return [];
 };
 
-const useNotesStore: React.FC = () => {
+const useNotesStore = () => {
     const [state, setState] = useState<iNotesState>(getInitialState);
     const [history, setHistory] = useState<iHistoryEntry[]>(getInitialHistory);
     const [redoStack, setRedoStack] = useState<iHistoryEntry[]>(getInitialRedo);
@@ -565,6 +565,62 @@ const useNotesStore: React.FC = () => {
         return true;
     }, []);
 
+    // Import notes only (expects notes-type JSON)
+    const importNotes = useCallback((jsonString: string) => {
+        const result = parseImportJson(jsonString);
+        if (!result) return false;
+        // Only accept notes-type or legacy format for notes import
+        if (result.type !== 'notes' && result.type !== 'legacy') return false;
+
+        setState((prev: iNotesState) => {
+            const newState = { ...prev };
+
+            if (result.notes) {
+                const existingIds = new Set(prev.notes.map(n => n.id));
+                const newNotes = result.notes.filter((n: iNote) => !existingIds.has(n.id));
+                newState.notes = [...newNotes, ...prev.notes];
+            }
+            if (result.folders) {
+                const existingFolderIds = new Set(prev.folders.map(f => f.id));
+                const newFolders = result.folders.filter((f: iFolder) => !existingFolderIds.has(f.id));
+                newState.folders = [...newFolders, ...prev.folders];
+            }
+
+            return newState;
+        });
+        return true;
+    }, []);
+
+    // Import settings only (expects settings-type JSON)
+    const importSettings = useCallback((jsonString: string) => {
+        const result = parseImportJson(jsonString);
+        if (!result) return false;
+        // Only accept settings-type or legacy format for settings import
+        if (result.type !== 'settings' && result.type !== 'legacy') return false;
+
+        setState((prev: iNotesState) => {
+            const newState = { ...prev };
+
+            if (result.settings) {
+                if (result.settings.lightMode !== undefined) newState.lightMode = result.settings.lightMode;
+                if (result.settings.sidebarExpanded !== undefined) newState.sidebarExpanded = result.settings.sidebarExpanded;
+                if (result.settings.editorWidth !== undefined) newState.editorWidth = result.settings.editorWidth;
+                if (result.settings.confirmDeletions !== undefined) newState.confirmDeletions = result.settings.confirmDeletions;
+            }
+            if (result.blockPresets) {
+                const existingTitles = new Set(prev.blockPresets.map(p => p.title));
+                const newPresets = result.blockPresets.filter((p: iBlockStyle) => {
+                    if (existingTitles.has(p.title)) return false;
+                    return true;
+                });
+                newState.blockPresets = [...prev.blockPresets, ...newPresets];
+            }
+
+            return newState;
+        });
+        return true;
+    }, []);
+
     // Clear all data
     const clearAllData = useCallback(() => {
         localStorage.removeItem(STORAGE_KEY);
@@ -682,6 +738,8 @@ const useNotesStore: React.FC = () => {
         exportAsJson,
         exportSettings,
         importFromJson,
+        importNotes,
+        importSettings,
 
         // Settings
         setConfirmDeletions,

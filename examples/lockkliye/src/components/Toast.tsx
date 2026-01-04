@@ -14,9 +14,10 @@
  */
 
 // React imports
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export type tToastType = 'success' | 'error' | 'info' | 'warning';
+export type tToastPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 interface iToastProps {
     message: string;
@@ -25,15 +26,44 @@ interface iToastProps {
     onClose: () => void;
 }
 
-export const Toast = ({ message, type = 'info', duration = 3000, onClose }: iToastProps) => {
+export const Toast = ({ message, type = 'info', duration = 5000, onClose }: iToastProps) => {
     const [isClosing, setIsClosing] = useState(false);
+    const [progress, setProgress] = useState(360); // degrees
+    const animationRef = useRef<number | null>(null);
+    const startTimeRef = useRef<number | null>(null);
+    const isPausedRef = useRef(false);
+    const remainingTimeRef = useRef(duration);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsClosing(true);
-        }, duration);
+        const animate = (timestamp: number) => {
+            if (!startTimeRef.current) startTimeRef.current = timestamp;
 
-        return () => clearTimeout(timer);
+            if (isPausedRef.current) {
+                startTimeRef.current = timestamp - (duration - remainingTimeRef.current);
+                animationRef.current = requestAnimationFrame(animate);
+                return;
+            }
+
+            const elapsed = timestamp - startTimeRef.current;
+            const remaining = Math.max(0, duration - elapsed);
+            remainingTimeRef.current = remaining;
+            const progressPercent = remaining / duration;
+            setProgress(progressPercent * 360);
+
+            if (remaining <= 0) {
+                setIsClosing(true);
+            } else {
+                animationRef.current = requestAnimationFrame(animate);
+            }
+        };
+
+        animationRef.current = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
+        };
     }, [duration]);
 
     useEffect(() => {
@@ -47,6 +77,15 @@ export const Toast = ({ message, type = 'info', duration = 3000, onClose }: iToa
 
     const handleClick = () => {
         setIsClosing(true);
+    };
+
+    const handleMouseEnter = () => {
+        isPausedRef.current = true;
+    };
+
+    const handleMouseLeave = () => {
+        isPausedRef.current = false;
+        startTimeRef.current = null;
     };
 
     const getIcon = () => {
@@ -67,7 +106,14 @@ export const Toast = ({ message, type = 'info', duration = 3000, onClose }: iToa
         <div
             className={`toast toast--${type} ${isClosing ? 'toast--closing' : ''}`}
             onClick={handleClick}
-            style={{ '--toast-duration': `${duration}ms` } as React.CSSProperties}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            style={
+                {
+                    '--toast-duration': `${duration}ms`,
+                    '--toast-progress': `${progress}deg`,
+                } as React.CSSProperties
+            }
         >
             <div className='toast__border-timer' />
             <div className='toast__content'>
@@ -89,13 +135,14 @@ interface iToastItem {
 interface iToastContainerProps {
     toasts: iToastItem[];
     onRemove: (id: string) => void;
+    position?: tToastPosition;
 }
 
-export const ToastContainer = ({ toasts, onRemove }: iToastContainerProps) => {
+export const ToastContainer = ({ toasts, onRemove, position = 'bottom-right' }: iToastContainerProps) => {
     if (toasts.length === 0) return null;
 
     return (
-        <div className='toast-container'>
+        <div className={`toast-container toast-container--${position}`}>
             {toasts.map((toast) => (
                 <Toast
                     key={toast.id}
@@ -110,10 +157,10 @@ export const ToastContainer = ({ toasts, onRemove }: iToastContainerProps) => {
 };
 
 // Hook for managing toasts
-export const useToast = () => {
+export const useToast = (position: tToastPosition = 'bottom-right') => {
     const [toasts, setToasts] = useState<iToastItem[]>([]);
 
-    const addToast = (message: string, type: tToastType = 'info', duration = 3000) => {
+    const addToast = (message: string, type: tToastType = 'info', duration = 5000) => {
         const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         setToasts((prev) => [...prev, { id, message, type, duration }]);
         return id;
@@ -130,6 +177,7 @@ export const useToast = () => {
 
     return {
         toasts,
+        position,
         addToast,
         removeToast,
         success,

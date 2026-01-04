@@ -36,7 +36,8 @@ interface iSidebarProps {
     onExportText: () => string;
     onExportJson: () => string;
     onExportSettings: () => string;
-    onImportJson: (json: string) => boolean;
+    onImportNotes: (json: string) => boolean;
+    onImportSettings: (json: string) => boolean;
     toast: ReturnType<typeof useToast>;
 }
 
@@ -58,14 +59,16 @@ export const Sidebar = ({
     onExportText,
     onExportJson,
     onExportSettings,
-    onImportJson,
+    onImportNotes,
+    onImportSettings,
     toast,
 }: iSidebarProps) => {
     const [showSettings, setShowSettings] = useState(false);
     const [isSettingsClosing, setIsSettingsClosing] = useState(false);
     const [showClearDataModal, setShowClearDataModal] = useState(false);
     const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const notesInputRef = useRef<HTMLInputElement>(null);
+    const settingsInputRef = useRef<HTMLInputElement>(null);
 
     // Handle settings toggle with closing animation
     const handleSettingsToggle = () => {
@@ -277,7 +280,7 @@ export const Sidebar = ({
                                     <span className='sidebar__settings-label'>Import</span>
                                     <input
                                         type='file'
-                                        ref={fileInputRef}
+                                        ref={notesInputRef}
                                         accept='.json'
                                         style={{ display: 'none' }}
                                         onChange={(e) => {
@@ -286,25 +289,55 @@ export const Sidebar = ({
                                                 const reader = new FileReader();
                                                 reader.onload = (event) => {
                                                     const content = event.target?.result as string;
-                                                    const success = onImportJson(content);
+                                                    const success = onImportNotes(content);
                                                     if (success) {
-                                                        toast.success('Imported successfully!');
+                                                        toast.success('Notes imported successfully!');
                                                     } else {
-                                                        toast.error('Failed to import. Invalid file format.');
+                                                        toast.error('Failed to import notes. Invalid file format.');
                                                     }
                                                 };
                                                 reader.readAsText(file);
                                             }
-                                            // Reset input
                                             e.target.value = '';
                                         }}
                                     />
-                                    <button
-                                        className='sidebar__import-btn'
-                                        onClick={() => fileInputRef.current?.click()}
-                                    >
-                                        📥 Import from JSON
-                                    </button>
+                                    <input
+                                        type='file'
+                                        ref={settingsInputRef}
+                                        accept='.json'
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const content = event.target?.result as string;
+                                                    const success = onImportSettings(content);
+                                                    if (success) {
+                                                        toast.success('Settings & presets imported!');
+                                                    } else {
+                                                        toast.error('Failed to import settings. Invalid file format.');
+                                                    }
+                                                };
+                                                reader.readAsText(file);
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                    <div className='sidebar__import-buttons'>
+                                        <button
+                                            className='sidebar__import-btn'
+                                            onClick={() => notesInputRef.current?.click()}
+                                        >
+                                            📝 Notes
+                                        </button>
+                                        <button
+                                            className='sidebar__import-btn'
+                                            onClick={() => settingsInputRef.current?.click()}
+                                        >
+                                            ⚙️ Settings & Presets
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className='sidebar__settings-section'>

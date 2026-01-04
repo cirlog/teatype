@@ -116,9 +116,16 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                     return '<br>';
                 }
 
+                if (word.text === '\t') {
+                    return '<span class="rich-text-editor__tab">\t</span>';
+                }
+
                 const style = getWordStyle(word.format);
                 const styleStr = styleToString(style);
-                const space = idx < wordList.length - 1 && wordList[idx + 1]?.text !== '\n' ? ' ' : '';
+                const space =
+                    idx < wordList.length - 1 && wordList[idx + 1]?.text !== '\n' && wordList[idx + 1]?.text !== '\t'
+                        ? ' '
+                        : '';
 
                 if (styleStr) {
                     return `<span data-word-id="${word.id}" style="${styleStr}">${word.text}</span>${space}`;
@@ -135,7 +142,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         const processNode = (node: Node) => {
             if (node.nodeType === Node.TEXT_NODE) {
                 const text = node.textContent || '';
-                // Split by whitespace while preserving it
+                // Split by whitespace while preserving it (including tabs)
                 const parts = text.split(/(\s+)/);
 
                 parts.forEach((part) => {
@@ -149,9 +156,28 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                                     .forEach((word) => {
                                         result.push(createWord(word));
                                     });
+                            } else if (line.includes('\t')) {
+                                // Preserve tabs
+                                const tabCount = (line.match(/\t/g) || []).length;
+                                for (let i = 0; i < tabCount; i++) {
+                                    result.push(createWord('\t'));
+                                }
                             }
                             if (idx < lines.length - 1) {
                                 result.push(createWord('\n'));
+                            }
+                        });
+                    } else if (part === '\t' || part.includes('\t')) {
+                        // Handle tabs
+                        const tabCount = (part.match(/\t/g) || []).length;
+                        for (let i = 0; i < tabCount; i++) {
+                            result.push(createWord('\t'));
+                        }
+                        // Also handle any non-tab content mixed with tabs
+                        const nonTabParts = part.split('\t').filter(Boolean);
+                        nonTabParts.forEach((nonTab) => {
+                            if (nonTab.trim()) {
+                                result.push(createWord(nonTab.trim()));
                             }
                         });
                     } else if (part.trim()) {
@@ -192,11 +218,8 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 const el = node as HTMLElement;
 
                 if (el.tagName === 'BR') {
-                    // Only add newline if the last item isn't already a newline
-                    const lastWord = result[result.length - 1];
-                    if (!lastWord || lastWord.text !== '\n') {
-                        result.push(createWord('\n'));
-                    }
+                    // Always add newline for BR - this allows empty lines
+                    result.push(createWord('\n'));
                     return;
                 }
 
@@ -216,21 +239,34 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
         element.childNodes.forEach((child) => processNode(child));
 
-        // Clean up: remove trailing newlines but keep internal ones
-        while (result.length > 0 && result[result.length - 1].text === '\n') {
-            result.pop();
+        // Don't strip trailing newlines anymore - preserve them for empty lines
+        // Only remove excessive consecutive newlines (more than 2)
+        const cleaned: iWord[] = [];
+        let consecutiveNewlines = 0;
+
+        for (const word of result) {
+            if (word.text === '\n') {
+                consecutiveNewlines++;
+                // Allow up to 2 consecutive newlines (one empty line)
+                if (consecutiveNewlines <= 2) {
+                    cleaned.push(word);
+                }
+            } else {
+                consecutiveNewlines = 0;
+                cleaned.push(word);
+            }
         }
 
-        // Remove leading newlines
-        while (result.length > 0 && result[0].text === '\n') {
-            result.shift();
+        // Remove leading newlines only
+        while (cleaned.length > 0 && cleaned[0].text === '\n') {
+            cleaned.shift();
         }
 
-        if (result.length === 0) {
+        if (cleaned.length === 0) {
             return [createWord('')];
         }
 
-        return result;
+        return cleaned;
     }, []);
 
     // Save cursor position
@@ -458,7 +494,23 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         if (!editorRef.current) return;
 
         const newWords = parseHTMLToWords(editorRef.current);
-        onWordsChange(newWords);
+
+        // Auto-convert "- " at the start of a line to bullet
+        const convertedWords = newWords.map((word, idx) => {
+            if (word.text === '-') {
+                // Check if it's at the start or after a newline
+                const prevWord = newWords[idx - 1];
+                const nextWord = newWords[idx + 1];
+                const isAtStart = idx === 0 || (prevWord && prevWord.text === '\n');
+                // If next word exists and isn't a newline, convert "-" to "•"
+                if (isAtStart && nextWord && nextWord.text !== '\n') {
+                    return { ...word, text: '•' };
+                }
+            }
+            return word;
+        });
+
+        onWordsChange(convertedWords);
 
         // Don't restore cursor here - let the content update naturally
     }, [parseHTMLToWords, onWordsChange]);
@@ -469,7 +521,16 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             if (e.key === 'Enter' && e.shiftKey) {
                 e.preventDefault();
                 onAddBlockAfter();
+                return;
             }
+
+            // Handle Tab key - insert tab character
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                document.execCommand('insertText', false, '\t');
+                return;
+            }
+
             // Regular Enter inserts newline (default contenteditable behavior)
         },
         [onAddBlockAfter]
@@ -484,7 +545,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
     // Handle click on words when in format mode (for selection-based formatting)
     const handleClick = useCallback(
-        (e: React.MouseEvent) => {
+        (_e: React.MouseEvent) => {
             if (!formatMode || !editorRef.current) return;
 
             // In edit mode with selection, apply formatting to selection

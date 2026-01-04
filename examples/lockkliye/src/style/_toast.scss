@@ -6,15 +6,37 @@
 // Toast notifications
 .toast-container {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
     display: flex;
-    flex-direction: column-reverse;
     gap: 12px;
     z-index: 10000;
     pointer-events: none;
     max-height: calc(100vh - 48px);
     overflow: hidden;
+
+    // Default: bottom-right
+    &--bottom-right {
+        bottom: 24px;
+        right: 24px;
+        flex-direction: column-reverse;
+    }
+
+    &--bottom-left {
+        bottom: 24px;
+        left: 24px;
+        flex-direction: column-reverse;
+    }
+
+    &--top-right {
+        top: 24px;
+        right: 24px;
+        flex-direction: column;
+    }
+
+    &--top-left {
+        top: 24px;
+        left: 24px;
+        flex-direction: column;
+    }
 }
 
 .toast {
@@ -25,15 +47,16 @@
     min-width: 280px;
     max-width: 400px;
     padding: 14px 18px;
-    background: var(--bg-secondary);
+    background: rgba(20, 20, 22, 0.85);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow), 0 0 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.1);
     cursor: pointer;
     pointer-events: auto;
     overflow: hidden;
     animation: toastSlideIn 300ms ease forwards;
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
     &::before {
         content: '';
@@ -43,15 +66,14 @@
         padding: 2px;
         background: conic-gradient(
             from 0deg,
-            var(--toast-color) 0%,
-            var(--toast-color) var(--progress, 100%),
-            transparent var(--progress, 100%),
-            transparent 100%
+            var(--toast-color) 0deg,
+            var(--toast-color) var(--toast-progress, 360deg),
+            transparent var(--toast-progress, 360deg),
+            transparent 360deg
         );
         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
-        animation: toastBorderTimer var(--toast-duration, 3000ms) linear forwards;
         pointer-events: none;
     }
 
@@ -61,22 +83,22 @@
 
     &--success {
         --toast-color: #34c759;
-        --toast-bg: rgba(52, 199, 89, 0.15);
+        --toast-bg: rgba(52, 199, 89, 0.2);
     }
 
     &--error {
         --toast-color: #ff453a;
-        --toast-bg: rgba(255, 69, 58, 0.15);
+        --toast-bg: rgba(255, 69, 58, 0.2);
     }
 
     &--warning {
         --toast-color: #ff9f0a;
-        --toast-bg: rgba(255, 159, 10, 0.15);
+        --toast-bg: rgba(255, 159, 10, 0.2);
     }
 
     &--info {
         --toast-color: #0a84ff;
-        --toast-bg: rgba(10, 132, 255, 0.15);
+        --toast-bg: rgba(10, 132, 255, 0.2);
     }
 
     &__border-timer {
@@ -85,7 +107,7 @@
         left: 0;
         height: 3px;
         background: var(--toast-color);
-        animation: toastProgressBar var(--toast-duration, 3000ms) linear forwards;
+        animation: toastProgressBar var(--toast-duration, 5000ms) linear forwards;
         border-radius: 2px;
     }
 
@@ -110,7 +132,7 @@
     }
 
     &__message {
-        color: var(--text-primary);
+        color: rgba(255, 255, 255, 0.95);
         font-size: 14px;
         line-height: 1.4;
         flex: 1;
@@ -118,10 +140,7 @@
 
     &:hover {
         transform: translateX(-4px);
-
-        &::before {
-            animation-play-state: paused;
-        }
+        background: rgba(30, 30, 34, 0.9);
 
         .toast__border-timer {
             animation-play-state: paused;
@@ -157,28 +176,5 @@
     }
     to {
         width: 0%;
-    }
-}
-
-@keyframes toastBorderTimer {
-    from {
-        --progress: 100%;
-        background: conic-gradient(
-            from 0deg,
-            var(--toast-color) 0%,
-            var(--toast-color) 100%,
-            transparent 100%,
-            transparent 100%
-        );
-    }
-    to {
-        --progress: 0%;
-        background: conic-gradient(
-            from 0deg,
-            var(--toast-color) 0%,
-            var(--toast-color) 0%,
-            transparent 0%,
-            transparent 100%
-        );
     }
 }

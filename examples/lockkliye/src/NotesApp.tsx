@@ -107,7 +107,8 @@ const NotesApp: React.FC = () => {
                 onExportText={store.exportAsText}
                 onExportJson={store.exportAsJson}
                 onExportSettings={store.exportSettings}
-                onImportJson={store.importFromJson}
+                onImportNotes={store.importNotes}
+                onImportSettings={store.importSettings}
                 toast={toast}
             />
 
@@ -154,7 +155,7 @@ const NotesApp: React.FC = () => {
             </main>
 
             <ModeCursor formatMode={store.formatMode} selectedColor={store.selectedColor} />
-            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} position={toast.position} />
         </div>
     );
 };
