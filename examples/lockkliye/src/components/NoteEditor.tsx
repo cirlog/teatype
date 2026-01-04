@@ -13,10 +13,15 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { useState } from 'react';
-import type { iNote, iTextBlock, iWord, tFormatMode } from '@/types';
+
+// Components
+import FloatingToolbar from './FloatingToolbar';
 import { TextBlockComponent } from './TextBlockComponent';
-import { FloatingToolbar } from './FloatingToolbar';
+
+// Types
+import type { iNote, iTextBlock, iWord, tFormatMode } from '@/types';
 
 interface iNoteEditorProps {
     note: iNote;

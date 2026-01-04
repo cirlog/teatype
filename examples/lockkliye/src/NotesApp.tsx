@@ -14,7 +14,7 @@
  */
 
 // Components
-import { ModeCursor } from '@/components/ModeCursor';
+import ModeCursor from '@/components/ModeCursor';
 import { NoteEditor } from '@/components/NoteEditor';
 import { Sidebar } from '@/components/Sidebar';
 
