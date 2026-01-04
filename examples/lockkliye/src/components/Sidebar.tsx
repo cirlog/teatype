@@ -15,6 +15,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { iNote } from '@/types';
+import { Modal } from './Modal';
 
 interface iSidebarProps {
     notes: iNote[];
@@ -57,6 +58,8 @@ export const Sidebar = ({
 }: iSidebarProps) => {
     const [showSettings, setShowSettings] = useState(false);
     const [isSettingsClosing, setIsSettingsClosing] = useState(false);
+    const [showClearDataModal, setShowClearDataModal] = useState(false);
+    const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Handle settings toggle with closing animation
@@ -149,7 +152,19 @@ export const Sidebar = ({
                                                     className='sidebar__note-delete'
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        onDeleteNote(note.id);
+                                                        // Check if note is empty (skip confirmation)
+                                                        const noteToDelete = notes.find((n) => n.id === note.id);
+                                                        const isNoteEmpty =
+                                                            !noteToDelete ||
+                                                            noteToDelete.blocks.length === 0 ||
+                                                            (noteToDelete.blocks.length === 1 &&
+                                                                noteToDelete.blocks[0].words.length <= 1 &&
+                                                                !noteToDelete.blocks[0].words[0]?.text.trim());
+                                                        if (confirmDeletions && !isNoteEmpty) {
+                                                            setDeleteNoteId(note.id);
+                                                        } else {
+                                                            onDeleteNote(note.id);
+                                                        }
                                                     }}
                                                     title='Delete note'
                                                 >
@@ -283,15 +298,7 @@ export const Sidebar = ({
                                     </div>
                                     <button
                                         className='sidebar__clear-data-btn'
-                                        onClick={() => {
-                                            if (
-                                                confirm(
-                                                    'Are you sure you want to clear all data? This cannot be undone.'
-                                                )
-                                            ) {
-                                                onClearAllData();
-                                            }
-                                        }}
+                                        onClick={() => setShowClearDataModal(true)}
                                     >
                                         Clear All Data
                                     </button>
@@ -301,6 +308,48 @@ export const Sidebar = ({
                     </div>
                 </>
             )}
+
+            {/* Clear All Data Confirmation Modal */}
+            <Modal
+                isOpen={showClearDataModal}
+                title='Clear All Data'
+                message='Are you sure you want to clear all data? This cannot be undone.'
+                onClose={() => setShowClearDataModal(false)}
+                buttons={[
+                    { label: 'Cancel', variant: 'secondary', onClick: () => setShowClearDataModal(false) },
+                    {
+                        label: 'Clear All',
+                        variant: 'danger',
+                        onClick: () => {
+                            onClearAllData();
+                            setShowClearDataModal(false);
+                        },
+                    },
+                ]}
+            />
+
+            {/* Delete Note Confirmation Modal */}
+            <Modal
+                isOpen={deleteNoteId !== null}
+                title='Delete Note'
+                message={`Are you sure you want to delete "${
+                    notes.find((n) => n.id === deleteNoteId)?.title || 'this note'
+                }"?`}
+                onClose={() => setDeleteNoteId(null)}
+                buttons={[
+                    { label: 'Cancel', variant: 'secondary', onClick: () => setDeleteNoteId(null) },
+                    {
+                        label: 'Delete',
+                        variant: 'danger',
+                        onClick: () => {
+                            if (deleteNoteId) {
+                                onDeleteNote(deleteNoteId);
+                                setDeleteNoteId(null);
+                            }
+                        },
+                    },
+                ]}
+            />
         </aside>
     );
 };

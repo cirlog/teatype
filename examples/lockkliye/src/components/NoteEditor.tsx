@@ -14,7 +14,7 @@
  */
 
 // React imports
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // Components
 import FloatingToolbar from './FloatingToolbar';
@@ -94,6 +94,20 @@ export const NoteEditor = ({
     const [deletePresetIndex, setDeletePresetIndex] = useState<number | null>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const presetMenuRef = useRef<HTMLDivElement>(null);
+
+    // Close preset menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (showPresetMenu && presetMenuRef.current && !presetMenuRef.current.contains(e.target as Node)) {
+                const addPresetBtn = (e.target as HTMLElement).closest('.note-editor__add-preset');
+                if (!addPresetBtn) {
+                    setShowPresetMenu(false);
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showPresetMenu]);
 
     const handleTitleSubmit = () => {
         onTitleChange(titleValue || 'Untitled');
@@ -182,78 +196,84 @@ export const NoteEditor = ({
                             </button>
                             {showPresetMenu && (
                                 <div className='note-editor__preset-menu' ref={presetMenuRef}>
-                                    {blockPresets.map((preset, index) => (
-                                        <div key={index} className='note-editor__preset-row'>
-                                            {editingPresetIndex === index ? (
-                                                <input
-                                                    className='note-editor__preset-edit-input'
-                                                    value={editingPresetTitle}
-                                                    onChange={(e) => setEditingPresetTitle(e.target.value)}
-                                                    onBlur={() => {
-                                                        onUpdateBlockPreset(index, {
-                                                            ...preset,
-                                                            title: editingPresetTitle,
-                                                        });
-                                                        setEditingPresetIndex(null);
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
+                                    {blockPresets.length === 0 ? (
+                                        <div className='note-editor__preset-empty'>No presets yet</div>
+                                    ) : (
+                                        blockPresets.map((preset, index) => (
+                                            <div key={index} className='note-editor__preset-row'>
+                                                {editingPresetIndex === index ? (
+                                                    <input
+                                                        className='note-editor__preset-edit-input'
+                                                        value={editingPresetTitle}
+                                                        onChange={(e) => setEditingPresetTitle(e.target.value)}
+                                                        onBlur={() => {
                                                             onUpdateBlockPreset(index, {
                                                                 ...preset,
                                                                 title: editingPresetTitle,
                                                             });
                                                             setEditingPresetIndex(null);
-                                                        }
-                                                    }}
-                                                    autoFocus
-                                                />
-                                            ) : (
-                                                <button
-                                                    className='note-editor__preset-item'
-                                                    onClick={() => {
-                                                        onBlockAddWithPreset(preset);
-                                                        setShowPresetMenu(false);
-                                                    }}
-                                                    style={{
-                                                        background:
-                                                            preset.backgroundGradient ||
-                                                            preset.customGradient ||
-                                                            preset.backgroundColor ||
-                                                            preset.customColor ||
-                                                            'transparent',
-                                                        borderStyle: preset.borderStyle || 'solid',
-                                                        borderColor: preset.borderColor || '#333',
-                                                        borderRadius: `${preset.borderRadius || 0}px`,
-                                                    }}
-                                                >
-                                                    {preset.title || `Preset ${index + 1}`}
-                                                </button>
-                                            )}
-                                            <div className='note-editor__preset-actions'>
-                                                <button
-                                                    className='note-editor__preset-edit'
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setEditingPresetIndex(index);
-                                                        setEditingPresetTitle(preset.title || `Preset ${index + 1}`);
-                                                    }}
-                                                    title='Edit preset name'
-                                                >
-                                                    ✏️
-                                                </button>
-                                                <button
-                                                    className='note-editor__preset-delete'
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setDeletePresetIndex(index);
-                                                    }}
-                                                    title='Delete preset'
-                                                >
-                                                    ×
-                                                </button>
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                onUpdateBlockPreset(index, {
+                                                                    ...preset,
+                                                                    title: editingPresetTitle,
+                                                                });
+                                                                setEditingPresetIndex(null);
+                                                            }
+                                                        }}
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <button
+                                                        className='note-editor__preset-item'
+                                                        onClick={() => {
+                                                            onBlockAddWithPreset(preset);
+                                                            setShowPresetMenu(false);
+                                                        }}
+                                                        style={{
+                                                            background:
+                                                                preset.backgroundGradient ||
+                                                                preset.customGradient ||
+                                                                preset.backgroundColor ||
+                                                                preset.customColor ||
+                                                                'transparent',
+                                                            borderStyle: preset.borderStyle || 'solid',
+                                                            borderColor: preset.borderColor || '#333',
+                                                            borderRadius: `${preset.borderRadius || 0}px`,
+                                                        }}
+                                                    >
+                                                        {preset.title || `Preset ${index + 1}`}
+                                                    </button>
+                                                )}
+                                                <div className='note-editor__preset-actions'>
+                                                    <button
+                                                        className='note-editor__preset-edit'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingPresetIndex(index);
+                                                            setEditingPresetTitle(
+                                                                preset.title || `Preset ${index + 1}`
+                                                            );
+                                                        }}
+                                                        title='Edit preset name'
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button
+                                                        className='note-editor__preset-delete'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setDeletePresetIndex(index);
+                                                        }}
+                                                        title='Delete preset'
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                 </div>
                             )}
                         </div>

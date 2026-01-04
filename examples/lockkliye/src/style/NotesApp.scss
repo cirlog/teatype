@@ -941,6 +941,14 @@ body {
             outline: none;
         }
     }
+
+    &__preset-empty {
+        padding: 16px;
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 13px;
+        font-style: italic;
+    }
 }
 
 // Text Block
@@ -960,12 +968,11 @@ body {
         position: absolute;
         top: -10px;
         left: 12px;
-        padding: 2px 8px;
-        background: var(--bg-primary);
+        padding: 4px 10px;
         border-radius: var(--radius-sm);
         font-size: 12px;
         font-weight: 600;
-        color: var(--text-secondary);
+        color: var(--text-primary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
         z-index: 1;

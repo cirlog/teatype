@@ -191,9 +191,8 @@ export const TextBlockComponent = ({
             styles.borderColor = blockStyle.borderColor || darkenColor(effectiveBg);
         }
 
-        if (blockStyle.borderRadius) {
-            styles.borderRadius = `${blockStyle.borderRadius}px`;
-        }
+        // Always use default border radius
+        styles.borderRadius = '8px';
 
         if (blockStyle.backgroundGradient) {
             styles.background = blockStyle.backgroundGradient;
@@ -237,8 +236,14 @@ export const TextBlockComponent = ({
         'linear-gradient(135deg, rgba(64,224,208,0.15) 0%, rgba(116,192,252,0.15) 100%)',
     ];
 
+    // Check if block is empty (no content or just empty words)
+    const isBlockEmpty = () => {
+        return block.words.length === 0 || (block.words.length === 1 && !block.words[0].text.trim());
+    };
+
     const handleDelete = () => {
-        if (confirmDeletions) {
+        // Skip confirmation for empty blocks
+        if (confirmDeletions && !isBlockEmpty()) {
             setShowDeleteModal(true);
         } else {
             onDelete(block.id);
@@ -317,7 +322,13 @@ export const TextBlockComponent = ({
             >
                 {/* Block title (legend-style) with color based on background */}
                 {blockStyle.title && (
-                    <span className='text-block__title' style={{ color: getTitleColor() }}>
+                    <span
+                        className='text-block__title'
+                        style={{
+                            color: getTitleColor(),
+                            backgroundColor: darkenColor(getEffectiveBackground(), 0.4),
+                        }}
+                    >
                         {blockStyle.title}
                     </span>
                 )}
@@ -510,16 +521,6 @@ export const TextBlockComponent = ({
                                     <button onClick={handleSetCustomGradient}>Set</button>
                                 </div>
                             )}
-                        </div>
-                        <div className='style-menu__section'>
-                            <span className='style-menu__label'>Radius</span>
-                            <input
-                                type='range'
-                                min='0'
-                                max='24'
-                                value={blockStyle.borderRadius || 0}
-                                onChange={(e) => onStyleChange(block.id, { borderRadius: parseInt(e.target.value) })}
-                            />
                         </div>
                         {onSaveAsPreset && (
                             <div className='style-menu__section'>
