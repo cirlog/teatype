@@ -260,7 +260,7 @@
         animation: settingsSlideIn 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
         transform-origin: top;
         overflow-y: auto;
-        max-height: calc(100vh - 200px);
+        max-height: 400px;
 
         &::-webkit-scrollbar {
             width: 6px;

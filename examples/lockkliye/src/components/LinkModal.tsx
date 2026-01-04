@@ -114,7 +114,14 @@ export const LinkModal: React.FC<iLinkModalProps> = ({
             <div className='link-modal__header'>
                 <span className='link-modal__word'>"{wordText}"</span>
                 {currentLink && (
-                    <button className='link-modal__delete' onClick={onDelete} title='Remove link'>
+                    <button
+                        className='link-modal__delete'
+                        onClick={() => {
+                            onDelete();
+                            onClose();
+                        }}
+                        title='Remove link'
+                    >
                         🗑️
                     </button>
                 )}

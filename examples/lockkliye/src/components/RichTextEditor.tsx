@@ -128,6 +128,30 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         }
     }, []);
 
+    // Update styles of specific words in-place without rewriting DOM (preserves cursor)
+    const updateWordStylesInPlace = useCallback((wordIds: string[], wordList: iWord[]) => {
+        if (!editorRef.current) return;
+
+        wordIds.forEach((wordId) => {
+            const span = editorRef.current?.querySelector(`span[data-word-id="${wordId}"]`);
+            if (span && span instanceof HTMLElement) {
+                const word = wordList.find((w) => w.id === wordId);
+                if (word) {
+                    const style = getWordStyle(word.format);
+                    const styleStr = styleToString(style);
+                    span.setAttribute('style', styleStr);
+
+                    // Update link class
+                    if (word.format.link) {
+                        span.classList.add('rich-text-editor__linked');
+                    } else {
+                        span.classList.remove('rich-text-editor__linked');
+                    }
+                }
+            }
+        });
+    }, []);
+
     // Render words as HTML with formatting
     const renderWordsAsHTML = useCallback((wordList: iWord[]): string => {
         if (wordList.length === 0 || (wordList.length === 1 && !wordList[0].text)) {
@@ -425,8 +449,6 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         const selectedIds = getSelectedWordIds();
         if (selectedIds.length === 0) return false;
 
-        const savedCursor = saveCursorPosition();
-
         const newWords = wordsRef.current.map((word) => {
             if (selectedIds.includes(word.id)) {
                 const updates = applyFormatMode(word.format, formatMode, selectedColor);
@@ -441,30 +463,22 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         // Update state
         onWordsChange(newWords);
 
-        // Instantly update DOM to show changes
-        updateDOMContent(newWords);
+        // Update styles in-place to preserve cursor/selection
+        updateWordStylesInPlace(selectedIds, newWords);
 
-        // Restore cursor after DOM update
-        requestAnimationFrame(() => {
-            if (savedCursor) {
-                restoreCursorPosition(savedCursor);
-            }
-            // Only clear format mode if editor is focused (typing mode)
-            // Keep format mode active for quick formatting in non-edit mode
-            if (onClearFormatMode && isFocused) {
-                onClearFormatMode();
-            }
-        });
+        // Only clear format mode if editor is focused (typing mode)
+        // Keep format mode active for quick formatting in non-edit mode
+        if (onClearFormatMode && isFocused) {
+            onClearFormatMode();
+        }
 
         return true;
     }, [
         formatMode,
         selectedColor,
         getSelectedWordIds,
-        saveCursorPosition,
-        restoreCursorPosition,
         onWordsChange,
-        updateDOMContent,
+        updateWordStylesInPlace,
         onClearFormatMode,
         isFocused,
     ]);
@@ -473,8 +487,6 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
     const applyFormattingToWord = useCallback(
         (wordId: string) => {
             if (!formatMode) return;
-
-            const savedCursor = saveCursorPosition();
 
             const newWords = wordsRef.current.map((word) => {
                 if (word.id === wordId) {
@@ -489,31 +501,16 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
 
             onWordsChange(newWords);
 
-            // Instantly update DOM
-            updateDOMContent(newWords);
+            // Update style in-place to preserve cursor
+            updateWordStylesInPlace([wordId], newWords);
 
-            // Restore cursor and keep format mode in non-edit mode
-            requestAnimationFrame(() => {
-                if (savedCursor) {
-                    restoreCursorPosition(savedCursor);
-                }
-                // Only clear format mode if editor is focused (typing mode)
-                // Keep format mode active for quick formatting in non-edit mode
-                if (onClearFormatMode && isFocused) {
-                    onClearFormatMode();
-                }
-            });
+            // Only clear format mode if editor is focused (typing mode)
+            // Keep format mode active for quick formatting in non-edit mode
+            if (onClearFormatMode && isFocused) {
+                onClearFormatMode();
+            }
         },
-        [
-            formatMode,
-            selectedColor,
-            onWordsChange,
-            saveCursorPosition,
-            restoreCursorPosition,
-            updateDOMContent,
-            onClearFormatMode,
-            isFocused,
-        ]
+        [formatMode, selectedColor, onWordsChange, updateWordStylesInPlace, onClearFormatMode, isFocused]
     );
 
     // Track previous format mode to detect changes
