@@ -33,12 +33,12 @@ const HeroTags = ({ name, pod, type }: iHeroTagsProps) => {
 };
 
 interface iTeaTypeAppProps {
-    eyebrow?: string;
-    title?: string;
     description?: string;
-    unit?: string;
+    eyebrow?: string;
     pod?: number;
+    title?: string;
     type?: string;
+    unit?: string;
 }
 
 const TeaTypeApp: React.FC<iTeaTypeAppProps> = (props) => {

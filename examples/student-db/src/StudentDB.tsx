@@ -19,14 +19,12 @@ import { TeaTypeApp } from '@teatype';
 const StudentDB = () => {
     return (
         <TeaTypeApp
-            eyebrow={'Realtime module vitals'}
-            title={'Operations Pulse'}
-            description={
-                'A lightweight dashboard pinging the backend status endpoint. Rebuilt in React + Vite for faster iteration.'
-            }
-            unit={'teatype'}
+            eyebrow='Realtime module vitals'
+            description='A lightweight dashboard pinging the backend status endpoint. Rebuilt in React + Vite for faster iteration.'
             pod={0}
-            type={'app'}
+            title='Operations Pulse'
+            type='app'
+            unit='teatype'
         />
     );
 };
