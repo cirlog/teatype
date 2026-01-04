@@ -13,20 +13,10 @@
  * all copies or substantial portions of the Software.
  */
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { iTextBlock, tFormatMode, iWord } from '@/types';
 import { createWord } from '@/types';
 import { WordComponent, applyFormatMode } from './WordComponent';
-
-// Debounce utility for resize performance
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return (...args: Parameters<T>) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn(...args), delay);
-    };
-};
 
 interface iTextBlockComponentProps {
     block: iTextBlock;
@@ -84,15 +74,6 @@ export const TextBlockComponent = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showStyleMenu]);
 
-    // Handle width resizing with debounce for performance
-    const debouncedStyleChange = useMemo(
-        () =>
-            debounce((id: string, style: Partial<iTextBlock['style']>) => {
-                onStyleChange(id, style);
-            }, 16), // ~60fps
-        [onStyleChange]
-    );
-
     useEffect(() => {
         if (!isResizing) return;
 
@@ -105,10 +86,15 @@ export const TextBlockComponent = ({
             const blockRect = blockRef.current.getBoundingClientRect();
 
             // Calculate new width as percentage of container
-            const newWidth = ((e.clientX - blockRect.left) / containerRect.width) * 100;
-            const clampedWidth = Math.max(30, Math.min(100, newWidth));
+            const rawWidth = ((e.clientX - blockRect.left) / containerRect.width) * 100;
+            // Snap to 10% increments for snappy feel
+            const snappedWidth = Math.round(rawWidth / 10) * 10;
+            const clampedWidth = Math.max(10, Math.min(100, snappedWidth));
 
-            debouncedStyleChange(block.id, { widthPercent: clampedWidth });
+            // Only update if the snapped value changed
+            if (clampedWidth !== block.style.widthPercent) {
+                onStyleChange(block.id, { widthPercent: clampedWidth });
+            }
         };
 
         const handleMouseUp = () => {
@@ -122,7 +108,7 @@ export const TextBlockComponent = ({
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isResizing, block.id, debouncedStyleChange]);
+    }, [isResizing, block.id, block.style.widthPercent, onStyleChange]);
 
     // Detect when mouse is near right edge of block
     const handleMouseMoveOnBlock = (e: React.MouseEvent) => {

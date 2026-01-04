@@ -32,11 +32,12 @@ const getInitialState = (): iNotesState => {
     if (stored) {
         try {
             const parsed = JSON.parse(stored);
-            // Ensure lightMode and selectedSize exist
+            // Ensure lightMode, selectedSize, and editorWidth exist
             return {
                 ...parsed,
                 lightMode: parsed.lightMode ?? false,
                 selectedSize: parsed.selectedSize ?? 'normal',
+                editorWidth: parsed.editorWidth ?? 70,
             };
         } catch {
             // Fall through to default state
@@ -92,6 +93,7 @@ const getInitialState = (): iNotesState => {
         selectedColor: FORMAT_COLORS[0],
         selectedSize: 'normal',
         lightMode: false,
+        editorWidth: 70,
     };
 };
 
@@ -360,6 +362,11 @@ const useNotesStore: React.FC = () => {
         setState((prev: iNotesState) => ({ ...prev, lightMode: !prev.lightMode }));
     }, []);
 
+    // Editor width setting
+    const setEditorWidth = useCallback((width: number) => {
+        setState((prev: iNotesState) => ({ ...prev, editorWidth: Math.max(50, Math.min(100, width)) }));
+    }, []);
+
     // Word formatting
     const updateWordFormat = useCallback((
         noteId: string,
@@ -551,6 +558,9 @@ const useNotesStore: React.FC = () => {
         // Light mode
         setLightMode,
         toggleLightMode,
+
+        // Editor width
+        setEditorWidth,
 
         // Word/Block operations
         updateWordFormat,

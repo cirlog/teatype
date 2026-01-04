@@ -21,12 +21,14 @@ interface iSidebarProps {
     activeNoteId: string | null;
     expanded: boolean;
     lightMode: boolean;
+    editorWidth: number;
     onToggle: () => void;
     onNoteSelect: (noteId: string) => void;
     onCreateNote: () => void;
     onDeleteNote: (noteId: string) => void;
     onClearAllData: () => void;
     onToggleLightMode: () => void;
+    onEditorWidthChange: (width: number) => void;
     onExportText: () => string;
     onExportJson: () => string;
     onImportJson: (json: string) => boolean;
@@ -37,12 +39,14 @@ export const Sidebar = ({
     activeNoteId,
     expanded,
     lightMode,
+    editorWidth,
     onToggle,
     onNoteSelect,
     onCreateNote,
     onDeleteNote,
     onClearAllData,
     onToggleLightMode,
+    onEditorWidthChange,
     onExportText,
     onExportJson,
     onImportJson,
@@ -149,6 +153,22 @@ export const Sidebar = ({
                                     <button className='sidebar__toggle-light-mode-btn' onClick={onToggleLightMode}>
                                         {lightMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
                                     </button>
+                                </div>
+
+                                <div className='sidebar__settings-section'>
+                                    <span className='sidebar__settings-label'>Editor Width</span>
+                                    <div className='sidebar__slider-container'>
+                                        <input
+                                            type='range'
+                                            min='50'
+                                            max='100'
+                                            step='5'
+                                            value={editorWidth}
+                                            onChange={(e) => onEditorWidthChange(Number(e.target.value))}
+                                            className='sidebar__slider'
+                                        />
+                                        <span className='sidebar__slider-value'>{editorWidth}%</span>
+                                    </div>
                                 </div>
 
                                 <div className='sidebar__settings-section'>

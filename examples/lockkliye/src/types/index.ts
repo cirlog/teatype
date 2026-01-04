@@ -110,6 +110,7 @@ interface iNotesState {
     selectedColor: string;
     selectedSize: string;
     lightMode: boolean;
+    editorWidth: number; // percentage 50-100
 }
 
 // Predefined colors for formatting

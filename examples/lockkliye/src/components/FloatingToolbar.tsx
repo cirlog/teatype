@@ -155,19 +155,6 @@ const FloatingToolbar: React.FC<iFloatingToolbarProps> = ({
                         />
                     ))}
                 </div>
-
-                <div className='floating-toolbar__divider' />
-
-                <div className='floating-toolbar__status'>
-                    {formatMode ? (
-                        <span className='floating-toolbar__mode-label'>
-                            mode: <strong>{formatMode}</strong>
-                            <span className='floating-toolbar__hint'> (ESC to exit)</span>
-                        </span>
-                    ) : (
-                        <span className='floating-toolbar__hint'>Click tool or use shortcuts</span>
-                    )}
-                </div>
             </div>
         </div>
     );

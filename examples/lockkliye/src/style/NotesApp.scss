@@ -1328,6 +1328,54 @@ body {
     background: var(--bg-tertiary);
 }
 
+.sidebar__slider-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.sidebar__slider {
+    flex: 1;
+    height: 4px;
+    appearance: none;
+    background: var(--bg-hover);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: transform var(--transition), box-shadow var(--transition);
+
+        &:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+    }
+
+    &::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+}
+
+.sidebar__slider-value {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 36px;
+    text-align: right;
+}
+
 // Light Mode Theme
 .notes-app.light-mode {
     --bg-primary: #f5f5f7;

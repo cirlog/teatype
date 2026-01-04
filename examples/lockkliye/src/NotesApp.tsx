@@ -83,12 +83,14 @@ const NotesApp: React.FC = () => {
                 activeNoteId={store.activeNoteId}
                 expanded={store.sidebarExpanded}
                 lightMode={store.lightMode}
+                editorWidth={store.editorWidth}
                 onToggle={store.toggleSidebar}
                 onNoteSelect={store.setActiveNote}
                 onCreateNote={() => store.createNewNote()}
                 onDeleteNote={store.deleteNote}
                 onClearAllData={store.clearAllData}
                 onToggleLightMode={store.toggleLightMode}
+                onEditorWidthChange={store.setEditorWidth}
                 onExportText={store.exportAsText}
                 onExportJson={store.exportAsJson}
                 onImportJson={store.importFromJson}
@@ -101,6 +103,7 @@ const NotesApp: React.FC = () => {
                         formatMode={store.formatMode}
                         selectedColor={store.selectedColor}
                         selectedSize={store.selectedSize}
+                        editorWidth={store.editorWidth}
                         historyCount={store.historyCount}
                         redoCount={store.redoCount}
                         canUndo={store.canUndo}
