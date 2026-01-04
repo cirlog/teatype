@@ -13,6 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { useEffect, useState } from 'react';
 
 export type tToastType = 'success' | 'error' | 'info' | 'warning';

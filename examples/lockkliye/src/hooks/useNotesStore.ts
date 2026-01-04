@@ -550,11 +550,9 @@ const useNotesStore: React.FC = () => {
                     if (result.settings.confirmDeletions !== undefined) newState.confirmDeletions = result.settings.confirmDeletions;
                 }
                 if (result.blockPresets) {
-                    // Merge presets by ID if present, otherwise by title
-                    const existingPresetIds = new Set(prev.blockPresets.map(p => (p as any).id).filter(Boolean));
+                    // Merge presets by title (presets don't have IDs)
                     const existingTitles = new Set(prev.blockPresets.map(p => p.title));
                     const newPresets = result.blockPresets.filter((p: iBlockStyle) => {
-                        if ((p as any).id && existingPresetIds.has((p as any).id)) return false;
                         if (existingTitles.has(p.title)) return false;
                         return true;
                     });
