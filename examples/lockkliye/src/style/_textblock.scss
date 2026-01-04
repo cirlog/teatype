@@ -183,16 +183,24 @@
     &__linked {
         position: relative;
         cursor: pointer;
+
+        // Link indicator via CSS pseudo-element (not selectable/copyable)
+        &::after {
+            content: '🔗';
+            position: absolute;
+            top: -6px;
+            right: -4px;
+            font-size: 8px;
+            line-height: 1;
+            pointer-events: none;
+            opacity: 0.7;
+            user-select: none;
+            -webkit-user-select: none;
+        }
     }
 
     &__link-indicator {
-        position: absolute;
-        top: -6px;
-        right: -4px;
-        font-size: 8px;
-        line-height: 1;
-        pointer-events: none;
-        opacity: 0.7;
+        display: none; // Deprecated - using ::after instead
     }
 
     &:empty::before {

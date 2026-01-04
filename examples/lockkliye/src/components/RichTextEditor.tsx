@@ -144,21 +144,26 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                     return `<span data-word-id="${word.id}" class="rich-text-editor__tab">\t</span>`;
                 }
 
+                // Handle non-breaking space indent markers (4 nbsp)
+                if (word.text === '\u00A0\u00A0\u00A0\u00A0') {
+                    return `<span data-word-id="${word.id}" class="rich-text-editor__indent">\u00A0\u00A0\u00A0\u00A0</span>`;
+                }
+
                 const style = getWordStyle(word.format);
                 const styleStr = styleToString(style);
                 const space =
-                    idx < wordList.length - 1 && wordList[idx + 1]?.text !== '\n' && wordList[idx + 1]?.text !== '\t'
+                    idx < wordList.length - 1 &&
+                    wordList[idx + 1]?.text !== '\n' &&
+                    wordList[idx + 1]?.text !== '\t' &&
+                    wordList[idx + 1]?.text !== '\u00A0\u00A0\u00A0\u00A0'
                         ? ' '
                         : '';
 
-                // Add link indicator for hyperlinked words
+                // Add link class for hyperlinked words (indicator is added via CSS ::after)
                 const linkClass = word.format.link ? ' rich-text-editor__linked' : '';
-                const linkIndicator = word.format.link
-                    ? '<span class="rich-text-editor__link-indicator">🔗</span>'
-                    : '';
 
                 if (styleStr || linkClass) {
-                    return `<span data-word-id="${word.id}" class="rich-text-editor__word${linkClass}" style="${styleStr}">${word.text}${linkIndicator}</span>${space}`;
+                    return `<span data-word-id="${word.id}" class="rich-text-editor__word${linkClass}" style="${styleStr}">${word.text}</span>${space}`;
                 }
                 return `<span data-word-id="${word.id}" class="rich-text-editor__word">${word.text}</span>${space}`;
             })
@@ -210,6 +215,17 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                                 result.push(createWord(nonTab.trim()));
                             }
                         });
+                    } else if (part.includes('\u00A0')) {
+                        // Handle non-breaking spaces (used for fake tabs/indentation)
+                        // Count groups of 4 non-breaking spaces as indent markers
+                        const nbspCount = (part.match(/\u00A0/g) || []).length;
+                        if (nbspCount >= 4) {
+                            // Store as indent word (4 nbsp = 1 indent)
+                            const indentCount = Math.floor(nbspCount / 4);
+                            for (let i = 0; i < indentCount; i++) {
+                                result.push(createWord('\u00A0\u00A0\u00A0\u00A0'));
+                            }
+                        }
                     } else if (part.trim()) {
                         // Regular word - check if parent has style
                         const parent = node.parentElement;
@@ -554,10 +570,11 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
                 return;
             }
 
-            // Handle Tab key - insert 4 spaces instead of tab character
+            // Handle Tab key - insert 4 non-breaking spaces instead of tab character
+            // Using \u00A0 (non-breaking space) prevents them from being collapsed
             if (e.key === 'Tab') {
                 e.preventDefault();
-                document.execCommand('insertText', false, '    ');
+                document.execCommand('insertText', false, '\u00A0\u00A0\u00A0\u00A0');
                 return;
             }
 

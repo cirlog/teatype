@@ -55,7 +55,7 @@ export const TextBlockComponent = ({
     const [showCustomColorPicker, setShowCustomColorPicker] = useState(false);
     const [showCustomGradientPicker, setShowCustomGradientPicker] = useState(false);
     const [customColorInput, setCustomColorInput] = useState('#ff0000');
-    const [customColorAlpha, setCustomColorAlpha] = useState(100);
+    const [customColorAlpha, setCustomColorAlpha] = useState(10);
     const [customGradientFrom, setCustomGradientFrom] = useState('#ff0000');
     const [customGradientTo, setCustomGradientTo] = useState('#0000ff');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -283,7 +283,10 @@ export const TextBlockComponent = ({
 
     // Set custom gradient for this block only (last in row)
     const handleSetCustomGradient = () => {
-        const gradient = `linear-gradient(135deg, ${customGradientFrom} 0%, ${customGradientTo} 100%)`;
+        // Convert hex colors to rgba with 0.15 alpha to match default gradient opacity
+        const fromRgba = hexToRgba(customGradientFrom, 0.15);
+        const toRgba = hexToRgba(customGradientTo, 0.15);
+        const gradient = `linear-gradient(135deg, ${fromRgba} 0%, ${toRgba} 100%)`;
         onStyleChange(block.id, {
             customGradient: gradient,
             backgroundGradient: gradient,

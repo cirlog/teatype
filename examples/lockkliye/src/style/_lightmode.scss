@@ -141,4 +141,9 @@
             color: var(--text-primary);
         }
     }
+
+    // Block title needs lighter text in light mode for visibility against dark background
+    .text-block__title {
+        color: #ffffff;
+    }
 }
