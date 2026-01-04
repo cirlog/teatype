@@ -22,6 +22,9 @@ import { Sidebar } from '@/components/Sidebar';
 import useNotesStore from '@/hooks/useNotesStore';
 import useKeyboardShortcuts from '@/hooks/useKeyboardShortcuts';
 
+// Types
+import type { iBlockStyle } from '@/types';
+
 const NotesApp: React.FC = () => {
     const store = useNotesStore();
 
@@ -66,6 +69,12 @@ const NotesApp: React.FC = () => {
         }
     };
 
+    const handleBlockAddWithPreset = (preset: iBlockStyle, afterBlockId?: string) => {
+        if (store.activeNoteId) {
+            store.addBlockWithPreset(store.activeNoteId, preset, afterBlockId);
+        }
+    };
+
     const handleTitleChange = (title: string) => {
         if (store.activeNoteId) {
             store.updateNote(store.activeNoteId, { title });
@@ -84,6 +93,7 @@ const NotesApp: React.FC = () => {
                 expanded={store.sidebarExpanded}
                 lightMode={store.lightMode}
                 editorWidth={store.editorWidth}
+                confirmDeletions={store.confirmDeletions}
                 onToggle={store.toggleSidebar}
                 onNoteSelect={store.setActiveNote}
                 onCreateNote={() => store.createNewNote()}
@@ -91,6 +101,7 @@ const NotesApp: React.FC = () => {
                 onClearAllData={store.clearAllData}
                 onToggleLightMode={store.toggleLightMode}
                 onEditorWidthChange={store.setEditorWidth}
+                onConfirmDeletionsChange={store.setConfirmDeletions}
                 onExportText={store.exportAsText}
                 onExportJson={store.exportAsJson}
                 onImportJson={store.importFromJson}
@@ -108,12 +119,17 @@ const NotesApp: React.FC = () => {
                         redoCount={store.redoCount}
                         canUndo={store.canUndo}
                         canRedo={store.canRedo}
+                        confirmDeletions={store.confirmDeletions}
+                        customColors={store.customColors}
+                        customGradients={store.customGradients}
+                        blockPresets={store.blockPresets}
                         onTitleChange={handleTitleChange}
                         onWordFormatChange={handleWordFormatChange}
                         onWordsChange={handleWordsChange}
                         onBlockStyleChange={handleBlockStyleChange}
                         onBlockDelete={handleBlockDelete}
                         onBlockAdd={handleBlockAdd}
+                        onBlockAddWithPreset={handleBlockAddWithPreset}
                         onFormatModeChange={store.setFormatMode}
                         onColorChange={store.setSelectedColor}
                         onSizeChange={store.setSelectedSize}
@@ -121,6 +137,8 @@ const NotesApp: React.FC = () => {
                         onUndo={store.undo}
                         onRedo={store.redo}
                         getHistory={store.getActiveNoteHistory}
+                        onAddCustomColor={store.addCustomColor}
+                        onAddCustomGradient={store.addCustomGradient}
                     />
                 ) : (
                     <div className='notes-app__empty'>

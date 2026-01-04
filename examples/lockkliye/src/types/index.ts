@@ -49,6 +49,7 @@ interface iWord {
 
 // Block styles for text containers
 interface iBlockStyle {
+    title?: string; // Optional title displayed as legend on block
     borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
     borderColor?: string;
     borderRadius?: number;
@@ -111,6 +112,10 @@ interface iNotesState {
     selectedSize: string;
     lightMode: boolean;
     editorWidth: number; // percentage 50-100
+    confirmDeletions: boolean; // Show confirmation dialogs for deletions
+    customColors: string[]; // User-defined custom colors
+    customGradients: string[]; // User-defined custom gradients
+    blockPresets: iBlockStyle[]; // Saved block presets
 }
 
 // Predefined colors for formatting
@@ -133,6 +138,9 @@ const BLOCK_GRADIENTS = [
     'linear-gradient(135deg, rgba(105,219,124,0.2) 0%, rgba(116,192,252,0.2) 100%)',
     'linear-gradient(135deg, rgba(247,131,172,0.2) 0%, rgba(177,151,252,0.2) 100%)',
     'linear-gradient(135deg, rgba(255,212,59,0.2) 0%, rgba(255,169,77,0.2) 100%)',
+    // Additional gradients
+    'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(150,150,150,0.1) 100%)', // Silver/Gray
+    'linear-gradient(135deg, rgba(64,224,208,0.2) 0%, rgba(116,192,252,0.2) 100%)', // Turquoise to Blue
 ];
 
 // Keyboard shortcuts mapping

@@ -94,6 +94,15 @@ const getInitialState = (): iNotesState => {
         selectedSize: 'normal',
         lightMode: false,
         editorWidth: 70,
+        confirmDeletions: true,
+        customColors: [],
+        customGradients: [],
+        blockPresets: [
+            // Default presets
+            { title: 'Note', borderStyle: 'solid', borderRadius: 8, backgroundColor: 'rgba(255,212,59,0.1)' },
+            { title: 'Important', borderStyle: 'solid', borderRadius: 4, backgroundGradient: 'linear-gradient(135deg, rgba(255,107,107,0.15) 0%, rgba(255,169,77,0.15) 100%)' },
+            { title: 'Info', borderStyle: 'dashed', borderRadius: 8, backgroundColor: 'rgba(116,192,252,0.1)' },
+        ],
     };
 };
 
@@ -524,6 +533,80 @@ const useNotesStore: React.FC = () => {
         setState(getInitialState());
     }, []);
 
+    // Toggle confirmation dialogs
+    const setConfirmDeletions = useCallback((value: boolean) => {
+        setState((prev: iNotesState) => ({ ...prev, confirmDeletions: value }));
+    }, []);
+
+    // Custom colors management
+    const addCustomColor = useCallback((color: string) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            customColors: [...prev.customColors, color],
+        }));
+    }, []);
+
+    const removeCustomColor = useCallback((index: number) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            customColors: prev.customColors.filter((_, i) => i !== index),
+        }));
+    }, []);
+
+    // Custom gradients management
+    const addCustomGradient = useCallback((gradient: string) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            customGradients: [...prev.customGradients, gradient],
+        }));
+    }, []);
+
+    const removeCustomGradient = useCallback((index: number) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            customGradients: prev.customGradients.filter((_, i) => i !== index),
+        }));
+    }, []);
+
+    // Block presets management
+    const addBlockPreset = useCallback((preset: iBlockStyle) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            blockPresets: [...prev.blockPresets, preset],
+        }));
+    }, []);
+
+    const removeBlockPreset = useCallback((index: number) => {
+        setState((prev: iNotesState) => ({
+            ...prev,
+            blockPresets: prev.blockPresets.filter((_, i) => i !== index),
+        }));
+    }, []);
+
+    // Add block with preset style
+    const addBlockWithPreset = useCallback((noteId: string, preset: iBlockStyle, afterBlockId?: string) => {
+        saveToHistory(noteId, 'Add preset block');
+        const newBlock = createBlock([createWord('')], preset);
+        setState((prev: iNotesState) => ({
+            ...prev,
+            notes: prev.notes.map((note: iNote) => {
+                if (note.id !== noteId) return note;
+                const blocks = [...note.blocks];
+                if (afterBlockId) {
+                    const idx = blocks.findIndex((b: iTextBlock) => b.id === afterBlockId);
+                    if (idx !== -1) {
+                        blocks.splice(idx + 1, 0, newBlock);
+                    } else {
+                        blocks.push(newBlock);
+                    }
+                } else {
+                    blocks.push(newBlock);
+                }
+                return { ...note, blocks, updatedAt: Date.now() };
+            }),
+        }));
+    }, [saveToHistory]);
+
     return {
         // State
         ...state,
@@ -579,6 +662,20 @@ const useNotesStore: React.FC = () => {
         exportAsText,
         exportAsJson,
         importFromJson,
+
+        // Settings
+        setConfirmDeletions,
+
+        // Custom colors/gradients
+        addCustomColor,
+        removeCustomColor,
+        addCustomGradient,
+        removeCustomGradient,
+
+        // Block presets
+        addBlockPreset,
+        removeBlockPreset,
+        addBlockWithPreset,
 
         // Dev
         clearAllData,

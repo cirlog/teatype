@@ -367,8 +367,9 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             if (savedCursor) {
                 restoreCursorPosition(savedCursor);
             }
-            // Clear format mode after applying (one-shot behavior)
-            if (onClearFormatMode) {
+            // Only clear format mode if editor is focused (typing mode)
+            // Keep format mode active for quick formatting in non-edit mode
+            if (onClearFormatMode && isFocused) {
                 onClearFormatMode();
             }
         });
@@ -383,6 +384,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         onWordsChange,
         updateDOMContent,
         onClearFormatMode,
+        isFocused,
     ]);
 
     // Apply formatting to a single word by ID
@@ -408,13 +410,14 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             // Instantly update DOM
             updateDOMContent(newWords);
 
-            // Restore cursor and clear format mode
+            // Restore cursor and keep format mode in non-edit mode
             requestAnimationFrame(() => {
                 if (savedCursor) {
                     restoreCursorPosition(savedCursor);
                 }
-                // Clear format mode after applying (one-shot behavior)
-                if (onClearFormatMode) {
+                // Only clear format mode if editor is focused (typing mode)
+                // Keep format mode active for quick formatting in non-edit mode
+                if (onClearFormatMode && isFocused) {
                     onClearFormatMode();
                 }
             });
@@ -427,6 +430,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             restoreCursorPosition,
             updateDOMContent,
             onClearFormatMode,
+            isFocused,
         ]
     );
 
@@ -478,7 +482,7 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
         document.execCommand('insertText', false, text);
     }, []);
 
-    // Handle click on words when in format mode
+    // Handle click on words when in format mode (for selection-based formatting)
     const handleClick = useCallback(
         (e: React.MouseEvent) => {
             if (!formatMode || !editorRef.current) return;
@@ -487,26 +491,22 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             const wordSpan = target.closest('span[data-word-id]');
 
             if (wordSpan) {
-                e.preventDefault();
-                const wordId = wordSpan.getAttribute('data-word-id');
-                if (wordId) {
-                    // Check if there's a selection - if not, apply to clicked word
-                    const selection = window.getSelection();
-                    const hasSelection = selection && selection.toString().trim().length > 0;
+                // Check if there's a selection - apply to selection if present
+                const selection = window.getSelection();
+                const hasSelection = selection && selection.toString().trim().length > 0;
 
-                    if (!hasSelection) {
-                        applyFormattingToWord(wordId);
-                    } else {
-                        // Apply to selection
-                        applyFormattingToSelection();
-                    }
+                if (hasSelection) {
+                    e.preventDefault();
+                    // Apply to selection
+                    applyFormattingToSelection();
                 }
+                // Single word clicks are handled by handleMouseDown
             }
         },
-        [formatMode, applyFormattingToWord, applyFormattingToSelection]
+        [formatMode, applyFormattingToSelection]
     );
 
-    // Handle mousedown for non-edit mode word clicking
+    // Handle mousedown for non-edit mode single word clicking
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (!formatMode || !editorRef.current) return;
@@ -515,11 +515,19 @@ export const RichTextEditor: React.FC<iRichTextEditorProps> = ({
             const wordSpan = target.closest('span[data-word-id]');
 
             if (wordSpan) {
-                // Prevent the default focus behavior when clicking words in format mode
-                e.preventDefault();
-                const wordId = wordSpan.getAttribute('data-word-id');
-                if (wordId) {
-                    applyFormattingToWord(wordId);
+                // Check if there's already a selection (user might be extending selection)
+                const selection = window.getSelection();
+                const hasSelection = selection && selection.toString().trim().length > 0;
+
+                // Only apply formatting on mousedown if there's no selection
+                // Selection-based formatting is handled by handleClick
+                if (!hasSelection) {
+                    // Prevent the default focus behavior when clicking words in format mode
+                    e.preventDefault();
+                    const wordId = wordSpan.getAttribute('data-word-id');
+                    if (wordId) {
+                        applyFormattingToWord(wordId);
+                    }
                 }
             }
         },

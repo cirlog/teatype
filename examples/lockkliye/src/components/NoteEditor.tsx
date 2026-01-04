@@ -21,7 +21,7 @@ import FloatingToolbar from './FloatingToolbar';
 import { TextBlockComponent } from './TextBlockComponent';
 
 // Types
-import type { iNote, iTextBlock, iWord, tFormatMode, iHistoryEntry } from '@/types';
+import type { iNote, iTextBlock, iWord, tFormatMode, iHistoryEntry, iBlockStyle } from '@/types';
 
 interface iNoteEditorProps {
     note: iNote;
@@ -33,12 +33,17 @@ interface iNoteEditorProps {
     redoCount: number;
     canUndo: boolean;
     canRedo: boolean;
+    confirmDeletions: boolean;
+    customColors: string[];
+    customGradients: string[];
+    blockPresets: iBlockStyle[];
     onTitleChange: (title: string) => void;
     onWordFormatChange: (blockId: string, wordId: string, format: Partial<iWord['format']>) => void;
     onWordsChange: (blockId: string, words: iWord[]) => void;
     onBlockStyleChange: (blockId: string, style: Partial<iTextBlock['style']>) => void;
     onBlockDelete: (blockId: string) => void;
     onBlockAdd: (afterBlockId?: string) => void;
+    onBlockAddWithPreset: (preset: iBlockStyle, afterBlockId?: string) => void;
     onFormatModeChange: (mode: tFormatMode) => void;
     onColorChange: (color: string) => void;
     onSizeChange: (size: string) => void;
@@ -46,6 +51,8 @@ interface iNoteEditorProps {
     onUndo: () => void;
     onRedo: () => void;
     getHistory: () => iHistoryEntry[];
+    onAddCustomColor: (color: string) => void;
+    onAddCustomGradient: (gradient: string) => void;
 }
 
 export const NoteEditor = ({
@@ -58,12 +65,17 @@ export const NoteEditor = ({
     redoCount: _redoCount,
     canUndo,
     canRedo,
+    confirmDeletions,
+    customColors,
+    customGradients,
+    blockPresets,
     onTitleChange,
     onWordFormatChange,
     onWordsChange,
     onBlockStyleChange,
     onBlockDelete,
     onBlockAdd,
+    onBlockAddWithPreset,
     onFormatModeChange,
     onColorChange,
     onSizeChange,
@@ -71,11 +83,15 @@ export const NoteEditor = ({
     onUndo,
     onRedo,
     getHistory,
+    onAddCustomColor,
+    onAddCustomGradient,
 }: iNoteEditorProps) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(note.title);
     const [showHistory, setShowHistory] = useState(false);
+    const [showPresetMenu, setShowPresetMenu] = useState(false);
     const editorRef = useRef<HTMLDivElement>(null);
+    const presetMenuRef = useRef<HTMLDivElement>(null);
 
     const handleTitleSubmit = () => {
         onTitleChange(titleValue || 'Untitled');
@@ -140,18 +156,58 @@ export const NoteEditor = ({
                             formatMode={formatMode}
                             selectedColor={selectedColor}
                             selectedSize={selectedSize}
+                            confirmDeletions={confirmDeletions}
+                            customColors={customColors}
+                            customGradients={customGradients}
                             onWordFormatChange={onWordFormatChange}
                             onWordsChange={onWordsChange}
                             onStyleChange={onBlockStyleChange}
                             onDelete={onBlockDelete}
                             onAddBlockAfter={onBlockAdd}
                             onClearFormatMode={onClearFormatMode}
+                            onAddCustomColor={onAddCustomColor}
+                            onAddCustomGradient={onAddCustomGradient}
                         />
                     ))}
 
-                    <button className='note-editor__add-block' onClick={() => onBlockAdd()}>
-                        + Add block
-                    </button>
+                    <div className='note-editor__add-buttons'>
+                        <button className='note-editor__add-block' onClick={() => onBlockAdd()}>
+                            + Add block
+                        </button>
+                        <div className='note-editor__preset-container'>
+                            <button
+                                className='note-editor__add-preset'
+                                onClick={() => setShowPresetMenu(!showPresetMenu)}
+                            >
+                                + Add preset
+                            </button>
+                            {showPresetMenu && (
+                                <div className='note-editor__preset-menu' ref={presetMenuRef}>
+                                    {blockPresets.map((preset, index) => (
+                                        <button
+                                            key={index}
+                                            className='note-editor__preset-item'
+                                            onClick={() => {
+                                                onBlockAddWithPreset(preset);
+                                                setShowPresetMenu(false);
+                                            }}
+                                            style={{
+                                                background:
+                                                    preset.backgroundGradient ||
+                                                    preset.backgroundColor ||
+                                                    'transparent',
+                                                borderStyle: preset.borderStyle || 'solid',
+                                                borderColor: preset.borderColor || '#333',
+                                                borderRadius: `${preset.borderRadius || 0}px`,
+                                            }}
+                                        >
+                                            {preset.title || `Preset ${index + 1}`}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 

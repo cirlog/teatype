@@ -22,6 +22,7 @@ interface iSidebarProps {
     expanded: boolean;
     lightMode: boolean;
     editorWidth: number;
+    confirmDeletions: boolean;
     onToggle: () => void;
     onNoteSelect: (noteId: string) => void;
     onCreateNote: () => void;
@@ -29,6 +30,7 @@ interface iSidebarProps {
     onClearAllData: () => void;
     onToggleLightMode: () => void;
     onEditorWidthChange: (width: number) => void;
+    onConfirmDeletionsChange: (value: boolean) => void;
     onExportText: () => string;
     onExportJson: () => string;
     onImportJson: (json: string) => boolean;
@@ -40,6 +42,7 @@ export const Sidebar = ({
     expanded,
     lightMode,
     editorWidth,
+    confirmDeletions,
     onToggle,
     onNoteSelect,
     onCreateNote,
@@ -47,6 +50,7 @@ export const Sidebar = ({
     onClearAllData,
     onToggleLightMode,
     onEditorWidthChange,
+    onConfirmDeletionsChange,
     onExportText,
     onExportJson,
     onImportJson,
@@ -267,6 +271,16 @@ export const Sidebar = ({
 
                                 <div className='sidebar__settings-section'>
                                     <span className='sidebar__settings-label'>Developer</span>
+                                    <div className='sidebar__toggle-setting'>
+                                        <label>
+                                            <input
+                                                type='checkbox'
+                                                checked={confirmDeletions}
+                                                onChange={(e) => onConfirmDeletionsChange(e.target.checked)}
+                                            />
+                                            Show delete confirmations
+                                        </label>
+                                    </div>
                                     <button
                                         className='sidebar__clear-data-btn'
                                         onClick={() => {
