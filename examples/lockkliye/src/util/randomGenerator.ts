@@ -2,9 +2,18 @@
  * @license
  * Copyright (C) 2024-2026 Burak Günaydin
  *
- * Random text and note generator for development/testing purposes
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  */
 
+// Types
 import { createWord, createBlock, createNote, iWord, iTextBlock, iNote, iWordFormat, iBlockStyle, FORMAT_COLORS } from '@/types';
 
 // Word lists for generating random text
@@ -59,10 +68,14 @@ const TITLE_WORDS = [
 ];
 
 // Helper to pick random item from array
-const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const pick = <T>(arr: T[]): T => {
+    return arr[Math.floor(Math.random() * arr.length)];
+};
 
 // Helper to pick random number in range
-const randInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
+const randInt = (min: number, max: number): number => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 // Generate a random sentence
 const generateSentence = (minWords: number = 5, maxWords: number = 15): string => {
@@ -71,20 +84,30 @@ const generateSentence = (minWords: number = 5, maxWords: number = 15): string =
 
     // Start with article + adjective + noun pattern
     words.push(pick(ARTICLES));
-    if (Math.random() > 0.5) words.push(pick(ADJECTIVES));
+    if (Math.random() > 0.5) {
+        words.push(pick(ADJECTIVES));
+    };
     words.push(pick(NOUNS));
     words.push(pick(VERBS));
 
     // Fill remaining with mixed words
     while (words.length < wordCount) {
         const rand = Math.random();
-        if (rand < 0.2) words.push(pick(ARTICLES));
-        else if (rand < 0.35) words.push(pick(ADJECTIVES));
-        else if (rand < 0.5) words.push(pick(ADVERBS));
-        else if (rand < 0.7) words.push(pick(NOUNS));
-        else if (rand < 0.85) words.push(pick(VERBS));
-        else if (rand < 0.92) words.push(pick(PREPOSITIONS));
-        else words.push(pick(CONJUNCTIONS));
+        if (rand < 0.2) {
+            words.push(pick(ARTICLES));
+        } else if (rand < 0.35) {
+            words.push(pick(ADJECTIVES))
+        } else if (rand < 0.5) {
+            words.push(pick(ADVERBS));
+        } else if (rand < 0.7) {
+            words.push(pick(NOUNS));
+        } else if (rand < 0.85) {
+            words.push(pick(VERBS));
+        } else if (rand < 0.92) {
+            words.push(pick(PREPOSITIONS));
+        } else {
+            words.push(pick(CONJUNCTIONS));
+        }
     }
 
     // Capitalize first word and add period
@@ -159,20 +182,32 @@ const BORDER_RADII = [0, 2, 4, 6, 8, 10, 12, 16, 20];
 // Generate random word format
 const generateRandomFormat = (): iWordFormat => {
     const format: iWordFormat = {};
-
     // Random chance for each format option
-    if (Math.random() < 0.15) format.bold = true;
-    if (Math.random() < 0.1) format.italic = true;
-    if (Math.random() < 0.05) format.underline = true;
-    if (Math.random() < 0.03) format.strikethrough = true;
-    if (Math.random() < 0.1) format.color = pick(FORMAT_COLORS);
-    if (Math.random() < 0.08) format.highlight = pick(FORMAT_COLORS) + '40';
+    if (Math.random() < 0.15) {
+        format.bold = true;
+    };
+    if (Math.random() < 0.1) {
+        format.italic = true;
+    };
+    if (Math.random() < 0.05) {
+        format.underline = true;
+    };
+    if (Math.random() < 0.03) {
+        format.strikethrough = true;
+    };
+    if (Math.random() < 0.1) {
+        format.color = pick(FORMAT_COLORS);
+    };
+    if (Math.random() < 0.08) {
+        format.highlight = pick(FORMAT_COLORS) + '40';
+    };
     if (Math.random() < 0.1) {
         const sizes: Array<'tiny' | 'smaller' | 'normal' | 'large' | 'larger' | 'huge'> = ['tiny', 'smaller', 'normal', 'large', 'larger', 'huge'];
         format.fontSize = pick(sizes);
     }
-    if (Math.random() < 0.03) format.link = 'https://example.com/' + pick(NOUNS);
-
+    if (Math.random() < 0.03) {
+        format.link = 'https://example.com/' + pick(NOUNS);
+    };
     return format;
 };
 
@@ -204,7 +239,6 @@ const generateRandomBlockStyle = (): iBlockStyle => {
     if (Math.random() < 0.2) {
         style.widthPercent = pick([50, 60, 70, 80, 90, 100]);
     }
-
     return style;
 };
 
