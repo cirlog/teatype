@@ -14,7 +14,11 @@
  */
 
 // Types
-import { createWord, createBlock, createNote, iWord, iTextBlock, iNote, iWordFormat, iBlockStyle, FORMAT_COLORS } from '@/types';
+import {
+    iBlockStyle, iNote, iTextBlock, iWord, iWordFormat,
+    FORMAT_COLORS,
+    createWord, createBlock, createNote,
+} from '@/types';
 
 // Word lists for generating random text
 const NOUNS = [
@@ -126,12 +130,12 @@ const generateParagraph = (minSentences: number = 3, maxSentences: number = 7): 
 };
 
 // Generate short text (~50-100 words)
-export const generateShortText = (): string => {
+const generateShortText = (): string => {
     return generateParagraph(3, 5);
 };
 
 // Generate long text (~200-500 words)
-export const generateLongText = (): string => {
+const generateLongText = (): string => {
     const paragraphs: string[] = [];
     const paragraphCount = randInt(3, 5);
     for (let i = 0; i < paragraphCount; i++) {
@@ -141,7 +145,7 @@ export const generateLongText = (): string => {
 };
 
 // Generate title text
-export const generateTitle = (): string => {
+const generateTitle = (): string => {
     const style = randInt(1, 4);
     switch (style) {
         case 1: // Simple: "Word Word"
@@ -297,7 +301,7 @@ const generateHeadingBlock = (): iTextBlock => {
 };
 
 // Generate a completely random note
-export const generateRandomNote = (): iNote => {
+const generateRandomNote = (): iNote => {
     const note = createNote(generateTitle());
     const blocks: iTextBlock[] = [];
 
@@ -332,7 +336,7 @@ export const generateRandomNote = (): iNote => {
 };
 
 // Copy text to clipboard
-export const copyToClipboard = async (text: string): Promise<boolean> => {
+const copyToClipboard = async (text: string): Promise<boolean> => {
     try {
         await navigator.clipboard.writeText(text);
         return true;
@@ -354,3 +358,11 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
         }
     }
 };
+
+export {
+    copyToClipboard,
+    generateLongText,
+    generateRandomNote,
+    generateShortText,
+    generateTitle
+}

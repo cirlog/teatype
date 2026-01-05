@@ -20,7 +20,7 @@ interface iMousePositionState {
     y: number;
 }
 
-const useMousePosition: React.FC = () => {
+const useMousePosition = () => {
     const [position, setPosition] = useState<iMousePositionState>({ x: 0, y: 0 });
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -29,7 +29,9 @@ const useMousePosition: React.FC = () => {
 
     useEffect(() => {
         window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
     }, [handleMouseMove]);
 
     return position;

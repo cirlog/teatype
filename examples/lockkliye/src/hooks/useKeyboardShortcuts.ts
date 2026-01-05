@@ -17,8 +17,10 @@
 import { useEffect, useCallback } from 'react';
 
 // Types
-import { SHORTCUTS } from '@/types';
-import { tFormatMode } from '@/types';
+import {
+    tFormatMode,
+    SHORTCUTS
+} from '@/types';
 
 interface iUseKeyboardShortcutsProps {
     onEscape: () => void;
@@ -31,9 +33,16 @@ const useKeyboardShortcuts: React.FC<iUseKeyboardShortcutsProps> = (props) => {
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         // Build shortcut string
         const parts: string[] = [];
-        if (e.ctrlKey || e.metaKey) parts.push('ctrl');
-        if (e.shiftKey) parts.push('shift');
-        if (e.altKey) parts.push('alt');
+        if (e.ctrlKey || e.metaKey) {
+            parts.push('ctrl');
+        };
+        if (e.shiftKey) {
+            parts.push('shift');
+        };
+        if (e.altKey) {
+            ;
+            parts.push('alt');
+        };
         parts.push(e.key.toLowerCase());
         const shortcut = parts.join('+');
 
@@ -79,6 +88,8 @@ const useKeyboardShortcuts: React.FC<iUseKeyboardShortcutsProps> = (props) => {
             window.removeEventListener('keydown', handleKeyDown);
         }
     }, [handleKeyDown]);
+
+    return null;
 };
 
 export default useKeyboardShortcuts;

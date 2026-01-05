@@ -317,13 +317,13 @@ export type {
     iAppSettings,
     iBlockStyle,
     iFolder,
+    tFormatMode,
     iHistoryEntry,
     iNote,
     iNotesState,
     iTextBlock,
     iWord,
     iWordFormat,
-    tFormatMode,
 };
 
 export {
