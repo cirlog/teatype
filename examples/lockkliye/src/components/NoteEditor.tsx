@@ -107,82 +107,55 @@ export const NoteEditor = ({
     const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
     const dragGhostRef = useRef<HTMLDivElement>(null);
 
-    // Track mouse position during drag via document listener
+    // Mouse-based drag system for full control
     useEffect(() => {
         if (!isDragging) return;
 
         const handleMouseMove = (e: MouseEvent) => {
             setMousePosition({ x: e.clientX, y: e.clientY });
-        };
 
-        document.addEventListener('mousemove', handleMouseMove);
-        return () => document.removeEventListener('mousemove', handleMouseMove);
-    }, [isDragging]);
-
-    // Compute the visual order of blocks (with preview reordering)
-    const getVisualBlocks = useCallback(() => {
-        if (!previewOrder) return note.blocks;
-        return previewOrder.map((i) => note.blocks[i]);
-    }, [note.blocks, previewOrder]);
-
-    // Handle drag start
-    const handleDragStart = useCallback(
-        (e: React.DragEvent, index: number) => {
-            const blockId = note.blocks[index]?.id;
-            const blockElement = blockId ? blockRefs.current.get(blockId) : null;
-
-            if (blockElement) {
-                setDraggedBlockRect(blockElement.getBoundingClientRect());
-            }
-
-            // Set drag data and effect
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', String(index));
-
-            // Set a transparent drag image to hide native ghost
-            const img = new Image();
-            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            e.dataTransfer.setDragImage(img, 0, 0);
-
-            setDraggedBlockIndex(index);
-            setIsDragging(true);
-            setMousePosition({ x: e.clientX, y: e.clientY });
-            // Initialize preview order as current order
-            setPreviewOrder(note.blocks.map((_, i) => i));
-        },
-        [note.blocks]
-    );
-
-    // Handle drag over - update preview order for live reordering
-    const handleDragOver = useCallback(
-        (e: React.DragEvent, visualIndex: number) => {
-            e.preventDefault();
-            if (e.clientX !== 0 || e.clientY !== 0) {
-                setMousePosition({ x: e.clientX, y: e.clientY });
-            }
-
+            // Find which block we're over based on mouse Y position
             if (draggedBlockIndex === null || !previewOrder) return;
 
-            // Find where the dragged block currently is in preview order
-            const currentDraggedVisualIndex = previewOrder.indexOf(draggedBlockIndex);
+            const blockEntries = Array.from(blockRefs.current.entries());
+            for (let i = 0; i < blockEntries.length; i++) {
+                const [blockId, el] = blockEntries[i];
+                const rect = el.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
 
-            if (currentDraggedVisualIndex !== visualIndex && currentDraggedVisualIndex !== -1) {
-                // Create new preview order by moving the dragged block
-                const newOrder = [...previewOrder];
-                newOrder.splice(currentDraggedVisualIndex, 1);
-                newOrder.splice(visualIndex, 0, draggedBlockIndex);
-                setPreviewOrder(newOrder);
+                // Find the visual index of this block
+                const block = note.blocks.find((b) => b.id === blockId);
+                if (!block) continue;
+                const originalIdx = note.blocks.indexOf(block);
+                const visualIdx = previewOrder.indexOf(originalIdx);
+
+                // If mouse is above the midpoint of this block, move dragged block here
+                if (e.clientY < midY && visualIdx !== -1) {
+                    const currentDraggedVisualIndex = previewOrder.indexOf(draggedBlockIndex);
+                    if (currentDraggedVisualIndex !== visualIdx && currentDraggedVisualIndex !== -1) {
+                        const newOrder = [...previewOrder];
+                        newOrder.splice(currentDraggedVisualIndex, 1);
+                        newOrder.splice(visualIdx, 0, draggedBlockIndex);
+                        setPreviewOrder(newOrder);
+                    }
+                    break;
+                }
+                // If this is the last block and mouse is below it
+                if (i === blockEntries.length - 1 && e.clientY >= midY) {
+                    const currentDraggedVisualIndex = previewOrder.indexOf(draggedBlockIndex);
+                    const targetIdx = previewOrder.length - 1;
+                    if (currentDraggedVisualIndex !== targetIdx && currentDraggedVisualIndex !== -1) {
+                        const newOrder = [...previewOrder];
+                        newOrder.splice(currentDraggedVisualIndex, 1);
+                        newOrder.push(draggedBlockIndex);
+                        setPreviewOrder(newOrder);
+                    }
+                }
             }
-        },
-        [draggedBlockIndex, previewOrder]
-    );
+        };
 
-    // Handle drop - apply the final order
-    const handleDrop = useCallback(
-        (e: React.DragEvent) => {
-            e.preventDefault();
+        const handleMouseUp = () => {
             if (draggedBlockIndex !== null && previewOrder) {
-                // Find where the block ended up
                 const finalIndex = previewOrder.indexOf(draggedBlockIndex);
                 if (finalIndex !== draggedBlockIndex) {
                     onBlockReorder(draggedBlockIndex, finalIndex);
@@ -192,17 +165,44 @@ export const NoteEditor = ({
             setPreviewOrder(null);
             setIsDragging(false);
             setDraggedBlockRect(null);
-        },
-        [draggedBlockIndex, previewOrder, onBlockReorder]
-    );
+            document.body.style.cursor = '';
+        };
 
-    // Handle drag end (cleanup if dropped outside)
-    const handleDragEnd = useCallback(() => {
-        setDraggedBlockIndex(null);
-        setPreviewOrder(null);
-        setIsDragging(false);
-        setDraggedBlockRect(null);
-    }, []);
+        document.body.style.cursor = 'grabbing';
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            document.body.style.cursor = '';
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, draggedBlockIndex, previewOrder, note.blocks, onBlockReorder]);
+
+    // Compute the visual order of blocks (with preview reordering)
+    const getVisualBlocks = useCallback(() => {
+        if (!previewOrder) return note.blocks;
+        return previewOrder.map((i) => note.blocks[i]);
+    }, [note.blocks, previewOrder]);
+
+    // Handle drag start - now mouse-based
+    const handleDragStart = useCallback(
+        (e: React.MouseEvent, index: number) => {
+            e.preventDefault();
+            const blockId = note.blocks[index]?.id;
+            const blockElement = blockId ? blockRefs.current.get(blockId) : null;
+
+            if (blockElement) {
+                setDraggedBlockRect(blockElement.getBoundingClientRect());
+            }
+
+            setDraggedBlockIndex(index);
+            setIsDragging(true);
+            setMousePosition({ x: e.clientX, y: e.clientY });
+            setPreviewOrder(note.blocks.map((_, i) => i));
+        },
+        [note.blocks]
+    );
 
     // Close preset menu on outside click
     useEffect(() => {
@@ -273,12 +273,12 @@ export const NoteEditor = ({
                     <p className='note-editor__date'>Last edited: {formatDate(note.updatedAt)}</p>
                 </div>
 
-                <div className='note-editor__content' onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
+                <div className='note-editor__content'>
                     <Flipper
                         flipKey={previewOrder ? previewOrder.join('-') : note.blocks.map((b) => b.id).join('-')}
                         spring={{ stiffness: 400, damping: 25 }}
                     >
-                        {getVisualBlocks().map((block, visualIndex) => {
+                        {getVisualBlocks().map((block) => {
                             const originalIndex = note.blocks.findIndex((b) => b.id === block.id);
                             const isBeingDragged = originalIndex === draggedBlockIndex;
 
@@ -292,15 +292,12 @@ export const NoteEditor = ({
                                         className={`note-editor__block-wrapper ${
                                             isBeingDragged ? 'note-editor__block-wrapper--dragging' : ''
                                         }`}
-                                        onDragOver={(e) => handleDragOver(e, visualIndex)}
                                     >
                                         {/* Drag handle - outside block-content so it stays visible */}
                                         {!isBeingDragged && (
                                             <div
                                                 className='note-editor__drag-handle'
-                                                draggable
-                                                onDragStart={(e) => handleDragStart(e, originalIndex)}
-                                                onDragEnd={handleDragEnd}
+                                                onMouseDown={(e) => handleDragStart(e, originalIndex)}
                                                 title='Drag to reorder'
                                             >
                                                 <span className='note-editor__drag-icon'>⠿</span>

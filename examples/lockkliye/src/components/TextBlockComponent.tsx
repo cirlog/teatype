@@ -59,10 +59,30 @@ export const TextBlockComponent = ({
     const [customGradientFrom, setCustomGradientFrom] = useState('#ff0000');
     const [customGradientTo, setCustomGradientTo] = useState('#0000ff');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isLightMode, setIsLightMode] = useState(
+        () => document.querySelector('.notes-app')?.classList.contains('light-mode') ?? false
+    );
     const styleMenuRef = useRef<HTMLDivElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
 
     const blockStyle = block.style;
+
+    // Watch for light mode changes via MutationObserver
+    useEffect(() => {
+        const appElement = document.querySelector('.notes-app');
+        if (!appElement) return;
+
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.attributeName === 'class') {
+                    setIsLightMode(appElement.classList.contains('light-mode'));
+                }
+            }
+        });
+
+        observer.observe(appElement, { attributes: true });
+        return () => observer.disconnect();
+    }, []);
 
     // Close style menu on outside click
     useEffect(() => {
@@ -197,9 +217,6 @@ export const TextBlockComponent = ({
         if (!effectiveBg || effectiveBg === 'transparent') {
             return undefined; // Will use CSS default
         }
-
-        // Check if we're in light mode by looking at the app's class
-        const isLightMode = document.querySelector('.notes-app')?.classList.contains('light-mode');
 
         // Extract RGB values from the background
         const rgbaMatch = effectiveBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
