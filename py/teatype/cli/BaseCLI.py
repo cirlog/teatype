@@ -762,7 +762,7 @@ class BaseCLI(ABC):
         """
         return {
             'name': self.name,
-            'shorthand': self.short,
+            'shorthand': self.shorthand,
             'help': self.help,
             'arguments': self.arguments,
             'flags': self.flags,
