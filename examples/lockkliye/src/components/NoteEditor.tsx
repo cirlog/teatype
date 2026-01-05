@@ -276,7 +276,7 @@ export const NoteEditor = ({
                 <div className='note-editor__content'>
                     <Flipper
                         flipKey={previewOrder ? previewOrder.join('-') : note.blocks.map((b) => b.id).join('-')}
-                        spring={{ stiffness: 400, damping: 25 }}
+                        spring={{ stiffness: 300, damping: 35 }}
                     >
                         {getVisualBlocks().map((block) => {
                             const originalIndex = note.blocks.findIndex((b) => b.id === block.id);
