@@ -36,8 +36,6 @@ class Flag:
                 depends_on:List[str]=None,
                 options:List[any]|type=None,
                 secret:bool=False):
-        print(shorthand)
-        print(name)
         self.help = help
         self.depends_on = depends_on
         self.required = required
