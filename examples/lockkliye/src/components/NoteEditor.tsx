@@ -98,43 +98,110 @@ export const NoteEditor = ({
     const [editingPresetTitle, setEditingPresetTitle] = useState('');
     const [deletePresetIndex, setDeletePresetIndex] = useState<number | null>(null);
     const [draggedBlockIndex, setDraggedBlockIndex] = useState<number | null>(null);
-    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const [previewOrder, setPreviewOrder] = useState<number[] | null>(null);
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [draggedBlockRect, setDraggedBlockRect] = useState<DOMRect | null>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const presetMenuRef = useRef<HTMLDivElement>(null);
+    const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+    const dragGhostRef = useRef<HTMLDivElement>(null);
+
+    // Track mouse position during drag via document listener
+    useEffect(() => {
+        if (!isDragging) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        return () => document.removeEventListener('mousemove', handleMouseMove);
+    }, [isDragging]);
+
+    // Compute the visual order of blocks (with preview reordering)
+    const getVisualBlocks = useCallback(() => {
+        if (!previewOrder) return note.blocks;
+        return previewOrder.map((i) => note.blocks[i]);
+    }, [note.blocks, previewOrder]);
 
     // Handle drag start
-    const handleDragStart = useCallback((index: number) => {
-        setDraggedBlockIndex(index);
-    }, []);
-
-    // Handle drag over
-    const handleDragOver = useCallback(
+    const handleDragStart = useCallback(
         (e: React.DragEvent, index: number) => {
-            e.preventDefault();
-            if (draggedBlockIndex !== null && draggedBlockIndex !== index) {
-                setDragOverIndex(index);
+            const blockId = note.blocks[index]?.id;
+            const blockElement = blockId ? blockRefs.current.get(blockId) : null;
+
+            if (blockElement) {
+                setDraggedBlockRect(blockElement.getBoundingClientRect());
             }
+
+            // Set drag data and effect
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(index));
+
+            // Set a transparent drag image to hide native ghost
+            const img = new Image();
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            e.dataTransfer.setDragImage(img, 0, 0);
+
+            setDraggedBlockIndex(index);
+            setIsDragging(true);
+            setMousePosition({ x: e.clientX, y: e.clientY });
+            // Initialize preview order as current order
+            setPreviewOrder(note.blocks.map((_, i) => i));
         },
-        [draggedBlockIndex]
+        [note.blocks]
     );
 
-    // Handle drop
-    const handleDrop = useCallback(
-        (e: React.DragEvent, toIndex: number) => {
+    // Handle drag over - update preview order for live reordering
+    const handleDragOver = useCallback(
+        (e: React.DragEvent, visualIndex: number) => {
             e.preventDefault();
-            if (draggedBlockIndex !== null && draggedBlockIndex !== toIndex) {
-                onBlockReorder(draggedBlockIndex, toIndex);
+            if (e.clientX !== 0 || e.clientY !== 0) {
+                setMousePosition({ x: e.clientX, y: e.clientY });
+            }
+
+            if (draggedBlockIndex === null || !previewOrder) return;
+
+            // Find where the dragged block currently is in preview order
+            const currentDraggedVisualIndex = previewOrder.indexOf(draggedBlockIndex);
+
+            if (currentDraggedVisualIndex !== visualIndex && currentDraggedVisualIndex !== -1) {
+                // Create new preview order by moving the dragged block
+                const newOrder = [...previewOrder];
+                newOrder.splice(currentDraggedVisualIndex, 1);
+                newOrder.splice(visualIndex, 0, draggedBlockIndex);
+                setPreviewOrder(newOrder);
+            }
+        },
+        [draggedBlockIndex, previewOrder]
+    );
+
+    // Handle drop - apply the final order
+    const handleDrop = useCallback(
+        (e: React.DragEvent) => {
+            e.preventDefault();
+            if (draggedBlockIndex !== null && previewOrder) {
+                // Find where the block ended up
+                const finalIndex = previewOrder.indexOf(draggedBlockIndex);
+                if (finalIndex !== draggedBlockIndex) {
+                    onBlockReorder(draggedBlockIndex, finalIndex);
+                }
             }
             setDraggedBlockIndex(null);
-            setDragOverIndex(null);
+            setPreviewOrder(null);
+            setIsDragging(false);
+            setDraggedBlockRect(null);
         },
-        [draggedBlockIndex, onBlockReorder]
+        [draggedBlockIndex, previewOrder, onBlockReorder]
     );
 
-    // Handle drag end
+    // Handle drag end (cleanup if dropped outside)
     const handleDragEnd = useCallback(() => {
         setDraggedBlockIndex(null);
-        setDragOverIndex(null);
+        setPreviewOrder(null);
+        setIsDragging(false);
+        setDraggedBlockRect(null);
     }, []);
 
     // Close preset menu on outside click
@@ -206,44 +273,99 @@ export const NoteEditor = ({
                     <p className='note-editor__date'>Last edited: {formatDate(note.updatedAt)}</p>
                 </div>
 
-                <div className='note-editor__content'>
-                    <Flipper flipKey={note.blocks.map((b) => b.id).join('-')}>
-                        {note.blocks.map((block, index) => (
-                            <Flipped key={block.id} flipId={block.id}>
-                                <div
-                                    className={`note-editor__block-wrapper ${
-                                        dragOverIndex === index ? 'note-editor__block-wrapper--drag-over' : ''
-                                    } ${draggedBlockIndex === index ? 'note-editor__block-wrapper--dragging' : ''}`}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDrop={(e) => handleDrop(e, index)}
-                                >
+                <div className='note-editor__content' onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
+                    <Flipper
+                        flipKey={previewOrder ? previewOrder.join('-') : note.blocks.map((b) => b.id).join('-')}
+                        spring={{ stiffness: 400, damping: 25 }}
+                    >
+                        {getVisualBlocks().map((block, visualIndex) => {
+                            const originalIndex = note.blocks.findIndex((b) => b.id === block.id);
+                            const isBeingDragged = originalIndex === draggedBlockIndex;
+
+                            return (
+                                <Flipped key={block.id} flipId={block.id}>
                                     <div
-                                        className='note-editor__drag-handle'
-                                        draggable
-                                        onDragStart={() => handleDragStart(index)}
-                                        onDragEnd={handleDragEnd}
-                                        title='Drag to reorder'
+                                        ref={(el) => {
+                                            if (el) blockRefs.current.set(block.id, el);
+                                            else blockRefs.current.delete(block.id);
+                                        }}
+                                        className={`note-editor__block-wrapper ${
+                                            isBeingDragged ? 'note-editor__block-wrapper--dragging' : ''
+                                        }`}
+                                        onDragOver={(e) => handleDragOver(e, visualIndex)}
                                     >
-                                        <span className='note-editor__drag-icon'>⠿</span>
+                                        {/* Drag handle - outside block-content so it stays visible */}
+                                        {!isBeingDragged && (
+                                            <div
+                                                className='note-editor__drag-handle'
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, originalIndex)}
+                                                onDragEnd={handleDragEnd}
+                                                title='Drag to reorder'
+                                            >
+                                                <span className='note-editor__drag-icon'>⠿</span>
+                                            </div>
+                                        )}
+                                        {/* Placeholder for dragged block */}
+                                        {isBeingDragged && isDragging ? (
+                                            <div
+                                                className='note-editor__block-placeholder'
+                                                style={{
+                                                    height: draggedBlockRect ? draggedBlockRect.height : 'auto',
+                                                    minHeight: '80px',
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className='note-editor__block-content'>
+                                                <TextBlockComponent
+                                                    block={block}
+                                                    formatMode={formatMode}
+                                                    selectedColor={selectedColor}
+                                                    selectedSize={selectedSize}
+                                                    confirmDeletions={confirmDeletions}
+                                                    onWordFormatChange={onWordFormatChange}
+                                                    onWordsChange={onWordsChange}
+                                                    onStyleChange={onBlockStyleChange}
+                                                    onDelete={onBlockDelete}
+                                                    onAddBlockAfter={onBlockAdd}
+                                                    onClearFormatMode={onClearFormatMode}
+                                                    onSaveAsPreset={onAddBlockPreset}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                    <TextBlockComponent
-                                        block={block}
-                                        formatMode={formatMode}
-                                        selectedColor={selectedColor}
-                                        selectedSize={selectedSize}
-                                        confirmDeletions={confirmDeletions}
-                                        onWordFormatChange={onWordFormatChange}
-                                        onWordsChange={onWordsChange}
-                                        onStyleChange={onBlockStyleChange}
-                                        onDelete={onBlockDelete}
-                                        onAddBlockAfter={onBlockAdd}
-                                        onClearFormatMode={onClearFormatMode}
-                                        onSaveAsPreset={onAddBlockPreset}
-                                    />
-                                </div>
-                            </Flipped>
-                        ))}
+                                </Flipped>
+                            );
+                        })}
                     </Flipper>
+
+                    {/* Floating ghost block that follows the cursor - exact copy of dragged block */}
+                    {isDragging && draggedBlockIndex !== null && (
+                        <div
+                            ref={dragGhostRef}
+                            className='note-editor__drag-ghost'
+                            style={{
+                                left: mousePosition.x + 15,
+                                top: mousePosition.y - 20,
+                                width: draggedBlockRect ? draggedBlockRect.width : 300,
+                            }}
+                        >
+                            <TextBlockComponent
+                                block={note.blocks[draggedBlockIndex]}
+                                formatMode={null}
+                                selectedColor={selectedColor}
+                                selectedSize={selectedSize}
+                                confirmDeletions={false}
+                                onWordFormatChange={() => {}}
+                                onWordsChange={() => {}}
+                                onStyleChange={() => {}}
+                                onDelete={() => {}}
+                                onAddBlockAfter={() => {}}
+                                onClearFormatMode={() => {}}
+                                onSaveAsPreset={() => {}}
+                            />
+                        </div>
+                    )}
 
                     <div className='note-editor__add-buttons'>
                         <button className='note-editor__add-block' onClick={() => onBlockAdd()}>

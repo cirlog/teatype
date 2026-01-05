@@ -131,26 +131,6 @@ export const TextBlockComponent = ({
         }
     };
 
-    // Extract color from rgba or gradient for border/title
-    const extractPrimaryColor = (colorStr: string | undefined): string | null => {
-        if (!colorStr) return null;
-        // Match rgba(r,g,b,a)
-        const rgbaMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-        if (rgbaMatch) {
-            return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
-        }
-        // Match hex
-        if (colorStr.startsWith('#')) {
-            return colorStr;
-        }
-        // Match gradient - extract first color
-        const gradMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-        if (gradMatch) {
-            return `rgb(${gradMatch[1]}, ${gradMatch[2]}, ${gradMatch[3]})`;
-        }
-        return null;
-    };
-
     // Darken a color for borders
     const darkenColor = (colorStr: string | undefined, amount: number = 0.3): string => {
         if (!colorStr || colorStr === 'transparent') return 'rgba(100, 100, 100, 0.4)';
@@ -211,11 +191,41 @@ export const TextBlockComponent = ({
         return styles;
     };
 
-    // Get title color based on block background
+    // Get title color based on block background - ensure good contrast
     const getTitleColor = (): string | undefined => {
         const effectiveBg = getEffectiveBackground();
-        const primary = extractPrimaryColor(effectiveBg);
-        if (primary) return primary;
+        if (!effectiveBg || effectiveBg === 'transparent') {
+            return undefined; // Will use CSS default
+        }
+
+        // Check if we're in light mode by looking at the app's class
+        const isLightMode = document.querySelector('.notes-app')?.classList.contains('light-mode');
+
+        // Extract RGB values from the background
+        const rgbaMatch = effectiveBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (rgbaMatch) {
+            const r = parseInt(rgbaMatch[1]);
+            const g = parseInt(rgbaMatch[2]);
+            const b = parseInt(rgbaMatch[3]);
+
+            if (isLightMode) {
+                // Light mode: darken the color significantly for better contrast
+                const darkenAmount = 0.35;
+                const darkR = Math.round(r * darkenAmount);
+                const darkG = Math.round(g * darkenAmount);
+                const darkB = Math.round(b * darkenAmount);
+                return `rgb(${darkR}, ${darkG}, ${darkB})`;
+            } else {
+                // Dark mode: brighten/saturate the color for visibility
+                // Keep the hue but make it more vibrant and visible
+                const brightenAmount = 1.3;
+                const brightR = Math.min(255, Math.round(r * brightenAmount));
+                const brightG = Math.min(255, Math.round(g * brightenAmount));
+                const brightB = Math.min(255, Math.round(b * brightenAmount));
+                return `rgb(${brightR}, ${brightG}, ${brightB})`;
+            }
+        }
+
         return undefined; // Will use CSS default
     };
 

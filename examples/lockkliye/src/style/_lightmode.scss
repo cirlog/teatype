@@ -144,8 +144,21 @@
 
     // Block title needs dark text on light background in light mode
     .text-block__title {
-        color: #1d1d1f;
-        background: rgba(255, 255, 255, 0.85);
-        border: 1px solid rgba(0, 0, 0, 0.15);
+        color: #1a1a1a;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        font-weight: 700;
+        text-shadow: none;
+    }
+
+    // Ensure text blocks with colored backgrounds have readable titles
+    .text-block {
+        // For blocks with any background color, use dark text
+        &[style*='background'] .text-block__title,
+        &[style*='Background'] .text-block__title {
+            color: #1a1a1a;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.25);
+        }
     }
 }
