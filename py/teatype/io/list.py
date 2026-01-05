@@ -32,9 +32,9 @@ def merge(list1, list2):
             item (dict): The dictionary item from which to extract the identifier.
         
         Returns:
-            Any: The unique identifier based on 'long' or 'short' keys.
+            Any: The unique identifier based on 'long'/'short' or 'name'/'shorthand' keys.
         """
-        return item.get('long') or item.get('short')
+        return item.get('long') or item.get('short') or item.get('name') or item.get('shorthand')
     
     # Create a mapping from identifier to item for list1, excluding items without an identifier
     list1_map = {get_identifier(item): item for item in list1 if get_identifier(item) is not None}
