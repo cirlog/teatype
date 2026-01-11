@@ -84,7 +84,7 @@
         // polaroidY = (2868 - 1481.7) / 2 - 2868 * 0.03 = 607.1px from top
         // As percentage of screen height: 607.1 / 2868 = 21.2%
         // Polaroid center from top: (607.1 + 1481.7/2) / 2868 = 46.95%
-        
+
         position: absolute;
         top: 47%;
         left: 50%;
@@ -94,7 +94,7 @@
         border-radius: 4px;
         box-shadow: 0 10px 30px $polaroid-shadow, 0 5px 15px rgba(0, 0, 0, 0.2);
         overflow: hidden;
-        
+
         // Use CSS custom properties for screen-relative calculations
         // Screen width = 100%, padding needs to be relative to SCREEN not polaroid
         // 4% of screen = 4/85 = 4.7% of polaroid width
