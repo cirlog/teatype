@@ -236,11 +236,11 @@
 
     &__clock {
         position: absolute;
-        top: 105px;
+        top: 50px;
         left: 50%;
         transform: translateX(-50%);
         font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-        font-size: 80px;
+        font-size: 95px;
         font-weight: 700;
         color: $text-primary;
         letter-spacing: -2px;

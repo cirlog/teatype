@@ -26,7 +26,7 @@ export const WALLPAPER_CONFIG = {
     // ===========================================
 
     /** Polaroid width as percentage of screen width */
-    polaroidWidth: 0.85, // 85%
+    polaroidWidth: 0.90, // 85%
 
     /** Padding on sides and top of polaroid (% of screen width) */
     polaroidPadding: 0.04, // 4%
@@ -35,7 +35,7 @@ export const WALLPAPER_CONFIG = {
     polaroidBottomPadding: 0.12, // 12%
 
     /** Vertical offset from center (negative = up) as % of screen height */
-    polaroidVerticalOffset: -0.03, // 3% up from center
+    polaroidVerticalOffset: 0.05, // 3% up from center
 
     // ===========================================
     // PHOTO SETTINGS
@@ -49,7 +49,7 @@ export const WALLPAPER_CONFIG = {
     // ===========================================
 
     /** Background blur amount in pixels (for canvas) */
-    backgroundBlur: 15,
+    backgroundBlur: 75,
 
     /** Background brightness (0-1) */
     backgroundBrightness: 0.85,
@@ -163,13 +163,18 @@ export function getCSSVariables(config: typeof WALLPAPER_CONFIG = WALLPAPER_CONF
     // Frame: 330px x 717px, Bezel: 12px each side
     // Screen: 306px x 693px
     const previewScreenWidth = 306;
+    const canvasWidth = 1320;
+    const previewScale = previewScreenWidth / canvasWidth;
 
     // Calculate font sizes for preview (proportional to canvas)
-    // Canvas width: 1320px, Preview width: 306px
-    // Scale factor: 306 / 1320 = 0.2318
     const previewTitleFontSize = previewScreenWidth * config.titleFontSize;
     const previewMetaFontSize = previewScreenWidth * config.metaFontSize;
     const previewTitleMetaGap = previewScreenWidth * config.titleMetaGap;
+
+    // Scale blur values for preview (blur is resolution-dependent)
+    const previewBgBlur = config.backgroundBlur * previewScale;
+    const previewPolaroidBgBlur = config.polaroidBackgroundBlur * previewScale;
+    const previewTextureBlur = config.textureBlur * previewScale;
 
     return {
         // Polaroid positioning and size
@@ -177,20 +182,20 @@ export function getCSSVariables(config: typeof WALLPAPER_CONFIG = WALLPAPER_CONF
         '--polaroid-top': `${polaroidTopPercent}%`,
         '--polaroid-padding': `${paddingAsPolaroidPercent}%`,
         '--polaroid-bottom-padding': `${bottomPaddingAsPolaroidPercent}%`,
-        '--polaroid-border-radius': `${config.polaroidBorderRadius}px`,
+        '--polaroid-border-radius': `${config.polaroidBorderRadius * previewScale}px`,
 
-        // Background
-        '--bg-blur': `${config.backgroundBlur}px`,
+        // Background (scaled for preview)
+        '--bg-blur': `${previewBgBlur}px`,
         '--bg-brightness': `${config.backgroundBrightness}`,
         '--bg-scale': `${config.backgroundScale}`,
 
-        // Polaroid background (blurred image gradient)
-        '--polaroid-bg-blur': `${config.polaroidBackgroundBlur}px`,
+        // Polaroid background (blurred image gradient) - scaled for preview
+        '--polaroid-bg-blur': `${previewPolaroidBgBlur}px`,
         '--polaroid-bg-brightness': `${config.polaroidBackgroundBrightness}`,
         '--polaroid-bg-saturation': `${config.polaroidBackgroundSaturation}`,
 
-        // Texture
-        '--texture-blur': `${config.textureBlur}px`,
+        // Texture - scaled for preview
+        '--texture-blur': `${previewTextureBlur}px`,
         '--texture-brightness': `${config.textureBrightness}`,
         '--texture-saturation': `${config.textureSaturation}`,
         '--texture-opacity': `${config.textureOpacity}`,
@@ -209,9 +214,9 @@ export function getCSSVariables(config: typeof WALLPAPER_CONFIG = WALLPAPER_CONF
         '--meta-font-family': config.metaFontFamily,
         '--title-meta-gap': `${previewTitleMetaGap}px`,
 
-        // Shadow
-        '--shadow-blur': `${config.shadowBlur}px`,
-        '--shadow-offset-y': `${config.shadowOffsetY}px`,
+        // Shadow - scaled for preview
+        '--shadow-blur': `${config.shadowBlur * previewScale}px`,
+        '--shadow-offset-y': `${config.shadowOffsetY * previewScale}px`,
     } as const;
 }
 
