@@ -81,8 +81,6 @@
         // photoWidth = 1122 - 52.8*2 = 1016.4px
         // photoHeight = 1016.4 * 1.25 = 1270.5px
         // polaroidHeight = 52.8 + 1270.5 + 158.4 = 1481.7px
-        // polaroidY = (2868 - 1481.7) / 2 - 2868 * 0.03 = 607.1px from top
-        // As percentage of screen height: 607.1 / 2868 = 21.2%
         // Polaroid center from top: (607.1 + 1481.7/2) / 2868 = 46.95%
 
         position: absolute;
@@ -95,13 +93,10 @@
         box-shadow: 0 10px 30px $polaroid-shadow, 0 5px 15px rgba(0, 0, 0, 0.2);
         overflow: hidden;
 
-        // Use CSS custom properties for screen-relative calculations
-        // Screen width = 100%, padding needs to be relative to SCREEN not polaroid
+        // Only top and side padding - bottom is handled by label container
         // 4% of screen = 4/85 = 4.7% of polaroid width
-        // 12% of screen = 12/85 = 14.1% of polaroid width
-        // BUT CSS padding % is based on element width, and our element is 85% of parent
-        // So the math works out: 4.7% of 85% = 4% of screen ✓
-        padding: 4.7% 4.7% 14.1% 4.7%;
+        padding: 4.7%;
+        padding-bottom: 0;
     }
 
     &__polaroid-texture {
@@ -117,7 +112,6 @@
 
     &__polaroid-photo-container {
         position: relative;
-        // Photo takes full width within the padding (no extra margin)
         width: 100%;
         aspect-ratio: 4 / 5;
         flex-shrink: 0;
@@ -161,20 +155,16 @@
     }
 
     &__polaroid-label {
-        // Label sits in the bottom padding area
-        // Add top margin to separate from photo (~4% of polaroid width, same as side padding)
-        margin-top: 4.7%;
+        // Bottom padding area: 12% of screen = 14.1% of polaroid width
+        // This includes the gap from photo + the label content
+        // Canvas draws label at: photoY + photoHeight + polaroidPadding (4% of screen)
+        height: 14.1%;
+        box-sizing: border-box;
+        padding-top: 4.7%; // Same as side padding for gap above label
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 2px;
-        text-align: center;
-    }
-
-    &__polaroid-title {
-        font-family: 'Caveat', cursive;
-        font-size: 28px;
-        font-weight: 600;
+        justify-content: flex-start;
         color: $polaroid-text-primary;
         line-height: 1.2;
     }
