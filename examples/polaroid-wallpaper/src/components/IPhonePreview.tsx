@@ -46,7 +46,12 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter, show
 
                             {/* Polaroid */}
                             <div className='iphone-preview__polaroid'>
-                                {/* Texture overlay - blurred version of photo */}
+                                {/* Blurred background - heavily blurred to look like color gradient */}
+                                <div
+                                    className='iphone-preview__polaroid-background'
+                                    style={{ backgroundImage: `url(${photo.src})` }}
+                                />
+                                {/* Texture overlay - subtle blurred version */}
                                 <div
                                     className='iphone-preview__polaroid-texture'
                                     style={{ backgroundImage: `url(${photo.src})` }}
@@ -82,7 +87,6 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter, show
                                     <div className='iphone-preview__status-bar'>
                                         <span className='iphone-preview__carrier'>WLAN</span>
                                         <div className='iphone-preview__status-icons'>
-                                            <span>📶</span>
                                             <span>📡</span>
                                             <span className='iphone-preview__battery'>🔋 84</span>
                                         </div>

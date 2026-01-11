@@ -71,7 +71,7 @@
         background-position: center;
         // Use CSS variables from shared config
         filter: blur(var(--bg-blur)) brightness(var(--bg-brightness));
-        transform: scale(1.15); // Prevent blur edge artifacts
+        transform: scale(var(--bg-scale, 1.15)); // Prevent blur edge artifacts
     }
 
     &__polaroid {
@@ -80,7 +80,8 @@
         left: 50%;
         transform: translate(-50%, -50%);
         width: var(--polaroid-width, 85%);
-        background: var(--polaroid-bg, #fafafa);
+        // Background is now a blurred image, set via the background element
+        background: transparent;
         border-radius: var(--polaroid-border-radius, 8px);
         box-shadow: 0 var(--shadow-offset-y, 20px) var(--shadow-blur, 60px) var(--shadow-color, rgba(0, 0, 0, 0.5)),
             0 5px 15px rgba(0, 0, 0, 0.2);
@@ -88,6 +89,18 @@
         // Use CSS variables for padding
         padding: var(--polaroid-padding, 4.7%);
         padding-bottom: 0;
+    }
+
+    &__polaroid-background {
+        // Heavily blurred image that looks like a color gradient
+        position: absolute;
+        inset: -30%; // Extend well beyond bounds
+        background-size: cover;
+        background-position: center;
+        filter: blur(var(--polaroid-bg-blur)) brightness(var(--polaroid-bg-brightness))
+            saturate(var(--polaroid-bg-saturation));
+        pointer-events: none;
+        z-index: 0;
     }
 
     &__polaroid-texture {
@@ -156,26 +169,23 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        gap: 4px;
+        gap: var(--title-meta-gap, 4px);
         z-index: 1;
     }
 
     &__polaroid-title {
-        // Font size from shared config - scales with screen
-        // Canvas uses: width * 0.038 = 50px at 1320px
-        // Preview screen ~306px, so 306 * 0.038 = 11.6px (we need to scale up for preview)
-        // Using a fixed size that looks proportional in the preview
+        // Font size from shared config - uses CSS variable
         font-family: var(--title-font-family, 'Caveat', cursive);
-        font-size: 24px; // Scaled for preview (actual export will use canvas calculation)
+        font-size: var(--title-font-size, 24px);
         font-weight: var(--title-font-weight, 600);
         color: var(--title-color, #1a1a1a);
         line-height: 1.2;
     }
 
     &__polaroid-meta {
-        // Canvas uses: width * 0.022 = 29px at 1320px
+        // Meta font from shared config - uses CSS variable
         font-family: var(--meta-font-family, 'Inter', sans-serif);
-        font-size: 12px; // Scaled for preview
+        font-size: var(--meta-font-size, 12px);
         font-weight: var(--meta-font-weight, 400);
         color: var(--meta-color, #666666);
         line-height: 1.3;
@@ -214,7 +224,7 @@
 
     &__date {
         position: absolute;
-        top: 80px;
+        top: 60px;
         left: 50%;
         transform: translateX(-50%);
         font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;

@@ -109,11 +109,18 @@ export async function generateWallpaperCanvas(
     ctx.fillRect(0, 0, width, height);
 
     // Draw blurred, darkened background (full screen)
-    // Scale up slightly to prevent blur edge artifacts
+    // Scale using config value to prevent blur edge artifacts
     ctx.save();
     ctx.filter = `blur(${WALLPAPER_CONFIG.backgroundBlur}px) brightness(${WALLPAPER_CONFIG.backgroundBrightness})`;
-    const blurMargin = 100; // Extra margin to prevent edge bleeding
-    drawImageCover(ctx, img, -blurMargin, -blurMargin, width + blurMargin * 2, height + blurMargin * 2);
+
+    // Calculate scaled dimensions based on backgroundScale config
+    const scale = WALLPAPER_CONFIG.backgroundScale;
+    const scaledWidth = width * scale;
+    const scaledHeight = height * scale;
+    const offsetX = (width - scaledWidth) / 2;
+    const offsetY = (height - scaledHeight) / 2;
+
+    drawImageCover(ctx, img, offsetX, offsetY, scaledWidth, scaledHeight);
     ctx.filter = 'none';
     ctx.restore();
 
@@ -140,8 +147,8 @@ export async function generateWallpaperCanvas(
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = WALLPAPER_CONFIG.shadowOffsetY;
 
-    // Draw white polaroid frame
-    ctx.fillStyle = WALLPAPER_CONFIG.polaroidBackground;
+    // Draw polaroid shape for shadow (will be covered by blurred background)
+    ctx.fillStyle = '#ffffff';
     roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, WALLPAPER_CONFIG.polaroidBorderRadius);
     ctx.fill();
 
@@ -151,7 +158,17 @@ export async function generateWallpaperCanvas(
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
-    // Add subtle texture to polaroid using blurred image
+    // Draw polaroid background - heavily blurred image that looks like color gradient
+    ctx.save();
+    ctx.beginPath();
+    roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, WALLPAPER_CONFIG.polaroidBorderRadius);
+    ctx.clip();
+    ctx.filter = `blur(${WALLPAPER_CONFIG.polaroidBackgroundBlur}px) brightness(${WALLPAPER_CONFIG.polaroidBackgroundBrightness}) saturate(${WALLPAPER_CONFIG.polaroidBackgroundSaturation})`;
+    const bgMargin = 100; // Extra margin for blur
+    drawImageCover(ctx, img, polaroidX - bgMargin, polaroidY - bgMargin, polaroidWidth + bgMargin * 2, polaroidHeight + bgMargin * 2);
+    ctx.restore();
+
+    // Add subtle texture overlay on top of the gradient background
     ctx.save();
     ctx.beginPath();
     roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, WALLPAPER_CONFIG.polaroidBorderRadius);

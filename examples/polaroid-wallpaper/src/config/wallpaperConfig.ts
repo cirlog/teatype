@@ -54,6 +54,9 @@ export const WALLPAPER_CONFIG = {
     /** Background brightness (0-1) */
     backgroundBrightness: 0.85,
 
+    /** Background scale factor to prevent blur edge artifacts */
+    backgroundScale: 2,
+
     // ===========================================
     // POLAROID TEXTURE OVERLAY
     // ===========================================
@@ -71,11 +74,21 @@ export const WALLPAPER_CONFIG = {
     textureOpacity: 0.12,
 
     // ===========================================
-    // COLORS
+    // POLAROID BACKGROUND (blurred image as gradient)
     // ===========================================
 
-    /** Polaroid frame background color */
-    polaroidBackground: '#fafafa',
+    /** Polaroid background blur - high value makes it look like a color gradient */
+    polaroidBackgroundBlur: 100,
+
+    /** Polaroid background brightness */
+    polaroidBackgroundBrightness: 2.5,
+
+    /** Polaroid background saturation (lower = more muted/pastel) */
+    polaroidBackgroundSaturation: 1,
+
+    // ===========================================
+    // COLORS
+    // ===========================================
 
     /** Title text color */
     titleColor: '#1a1a1a',
@@ -146,13 +159,17 @@ export function getCSSVariables(config: typeof WALLPAPER_CONFIG = WALLPAPER_CONF
     // As percentage: 50% - offset% (but we need to account for transform)
     const polaroidTopPercent = 50 + (config.polaroidVerticalOffset * 100);
 
-    // Font sizes relative to polaroid width (for CSS)
-    // In canvas: fontSize = screenWidth * ratio
-    // In CSS: fontSize = polaroidWidth * (ratio / polaroidWidthRatio)
-    // But polaroid is 85% of screen, so: fontSize = screenWidth * 0.85 * adjustedRatio
-    // We want same visual size, so in CSS with polaroid as reference:
-    // adjustedRatio = ratio / 0.85 (but then polaroid is % of screen...)
-    // Actually simpler: use vw units in CSS based on screen width
+    // Preview screen dimensions (inside iPhone frame)
+    // Frame: 330px x 717px, Bezel: 12px each side
+    // Screen: 306px x 693px
+    const previewScreenWidth = 306;
+
+    // Calculate font sizes for preview (proportional to canvas)
+    // Canvas width: 1320px, Preview width: 306px
+    // Scale factor: 306 / 1320 = 0.2318
+    const previewTitleFontSize = previewScreenWidth * config.titleFontSize;
+    const previewMetaFontSize = previewScreenWidth * config.metaFontSize;
+    const previewTitleMetaGap = previewScreenWidth * config.titleMetaGap;
 
     return {
         // Polaroid positioning and size
@@ -165,6 +182,12 @@ export function getCSSVariables(config: typeof WALLPAPER_CONFIG = WALLPAPER_CONF
         // Background
         '--bg-blur': `${config.backgroundBlur}px`,
         '--bg-brightness': `${config.backgroundBrightness}`,
+        '--bg-scale': `${config.backgroundScale}`,
+
+        // Polaroid background (blurred image gradient)
+        '--polaroid-bg-blur': `${config.polaroidBackgroundBlur}px`,
+        '--polaroid-bg-brightness': `${config.polaroidBackgroundBrightness}`,
+        '--polaroid-bg-saturation': `${config.polaroidBackgroundSaturation}`,
 
         // Texture
         '--texture-blur': `${config.textureBlur}px`,
@@ -173,24 +196,18 @@ export function getCSSVariables(config: typeof WALLPAPER_CONFIG = WALLPAPER_CONF
         '--texture-opacity': `${config.textureOpacity}`,
 
         // Colors
-        '--polaroid-bg': config.polaroidBackground,
         '--title-color': config.titleColor,
         '--meta-color': config.metaColor,
         '--shadow-color': config.shadowColor,
 
-        // Typography - using the polaroid-relative calculation
-        // Preview screen width ≈ 306px, so we scale fonts proportionally
-        // Canvas at 1320px: title = 1320 * 0.038 = 50.16px
-        // Preview at 306px: title = 306 * 0.038 = 11.6px (too small!)
-        // We need to use a ratio that works for the preview
-        // Since preview screen is inside the polaroid parent, use em or calculate
-        '--title-font-size': `${config.titleFontSize * 100}vw`,
+        // Typography - calculated for preview screen width (306px)
+        '--title-font-size': `${previewTitleFontSize}px`,
         '--title-font-weight': `${config.titleFontWeight}`,
         '--title-font-family': config.titleFontFamily,
-        '--meta-font-size': `${config.metaFontSize * 100}vw`,
+        '--meta-font-size': `${previewMetaFontSize}px`,
         '--meta-font-weight': `${config.metaFontWeight}`,
         '--meta-font-family': config.metaFontFamily,
-        '--title-meta-gap': `${config.titleMetaGap * 100}vw`,
+        '--title-meta-gap': `${previewTitleMetaGap}px`,
 
         // Shadow
         '--shadow-blur': `${config.shadowBlur}px`,
