@@ -42,7 +42,10 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter, show
 
                             {/* Polaroid */}
                             <div className='iphone-preview__polaroid'>
-                                <div className='iphone-preview__polaroid-top' />
+                                <div
+                                    className='iphone-preview__polaroid-texture'
+                                    style={{ backgroundImage: `url(${photo.src})` }}
+                                />
                                 <div className='iphone-preview__polaroid-photo-container'>
                                     <div
                                         className={`iphone-preview__polaroid-photo ${

@@ -116,10 +116,10 @@ export async function generateWallpaperCanvas(
     ctx.restore();
 
     // Calculate polaroid dimensions
-    // Top padding needs to be large enough to fit: date line + clock
+    // No top padding - clock sits above the polaroid
     const polaroidWidth = width * 0.85;
     const polaroidPadding = width * 0.04;
-    const polaroidTopPadding = width * 0.22; // Large space for clock
+    const polaroidTopPadding = polaroidPadding; // Same as side padding
     const polaroidBottomPadding = width * 0.12;
 
     // Photo area dimensions
@@ -149,6 +149,17 @@ export async function generateWallpaperCanvas(
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
+
+    // Add subtle texture to polaroid using blurred image
+    ctx.save();
+    ctx.beginPath();
+    roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, 8);
+    ctx.clip();
+    ctx.globalAlpha = 0.12;
+    ctx.filter = 'blur(40px) brightness(1.5) saturate(0.3)';
+    const textureMargin = 50;
+    drawImageCover(ctx, img, polaroidX - textureMargin, polaroidY - textureMargin, polaroidWidth + textureMargin * 2, polaroidHeight + textureMargin * 2);
+    ctx.restore();
 
     // Draw photo with filter
     const photoX = polaroidX + polaroidPadding;

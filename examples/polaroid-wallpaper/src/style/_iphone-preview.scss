@@ -69,33 +69,57 @@
         inset: 0;
         background-size: cover;
         background-position: center;
-        filter: blur(0.85rem) brightness(0.85);
-        transform: scale(1.1); // Prevent blur edge artifacts
+        filter: blur(1.5rem) brightness(0.4); // Match canvas: blur(50px) brightness(0.4)
+        transform: scale(1.15); // Prevent blur edge artifacts
     }
 
     &__polaroid {
+        // Canvas calculations at 1320x2868:
+        // polaroidWidth = 1320 * 0.85 = 1122px
+        // polaroidPadding = 1320 * 0.04 = 52.8px (sides + top)
+        // polaroidBottomPadding = 1320 * 0.12 = 158.4px
+        // photoWidth = 1122 - 52.8*2 = 1016.4px
+        // photoHeight = 1016.4 * 1.25 = 1270.5px
+        // polaroidHeight = 52.8 + 1270.5 + 158.4 = 1481.7px
+        // polaroidY = (2868 - 1481.7) / 2 - 2868 * 0.03 = 607.1px from top
+        // As percentage of screen height: 607.1 / 2868 = 21.2%
+        // Polaroid center from top: (607.1 + 1481.7/2) / 2868 = 46.95%
+        
         position: absolute;
-        top: 47%; // Offset slightly up to leave room for bottom buttons
+        top: 47%;
         left: 50%;
         transform: translate(-50%, -50%);
         width: 85%;
         background: $polaroid-white;
         border-radius: 4px;
         box-shadow: 0 10px 30px $polaroid-shadow, 0 5px 15px rgba(0, 0, 0, 0.2);
-        display: flex;
-        flex-direction: column;
+        overflow: hidden;
+        
+        // Use CSS custom properties for screen-relative calculations
+        // Screen width = 100%, padding needs to be relative to SCREEN not polaroid
+        // 4% of screen = 4/85 = 4.7% of polaroid width
+        // 12% of screen = 12/85 = 14.1% of polaroid width
+        // BUT CSS padding % is based on element width, and our element is 85% of parent
+        // So the math works out: 4.7% of 85% = 4% of screen ✓
+        padding: 4.7% 4.7% 14.1% 4.7%;
     }
 
-    &__polaroid-top {
-        height: 22%; // Large space for date + clock
-        flex-shrink: 0;
+    &__polaroid-texture {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        filter: blur(30px) brightness(1.4) saturate(0.3);
+        opacity: 0.15;
+        transform: scale(1.2);
+        pointer-events: none;
     }
 
     &__polaroid-photo-container {
         position: relative;
-        width: calc(100% - 12px);
+        // Photo takes full width within the padding (no extra margin)
+        width: 100%;
         aspect-ratio: 4 / 5;
-        margin: 0 6px;
         flex-shrink: 0;
         overflow: hidden;
     }
@@ -137,11 +161,13 @@
     }
 
     &__polaroid-label {
-        padding: 20px 12px 26px;
+        // Label sits in the bottom padding area
+        // Add top margin to separate from photo (~4% of polaroid width, same as side padding)
+        margin-top: 4.7%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 4px;
+        gap: 2px;
         text-align: center;
     }
 
