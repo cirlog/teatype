@@ -69,45 +69,37 @@
         inset: 0;
         background-size: cover;
         background-position: center;
-        filter: blur(1.5rem) brightness(0.4); // Match canvas: blur(50px) brightness(0.4)
+        // Use CSS variables from shared config
+        filter: blur(var(--bg-blur)) brightness(var(--bg-brightness));
         transform: scale(1.15); // Prevent blur edge artifacts
     }
 
     &__polaroid {
-        // Canvas calculations at 1320x2868:
-        // polaroidWidth = 1320 * 0.85 = 1122px
-        // polaroidPadding = 1320 * 0.04 = 52.8px (sides + top)
-        // polaroidBottomPadding = 1320 * 0.12 = 158.4px
-        // photoWidth = 1122 - 52.8*2 = 1016.4px
-        // photoHeight = 1016.4 * 1.25 = 1270.5px
-        // polaroidHeight = 52.8 + 1270.5 + 158.4 = 1481.7px
-        // Polaroid center from top: (607.1 + 1481.7/2) / 2868 = 46.95%
-
         position: absolute;
-        top: 47%;
+        top: var(--polaroid-top, 47%);
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 85%;
-        background: $polaroid-white;
-        border-radius: 4px;
-        box-shadow: 0 10px 30px $polaroid-shadow, 0 5px 15px rgba(0, 0, 0, 0.2);
+        width: var(--polaroid-width, 85%);
+        background: var(--polaroid-bg, #fafafa);
+        border-radius: var(--polaroid-border-radius, 8px);
+        box-shadow: 0 var(--shadow-offset-y, 20px) var(--shadow-blur, 60px) var(--shadow-color, rgba(0, 0, 0, 0.5)),
+            0 5px 15px rgba(0, 0, 0, 0.2);
         overflow: hidden;
-
-        // Only top and side padding - bottom is handled by label container
-        // 4% of screen = 4/85 = 4.7% of polaroid width
-        padding: 4.7%;
+        // Use CSS variables for padding
+        padding: var(--polaroid-padding, 4.7%);
         padding-bottom: 0;
     }
 
     &__polaroid-texture {
         position: absolute;
-        inset: 0;
+        inset: -20%; // Extend beyond bounds to prevent edges showing
         background-size: cover;
         background-position: center;
-        filter: blur(30px) brightness(1.4) saturate(0.3);
-        opacity: 0.15;
-        transform: scale(1.2);
+        filter: blur(var(--texture-blur, 40px)) brightness(var(--texture-brightness, 1.5))
+            saturate(var(--texture-saturation, 0.3));
+        opacity: var(--texture-opacity, 0.12);
         pointer-events: none;
+        z-index: 0;
     }
 
     &__polaroid-photo-container {
@@ -116,6 +108,7 @@
         aspect-ratio: 4 / 5;
         flex-shrink: 0;
         overflow: hidden;
+        z-index: 1;
     }
 
     &__polaroid-photo {
@@ -156,23 +149,35 @@
 
     &__polaroid-label {
         // Bottom padding area: 12% of screen = 14.1% of polaroid width
-        // This includes the gap from photo + the label content
-        // Canvas draws label at: photoY + photoHeight + polaroidPadding (4% of screen)
-        height: 14.1%;
+        height: var(--polaroid-bottom-padding, 14.1%);
         box-sizing: border-box;
-        padding-top: 4.7%; // Same as side padding for gap above label
+        padding-top: var(--polaroid-padding, 4.7%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        color: $polaroid-text-primary;
+        gap: 4px;
+        z-index: 1;
+    }
+
+    &__polaroid-title {
+        // Font size from shared config - scales with screen
+        // Canvas uses: width * 0.038 = 50px at 1320px
+        // Preview screen ~306px, so 306 * 0.038 = 11.6px (we need to scale up for preview)
+        // Using a fixed size that looks proportional in the preview
+        font-family: var(--title-font-family, 'Caveat', cursive);
+        font-size: 24px; // Scaled for preview (actual export will use canvas calculation)
+        font-weight: var(--title-font-weight, 600);
+        color: var(--title-color, #1a1a1a);
         line-height: 1.2;
     }
 
     &__polaroid-meta {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        color: $polaroid-text-secondary;
+        // Canvas uses: width * 0.022 = 29px at 1320px
+        font-family: var(--meta-font-family, 'Inter', sans-serif);
+        font-size: 12px; // Scaled for preview
+        font-weight: var(--meta-font-weight, 400);
+        color: var(--meta-color, #666666);
         line-height: 1.3;
     }
 

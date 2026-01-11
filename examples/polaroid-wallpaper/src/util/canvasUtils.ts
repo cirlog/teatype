@@ -13,7 +13,9 @@
  * all copies or substantial portions of the Software.
  */
 
+// Types
 import { IPHONE_16_PRO_MAX, type iPhotoData, type iExportSettings } from '@/types';
+import { WALLPAPER_CONFIG } from '@/config/wallpaperConfig';
 
 /**
  * Apply polaroid filter to an image
@@ -109,39 +111,38 @@ export async function generateWallpaperCanvas(
     // Draw blurred, darkened background (full screen)
     // Scale up slightly to prevent blur edge artifacts
     ctx.save();
-    ctx.filter = 'blur(50px) brightness(0.4)';
+    ctx.filter = `blur(${WALLPAPER_CONFIG.backgroundBlur}px) brightness(${WALLPAPER_CONFIG.backgroundBrightness})`;
     const blurMargin = 100; // Extra margin to prevent edge bleeding
     drawImageCover(ctx, img, -blurMargin, -blurMargin, width + blurMargin * 2, height + blurMargin * 2);
     ctx.filter = 'none';
     ctx.restore();
 
-    // Calculate polaroid dimensions
-    // No top padding - clock sits above the polaroid
-    const polaroidWidth = width * 0.85;
-    const polaroidPadding = width * 0.04;
+    // Calculate polaroid dimensions using shared config
+    const polaroidWidth = width * WALLPAPER_CONFIG.polaroidWidth;
+    const polaroidPadding = width * WALLPAPER_CONFIG.polaroidPadding;
     const polaroidTopPadding = polaroidPadding; // Same as side padding
-    const polaroidBottomPadding = width * 0.12;
+    const polaroidBottomPadding = width * WALLPAPER_CONFIG.polaroidBottomPadding;
 
     // Photo area dimensions
     const photoWidth = polaroidWidth - polaroidPadding * 2;
-    const photoHeight = photoWidth * (5 / 4); // 4:5 aspect ratio
+    const photoHeight = photoWidth / WALLPAPER_CONFIG.photoAspectRatio; // 4:5 aspect ratio
 
     // Total polaroid height
     const polaroidHeight = polaroidTopPadding + photoHeight + polaroidBottomPadding;
 
-    // Position polaroid - offset slightly towards top to leave room for bottom buttons
+    // Position polaroid - offset using config value
     const polaroidX = (width - polaroidWidth) / 2;
-    const polaroidY = (height - polaroidHeight) / 2 - height * 0.03;
+    const polaroidY = (height - polaroidHeight) / 2 + height * WALLPAPER_CONFIG.polaroidVerticalOffset;
 
     // Draw polaroid shadow
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 60;
+    ctx.shadowColor = WALLPAPER_CONFIG.shadowColor;
+    ctx.shadowBlur = WALLPAPER_CONFIG.shadowBlur;
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 20;
+    ctx.shadowOffsetY = WALLPAPER_CONFIG.shadowOffsetY;
 
     // Draw white polaroid frame
-    ctx.fillStyle = '#fafafa';
-    roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, 8);
+    ctx.fillStyle = WALLPAPER_CONFIG.polaroidBackground;
+    roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, WALLPAPER_CONFIG.polaroidBorderRadius);
     ctx.fill();
 
     // Reset shadow
@@ -153,10 +154,10 @@ export async function generateWallpaperCanvas(
     // Add subtle texture to polaroid using blurred image
     ctx.save();
     ctx.beginPath();
-    roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, 8);
+    roundRect(ctx, polaroidX, polaroidY, polaroidWidth, polaroidHeight, WALLPAPER_CONFIG.polaroidBorderRadius);
     ctx.clip();
-    ctx.globalAlpha = 0.12;
-    ctx.filter = 'blur(40px) brightness(1.5) saturate(0.3)';
+    ctx.globalAlpha = WALLPAPER_CONFIG.textureOpacity;
+    ctx.filter = `blur(${WALLPAPER_CONFIG.textureBlur}px) brightness(${WALLPAPER_CONFIG.textureBrightness}) saturate(${WALLPAPER_CONFIG.textureSaturation})`;
     const textureMargin = 50;
     drawImageCover(ctx, img, polaroidX - textureMargin, polaroidY - textureMargin, polaroidWidth + textureMargin * 2, polaroidHeight + textureMargin * 2);
     ctx.restore();
@@ -188,21 +189,21 @@ export async function generateWallpaperCanvas(
     const labelY = photoY + photoHeight + polaroidPadding;
     const labelCenterX = polaroidX + polaroidWidth / 2;
 
-    // Title (handwritten style - we'll use a nice font in CSS, here we simulate)
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = `600 ${width * 0.038}px 'Caveat', cursive`;
+    // Title (handwritten style)
+    ctx.fillStyle = WALLPAPER_CONFIG.titleColor;
+    ctx.font = `${WALLPAPER_CONFIG.titleFontWeight} ${width * WALLPAPER_CONFIG.titleFontSize}px ${WALLPAPER_CONFIG.titleFontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(photo.metadata.title || 'Untitled', labelCenterX, labelY);
 
     // Date and location
-    ctx.font = `400 ${width * 0.022}px 'Inter', sans-serif`;
-    ctx.fillStyle = '#666666';
+    ctx.font = `${WALLPAPER_CONFIG.metaFontWeight} ${width * WALLPAPER_CONFIG.metaFontSize}px ${WALLPAPER_CONFIG.metaFontFamily}`;
+    ctx.fillStyle = WALLPAPER_CONFIG.metaColor;
 
     const dateLocationText = [photo.metadata.date, photo.metadata.location].filter(Boolean).join(' • ');
 
     if (dateLocationText) {
-        ctx.fillText(dateLocationText, labelCenterX, labelY + width * 0.055);
+        ctx.fillText(dateLocationText, labelCenterX, labelY + width * WALLPAPER_CONFIG.titleMetaGap);
     }
 
     return canvas;

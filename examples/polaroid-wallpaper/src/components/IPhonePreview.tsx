@@ -13,8 +13,9 @@
  * all copies or substantial portions of the Software.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { getCSSVariables, WALLPAPER_CONFIG } from '@/config/wallpaperConfig';
 import type { iPhotoData } from '@/types';
 
 interface iIPhonePreviewProps {
@@ -24,8 +25,11 @@ interface iIPhonePreviewProps {
 }
 
 const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter, showOverlay }) => {
+    // Get CSS variables from shared config
+    const cssVariables = useMemo(() => getCSSVariables(WALLPAPER_CONFIG), []);
+
     return (
-        <div className='iphone-preview'>
+        <div className='iphone-preview' style={cssVariables as React.CSSProperties}>
             <div className='iphone-preview__frame'>
                 {/* Dynamic Island */}
                 {showOverlay && <div className='iphone-preview__dynamic-island' />}
@@ -42,6 +46,7 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter, show
 
                             {/* Polaroid */}
                             <div className='iphone-preview__polaroid'>
+                                {/* Texture overlay - blurred version of photo */}
                                 <div
                                     className='iphone-preview__polaroid-texture'
                                     style={{ backgroundImage: `url(${photo.src})` }}
