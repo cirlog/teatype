@@ -24,6 +24,7 @@ import usePhotoStore from '@/hooks/usePhotoStore';
 const WallpaperApp: React.FC = () => {
     const store = usePhotoStore();
     const [applyFilter, setApplyFilter] = useState(true);
+    const [showOverlay, setShowOverlay] = useState(true);
 
     const handleFileSelect = async (file: File) => {
         try {
@@ -63,11 +64,13 @@ const WallpaperApp: React.FC = () => {
                         photo={store.activePhoto}
                         applyFilter={applyFilter}
                         onFilterToggle={() => setApplyFilter(!applyFilter)}
+                        showOverlay={showOverlay}
+                        onOverlayToggle={() => setShowOverlay(!showOverlay)}
                     />
                 </div>
 
                 <div className='wallpaper-app__preview'>
-                    <IPhonePreview photo={store.activePhoto} applyFilter={applyFilter} />
+                    <IPhonePreview photo={store.activePhoto} applyFilter={applyFilter} showOverlay={showOverlay} />
                 </div>
             </main>
 

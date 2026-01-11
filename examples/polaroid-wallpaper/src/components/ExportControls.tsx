@@ -22,9 +22,17 @@ interface iExportControlsProps {
     photo: iPhotoData | null;
     applyFilter: boolean;
     onFilterToggle: () => void;
+    showOverlay: boolean;
+    onOverlayToggle: () => void;
 }
 
-const ExportControls: React.FC<iExportControlsProps> = ({ photo, applyFilter, onFilterToggle }) => {
+const ExportControls: React.FC<iExportControlsProps> = ({
+    photo,
+    applyFilter,
+    onFilterToggle,
+    showOverlay,
+    onOverlayToggle,
+}) => {
     const [isExporting, setIsExporting] = useState(false);
     const [exportSettings, setExportSettings] = useState<iExportSettings>({
         quality: 1,
@@ -57,6 +65,14 @@ const ExportControls: React.FC<iExportControlsProps> = ({ photo, applyFilter, on
                     <span>Apply Polaroid Filter</span>
                 </label>
                 <p className='export-controls__hint'>Adds a warm, slightly faded vintage look</p>
+            </div>
+
+            <div className='export-controls__option'>
+                <label className='export-controls__checkbox'>
+                    <input type='checkbox' checked={showOverlay} onChange={onOverlayToggle} />
+                    <span>Show iPhone Overlay</span>
+                </label>
+                <p className='export-controls__hint'>Shows clock, notch, and buttons for preview</p>
             </div>
 
             <div className='export-controls__option'>

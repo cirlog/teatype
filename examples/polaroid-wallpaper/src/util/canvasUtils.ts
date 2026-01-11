@@ -47,6 +47,41 @@ function applyPolaroidFilter(ctx: CanvasRenderingContext2D, width: number, heigh
 }
 
 /**
+ * Apply gloss overlay effect
+ * Creates a shine/reflection effect like glossy photo paper
+ */
+function applyGlossOverlay(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    // Create gradient for gloss effect
+    const gradient = ctx.createLinearGradient(0, 0, width, height * 0.6);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
+    gradient.addColorStop(0.6, 'transparent');
+    gradient.addColorStop(0.99, 'rgba(0, 0, 0, 0.25)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+}
+
+/**
+ * Apply grain/noise overlay effect
+ * Creates a film grain texture for vintage look
+ */
+function applyGrainOverlay(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    const grainIntensity = 12; // Lower = subtler grain
+
+    for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * grainIntensity;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise)); // Red
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise)); // Green
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise)); // Blue
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+}
+
+/**
  * Generate wallpaper canvas from photo data
  * @param photo - Photo data to generate wallpaper from
  * @param applyFilter - Whether to apply polaroid filter
@@ -67,16 +102,25 @@ export async function generateWallpaperCanvas(
     // Load the image
     const img = await loadImage(photo.src);
 
+    // Fill canvas with black first to prevent white edge bleeding from blur
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, width, height);
+
     // Draw blurred, darkened background (full screen)
+    // Scale up slightly to prevent blur edge artifacts
+    ctx.save();
     ctx.filter = 'blur(50px) brightness(0.4)';
-    drawImageCover(ctx, img, 0, 0, width, height);
+    const blurMargin = 100; // Extra margin to prevent edge bleeding
+    drawImageCover(ctx, img, -blurMargin, -blurMargin, width + blurMargin * 2, height + blurMargin * 2);
     ctx.filter = 'none';
+    ctx.restore();
 
     // Calculate polaroid dimensions
+    // Top padding needs to be large enough to fit: date line + clock
     const polaroidWidth = width * 0.85;
     const polaroidPadding = width * 0.04;
-    const polaroidTopPadding = width * 0.06;
-    const polaroidBottomPadding = width * 0.14;
+    const polaroidTopPadding = width * 0.22; // Large space for clock
+    const polaroidBottomPadding = width * 0.12;
 
     // Photo area dimensions
     const photoWidth = polaroidWidth - polaroidPadding * 2;
@@ -85,9 +129,9 @@ export async function generateWallpaperCanvas(
     // Total polaroid height
     const polaroidHeight = polaroidTopPadding + photoHeight + polaroidBottomPadding;
 
-    // Center polaroid on screen
+    // Position polaroid - offset slightly towards top to leave room for bottom buttons
     const polaroidX = (width - polaroidWidth) / 2;
-    const polaroidY = (height - polaroidHeight) / 2;
+    const polaroidY = (height - polaroidHeight) / 2 - height * 0.03;
 
     // Draw polaroid shadow
     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -119,9 +163,11 @@ export async function generateWallpaperCanvas(
     // Draw image to fill photo area
     drawImageCover(photoCtx, img, 0, 0, photoWidth, photoHeight);
 
-    // Apply polaroid filter if enabled
+    // Apply polaroid filter if enabled (includes gloss and grain)
     if (applyFilter) {
         applyPolaroidFilter(photoCtx, photoWidth, photoHeight);
+        applyGlossOverlay(photoCtx, photoWidth, photoHeight);
+        applyGrainOverlay(photoCtx, photoWidth, photoHeight);
     }
 
     // Draw the photo onto main canvas

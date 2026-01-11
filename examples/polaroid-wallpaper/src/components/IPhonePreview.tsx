@@ -20,14 +20,15 @@ import type { iPhotoData } from '@/types';
 interface iIPhonePreviewProps {
     photo: iPhotoData | null;
     applyFilter: boolean;
+    showOverlay: boolean;
 }
 
-const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter }) => {
+const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter, showOverlay }) => {
     return (
         <div className='iphone-preview'>
             <div className='iphone-preview__frame'>
                 {/* Dynamic Island */}
-                <div className='iphone-preview__dynamic-island' />
+                {showOverlay && <div className='iphone-preview__dynamic-island' />}
 
                 {/* Screen content */}
                 <div className='iphone-preview__screen'>
@@ -42,12 +43,20 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter }) =>
                             {/* Polaroid */}
                             <div className='iphone-preview__polaroid'>
                                 <div className='iphone-preview__polaroid-top' />
-                                <div
-                                    className={`iphone-preview__polaroid-photo ${
-                                        applyFilter ? 'iphone-preview__polaroid-photo--filtered' : ''
-                                    }`}
-                                    style={{ backgroundImage: `url(${photo.src})` }}
-                                />
+                                <div className='iphone-preview__polaroid-photo-container'>
+                                    <div
+                                        className={`iphone-preview__polaroid-photo ${
+                                            applyFilter ? 'iphone-preview__polaroid-photo--filtered' : ''
+                                        }`}
+                                        style={{ backgroundImage: `url(${photo.src})` }}
+                                    />
+                                    {applyFilter && (
+                                        <>
+                                            <div className='iphone-preview__polaroid-gloss' />
+                                            <div className='iphone-preview__polaroid-grain' />
+                                        </>
+                                    )}
+                                </div>
                                 <div className='iphone-preview__polaroid-label'>
                                     <span className='iphone-preview__polaroid-title'>
                                         {photo.metadata.title || 'Untitled'}
@@ -58,8 +67,33 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter }) =>
                                 </div>
                             </div>
 
-                            {/* Time overlay (for preview) */}
-                            <div className='iphone-preview__time'>9:41</div>
+                            {/* iPhone Overlay Elements */}
+                            {showOverlay && (
+                                <>
+                                    {/* Status bar */}
+                                    <div className='iphone-preview__status-bar'>
+                                        <span className='iphone-preview__carrier'>WLAN</span>
+                                        <div className='iphone-preview__status-icons'>
+                                            <span>📶</span>
+                                            <span>📡</span>
+                                            <span className='iphone-preview__battery'>🔋 84</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Date */}
+                                    <div className='iphone-preview__date'>So. 11. KW2</div>
+
+                                    {/* Clock */}
+                                    <div className='iphone-preview__clock'>10:58</div>
+
+                                    {/* Bottom buttons */}
+                                    <div className='iphone-preview__bottom-bar'>
+                                        <div className='iphone-preview__bottom-button'>🔦</div>
+                                        <div className='iphone-preview__focus-mode'>🌙 Nicht stören</div>
+                                        <div className='iphone-preview__bottom-button'>📷</div>
+                                    </div>
+                                </>
+                            )}
                         </>
                     ) : (
                         <div className='iphone-preview__empty'>
@@ -69,7 +103,7 @@ const IPhonePreview: React.FC<iIPhonePreviewProps> = ({ photo, applyFilter }) =>
                 </div>
 
                 {/* Home indicator */}
-                <div className='iphone-preview__home-indicator' />
+                {showOverlay && <div className='iphone-preview__home-indicator' />}
             </div>
         </div>
     );
