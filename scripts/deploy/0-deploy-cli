@@ -19,7 +19,7 @@ grandparent_directory=$(dirname "$parent_directory") # teatype
 
 prepare_sudo_env
 
-$workspace_directory/1-install-python311
+$workspace_directory/1-install-python313
 $workspace_directory/2-create-env
 $workspace_directory/3-install-dev-environment
 $workspace_directory/5-install-system-dependencies

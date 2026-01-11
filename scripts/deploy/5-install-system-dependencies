@@ -12,6 +12,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+sudo apt-get install -y curl || true
 sudo apt-get install -y chromium-browser || true
 sudo apt-get install -y graphviz || true
 sudo apt-get install -y jq || true

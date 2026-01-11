@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.13
 
 # Copyright (C) 2024-2026 Burak Günaydin
 #
@@ -198,7 +198,7 @@ urlpatterns = parse_dynamic_routes(
     print(f"Created: {urls_file}")
     
     # Create main application file
-    main_content = f'''#!/usr/bin/env python3.11
+    main_content = f'''#!/usr/bin/env python3.13
 
 # Copyright (C) 2024-2026 Burak Günaydin
 #

@@ -1,0 +1,53 @@
+/**
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+// iPhone 16 Pro Max dimensions for CSS
+// Actual: 1320 x 2868
+// Preview scale: ~0.25 for display
+$iphone-preview-width: 330px;
+$iphone-preview-height: 717px;
+$iphone-border-radius: 55px;
+$iphone-bezel: 12px;
+
+// Polaroid dimensions (as ratio of screen)
+$polaroid-width-ratio: 0.85;
+$polaroid-side-padding: 4%;
+$polaroid-top-padding: 6%;
+$polaroid-bottom-padding: 14%;
+
+// Colors
+$bg-primary: #0a0a0b;
+$bg-gradient: linear-gradient(135deg, #0a0a0b 0%, #141416 25%, #1a1a1d 50%, #141416 75%, #0a0a0b 100%);
+$bg-secondary: rgba(20, 20, 22, 0.95);
+$bg-tertiary: #1e1e22;
+$bg-hover: #2a2a30;
+$text-primary: #ffffff;
+$text-secondary: #98989d;
+$text-tertiary: #636366;
+$accent: #ff9500;
+$accent-hover: #ffaa33;
+$border: rgba(255, 255, 255, 0.08);
+$border-strong: rgba(255, 255, 255, 0.15);
+$shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$transition: 200ms ease;
+
+// Polaroid colors
+$polaroid-white: #fafafa;
+$polaroid-shadow: rgba(0, 0, 0, 0.4);
+$polaroid-text-primary: #1a1a1a;
+$polaroid-text-secondary: #666666;

@@ -25,4 +25,4 @@ prompt pass "Enter PyPI password/token"
 prompt host "Enter PyPI host"
 prompt port "Enter PyPI port"
 
-python3.11 -m pip install --index-url http://$user:$pass@$host:$port/simple --trusted-host $host teatype
+python3.13 -m pip install --index-url http://$user:$pass@$host:$port/simple --trusted-host $host teatype

@@ -2,53 +2,53 @@
     {
         "name": "pb",
         "description": "Build a python package",
-        "command": "python3.11 setup.py sdist bdist_wheel"
+        "command": "python3.13 setup.py sdist bdist_wheel"
     },
     {
         "name": "pf",
         "description": "Freeze all installed python packages",
-        "command": "python3.11 -m pip freeze"
+        "command": "python3.13 -m pip freeze"
     },
     {
         "name": "pfo",
         "description": "Freeze all installed python packages and output to a requirements file in the current directory",
-        "command": "python3.11 -m pip freeze > requirements.txt"
+        "command": "python3.13 -m pip freeze > requirements.txt"
     },
     {
         "name": "pi",
         "description": "Install a python package for the baseline interpreter",
-        "command": "python3.11 -m pip install"
+        "command": "python3.13 -m pip install"
     },
     {
         "name": "pip3.11",
         "description": "Run pip for the baseline python interpreter",
-        "command": "python3.11 -m pip"
+        "command": "python3.13 -m pip"
     },
     {
         "name": "pie",
         "description": "Install a python package in editable mode",
-        "command": "python3.11 -m pip install -e ."
+        "command": "python3.13 -m pip install -e ."
     },
     {
         "name": "pir",
         "description": "Install all python packages in the specified .txt file",
-        "command": "python3.11 -m pip install -r"
+        "command": "python3.13 -m pip install -r"
     },
     {
         "name": "pl",
         "description": "View the installed python packages in a more detailed format",
-        "command": "python3.11 -m pip list --format=columns"
+        "command": "python3.13 -m pip list --format=columns"
     },
     {
         "name": "pt",
         "description": "Run pytest with the specified arguments",
-        "command": "python3.11 -m pytest -s -rf --disable-warnings --tb=native --showlocals --color=yes"
+        "command": "python3.13 -m pytest -s -rf --disable-warnings --tb=native --showlocals --color=yes"
     },
     {
         "name": "ptr",
         "description": "Run pytest periodically with a passed argument interval in seconds",
         "function": [
-            "while true; do clear; python3.11 -m pytest -s -rf --disable-warnings --tb=native --showlocals --color=yes --maxfail=1; sleep $1; done"
+            "while true; do clear; python3.13 -m pytest -s -rf --disable-warnings --tb=native --showlocals --color=yes --maxfail=1; sleep $1; done"
         ]
     },
     {
@@ -79,7 +79,7 @@
             "    echo \"Directory \"$env_name\" already exists.\"",
             "    return 1",
             "fi",
-            "python3.11 -m venv \"$env_name\" && echo \"Virtual environment '$env_name' created.\""
+            "python3.13 -m venv \"$env_name\" && echo \"Virtual environment '$env_name' created.\""
         ]
     },
     {
@@ -90,6 +90,6 @@
     {
         "name": "py",
         "description": "Run a python script with the baseline interpreter",
-        "command": "python3.11"
+        "command": "python3.13"
     }
 ]

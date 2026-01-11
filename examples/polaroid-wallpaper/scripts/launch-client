@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python3.13
 
 # Copyright (C) 2024-2026 Burak Günaydin
 #
@@ -12,13 +12,14 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-workspace_directory=$(dirname "$(readlink -f "$0")") # teatype/scripts/deploy
-parent_directory=$(dirname "$workspace_directory") # teatype/scripts
-grandparent_directory=$(dirname "$parent_directory") # teatype
-. "$grandparent_directory/util/bash-helper.sh"
+# Third-party imports
+from teatype.cli import BaseStartCLI
+from teatype.io import path, shell
 
-prepare_sudo_env
+class LaunchClient(BaseStartCLI):
+    def pre_execute(self):
+        self.process_name = 'polaroid_wallpaper_client'
+        self.start_command = 'pnpm start'
 
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt-get update -y
-sudo apt install -y python3.11 python3.11-dev python3.11-venv python3-pip
+if __name__ == '__main__':
+    LaunchClient()

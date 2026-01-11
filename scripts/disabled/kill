@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.13
 
 # Copyright (C) 2024-2026 Burak Günaydin
 #
@@ -52,7 +52,7 @@ class Kill(BaseCLI):
                 cmd  = ' '.join(process.info['cmdline'] or [])
                 fragment = process_name.lower()
                 if fragment in name.lower() or fragment in cmd.lower():
-                    if 'python3.11 /root/arsonite/teatype/cli/tt kill' in cmd:
+                    if 'python3.13 /root/arsonite/teatype/cli/tt kill' in cmd:
                         continue # Skip self
                     matches.append(process)
             except (psutil.NoSuchProcess, psutil.AccessDenied):

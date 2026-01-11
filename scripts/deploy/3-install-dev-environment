@@ -32,25 +32,25 @@ prompt use_gpu "Do you want to install gpu support for ai tools?" "Y/n" "n"
 
 sudo rm -rf "$grandparent_directory/teatype-venv" || true
 
-python3.11 -m venv $grandparent_directory/teatype-venv
+python3.13 -m venv $grandparent_directory/teatype-venv
 . $grandparent_directory/teatype-venv/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
 
 python_directory="$grandparent_directory/py"
-python3.11 -m pip install --upgrade pip
-python3.11 -m pip install -e "$python_directory" --
-python3.11 -m pip install -r "$python_directory/requirements/base.txt"
-python3.11 -m pip install -r "$python_directory/requirements/build.txt"
-python3.11 -m pip install -r "$python_directory/requirements/test.txt"
+python3.13 -m pip install --upgrade pip
+python3.13 -m pip install -e "$python_directory" --
+python3.13 -m pip install -r "$python_directory/requirements/base.txt"
+python3.13 -m pip install -r "$python_directory/requirements/build.txt"
+python3.13 -m pip install -r "$python_directory/requirements/test.txt"
 
 if [[ $use_django == "Y" || $use_django == "y" ]]; then
-    python3.11 -m pip install -r "$python_directory/requirements/django-support.txt"
+    python3.13 -m pip install -r "$python_directory/requirements/django-support.txt"
 fi
 
 if [[ $use_fastapi == "Y" || $use_fastapi == "y" ]]; then
-    python3.11 -m pip install -r "$python_directory/requirements/fastapi-support.txt"
+    python3.13 -m pip install -r "$python_directory/requirements/fastapi-support.txt"
 fi
 
 if [[ $use_gpu == "Y" || $use_gpu == "y" ]]; then
-    # python3.11 -m pip install -r "$python_directory/requirements/gpu.txt"
+    # python3.13 -m pip install -r "$python_directory/requirements/gpu.txt"
     . "$grandparent_directory/scripts/deploy/4-install-llama-cpp-gpu"
 fi
