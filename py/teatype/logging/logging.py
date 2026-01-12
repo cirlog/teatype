@@ -417,6 +417,22 @@ def warn(message:str='',
     # Add a blank line after the message if pad_after is specified and greater than 0
     if pad_after:
         println(pad_after) # Print a blank line to add padding below the message
+        
+def whisper(message:str='',
+            pad_after:int=None,
+            pad_before:int=None) -> None:
+    """
+    Logs a subtle (whisper) message.
+    """
+    whisper = _format(message,
+                      pad_before=pad_before,
+                      use_prefix=False,
+                      verbose=False)
+    logger.info(f'{EscapeColor.GRAY}\033[3m{whisper}{EscapeColor.RESET}')
+    
+    # Add a blank line after the message if pad_after is specified and greater than 0
+    if pad_after:
+        println(pad_after) # Print a blank line to add padding below the message
 
 # Global logger instance
 logger = logging.getLogger(GLOBAL_LOGGING_CONFIG.LOG_NAME)

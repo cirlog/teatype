@@ -19,6 +19,7 @@ __all__ = [
     'println',
     'success',
     'warn',
+    'whisper'
 ]
 
-from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, warn
+from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, warn, whisper
