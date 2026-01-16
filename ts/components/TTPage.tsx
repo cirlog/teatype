@@ -18,6 +18,9 @@ import { useNavigate } from 'react-router-dom';
 // Components
 import { TTInfotip } from './TTInfotip';
 
+// Icons
+import { ArrowIcon } from '../icons';
+
 // Style
 import './style/TTPage.scss';
 
@@ -36,29 +39,14 @@ const TTPage: React.FC<iTTPageProps> = ({ appName, backPath = '/', children, des
         <div className='tt-page'>
             <header className='tt-page-header'>
                 <button className='tt-page-back' onClick={() => navigate(backPath)} aria-label='Go back'>
-                    <svg
-                        width='24'
-                        height='24'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                    >
-                        <path d='M19 12H5M12 19l-7-7 7-7' />
-                    </svg>
+                    <ArrowIcon />
                 </button>
 
                 <div className='tt-page-header-content'>
                     {appName && <p className='tt-page-flare'>{appName}</p>}
                     <div className='tt-page-title-row'>
                         <h1 className='tt-page-title'>{title}</h1>
-                        {description && (
-                            <TTInfotip content={description} position='right'>
-                                <span className='tt-page-info-icon'>i</span>
-                            </TTInfotip>
-                        )}
+                        {description && <TTInfotip position='right'>{description}</TTInfotip>}
                     </div>
                 </div>
             </header>

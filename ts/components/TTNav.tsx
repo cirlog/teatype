@@ -23,16 +23,14 @@ import './style/TTNav.scss';
 
 interface iTTNavProps {
     appName: string;
-    navType: 'apps';
+    navType?: 'apps';
     pages: iPageInfo[];
     subtitle?: string;
 }
 
-const TTNav: React.FC<iTTNavProps> = (props) => {
-    const navType = 'apps'; // Currently only 'apps' type is supported
-
+const AppNavigation = (props) => {
     return (
-        <nav id='tt-nav'>
+        <>
             <header className='tt-nav-header'>
                 <h1 className='tt-nav-title'>{props.appName}</h1>
                 {props.subtitle && <p className='tt-nav-subtitle'>{props.subtitle}</p>}
@@ -50,7 +48,9 @@ const TTNav: React.FC<iTTNavProps> = (props) => {
 
                         <div className='tt-nav-tile-content'>
                             <h2 className='tt-nav-tile-title'>{page.title}</h2>
-                            {page.description && <p className='tt-nav-tile-description'>{page.description}</p>}
+                            {page.shortDescription && (
+                                <p className='tt-nav-tile-description'>{page.shortDescription}</p>
+                            )}
                         </div>
 
                         <svg
@@ -69,8 +69,18 @@ const TTNav: React.FC<iTTNavProps> = (props) => {
                     </NavLink>
                 ))}
             </main>
-        </nav>
+        </>
     );
+};
+
+const TTNav: React.FC<iTTNavProps> = (props) => {
+    const navType = 'apps'; // Currently only 'apps' type is supported
+    let navContent = null;
+    if (navType === 'apps') {
+        navContent = <AppNavigation appName={props.appName} pages={props.pages} subtitle={props.subtitle} />;
+    }
+
+    return <nav id='tt-nav'>{navContent}</nav>;
 };
 
 export default TTNav;

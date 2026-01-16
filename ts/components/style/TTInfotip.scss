@@ -22,6 +22,7 @@
 
     &__content {
         position: absolute;
+
         min-width: 200px;
         max-width: 320px;
         padding: 0.85rem 1rem;
@@ -34,10 +35,14 @@
         color: var(--text-muted);
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
-        z-index: 100;
+        transition:
+            opacity 0.2s,
+            transform 0.2s,
+            visibility 0.2s;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         pointer-events: none;
+
+        z-index: 100;
 
         &::before {
             content: '';

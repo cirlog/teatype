@@ -13,6 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { Routes, Route } from 'react-router-dom';
 
 // Components
@@ -22,24 +23,25 @@ import { DatabaseIcon, ModelsIcon, SettingsIcon } from '@teatype/icons';
 
 const APP_NAME = 'Student DB Dashboard';
 const PAGES: iPageInfo[] = [
-    {
-        title: 'Model Selection',
-        path: '/models',
-        description: 'Select and configure AI models for your student database application.',
-        icon: <ModelsIcon />,
-    },
+    // {
+    //     title: 'Model Selection',
+    //     path: '/models',
+    //     description: 'Select and configure AI models for your student database application.',
+    //     icon: <ModelsIcon />,
+    // },
     {
         title: 'Database Management',
         path: '/database',
-        description: 'View and manage student records in the database.',
+        longDescription: 'View and manage student (and adjacent) records in the hybrid database.',
+        shortDescription: 'Manage Student Records',
         icon: <DatabaseIcon />,
     },
-    {
-        title: 'Settings',
-        path: '/settings',
-        description: 'Configure application preferences and system settings.',
-        icon: <SettingsIcon />,
-    },
+    // {
+    //     title: 'Settings',
+    //     path: '/settings',
+    //     description: 'Configure application preferences and system settings.',
+    //     icon: <SettingsIcon />,
+    // },
 ];
 
 const StudentDB = () => {
@@ -57,7 +59,7 @@ const StudentDB = () => {
                         key={page.path}
                         path={page.path}
                         element={
-                            <TTPage appName={APP_NAME} title={page.title} description={page.description}>
+                            <TTPage appName={APP_NAME} title={page.title} description={page.longDescription}>
                                 <p>{page.title} content goes here...</p>
                             </TTPage>
                         }

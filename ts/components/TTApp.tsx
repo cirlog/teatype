@@ -19,9 +19,10 @@ import { BrowserRouter } from 'react-router-dom';
 // Style
 import './style/TTApp.scss';
 
-export interface iPageInfo {
-    description?: string;
+export interface iPage {
     path: string;
+    longDescription?: string;
+    shortDescription?: string;
     title: string;
 }
 
