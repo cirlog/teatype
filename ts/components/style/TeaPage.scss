@@ -64,6 +64,7 @@
         }
 
         .tea-page-header-content {
+            position: relative;
             flex: 1;
 
             .tea-page-flare {
@@ -141,25 +142,33 @@
             }
 
             .tea-page-tags {
+                position: absolute;
+                left: 0;
+                top: 100%;
+                z-index: 10;
+
+                margin-top: 0.5rem;
+
                 opacity: 0;
-                visibility: hidden;
+                pointer-events: none;
                 transform: translateY(-8px);
                 transition:
                     opacity 0.2s,
-                    transform 0.2s,
-                    visibility 0.2s;
+                    transform 0.2s;
             }
 
             // Show tags when hovering the tooltip trigger
             &:has(.tea-tooltip:hover) .tea-page-tags {
                 opacity: 1;
-                visibility: visible;
+                pointer-events: auto;
                 transform: translateY(0);
             }
         }
     }
 
     .tea-page-main {
+        max-width: var(--tea-content-width, 100%);
+        margin: 0 auto;
         padding: 0 clamp(2rem, 8vw, 5rem) 2rem;
 
         .grid {

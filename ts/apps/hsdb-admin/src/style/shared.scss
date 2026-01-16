@@ -33,7 +33,7 @@ $hsdb-transition-slow: 0.3s ease;
     gap: 0.5rem;
     padding: 0.625rem 1rem;
 
-    background: rgba(15, 23, 42, 0.55);
+    background: var(--surface-card);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border);
     border-radius: $hsdb-radius-sm;
@@ -49,7 +49,7 @@ $hsdb-transition-slow: 0.3s ease;
         transform $hsdb-transition-fast;
 
     &:hover:not(:disabled) {
-        background: rgba(15, 23, 42, 0.75);
+        background: var(--surface-elevated);
         border-color: var(--accent);
     }
 
@@ -112,7 +112,7 @@ $hsdb-transition-slow: 0.3s ease;
         border-color: transparent;
 
         &:hover:not(:disabled) {
-            background: rgba(15, 23, 42, 0.55);
+            background: var(--surface-card);
             border-color: var(--border);
         }
     }
@@ -127,7 +127,7 @@ $hsdb-transition-slow: 0.3s ease;
     }
 
     &--secondary {
-        background: rgba(15, 23, 42, 0.75);
+        background: var(--surface-elevated);
         border-color: var(--border);
 
         &:hover:not(:disabled) {
@@ -160,7 +160,7 @@ $hsdb-transition-slow: 0.3s ease;
         width: 100%;
         padding: 0.625rem 0.875rem;
 
-        background: rgba(15, 23, 42, 0.55);
+        background: var(--surface-card);
         border: 1px solid var(--border);
         border-radius: $hsdb-radius-sm;
         color: var(--text-primary);

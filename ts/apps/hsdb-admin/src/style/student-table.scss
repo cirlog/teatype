@@ -53,7 +53,7 @@
             top: 0;
             z-index: 1;
 
-            background: rgba(15, 23, 42, 0.95);
+            background: var(--surface-elevated);
             backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--border);
 
@@ -87,7 +87,7 @@
                 transition: background 0.15s ease;
 
                 &:hover {
-                    background: rgba(15, 23, 42, 0.25);
+                    background: var(--accent-soft);
                 }
 
                 &:last-child {

@@ -14,6 +14,42 @@
 
 $settings-width: 320px;
 
+// Custom scrollbar mixin
+@mixin tea-scrollbar {
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.15));
+        border-radius: 4px;
+
+        &:hover {
+            background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.25));
+        }
+    }
+
+    &::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+
+    // Firefox
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb, rgba(255, 255, 255, 0.15)) transparent;
+}
+
+// Apply custom scrollbar globally
+*,
+html,
+body {
+    @include tea-scrollbar;
+}
+
 #tea-app {
     position: relative;
 
@@ -55,7 +91,7 @@ $settings-width: 320px;
         }
 
         &:hover {
-            background: rgba(20, 33, 61, 0.85);
+            background: var(--surface-elevated);
             border-color: var(--accent);
             color: var(--accent);
 
@@ -69,45 +105,45 @@ $settings-width: 320px;
     .tea-app-content {
         flex: 1;
         min-width: 0;
+        max-width: var(--tea-content-width, 100%);
+        margin: 0 auto;
         overflow-y: auto;
-
-        transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    // Settings sidebar
+    // Settings sidebar overlay
     .tea-app-settings-sidebar {
         position: fixed;
         top: 0;
         right: 0;
         bottom: 0;
-        z-index: 90;
+        z-index: 200;
 
         width: $settings-width;
 
-        background: linear-gradient(180deg, rgba(8, 12, 21, 0.98) 0%, rgba(12, 18, 32, 0.98) 100%);
-        border-left: 1px solid rgba(0, 0, 0, 0.5);
+        background: var(--sidebar-bg, rgba(8, 12, 21, 0.85));
+        backdrop-filter: blur(20px);
+        border-left: 1px solid var(--border);
         box-shadow:
-            inset 2px 0 8px rgba(0, 0, 0, 0.4),
-            inset 1px 0 0 rgba(255, 255, 255, 0.03),
-            -8px 0 32px rgba(0, 0, 0, 0.3);
+            inset 1px 0 0 var(--sidebar-inset, rgba(255, 255, 255, 0.03)),
+            -12px 0 40px var(--sidebar-shadow, rgba(0, 0, 0, 0.4));
 
-        transform: translateX(100%);
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(20px);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
     }
 
-    // Settings open state
+    // Settings open state - overlay only, no push
     &.settings-open {
-        .tea-app-content {
-            margin-right: $settings-width;
-        }
-
         .tea-app-settings-sidebar {
+            opacity: 1;
+            pointer-events: auto;
             transform: translateX(0);
         }
 
         .tea-app-settings-toggle {
-            right: calc(#{$settings-width} + 1.25rem);
-
             svg {
                 transform: rotate(90deg);
             }
@@ -121,11 +157,16 @@ $settings-width: 320px;
 
 // Theme variables
 :root {
-    --tea-content-width: 85%;
+    --tea-content-width: 100%;
+
+    // Scrollbar defaults (flow theme)
+    --scrollbar-thumb: rgba(124, 58, 237, 0.3);
+    --scrollbar-thumb-hover: rgba(124, 58, 237, 0.5);
 }
 
 // Dark theme (black/gray gradient with orange accents)
 [data-theme='dark'] {
+    // Core colors
     --surface: #0a0a0a;
     --surface-elevated: #141414;
     --surface-card: rgba(20, 20, 20, 0.75);
@@ -138,15 +179,26 @@ $settings-width: 320px;
     --success: #22c55e;
     --warning: #eab308;
     --settings-accent: #f97316;
+
+    // Scrollbar
+    --scrollbar-thumb: rgba(249, 115, 22, 0.3);
+    --scrollbar-thumb-hover: rgba(249, 115, 22, 0.5);
+
+    // Sidebar
+    --sidebar-bg: rgba(10, 10, 10, 0.9);
+    --sidebar-inset: rgba(255, 255, 255, 0.02);
+    --sidebar-shadow: rgba(0, 0, 0, 0.5);
 }
 
 [data-theme='dark'] body,
 [data-theme='dark'] #root {
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+    color: var(--text-primary);
 }
 
 // Flow theme (current default - deep blue with purple accents)
 [data-theme='flow'] {
+    // Core colors
     --surface: #0f172a;
     --surface-elevated: #14213d;
     --surface-card: rgba(20, 33, 61, 0.65);
@@ -159,17 +211,29 @@ $settings-width: 320px;
     --success: #10b981;
     --warning: #f97316;
     --settings-accent: #7c3aed;
+
+    // Scrollbar
+    --scrollbar-thumb: rgba(124, 58, 237, 0.3);
+    --scrollbar-thumb-hover: rgba(124, 58, 237, 0.5);
+
+    // Sidebar
+    --sidebar-bg: rgba(15, 23, 42, 0.85);
+    --sidebar-inset: rgba(255, 255, 255, 0.03);
+    --sidebar-shadow: rgba(0, 0, 0, 0.4);
 }
 
 [data-theme='flow'] body,
 [data-theme='flow'] #root {
     background:
         radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),
-        radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.2), transparent 35%), #0f172a;
+        radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.2), transparent 35%),
+        #0f172a;
+    color: var(--text-primary);
 }
 
 // Light theme (clean white with subtle shadows)
 [data-theme='light'] {
+    // Core colors
     --surface: #ffffff;
     --surface-elevated: #f8fafc;
     --surface-card: rgba(255, 255, 255, 0.85);
@@ -182,30 +246,126 @@ $settings-width: 320px;
     --success: #059669;
     --warning: #d97706;
     --settings-accent: #6366f1;
+
+    // Scrollbar
+    --scrollbar-thumb: rgba(99, 102, 241, 0.25);
+    --scrollbar-thumb-hover: rgba(99, 102, 241, 0.4);
+
+    // Sidebar
+    --sidebar-bg: rgba(248, 250, 252, 0.92);
+    --sidebar-inset: rgba(255, 255, 255, 0.5);
+    --sidebar-shadow: rgba(0, 0, 0, 0.15);
 }
 
 [data-theme='light'] body,
 [data-theme='light'] #root {
     background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    color: var(--text-primary);
 }
 
-[data-theme='light'] .tea-app-settings-sidebar {
-    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%);
-    border-left-color: rgba(0, 0, 0, 0.1);
-    box-shadow:
-        inset 2px 0 8px rgba(0, 0, 0, 0.05),
-        inset 1px 0 0 rgba(255, 255, 255, 0.5),
-        -8px 0 32px rgba(0, 0, 0, 0.08);
-}
-
-[data-theme='light'] .tea-settings-theme-option {
-    background: rgba(0, 0, 0, 0.03);
-
-    &:hover {
-        background: rgba(0, 0, 0, 0.06);
+// Light theme specific overrides
+[data-theme='light'] {
+    .tea-app-settings-toggle:hover {
+        background: rgba(99, 102, 241, 0.1);
     }
-}
 
-[data-theme='light'] .tea-settings-slider {
-    background: rgba(0, 0, 0, 0.1);
+    .tea-settings-theme-option {
+        background: rgba(0, 0, 0, 0.03);
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+    }
+
+    .tea-settings-slider {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .tea-settings-close:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .tea-nav-tile:hover {
+        background: rgba(99, 102, 241, 0.08);
+    }
+
+    .tea-nav-filter-tag {
+        background: rgba(0, 0, 0, 0.04);
+
+        &:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        &.active {
+            background: var(--accent-soft);
+        }
+    }
+
+    .tea-page-back {
+        background: rgba(0, 0, 0, 0.04);
+
+        &:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+    }
+
+    .tea-page-info-icon {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .student-table {
+        background: rgba(255, 255, 255, 0.85);
+
+        thead {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.04);
+        }
+    }
+
+    .btn {
+        background: rgba(0, 0, 0, 0.04);
+
+        &:hover:not(:disabled) {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        &--primary {
+            background: var(--accent);
+            color: #fff;
+
+            &:hover:not(:disabled) {
+                background: color-mix(in srgb, var(--accent) 85%, #000);
+            }
+        }
+
+        &--danger {
+            background: rgba(239, 68, 68, 0.08);
+        }
+    }
+
+    .modal {
+        background: var(--surface-elevated);
+    }
+
+    .modal__footer {
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    .form-group input,
+    .form-group select {
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    .error {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
 }
