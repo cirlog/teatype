@@ -23,12 +23,16 @@ type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
 interface iTTInfotipProps {
     children: React.ReactNode;
+    content: React.ReactNode;
     position?: TooltipPosition;
-    trigger: React.ReactNode;
 }
 
 const TTInfotip: React.FC<iTTInfotipProps> = ({ children, content, position = 'right' }) => {
-    return <TTTooltip position='right'>{props.children}</TTTooltip>;
+    return (
+        <TTTooltip content={content} position={position}>
+            {children}
+        </TTTooltip>
+    );
 };
 
 export default TTInfotip;

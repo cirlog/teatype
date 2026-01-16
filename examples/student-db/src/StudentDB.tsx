@@ -14,19 +14,39 @@
  */
 
 // Components
-import { TTApp } from '@teatype/components';
+import { TTApp, TTNav, TTPage } from '@teatype/components';
 
 const StudentDB = () => {
     return (
-        <TTApp
-            description='Select and configure AI models for your student database application.'
-            flare='HSDB Dashboard'
-            pod={0}
-            title='Model selection'
-            type='app'
-            unit='teatype'
-        >
-            <TTPage >
+        <TTApp name='HSDB Dashboard'>
+            <TTNav subtitle='Select a module to get started' />
+
+            <TTPage
+                id='models'
+                title='Model Selection'
+                description='Select and configure AI models for your student database application.'
+                icon={<ModelIcon />}
+            >
+                <p>Model selection content goes here...</p>
+            </TTPage>
+
+            <TTPage
+                id='database'
+                title='Database Management'
+                description='View and manage student records in the database.'
+                icon={<DatabaseIcon />}
+            >
+                <p>Database management content goes here...</p>
+            </TTPage>
+
+            <TTPage
+                id='settings'
+                title='Settings'
+                description='Configure application preferences and system settings.'
+                icon={<SettingsIcon />}
+            >
+                <p>Settings content goes here...</p>
+            </TTPage>
         </TTApp>
     );
 };

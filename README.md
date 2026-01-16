@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/arsonite/teatype">
-    <img src="./files/media/teatype-logo-color.svg" alt="teatype icon" width="80" height="80">
+    <img src="./files/media/icon/teatype-logo-color.svg" alt="teatype icon" width="80" height="80">
   </a>
 
 <h3 align="center"><b>teatype</b></h3>

@@ -13,59 +13,66 @@
  * all copies or substantial portions of the Software.
  */
 
+import { useEffect } from 'react';
+
 // Components
+import { useTTApp } from './TTApp';
 import { TTInfotip } from './TTInfotip';
 
 // Style
-import './style/TTApp.scss';
+import './style/TTPage.scss';
 
-interface iHeroTagsProps {
-    name?: string;
-    pod?: number;
-    type?: string;
-}
-
-const HeroTags = ({ name, pod, type }: iHeroTagsProps) => {
-    return (
-        <div className='hero__tags'>
-            <span className='hero__tag'>{name}</span>
-            <span className='hero__tag'>pod {pod}</span>
-            <span className='hero__tag'>{type}</span>
-        </div>
-    );
-};
-
-interface iTTAppProps {
-    children: React.ReactNode;
+interface iTTPageProps {
+    children?: React.ReactNode;
     description?: string;
-    flare?: string;
-    pod?: number;
-    title?: string;
-    type?: string;
-    unit?: string;
+    icon?: React.ReactNode;
+    id: string;
+    title: string;
 }
 
-const TTApp: React.FC<iTTAppProps> = (props) => {
-    return (
-        <div id='tt-app'>
-            <header>
-                <p className='tt-app-flare'>{props.flare}</p>
-                <div className='tt-app-title-row'>
-                    <h1>{props.title}</h1>
-                    {/* {props.description && (
-                        <div className='hero__info'>
-                            <TTInfotip position='right'>{props.description}</TTInfotip>
-                        </div>
-                    )} */}
-                </div>
-                {/* <HeroTags name={props.unit} pod={props.pod} type={props.type} /> */}
-            </header>
+const TTPage: React.FC<iTTPageProps> = ({ children, description, icon, id, title }) => {
+    const { appName, activePage, registerPage, navigateTo } = useTTApp();
 
-            <main>{props.children}</main>
+    useEffect(() => {
+        registerPage({ id, title, description, icon });
+    }, [id, title, description, icon, registerPage]);
+
+    if (activePage !== id) return null;
+
+    return (
+        <div className='tt-page'>
+            <header className='tt-page-header'>
+                <button className='tt-page-back' onClick={() => navigateTo(null)} aria-label='Go back'>
+                    <svg
+                        width='24'
+                        height='24'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='currentColor'
+                        strokeWidth='2'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                    >
+                        <path d='M19 12H5M12 19l-7-7 7-7' />
+                    </svg>
+                </button>
+                <div className='tt-page-header-content'>
+                    <p className='tt-page-flare'>{appName}</p>
+                    <div className='tt-page-title-row'>
+                        <h1 className='tt-page-title'>{title}</h1>
+                        {description && (
+                            <TTInfotip content={description} position='right'>
+                                <span className='tt-page-info-icon'>i</span>
+                            </TTInfotip>
+                        )}
+                    </div>
+                </div>
+            </header>
+            <main className='tt-page-content'>{children}</main>
         </div>
     );
 };
 
-export default TTApp;
+export default TTPage;
 
-export { TTApp };
+export { TTPage };

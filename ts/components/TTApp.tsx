@@ -13,56 +13,61 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-import { TTInfotip } from './TTInfotip';
+import { createContext, useCallback, useContext, useState } from 'react';
 
 // Style
 import './style/TTApp.scss';
 
-interface iHeroTagsProps {
-    name?: string;
-    pod?: number;
-    type?: string;
+export interface iPageInfo {
+    id: string;
+    title: string;
+    description?: string;
+    icon?: React.ReactNode;
 }
 
-const HeroTags = ({ name, pod, type }: iHeroTagsProps) => {
-    return (
-        <div className='hero__tags'>
-            <span className='hero__tag'>{name}</span>
-            <span className='hero__tag'>pod {pod}</span>
-            <span className='hero__tag'>{type}</span>
-        </div>
-    );
+interface iTTAppContext {
+    appName: string;
+    activePage: string | null;
+    pages: iPageInfo[];
+    registerPage: (page: iPageInfo) => void;
+    navigateTo: (pageId: string | null) => void;
+}
+
+const TTAppContext = createContext<iTTAppContext | null>(null);
+
+export const useTTApp = () => {
+    const context = useContext(TTAppContext);
+    if (!context) {
+        throw new Error('useTTApp must be used within a TTApp');
+    }
+    return context;
 };
 
 interface iTTAppProps {
     children: React.ReactNode;
-    description?: string;
-    flare?: string;
-    pod?: number;
-    title?: string;
-    type?: string;
-    unit?: string;
+    defaultPage?: string;
+    name: string;
 }
 
-const TTApp: React.FC<iTTAppProps> = (props) => {
-    return (
-        <div id='tt-app'>
-            <header>
-                <p className='tt-app-flare'>{props.flare}</p>
-                <div className='tt-app-title-row'>
-                    <h1>{props.title}</h1>
-                    {/* {props.description && (
-                        <div className='hero__info'>
-                            <TTInfotip position='right'>{props.description}</TTInfotip>
-                        </div>
-                    )} */}
-                </div>
-                {/* <HeroTags name={props.unit} pod={props.pod} type={props.type} /> */}
-            </header>
+const TTApp: React.FC<iTTAppProps> = ({ children, defaultPage = null, name }) => {
+    const [activePage, setActivePage] = useState<string | null>(defaultPage);
+    const [pages, setPages] = useState<iPageInfo[]>([]);
 
-            <main>{props.children}</main>
-        </div>
+    const registerPage = useCallback((page: iPageInfo) => {
+        setPages((prev) => {
+            if (prev.some((p) => p.id === page.id)) return prev;
+            return [...prev, page];
+        });
+    }, []);
+
+    const navigateTo = useCallback((pageId: string | null) => {
+        setActivePage(pageId);
+    }, []);
+
+    return (
+        <TTAppContext.Provider value={{ appName: name, activePage, pages, registerPage, navigateTo }}>
+            <div id='tt-app'>{children}</div>
+        </TTAppContext.Provider>
     );
 };
 

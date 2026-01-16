@@ -1,0 +1,154 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.tt-nav {
+    min-height: 100vh;
+    padding: 4rem clamp(2rem, 8vw, 5rem);
+}
+
+.tt-nav-header {
+    margin-bottom: 3rem;
+    text-align: center;
+
+    animation: tt-nav-header-fade-in 0.4s ease-out;
+}
+
+@keyframes tt-nav-header-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tt-nav-title {
+    margin: 0;
+
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 600;
+}
+
+.tt-nav-subtitle {
+    margin: 0.5rem 0 0;
+
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.tt-nav-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tt-nav-tile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+
+    background: var(--surface-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+
+    animation: tt-nav-tile-fade-in 0.4s ease-out backwards;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+
+    &:hover {
+        background: rgba(20, 33, 61, 0.85);
+        border-color: var(--accent);
+        box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
+        transform: translateY(-2px);
+
+        .tt-nav-tile-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+@keyframes tt-nav-tile-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tt-nav-tile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+
+    background: var(--accent-soft);
+    border-radius: 10px;
+    color: var(--accent);
+
+    svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}
+
+.tt-nav-tile-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.tt-nav-tile-title {
+    margin: 0;
+
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.tt-nav-tile-description {
+    margin: 0.25rem 0 0;
+
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tt-nav-tile-arrow {
+    flex-shrink: 0;
+
+    color: var(--text-muted);
+    opacity: 0;
+    transform: translateX(-4px);
+
+    transition: color 0.2s, opacity 0.2s, transform 0.2s;
+}

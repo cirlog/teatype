@@ -5,6 +5,7 @@ packages:
     - components
     - hooks
     - style
+    - toolkit
     - ../examples/*
 
 ignoredBuiltDependencies:

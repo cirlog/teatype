@@ -13,5 +13,13 @@
  * all copies or substantial portions of the Software.
  */
 
-export { TTApp } from './TTApp';
+// Components
+export { TTApp, useTTApp } from './TTApp';
+export { TTInfotip } from './TTInfotip';
+export { TTIcon } from './TTIcon';
+export { TTNav } from './TTNav';
+export { TTPage } from './TTPage';
 export { TTTooltip } from './TTTooltip';
+
+// Types
+export type { iPageInfo } from './TTApp';
