@@ -13,16 +13,16 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { BrowserRouter } from 'react-router-dom';
 
 // Style
 import './style/TTApp.scss';
 
 export interface iPageInfo {
+    description?: string;
     path: string;
     title: string;
-    description?: string;
-    icon?: React.ReactNode;
 }
 
 interface iTTAppProps {
@@ -30,11 +30,11 @@ interface iTTAppProps {
     name: string;
 }
 
-const TTApp: React.FC<iTTAppProps> = ({ children, name }) => {
+const TTApp: React.FC<iTTAppProps> = (props) => {
     return (
         <BrowserRouter>
-            <div id='tt-app' data-app-name={name}>
-                {children}
+            <div id='tt-app' data-app-name={props.name}>
+                {props.children}
             </div>
         </BrowserRouter>
     );

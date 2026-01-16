@@ -13,42 +13,81 @@
  * all copies or substantial portions of the Software.
  */
 
+import { Routes, Route } from 'react-router-dom';
+
 // Components
-import { TTApp, TTIcon, TTNav, TTPage } from '@teatype/components';
+import { iPageInfo, TTApp, TTNav, TTPage } from '@teatype/components';
 
 import { DatabaseIcon, ModelsIcon, SettingsIcon } from '@teatype/icons';
 
+const APP_NAME = 'HSDB Dashboard';
+
+const pages: iPageInfo[] = [
+    {
+        path: '/models',
+        title: 'Model Selection',
+        description: 'Select and configure AI models for your student database application.',
+        icon: <ModelsIcon />,
+    },
+    {
+        path: '/database',
+        title: 'Database Management',
+        description: 'View and manage student records in the database.',
+        icon: <DatabaseIcon />,
+    },
+    {
+        path: '/settings',
+        title: 'Settings',
+        description: 'Configure application preferences and system settings.',
+        icon: <SettingsIcon />,
+    },
+];
+
 const StudentDB = () => {
     return (
-        <TTApp name='HSDB Dashboard'>
-            <TTNav subtitle='Select a module to get started' appName={''} pages={[]} />
-
-            <TTPage
-                id='models'
-                title='Model Selection'
-                description='Select and configure AI models for your student database application.'
-                icon={<ModelsIcon />}
-            >
-                <p>Model selection content goes here...</p>
-            </TTPage>
-
-            <TTPage
-                id='database'
-                title='Database Management'
-                description='View and manage student records in the database.'
-                icon={<DatabaseIcon />}
-            >
-                <p>Database management content goes here...</p>
-            </TTPage>
-
-            <TTPage
-                id='settings'
-                title='Settings'
-                description='Configure application preferences and system settings.'
-                icon={<SettingsIcon />}
-            >
-                <p>Settings content goes here...</p>
-            </TTPage>
+        <TTApp name={APP_NAME}>
+            <Routes>
+                <Route
+                    path='/'
+                    element={<TTNav appName={APP_NAME} pages={pages} subtitle='Select a module to get started' />}
+                />
+                <Route
+                    path='/models'
+                    element={
+                        <TTPage
+                            appName={APP_NAME}
+                            title='Model Selection'
+                            description='Select and configure AI models for your student database application.'
+                        >
+                            <p>Model selection content goes here...</p>
+                        </TTPage>
+                    }
+                />
+                <Route
+                    path='/database'
+                    element={
+                        <TTPage
+                            appName={APP_NAME}
+                            title='Database Management'
+                            description='View and manage student records in the database.'
+                        >
+                            <p>Database management content goes here...</p>
+                        </TTPage>
+                    }
+                />
+                <Route
+                    path='/settings'
+                    element={
+                        <TTPage
+                            appName={APP_NAME}
+                            title='Settings'
+                            description='Configure application preferences and system settings.'
+                        >
+                            <p>Settings content goes here...</p>
+                        </TTPage>
+                    }
+                />
+            </Routes>
         </TTApp>
     );
 };

@@ -1,7 +1,9 @@
 const DatabaseIcon = () => {
     return (
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' width='24px' height='24px'>
-            <path d='M12 2C7.589 2 4 3.79 4 6v2c0 2.21 3.589 4 8 4s8-1.79 8-4V6c0-2.21-3.589-4-8-4zm0 6c-4.411 0-8-1.79-8-4v2c0 2.21 3.589 4 8 4s8-1.79 8-4V4c0 2.21-3.589 4-8 4zm0 2c-4.411 0-8 1.79-8 4v2c0 2.21 3.589 4 8 4s8-1.79 8-4v-2c0-2.21-3.589-4-8-4zm0 6c-4.411 0-8 1.79-8 4v2c0 2.21 3.589 4 8 4s8-1.79 8-4v-2c0-2.21-3.589-4-8-4z' />
+        <svg fill='none' stroke='currentColor' viewBox='2.5 1.5 19 21'>
+            <ellipse cx='12' cy='5' rx='9' ry='3' />
+            <path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3' />
+            <path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5' />
         </svg>
     );
 };

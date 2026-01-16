@@ -18,7 +18,8 @@
 
 #tt-app {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 
     header {
         padding: 4rem clamp(2rem, 8vw, 5rem) 2rem;
@@ -61,7 +62,9 @@
             font-style: italic;
             font-weight: 600;
 
-            transition: border-color 0.2s, color 0.2s;
+            transition:
+                border-color 0.2s,
+                color 0.2s;
 
             &:hover {
                 border-color: var(--accent);
@@ -83,7 +86,10 @@
             opacity: 0;
             visibility: hidden;
             transform: translateY(-8px);
-            transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+            transition:
+                opacity 0.2s,
+                transform 0.2s,
+                visibility 0.2s;
         }
 
         .tt-app__tag {
