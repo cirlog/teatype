@@ -13,19 +13,20 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 // Components
-import { StudentTable } from '@/components/StudentTable';
-import { EditStudentModal } from '@/components/EditStudentModal';
+import { StudentTable } from './components/StudentTable';
+import { EditStudentModal } from './components/EditStudentModal';
 
 // Hooks
-import { useStudents } from '@/hooks/useStudents';
-import { Student } from '@/api/students';
+import { useStudents } from './hooks/useStudents';
+import { Student } from './api/students';
 
 // Style
-import '@/style/dashboard.scss';
-import { Toaster } from 'react-hot-toast';
+import './style/dashboard.scss';
 
 export default function App() {
     const { students, loading, error, refresh, updateStudent, deleteStudent } = useStudents();

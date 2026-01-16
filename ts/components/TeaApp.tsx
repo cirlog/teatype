@@ -20,7 +20,7 @@ import { BrowserRouter } from 'react-router-dom';
 import './style/TeaApp.scss';
 
 interface iPage {
-    content: React.ReactNode;
+    content?: React.FC;
     longDescription?: string;
     path: string;
     shortDescription?: string;

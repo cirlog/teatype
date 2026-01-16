@@ -57,22 +57,25 @@ const StudentDB = () => {
                         <TeaNav appName={APP_NAME} pages={PAGES} subtitle='Test-Application for the HSDB Server OEM' />
                     }
                 />
-                {PAGES.map((page) => (
-                    <Route
-                        key={page.path}
-                        path={page.path}
-                        element={
-                            <TeaPage
-                                appName={APP_NAME}
-                                title={page.title}
-                                description={page.longDescription}
-                                tags={page.tags}
-                            >
-                                <p>{page.title} content goes here...</p>
-                            </TeaPage>
-                        }
-                    />
-                ))}
+                {PAGES.map((page) => {
+                    const PageContent = page.content;
+                    return (
+                        <Route
+                            key={page.path}
+                            path={page.path}
+                            element={
+                                <TeaPage
+                                    appName={APP_NAME}
+                                    title={page.title}
+                                    description={page.longDescription}
+                                    tags={page.tags}
+                                >
+                                    {PageContent && <PageContent />}
+                                </TeaPage>
+                            }
+                        />
+                    );
+                })}
             </Routes>
         </TeaApp>
     );

@@ -16,6 +16,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@teatype/apps": "workspace:*",
         "@teatype/baseconfig": "workspace:*",
         "@teatype/components": "workspace:*",
         "@teatype/hooks": "workspace:*",
