@@ -49,6 +49,7 @@ const TTPage: React.FC<iTTPageProps> = ({ appName, backPath = '/', children, des
                         <path d='M19 12H5M12 19l-7-7 7-7' />
                     </svg>
                 </button>
+
                 <div className='tt-page-header-content'>
                     {appName && <p className='tt-page-flare'>{appName}</p>}
                     <div className='tt-page-title-row'>
@@ -61,7 +62,8 @@ const TTPage: React.FC<iTTPageProps> = ({ appName, backPath = '/', children, des
                     </div>
                 </div>
             </header>
-            <main className='tt-page-content'>{children}</main>
+
+            <main className='tt-page-main'>{children}</main>
         </div>
     );
 };

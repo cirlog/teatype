@@ -23,20 +23,23 @@ import './style/TTNav.scss';
 
 interface iTTNavProps {
     appName: string;
+    navType: 'apps';
     pages: iPageInfo[];
     subtitle?: string;
 }
 
-const TTNav: React.FC<iTTNavProps> = ({ appName, pages, subtitle }) => {
+const TTNav: React.FC<iTTNavProps> = (props) => {
+    const navType = 'apps'; // Currently only 'apps' type is supported
+
     return (
-        <div className='tt-nav'>
+        <nav id='tt-nav'>
             <header className='tt-nav-header'>
-                <h1 className='tt-nav-title'>{appName}</h1>
-                {subtitle && <p className='tt-nav-subtitle'>{subtitle}</p>}
+                <h1 className='tt-nav-title'>{props.appName}</h1>
+                {props.subtitle && <p className='tt-nav-subtitle'>{props.subtitle}</p>}
             </header>
 
-            <div className='tt-nav-grid'>
-                {pages.map((page, index) => (
+            <main className='tt-nav-grid'>
+                {props.pages.map((page, index) => (
                     <NavLink
                         key={page.path}
                         to={page.path}
@@ -44,10 +47,12 @@ const TTNav: React.FC<iTTNavProps> = ({ appName, pages, subtitle }) => {
                         style={{ animationDelay: `${index * 0.05}s` }}
                     >
                         {page.icon && <div className='tt-nav-tile-icon'>{page.icon}</div>}
+
                         <div className='tt-nav-tile-content'>
                             <h2 className='tt-nav-tile-title'>{page.title}</h2>
                             {page.description && <p className='tt-nav-tile-description'>{page.description}</p>}
                         </div>
+
                         <svg
                             className='tt-nav-tile-arrow'
                             width='20'
@@ -63,8 +68,8 @@ const TTNav: React.FC<iTTNavProps> = ({ appName, pages, subtitle }) => {
                         </svg>
                     </NavLink>
                 ))}
-            </div>
-        </div>
+            </main>
+        </nav>
     );
 };
 
