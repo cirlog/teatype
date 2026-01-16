@@ -17,7 +17,8 @@
 import { Routes, Route } from 'react-router-dom';
 
 // Components
-import { iPageInfo, TTApp, TTNav, TTPage } from '@teatype/components';
+import { HSDBAdmin } from '@teatype/apps';
+import { iPageInfo, TeaApp, TeaNav, TeaPage } from '@teatype/components';
 
 import { DatabaseIcon, ModelsIcon, SettingsIcon } from '@teatype/icons';
 
@@ -32,9 +33,11 @@ const PAGES: iPageInfo[] = [
     {
         title: 'Database Management',
         path: '/database',
+        content: HSDBAdmin,
         longDescription: 'View and manage student (and adjacent) records in the hybrid database.',
         shortDescription: 'Manage Student Records',
         icon: <DatabaseIcon />,
+        tags: ['HSDB', 'Students', 'Records'],
     },
     // {
     //     title: 'Settings',
@@ -46,12 +49,12 @@ const PAGES: iPageInfo[] = [
 
 const StudentDB = () => {
     return (
-        <TTApp name={APP_NAME}>
+        <TeaApp name={APP_NAME}>
             <Routes>
                 <Route
                     path='/'
                     element={
-                        <TTNav appName={APP_NAME} pages={PAGES} subtitle='Test-Application for the HSDB Server OEM' />
+                        <TeaNav appName={APP_NAME} pages={PAGES} subtitle='Test-Application for the HSDB Server OEM' />
                     }
                 />
                 {PAGES.map((page) => (
@@ -59,14 +62,19 @@ const StudentDB = () => {
                         key={page.path}
                         path={page.path}
                         element={
-                            <TTPage appName={APP_NAME} title={page.title} description={page.longDescription}>
+                            <TeaPage
+                                appName={APP_NAME}
+                                title={page.title}
+                                description={page.longDescription}
+                                tags={page.tags}
+                            >
                                 <p>{page.title} content goes here...</p>
-                            </TTPage>
+                            </TeaPage>
                         }
                     />
                 ))}
             </Routes>
-        </TTApp>
+        </TeaApp>
     );
 };
 

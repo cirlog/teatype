@@ -1,5 +1,4 @@
 /**
- * @license
  * Copyright (C) 2024-2026 Burak Günaydin
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -13,15 +12,8 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-export { TeaApp } from './TeaApp';
-export { TeaIcon } from './TeaIcon';
-export { TeaInfotip } from './TeaInfotip';
-export { TeaNav } from './TeaNav';
-export { TeaPage } from './TeaPage';
-export { TeaTag } from './TeaTag';
-export { TeaTags } from './TeaTags';
-export { TeaTooltip } from './TeaTooltip';
-
-// Types
-export type { iPage, iPage as iPageInfo } from './TeaApp';
+#tea-app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}

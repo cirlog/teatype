@@ -14,14 +14,28 @@
  */
 
 // Components
-export { TeaApp } from './TeaApp';
-export { TeaIcon } from './TeaIcon';
-export { TeaInfotip } from './TeaInfotip';
-export { TeaNav } from './TeaNav';
-export { TeaPage } from './TeaPage';
-export { TeaTag } from './TeaTag';
-export { TeaTags } from './TeaTags';
-export { TeaTooltip } from './TeaTooltip';
+import { TeaTag } from './TeaTag';
 
-// Types
-export type { iPage, iPage as iPageInfo } from './TeaApp';
+// Style
+import './style/TeaTags.scss';
+
+interface iTeaTagsProps {
+    className?: string;
+    tags: string[];
+}
+
+const TeaTags: React.FC<iTeaTagsProps> = ({ className, tags }) => {
+    if (!tags || tags.length === 0) return null;
+
+    return (
+        <div className={`tea-tags${className ? ` ${className}` : ''}`}>
+            {tags.map((tag, index) => (
+                <TeaTag key={index}>{tag}</TeaTag>
+            ))}
+        </div>
+    );
+};
+
+export default TeaTags;
+
+export { TeaTags };

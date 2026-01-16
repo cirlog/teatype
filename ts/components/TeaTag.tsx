@@ -14,29 +14,16 @@
  */
 
 // Style
-import './style/TTTooltip.scss';
+import './style/TeaTag.scss';
 
-type tTooltipPosition = 'top' | 'bottom' | 'left' | 'right';
-
-interface iTTTooltipProps {
+interface iTeaTagProps {
     children: React.ReactNode;
-    position?: tTooltipPosition;
-    trigger: React.ReactNode;
 }
 
-const TTTooltip: React.FC<iTTTooltipProps> = (props) => {
-    const position = props.position || 'top';
-
-    return (
-        <div className={`tt-tooltip tt-tooltip--${position}`}>
-            <div className='tt-tooltip__trigger'>{props.trigger}</div>
-            <div className='tt-tooltip__content'>{props.children}</div>
-        </div>
-    );
+const TeaTag: React.FC<iTeaTagProps> = ({ children }) => {
+    return <span className='tea-tag'>{children}</span>;
 };
 
-export default TTTooltip;
+export default TeaTag;
 
-export { TTTooltip };
-
-export type { tTooltipPosition };
+export { TeaTag };

@@ -12,18 +12,18 @@
  * all copies or substantial portions of the Software.
  */
 
-#tt-nav {
+#tea-nav {
     min-height: 100vh;
     padding: 4rem clamp(2rem, 8vw, 5rem);
 
-    .tt-nav-header {
+    .tea-nav-header {
         margin-bottom: 3rem;
 
-        animation: tt-nav-header-fade-in 0.4s ease-out;
+        animation: tea-nav-header-fade-in 0.4s ease-out;
         text-align: center;
     }
 
-    @keyframes tt-nav-header-fade-in {
+    @keyframes tea-nav-header-fade-in {
         from {
             opacity: 0;
             transform: translateY(-12px);
@@ -34,21 +34,21 @@
         }
     }
 
-    .tt-nav-title {
+    .tea-nav-title {
         margin: 0;
 
         font-size: clamp(2rem, 6vw, 3rem);
         font-weight: 600;
     }
 
-    .tt-nav-subtitle {
+    .tea-nav-subtitle {
         margin: 0.5rem 0 0;
 
         color: var(--text-muted);
         font-size: 1rem;
     }
 
-    .tt-nav-grid {
+    .tea-nav-grid {
         display: grid;
         gap: 1rem;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -56,7 +56,7 @@
         margin: 0 auto;
     }
 
-    .tt-nav-tile {
+    .tea-nav-tile {
         display: flex;
         align-items: center;
         gap: 1rem;
@@ -70,7 +70,7 @@
         cursor: pointer;
         text-align: left;
 
-        animation: tt-nav-tile-fade-in 0.4s ease-out backwards;
+        animation: tea-nav-tile-fade-in 0.4s ease-out backwards;
         transition:
             background 0.2s,
             border-color 0.2s,
@@ -83,7 +83,7 @@
             box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
             transform: translateY(-2px);
 
-            .tt-nav-tile-arrow {
+            .tea-nav-tile-arrow {
                 opacity: 1;
                 transform: translateX(0);
             }
@@ -94,7 +94,7 @@
         }
     }
 
-    @keyframes tt-nav-tile-fade-in {
+    @keyframes tea-nav-tile-fade-in {
         from {
             opacity: 0;
             transform: translateY(16px);
@@ -105,7 +105,7 @@
         }
     }
 
-    .tt-nav-tile-icon {
+    .tea-nav-tile-icon {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -123,19 +123,19 @@
         }
     }
 
-    .tt-nav-tile-content {
+    .tea-nav-tile-content {
         flex: 1;
         min-width: 0;
     }
 
-    .tt-nav-tile-title {
+    .tea-nav-tile-title {
         margin: 0;
 
         font-size: 1rem;
         font-weight: 500;
     }
 
-    .tt-nav-tile-description {
+    .tea-nav-tile-description {
         margin: 0.25rem 0 0;
 
         color: var(--text-muted);
@@ -146,7 +146,7 @@
         white-space: nowrap;
     }
 
-    .tt-nav-tile-arrow {
+    .tea-nav-tile-arrow {
         flex-shrink: 0;
 
         color: var(--text-muted);

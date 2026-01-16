@@ -16,12 +16,12 @@
 import { NavLink } from 'react-router-dom';
 
 // Components
-import { iPageInfo } from './TTApp';
+import { iPageInfo } from './TeaApp';
 
 // Style
-import './style/TTNav.scss';
+import './style/TeaNav.scss';
 
-interface iTTNavProps {
+interface iTeaNavProps {
     appName: string;
     navType?: 'apps';
     pages: iPageInfo[];
@@ -31,30 +31,30 @@ interface iTTNavProps {
 const AppNavigation = (props) => {
     return (
         <>
-            <header className='tt-nav-header'>
-                <h1 className='tt-nav-title'>{props.appName}</h1>
-                {props.subtitle && <p className='tt-nav-subtitle'>{props.subtitle}</p>}
+            <header className='tea-nav-header'>
+                <h1 className='tea-nav-title'>{props.appName}</h1>
+                {props.subtitle && <p className='tea-nav-subtitle'>{props.subtitle}</p>}
             </header>
 
-            <main className='tt-nav-grid'>
+            <main className='tea-nav-grid'>
                 {props.pages.map((page, index) => (
                     <NavLink
                         key={page.path}
                         to={page.path}
-                        className='tt-nav-tile'
+                        className='tea-nav-tile'
                         style={{ animationDelay: `${index * 0.05}s` }}
                     >
-                        {page.icon && <div className='tt-nav-tile-icon'>{page.icon}</div>}
+                        {page.icon && <div className='tea-nav-tile-icon'>{page.icon}</div>}
 
-                        <div className='tt-nav-tile-content'>
-                            <h2 className='tt-nav-tile-title'>{page.title}</h2>
+                        <div className='tea-nav-tile-content'>
+                            <h2 className='tea-nav-tile-title'>{page.title}</h2>
                             {page.shortDescription && (
-                                <p className='tt-nav-tile-description'>{page.shortDescription}</p>
+                                <p className='tea-nav-tile-description'>{page.shortDescription}</p>
                             )}
                         </div>
 
                         <svg
-                            className='tt-nav-tile-arrow'
+                            className='tea-nav-tile-arrow'
                             width='20'
                             height='20'
                             viewBox='0 0 24 24'
@@ -73,16 +73,16 @@ const AppNavigation = (props) => {
     );
 };
 
-const TTNav: React.FC<iTTNavProps> = (props) => {
+const TeaNav: React.FC<iTeaNavProps> = (props) => {
     const navType = 'apps'; // Currently only 'apps' type is supported
     let navContent = null;
     if (navType === 'apps') {
         navContent = <AppNavigation appName={props.appName} pages={props.pages} subtitle={props.subtitle} />;
     }
 
-    return <nav id='tt-nav'>{navContent}</nav>;
+    return <nav id='tea-nav'>{navContent}</nav>;
 };
 
-export default TTNav;
+export default TeaNav;
 
-export { TTNav };
+export { TeaNav };

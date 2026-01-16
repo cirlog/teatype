@@ -13,34 +13,22 @@
  * all copies or substantial portions of the Software.
  */
 
-// React imports
-import { BrowserRouter } from 'react-router-dom';
+// Components
+import { tTooltipPosition, TeaTooltip } from './TeaTooltip';
 
-// Style
-import './style/TTApp.scss';
-
-export interface iPage {
-    path: string;
-    longDescription?: string;
-    shortDescription?: string;
-    title: string;
-}
-
-interface iTTAppProps {
+interface iTeaInfotipProps {
     children: React.ReactNode;
-    name: string;
+    position?: tTooltipPosition;
 }
 
-const TTApp: React.FC<iTTAppProps> = (props) => {
+const TeaInfotip: React.FC<iTeaInfotipProps> = (props) => {
     return (
-        <BrowserRouter>
-            <div id='tt-app' data-app-name={props.name}>
-                {props.children}
-            </div>
-        </BrowserRouter>
+        <TeaTooltip position={props.position} trigger={<span className='tea-page-info-icon'>i</span>}>
+            {props.children}
+        </TeaTooltip>
     );
 };
 
-export default TTApp;
+export default TeaInfotip;
 
-export { TTApp };
+export { TeaInfotip };

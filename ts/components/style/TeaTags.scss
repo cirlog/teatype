@@ -1,5 +1,4 @@
 /**
- * @license
  * Copyright (C) 2024-2026 Burak Günaydin
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -13,22 +12,9 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-import { tTooltipPosition, TTTooltip } from './TTTooltip';
-
-interface iTTInfotipProps {
-    children: React.ReactNode;
-    position?: tTooltipPosition;
+.tea-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 1.5rem;
 }
-
-const TTInfotip: React.FC<iTTInfotipProps> = (props) => {
-    return (
-        <TTTooltip position={props.position} trigger={<span className='tt-page-info-icon'>i</span>}>
-            {props.children}
-        </TTTooltip>
-    );
-};
-
-export default TTInfotip;
-
-export { TTInfotip };

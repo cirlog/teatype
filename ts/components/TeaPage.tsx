@@ -16,46 +16,49 @@
 import { useNavigate } from 'react-router-dom';
 
 // Components
-import { TTInfotip } from './TTInfotip';
+import { TeaInfotip } from './TeaInfotip';
+import { TeaTags } from './TeaTags';
 
 // Icons
 import { ArrowIcon } from '../icons';
 
 // Style
-import './style/TTPage.scss';
+import './style/TeaPage.scss';
 
-interface iTTPageProps {
+interface iTeaPageProps {
     appName?: string;
     backPath?: string;
     children?: React.ReactNode;
     description?: string;
+    tags?: string[];
     title: string;
 }
 
-const TTPage: React.FC<iTTPageProps> = ({ appName, backPath = '/', children, description, title }) => {
+const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, description, tags, title }) => {
     const navigate = useNavigate();
 
     return (
-        <div className='tt-page'>
-            <header className='tt-page-header'>
-                <button className='tt-page-back' onClick={() => navigate(backPath)} aria-label='Go back'>
+        <div className='tea-page'>
+            <header className='tea-page-header'>
+                <button className='tea-page-back' onClick={() => navigate(backPath)} aria-label='Go back'>
                     <ArrowIcon />
                 </button>
 
-                <div className='tt-page-header-content'>
-                    {appName && <p className='tt-page-flare'>{appName}</p>}
-                    <div className='tt-page-title-row'>
-                        <h1 className='tt-page-title'>{title}</h1>
-                        {description && <TTInfotip position='right'>{description}</TTInfotip>}
+                <div className='tea-page-header-content'>
+                    {appName && <p className='tea-page-flare'>{appName}</p>}
+                    <div className='tea-page-title-row'>
+                        <h1 className='tea-page-title'>{title}</h1>
+                        {description && <TeaInfotip position='right'>{description}</TeaInfotip>}
                     </div>
+                    {tags && <TeaTags className='tea-page-tags' tags={tags} />}
                 </div>
             </header>
 
-            <main className='tt-page-main'>{children}</main>
+            <main className='tea-page-main'>{children}</main>
         </div>
     );
 };
 
-export default TTPage;
+export default TeaPage;
 
-export { TTPage };
+export { TeaPage };

@@ -13,15 +13,4 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-export { TeaApp } from './TeaApp';
-export { TeaIcon } from './TeaIcon';
-export { TeaInfotip } from './TeaInfotip';
-export { TeaNav } from './TeaNav';
-export { TeaPage } from './TeaPage';
-export { TeaTag } from './TeaTag';
-export { TeaTags } from './TeaTags';
-export { TeaTooltip } from './TeaTooltip';
-
-// Types
-export type { iPage, iPage as iPageInfo } from './TeaApp';
+export { HSDBAdmin } from './hsdb-admin/src/App';

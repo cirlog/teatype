@@ -12,12 +12,12 @@
  * all copies or substantial portions of the Software.
  */
 
-.tt-page {
+.tea-page {
     min-height: 100vh;
     padding-bottom: 4rem;
-    animation: tt-page-fade-in 0.3s ease-out;
+    animation: tea-page-fade-in 0.3s ease-out;
 
-    @keyframes tt-page-fade-in {
+    @keyframes tea-page-fade-in {
         from {
             opacity: 0;
             transform: translateY(12px);
@@ -28,13 +28,13 @@
         }
     }
 
-    .tt-page-header {
+    .tea-page-header {
         display: flex;
         align-items: flex-start;
         gap: 1rem;
         padding: 4rem clamp(2rem, 8vw, 5rem) 2rem;
 
-        .tt-page-back {
+        .tea-page-back {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -63,10 +63,10 @@
             }
         }
 
-        .tt-page-header-content {
+        .tea-page-header-content {
             flex: 1;
 
-            .tt-page-flare {
+            .tea-page-flare {
                 // margin-bottom: 0.5rem;
 
                 color: var(--text-muted);
@@ -74,10 +74,10 @@
                 letter-spacing: 0.35rem;
                 text-transform: uppercase;
 
-                // animation: tt-flare-fade-in 0.4s ease-out;
+                // animation: tea-flare-fade-in 0.4s ease-out;
             }
 
-            @keyframes tt-flare-fade-in {
+            @keyframes tea-flare-fade-in {
                 from {
                     opacity: 0;
                     // letter-spacing: 0.5rem;
@@ -88,22 +88,22 @@
                 }
             }
 
-            .tt-page-title-row {
+            .tea-page-title-row {
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
             }
 
-            .tt-page-title {
+            .tea-page-title {
                 margin: 0;
 
                 font-size: clamp(1.75rem, 5vw, 2.5rem);
                 font-weight: 600;
 
-                animation: tt-title-fade-in 0.3s ease-out 0.1s backwards;
+                animation: tea-title-fade-in 0.3s ease-out 0.1s backwards;
             }
 
-            @keyframes tt-title-fade-in {
+            @keyframes tea-title-fade-in {
                 from {
                     opacity: 0.25;
                     transform: translateY(8px);
@@ -114,7 +114,7 @@
                 }
             }
 
-            .tt-page-info-icon {
+            .tea-page-info-icon {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -139,10 +139,27 @@
                     color: var(--accent);
                 }
             }
+
+            .tea-page-tags {
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-8px);
+                transition:
+                    opacity 0.2s,
+                    transform 0.2s,
+                    visibility 0.2s;
+            }
+
+            // Show tags when hovering the tooltip trigger
+            &:has(.tea-tooltip:hover) .tea-page-tags {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
         }
     }
 
-    .tt-page-main {
+    .tea-page-main {
         padding: 0 clamp(2rem, 8vw, 5rem) 2rem;
 
         .grid {

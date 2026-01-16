@@ -1,0 +1,15 @@
+{
+    "name": "@teatype/apps",
+    "version": "1.0.0",
+    "description": "Shared React apps for Teatype apps",
+    "private": true,
+    "type": "module",
+    "main": "./index.ts",
+    "exports": {
+        ".": "./index.ts",
+        "./*": "./*.ts"
+    },
+    "peerDependencies": {
+        "react": "^19.0.0"
+    }
+}
