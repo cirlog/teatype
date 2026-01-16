@@ -14,16 +14,11 @@
  */
 
 // Components
-import { TTTooltip } from './TTTooltip';
-
-// Style
-import './style/TTInfotip.scss';
-
-type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+import { tTooltipPosition, TTTooltip } from './TTTooltip';
 
 interface iTTInfotipProps {
     children: React.ReactNode;
-    position?: TooltipPosition;
+    position?: tTooltipPosition;
 }
 
 const TTInfotip: React.FC<iTTInfotipProps> = (props) => {
@@ -37,5 +32,3 @@ const TTInfotip: React.FC<iTTInfotipProps> = (props) => {
 export default TTInfotip;
 
 export { TTInfotip };
-
-export type { TooltipPosition };
