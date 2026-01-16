@@ -33,6 +33,7 @@ interface iTeaAppProps {
     name: string;
 }
 
+// TODO: Add settings with ui themes dark/light/flow and slider for content width for now
 const TeaApp: React.FC<iTeaAppProps> = (props) => {
     return (
         <BrowserRouter>

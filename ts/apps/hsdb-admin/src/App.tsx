@@ -55,11 +55,6 @@ export default function App() {
         <div className='hsdb-dashboard'>
             <Toaster position='top-right' />
 
-            <header className='hsdb-dashboard__header'>
-                <h1>HSDB Admin Dashboard</h1>
-                <p>Manage your Django student database</p>
-            </header>
-
             <div className='hsdb-dashboard__stats'>
                 <div className='stat-card'>
                     <p className='stat-card__label'>Total Students</p>

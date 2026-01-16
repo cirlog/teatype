@@ -20,16 +20,18 @@ import { Routes, Route } from 'react-router-dom';
 import { HSDBAdmin } from '@teatype/apps';
 import { iPageInfo, TeaApp, TeaNav, TeaPage } from '@teatype/components';
 
-import { DatabaseIcon, ModelsIcon, SettingsIcon } from '@teatype/icons';
+import { DatabaseIcon, ModelsIcon } from '@teatype/icons';
 
 const APP_NAME = 'Student DB Dashboard';
 const PAGES: iPageInfo[] = [
-    // {
-    //     title: 'Model Selection',
-    //     path: '/models',
-    //     description: 'Select and configure AI models for your student database application.',
-    //     icon: <ModelsIcon />,
-    // },
+    {
+        title: 'Model Selection',
+        path: '/models',
+        longDescription: 'Select and configure database models for your student database application.',
+        shortDescription: 'Configure Database Models',
+        icon: <ModelsIcon />,
+        tags: ['HSDB', 'Models', 'Configuration'],
+    },
     {
         title: 'Database Management',
         path: '/database',
@@ -39,12 +41,6 @@ const PAGES: iPageInfo[] = [
         icon: <DatabaseIcon />,
         tags: ['HSDB', 'Students', 'Records'],
     },
-    // {
-    //     title: 'Settings',
-    //     path: '/settings',
-    //     description: 'Configure application preferences and system settings.',
-    //     icon: <SettingsIcon />,
-    // },
 ];
 
 const StudentDB = () => {
