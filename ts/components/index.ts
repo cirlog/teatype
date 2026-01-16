@@ -19,9 +19,11 @@ export { TeaIcon } from './TeaIcon';
 export { TeaInfotip } from './TeaInfotip';
 export { TeaNav } from './TeaNav';
 export { TeaPage } from './TeaPage';
+export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaSettings';
 export { TeaTag } from './TeaTag';
 export { TeaTags } from './TeaTags';
 export { TeaTooltip } from './TeaTooltip';
 
 // Types
-export type { iPage, iPage as iPageInfo } from './TeaApp';
+export type { iPageInfo } from './TeaApp';
+export type { Theme } from './TeaSettings';

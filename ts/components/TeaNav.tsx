@@ -13,6 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
+import { useState, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 
 // Components
@@ -28,7 +29,38 @@ interface iTeaNavProps {
     subtitle?: string;
 }
 
-const AppNavigation = (props) => {
+interface AppNavigationProps {
+    appName: string;
+    pages: iPageInfo[];
+    subtitle?: string;
+}
+
+const AppNavigation: React.FC<AppNavigationProps> = (props) => {
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+    // Collect all unique tags from pages
+    const allTags = useMemo(() => {
+        const tags = new Set<string>();
+        props.pages.forEach((page) => {
+            page.tags?.forEach((tag) => tags.add(tag));
+        });
+        return Array.from(tags).sort();
+    }, [props.pages]);
+
+    // Filter pages based on selected tags
+    const filteredPages = useMemo(() => {
+        if (selectedTags.length === 0) return props.pages;
+        return props.pages.filter((page) => page.tags?.some((tag) => selectedTags.includes(tag)));
+    }, [props.pages, selectedTags]);
+
+    const toggleTag = (tag: string) => {
+        setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+    };
+
+    const clearFilters = () => {
+        setSelectedTags([]);
+    };
+
     return (
         <>
             <header className='tea-nav-header'>
@@ -36,8 +68,29 @@ const AppNavigation = (props) => {
                 {props.subtitle && <p className='tea-nav-subtitle'>{props.subtitle}</p>}
             </header>
 
+            {allTags.length > 0 && (
+                <div className='tea-nav-filter'>
+                    <div className='tea-nav-filter-tags'>
+                        {allTags.map((tag) => (
+                            <button
+                                key={tag}
+                                className={`tea-nav-filter-tag ${selectedTags.includes(tag) ? 'active' : ''}`}
+                                onClick={() => toggleTag(tag)}
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
+                    {selectedTags.length > 0 && (
+                        <button className='tea-nav-filter-clear' onClick={clearFilters}>
+                            Clear filters
+                        </button>
+                    )}
+                </div>
+            )}
+
             <main className='tea-nav-grid'>
-                {props.pages.map((page, index) => (
+                {filteredPages.map((page, index) => (
                     <NavLink
                         key={page.path}
                         to={page.path}
@@ -68,6 +121,13 @@ const AppNavigation = (props) => {
                         </svg>
                     </NavLink>
                 ))}
+
+                {filteredPages.length === 0 && (
+                    <div className='tea-nav-empty'>
+                        <p>No apps match the selected filters</p>
+                        <button onClick={clearFilters}>Clear filters</button>
+                    </div>
+                )}
             </main>
         </>
     );

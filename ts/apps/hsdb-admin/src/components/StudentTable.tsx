@@ -76,54 +76,58 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
 
     return (
         <div className='student-table'>
-            <table>
-                <thead>
-                    <tr>
-                        <th className='sortable' onClick={() => handleSort('name')}>
-                            Name{getSortIndicator('name')}
-                        </th>
-                        <th className='sortable' onClick={() => handleSort('age')}>
-                            Age{getSortIndicator('age')}
-                        </th>
-                        <th className='sortable' onClick={() => handleSort('gender')}>
-                            Gender{getSortIndicator('gender')}
-                        </th>
-                        <th className='sortable' onClick={() => handleSort('height')}>
-                            Height (cm){getSortIndicator('height')}
-                        </th>
-                        <th className='sortable' onClick={() => handleSort('school')}>
-                            School ID{getSortIndicator('school')}
-                        </th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {paginatedStudents.map((student) => (
-                        <tr key={student.id}>
-                            <td>{student.name}</td>
-                            <td>{student.age}</td>
-                            <td>{student.gender}</td>
-                            <td>{student.height}</td>
-                            <td className='mono'>{student.school ? `${student.school.substring(0, 8)}...` : '-'}</td>
-                            <td className='actions'>
-                                <button className='btn btn--sm btn--edit' onClick={() => onEdit(student)}>
-                                    Edit
-                                </button>
-                                <button
-                                    className='btn btn--sm btn--delete'
-                                    onClick={() => {
-                                        if (confirm(`Delete ${student.name}?`)) {
-                                            onDelete(student.id);
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                            </td>
+            <div className='student-table__wrapper'>
+                <table>
+                    <thead>
+                        <tr>
+                            <th className='sortable' onClick={() => handleSort('name')}>
+                                Name{getSortIndicator('name')}
+                            </th>
+                            <th className='sortable' onClick={() => handleSort('age')}>
+                                Age{getSortIndicator('age')}
+                            </th>
+                            <th className='sortable' onClick={() => handleSort('gender')}>
+                                Gender{getSortIndicator('gender')}
+                            </th>
+                            <th className='sortable' onClick={() => handleSort('height')}>
+                                Height (cm){getSortIndicator('height')}
+                            </th>
+                            <th className='sortable' onClick={() => handleSort('school')}>
+                                School ID{getSortIndicator('school')}
+                            </th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {paginatedStudents.map((student) => (
+                            <tr key={student.id}>
+                                <td>{student.name}</td>
+                                <td>{student.age}</td>
+                                <td>{student.gender}</td>
+                                <td>{student.height}</td>
+                                <td className='mono'>
+                                    {student.school ? `${student.school.substring(0, 8)}...` : '-'}
+                                </td>
+                                <td className='actions'>
+                                    <button className='btn btn--sm btn--edit' onClick={() => onEdit(student)}>
+                                        Edit
+                                    </button>
+                                    <button
+                                        className='btn btn--sm btn--delete'
+                                        onClick={() => {
+                                            if (confirm(`Delete ${student.name}?`)) {
+                                                onDelete(student.id);
+                                            }
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
             {students.length === 0 && (
                 <div className='empty-state'>

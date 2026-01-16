@@ -12,8 +12,200 @@
  * all copies or substantial portions of the Software.
  */
 
+$settings-width: 320px;
+
 #tea-app {
+    position: relative;
+
     display: flex;
-    flex-direction: column;
     min-height: 100vh;
+    overflow: hidden;
+
+    // Settings toggle button
+    .tea-app-settings-toggle {
+        position: fixed;
+        top: 1.25rem;
+        right: 1.25rem;
+        z-index: 100;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+
+        background: var(--surface-card);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text-muted);
+        cursor: pointer;
+
+        transition:
+            background 0.2s,
+            border-color 0.2s,
+            color 0.2s,
+            transform 0.2s;
+
+        svg {
+            width: 1.25rem;
+            height: 1.25rem;
+
+            transition: transform 0.3s ease;
+        }
+
+        &:hover {
+            background: rgba(20, 33, 61, 0.85);
+            border-color: var(--accent);
+            color: var(--accent);
+
+            svg {
+                transform: rotate(45deg);
+            }
+        }
+    }
+
+    // Main content area
+    .tea-app-content {
+        flex: 1;
+        min-width: 0;
+        overflow-y: auto;
+
+        transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    // Settings sidebar
+    .tea-app-settings-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 90;
+
+        width: $settings-width;
+
+        background: linear-gradient(180deg, rgba(8, 12, 21, 0.98) 0%, rgba(12, 18, 32, 0.98) 100%);
+        border-left: 1px solid rgba(0, 0, 0, 0.5);
+        box-shadow:
+            inset 2px 0 8px rgba(0, 0, 0, 0.4),
+            inset 1px 0 0 rgba(255, 255, 255, 0.03),
+            -8px 0 32px rgba(0, 0, 0, 0.3);
+
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    // Settings open state
+    &.settings-open {
+        .tea-app-content {
+            margin-right: $settings-width;
+        }
+
+        .tea-app-settings-sidebar {
+            transform: translateX(0);
+        }
+
+        .tea-app-settings-toggle {
+            right: calc(#{$settings-width} + 1.25rem);
+
+            svg {
+                transform: rotate(90deg);
+            }
+
+            &:hover svg {
+                transform: rotate(135deg);
+            }
+        }
+    }
+}
+
+// Theme variables
+:root {
+    --tea-content-width: 85%;
+}
+
+// Dark theme (black/gray gradient with orange accents)
+[data-theme='dark'] {
+    --surface: #0a0a0a;
+    --surface-elevated: #141414;
+    --surface-card: rgba(20, 20, 20, 0.75);
+    --text-primary: #f5f5f5;
+    --text-muted: #888888;
+    --accent: #f97316;
+    --accent-soft: rgba(249, 115, 22, 0.15);
+    --border: rgba(255, 255, 255, 0.08);
+    --shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    --success: #22c55e;
+    --warning: #eab308;
+    --settings-accent: #f97316;
+}
+
+[data-theme='dark'] body,
+[data-theme='dark'] #root {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+}
+
+// Flow theme (current default - deep blue with purple accents)
+[data-theme='flow'] {
+    --surface: #0f172a;
+    --surface-elevated: #14213d;
+    --surface-card: rgba(20, 33, 61, 0.65);
+    --text-primary: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #7c3aed;
+    --accent-soft: rgba(124, 58, 237, 0.18);
+    --border: rgba(226, 232, 240, 0.1);
+    --shadow: 0 25px 50px rgba(15, 23, 42, 0.35);
+    --success: #10b981;
+    --warning: #f97316;
+    --settings-accent: #7c3aed;
+}
+
+[data-theme='flow'] body,
+[data-theme='flow'] #root {
+    background:
+        radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),
+        radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.2), transparent 35%), #0f172a;
+}
+
+// Light theme (clean white with subtle shadows)
+[data-theme='light'] {
+    --surface: #ffffff;
+    --surface-elevated: #f8fafc;
+    --surface-card: rgba(255, 255, 255, 0.85);
+    --text-primary: #1e293b;
+    --text-muted: #64748b;
+    --accent: #6366f1;
+    --accent-soft: rgba(99, 102, 241, 0.12);
+    --border: rgba(15, 23, 42, 0.08);
+    --shadow: 0 25px 50px rgba(15, 23, 42, 0.1);
+    --success: #059669;
+    --warning: #d97706;
+    --settings-accent: #6366f1;
+}
+
+[data-theme='light'] body,
+[data-theme='light'] #root {
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+[data-theme='light'] .tea-app-settings-sidebar {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%);
+    border-left-color: rgba(0, 0, 0, 0.1);
+    box-shadow:
+        inset 2px 0 8px rgba(0, 0, 0, 0.05),
+        inset 1px 0 0 rgba(255, 255, 255, 0.5),
+        -8px 0 32px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .tea-settings-theme-option {
+    background: rgba(0, 0, 0, 0.03);
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+}
+
+[data-theme='light'] .tea-settings-slider {
+    background: rgba(0, 0, 0, 0.1);
 }

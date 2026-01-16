@@ -16,11 +16,19 @@
 // React imports
 import { BrowserRouter } from 'react-router-dom';
 
+// Components
+import { TeaSettingsProvider, TeaSettingsPanel, useTeaSettings } from './TeaSettings';
+
+// Icons
+import { SettingsIcon } from '../icons';
+
 // Style
 import './style/TeaApp.scss';
+import './style/TeaSettings.scss';
 
-interface iPage {
+interface iPageInfo {
     content?: React.FC;
+    icon?: React.ReactNode;
     longDescription?: string;
     path: string;
     shortDescription?: string;
@@ -33,13 +41,34 @@ interface iTeaAppProps {
     name: string;
 }
 
-// TODO: Add settings with ui themes dark/light/flow and slider for content width for now
+const TeaAppContent: React.FC<iTeaAppProps> = (props) => {
+    const { isSettingsOpen, setIsSettingsOpen } = useTeaSettings();
+
+    return (
+        <div id='tea-app' data-app-name={props.name} className={isSettingsOpen ? 'settings-open' : ''}>
+            <button
+                className='tea-app-settings-toggle'
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                aria-label='Toggle settings'
+            >
+                <SettingsIcon />
+            </button>
+
+            <div className='tea-app-content'>{props.children}</div>
+
+            <aside className='tea-app-settings-sidebar'>
+                <TeaSettingsPanel onClose={() => setIsSettingsOpen(false)} />
+            </aside>
+        </div>
+    );
+};
+
 const TeaApp: React.FC<iTeaAppProps> = (props) => {
     return (
         <BrowserRouter>
-            <div id='tea-app' data-app-name={props.name}>
-                {props.children}
-            </div>
+            <TeaSettingsProvider>
+                <TeaAppContent name={props.name}>{props.children}</TeaAppContent>
+            </TeaSettingsProvider>
         </BrowserRouter>
     );
 };
@@ -48,4 +77,4 @@ export default TeaApp;
 
 export { TeaApp };
 
-export type { iPage };
+export type { iPageInfo };

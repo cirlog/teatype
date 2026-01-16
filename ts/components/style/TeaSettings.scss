@@ -1,0 +1,212 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+// Settings panel styles
+.tea-settings-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .tea-settings-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem;
+
+        border-bottom: 1px solid var(--border);
+
+        h2 {
+            margin: 0;
+
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+    }
+
+    .tea-settings-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: var(--text-muted);
+        cursor: pointer;
+
+        transition:
+            background 0.15s,
+            border-color 0.15s,
+            color 0.15s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+    }
+
+    .tea-settings-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    .tea-settings-section {
+        margin-bottom: 2rem;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        h3 {
+            margin: 0 0 1rem;
+
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    }
+
+    .tea-settings-theme-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .tea-settings-theme-option {
+        display: grid;
+        grid-template-columns: 3rem 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+        gap: 0.25rem 0.875rem;
+        padding: 0.875rem;
+
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text-primary);
+        cursor: pointer;
+        text-align: left;
+
+        transition:
+            background 0.15s,
+            border-color 0.15s,
+            box-shadow 0.15s;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        &.active {
+            border-color: var(--settings-accent, var(--accent));
+            box-shadow: 0 0 0 1px var(--settings-accent, var(--accent));
+        }
+    }
+
+    .tea-settings-theme-preview {
+        grid-row: span 2;
+        width: 3rem;
+        height: 3rem;
+
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        &.theme-dark {
+            background: linear-gradient(135deg, #111 0%, #222 50%, #333 100%);
+        }
+
+        &.theme-flow {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #7c3aed 100%);
+        }
+
+        &.theme-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+        }
+    }
+
+    .tea-settings-theme-label {
+        font-size: 0.9375rem;
+        font-weight: 500;
+    }
+
+    .tea-settings-theme-desc {
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+    }
+
+    .tea-settings-slider-container {
+        padding: 0.5rem 0;
+    }
+
+    .tea-settings-slider {
+        width: 100%;
+        height: 6px;
+
+        appearance: none;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 3px;
+        cursor: pointer;
+
+        &::-webkit-slider-thumb {
+            width: 18px;
+            height: 18px;
+
+            appearance: none;
+            background: var(--settings-accent, var(--accent));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            cursor: grab;
+
+            transition: transform 0.15s;
+
+            &:hover {
+                transform: scale(1.1);
+            }
+
+            &:active {
+                cursor: grabbing;
+            }
+        }
+
+        &::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+
+            background: var(--settings-accent, var(--accent));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            cursor: grab;
+        }
+    }
+
+    .tea-settings-slider-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+
+    .tea-settings-slider-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+}
