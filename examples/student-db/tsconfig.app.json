@@ -54,6 +54,8 @@
         // Path mapping for cleaner imports - @/* maps to the src directory
         "paths": {
             "@/*": ["./src/*"],
+            "@teatype": ["../../ts/components/index.ts"],
+            "@teatype/style/*": ["../../ts/style/*"],
             "@teatype/*": ["../../ts/*"]
         }
     },

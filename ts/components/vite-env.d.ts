@@ -13,22 +13,10 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-import { TTApp } from '@teatype/components';
+/// <reference types="vite/client" />
 
-const StudentDB = () => {
-    return (
-        <TTApp
-            description='Select and configure AI models for your student database application.'
-            flare='HSDB Dashboard'
-            pod={0}
-            title='Model selection'
-            type='app'
-            unit='teatype'
-        >
-            <TTPage >
-        </TTApp>
-    );
-};
-
-export default StudentDB;
+// Type declarations for SCSS modules
+declare module '*.scss' {
+    const content: { [className: string]: string };
+    export default content;
+}

@@ -13,13 +13,16 @@
  * all copies or substantial portions of the Software.
  */
 
+// Components
+import { TTInfotip } from './TTInfotip';
+
 // Style
-import './style/TeaTypeApp.scss';
+import './style/TTApp.scss';
 
 interface iHeroTagsProps {
-    name: string;
-    pod: number;
-    type: string;
+    name?: string;
+    pod?: number;
+    type?: string;
 }
 
 const HeroTags = ({ name, pod, type }: iHeroTagsProps) => {
@@ -32,28 +35,37 @@ const HeroTags = ({ name, pod, type }: iHeroTagsProps) => {
     );
 };
 
-interface iTeaTypeAppProps {
+interface iTTAppProps {
+    children: React.ReactNode;
     description?: string;
-    eyebrow?: string;
+    flare?: string;
     pod?: number;
     title?: string;
     type?: string;
     unit?: string;
 }
 
-const TeaTypeApp: React.FC<iTeaTypeAppProps> = (props) => {
+const TTApp: React.FC<iTTAppProps> = (props) => {
     return (
-        <header className='hero'>
-            <div className='hero__content'>
-                <p className='hero__eyebrow'>{props.eyebrow}</p>
-                <h1>{props.title}</h1>
-                <p className='hero__lede'>{props.description}</p>
-                <HeroTags name={props.unit} pod={props.pod} type={props.type} />
-            </div>
-        </header>
+        <div id='tt-app'>
+            <header>
+                <p className='tt-app-flare'>{props.flare}</p>
+                <div className='tt-app-title-row'>
+                    <h1>{props.title}</h1>
+                    {/* {props.description && (
+                        <div className='hero__info'>
+                            <TTInfotip position='right'>{props.description}</TTInfotip>
+                        </div>
+                    )} */}
+                </div>
+                {/* <HeroTags name={props.unit} pod={props.pod} type={props.type} /> */}
+            </header>
+
+            <main>{props.children}</main>
+        </div>
     );
 };
 
-export default TeaTypeApp;
+export default TTApp;
 
-export { TeaTypeApp };
+export { TTApp };

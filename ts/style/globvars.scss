@@ -32,6 +32,27 @@ $white: #eee;
 $yellow: #ffd376;
 $yellow-dark: #d1a64b;
 
+// Surface colors
+$surface: #0f172a;
+$surface-elevated: #14213d;
+$surface-card: rgba(20, 33, 61, 0.65);
+
+// Text colors
+$text-primary: #e2e8f0;
+$text-muted: #94a3b8;
+
+// Accent colors
+$accent: #7c3aed;
+$accent-soft: rgba(124, 58, 237, 0.18);
+
+// Status colors
+$success: #10b981;
+$warning: #f97316;
+
+// Borders & shadows
+$border: rgba(226, 232, 240, 0.1);
+$shadow: 0 25px 50px rgba(15, 23, 42, 0.35);
+
 // Gradients
 $teatype-gradient: linear-gradient(90deg, #f48a51 0%, #ef6a5f 25%, #e03a7d 50%, #c8329a 75%, #9b28b0 100%);
 $teatype-gradient-allblue: radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),

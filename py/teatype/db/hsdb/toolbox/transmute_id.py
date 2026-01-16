@@ -10,26 +10,20 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Standard-library imports
-from typing import TypeVar
-
 # Third-party imports
-from teatype.db.hsdb.HSDBAttribute import HSDBAttribute as HSDBAttributeClass
-from teatype.db.hsdb.HSDBField import HSDBField as HSDBFieldClass
-
-HSDBAttribute = TypeVar(HSDBAttributeClass)
-HSDBField = TypeVar(HSDBFieldClass)
+from teatype.db.hsdb.HSDBAttribute import HSDBAttribute
+from teatype.db.hsdb.HSDBField import HSDBField
 
 def transmute_id(entry_id:HSDBField|str) -> str:
     """
     Transmute the ID to a format that is compatible with the index.
     """
     entry_id_type = type(entry_id)
-    if entry_id_type is not str and entry_id_type is HSDBField and entry_id_type is not HSDBFieldClass._ValueWrapper:
+    if entry_id_type is not str and entry_id_type is HSDBField and entry_id_type is not HSDBField._ValueWrapper:
         raise TypeError(f'Entry ID must be a string or a HSDBField (subclass), not {entry_id_type}.')
-    if isinstance(entry_id, HSDBFieldClass) or \
-        isinstance(entry_id, HSDBFieldClass._ValueWrapper) or \
-        isinstance(entry_id, HSDBAttributeClass) or \
-        isinstance(entry_id, HSDBAttributeClass._AttributeWrapper):
+    if isinstance(entry_id, HSDBField) or \
+        isinstance(entry_id, HSDBField._ValueWrapper) or \
+        isinstance(entry_id, HSDBAttribute) or \
+        isinstance(entry_id, HSDBAttribute._AttributeWrapper):
         entry_id = entry_id.value
     return entry_id

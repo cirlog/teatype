@@ -36,7 +36,8 @@ export const getBaseViteConfig = (): UserConfig => ({
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
-            '@teatype': resolve(__dirname, '../../ts'),
+            '@teatype/style': resolve(__dirname, '../../ts/style'),
+            '@teatype/components': resolve(__dirname, '../../ts/components'),
         },
     },
     server: {

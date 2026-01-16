@@ -13,22 +13,30 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-import { TTApp } from '@teatype/components';
+// Style
+import './style/TTTooltip.scss';
 
-const StudentDB = () => {
+type tTooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
+interface iTTTooltipProps {
+    children: React.ReactNode;
+    position?: tTooltipPosition;
+    trigger: React.ReactNode;
+}
+
+const TTTooltip: React.FC<iTTTooltipProps> = (props) => {
+    const position = props.position || 'top';
+
     return (
-        <TTApp
-            description='Select and configure AI models for your student database application.'
-            flare='HSDB Dashboard'
-            pod={0}
-            title='Model selection'
-            type='app'
-            unit='teatype'
-        >
-            <TTPage >
-        </TTApp>
+        <div className={`tt-tooltip tt-tooltip--${position}`}>
+            <div className='tt-tooltip__trigger'>{props.trigger}</div>
+            <div className='tt-tooltip__content'>{props.children}</div>
+        </div>
     );
 };
 
-export default StudentDB;
+export default TTTooltip;
+
+export { TTTooltip };
+
+export type { tTooltipPosition };

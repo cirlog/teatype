@@ -14,21 +14,25 @@
  */
 
 // Components
-import { TTApp } from '@teatype/components';
+import { TTTooltip } from './TTTooltip';
 
-const StudentDB = () => {
-    return (
-        <TTApp
-            description='Select and configure AI models for your student database application.'
-            flare='HSDB Dashboard'
-            pod={0}
-            title='Model selection'
-            type='app'
-            unit='teatype'
-        >
-            <TTPage >
-        </TTApp>
-    );
+// Style
+import './style/TTInfotip.scss';
+
+type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
+interface iTTInfotipProps {
+    children: React.ReactNode;
+    position?: TooltipPosition;
+    trigger: React.ReactNode;
+}
+
+const TTInfotip: React.FC<iTTInfotipProps> = ({ children, content, position = 'right' }) => {
+    return <TTTooltip position='right'>{props.children}</TTTooltip>;
 };
 
-export default StudentDB;
+export default TTInfotip;
+
+export { TTInfotip };
+
+export type { TooltipPosition };
