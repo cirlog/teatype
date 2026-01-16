@@ -25,7 +25,7 @@
         min-width: 200px;
         max-width: 320px;
         padding: 0.85rem 1rem;
-        background: rgba(15, 23, 42, 0.85);
+        background: var(--surface-elevated);
         backdrop-filter: blur(12px);
         border: 1px solid var(--border);
         border-radius: 10px;
@@ -49,7 +49,7 @@
             position: absolute;
             width: 10px;
             height: 10px;
-            background: rgba(15, 23, 42, 0.85);
+            background: var(--surface-elevated);
         }
     }
 

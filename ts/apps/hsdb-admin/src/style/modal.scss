@@ -100,7 +100,7 @@
             color 0.15s ease;
 
         &:hover {
-            background: rgba(15, 23, 42, 0.55);
+            background: var(--surface-card);
             border-color: var(--border);
             color: var(--text-primary);
         }
@@ -117,7 +117,7 @@
         gap: 0.75rem;
         padding: 1rem 1.5rem;
 
-        background: rgba(15, 23, 42, 0.25);
+        background: var(--surface-elevated);
         border-top: 1px solid var(--border);
     }
 }

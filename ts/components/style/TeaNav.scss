@@ -81,7 +81,7 @@
     .tea-nav-filter-tag {
         padding: 0.375rem 0.875rem;
 
-        background: rgba(15, 23, 42, 0.35);
+        background: var(--surface-card);
         backdrop-filter: blur(8px);
         border: 1px solid var(--border);
         border-radius: 999px;
@@ -97,7 +97,7 @@
             transform 0.15s;
 
         &:hover {
-            background: rgba(15, 23, 42, 0.55);
+            background: var(--surface-elevated);
             border-color: var(--accent);
             color: var(--text-primary);
         }
@@ -155,9 +155,9 @@
             transform 0.2s;
 
         &:hover {
-            background: rgba(20, 33, 61, 0.85);
+            background: var(--surface-elevated);
             border-color: var(--accent);
-            box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
+            box-shadow: 0 8px 32px var(--accent-soft);
             transform: translateY(-2px);
 
             .tea-nav-tile-arrow {

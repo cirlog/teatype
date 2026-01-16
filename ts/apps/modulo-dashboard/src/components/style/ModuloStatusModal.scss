@@ -61,7 +61,7 @@ $transition-base: 0.2s ease;
         padding: 0.25rem 0.9rem;
         border-radius: $radius-pill;
         border: 1px solid var(--border);
-        background: rgba(15, 23, 42, 0.55);
+        background: var(--surface-card);
         font-size: 0.85rem;
     }
 }

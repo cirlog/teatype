@@ -42,7 +42,7 @@
             height: 2.5rem;
             margin: auto 0;
 
-            background: rgba(15, 23, 42, 0.55);
+            background: var(--surface-card);
             border: 1px solid var(--border);
             border-radius: 50%;
             color: var(--text-muted);
@@ -51,7 +51,7 @@
             transition: all 0.2s;
 
             &:hover {
-                background: rgba(15, 23, 42, 0.75);
+                background: var(--surface-elevated);
                 border-color: var(--accent);
                 color: var(--accent);
                 transform: translateX(-2px);
@@ -122,7 +122,7 @@
                 width: 1.25rem;
                 height: 1.25rem;
 
-                background: rgba(15, 23, 42, 0.55);
+                background: var(--surface-card);
                 border: 1px solid var(--border);
                 border-radius: 50%;
                 color: var(--text-muted);
@@ -147,14 +147,12 @@
                 top: 100%;
                 z-index: 10;
 
-                margin-top: 0.5rem;
+                margin-top: -0.1rem;
 
                 opacity: 0;
                 pointer-events: none;
                 transform: translateY(-8px);
-                transition:
-                    opacity 0.2s,
-                    transform 0.2s;
+                transition: all 0.2s;
             }
 
             // Show tags when hovering the tooltip trigger
