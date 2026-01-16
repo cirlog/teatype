@@ -14,18 +14,20 @@
  */
 
 // Components
-import { TTApp, TTNav, TTPage } from '@teatype/components';
+import { TTApp, TTIcon, TTNav, TTPage } from '@teatype/components';
+
+import { DatabaseIcon, ModelsIcon, SettingsIcon } from '@teatype/icons';
 
 const StudentDB = () => {
     return (
         <TTApp name='HSDB Dashboard'>
-            <TTNav subtitle='Select a module to get started' />
+            <TTNav subtitle='Select a module to get started' appName={''} pages={[]} />
 
             <TTPage
                 id='models'
                 title='Model Selection'
                 description='Select and configure AI models for your student database application.'
-                icon={<ModelIcon />}
+                icon={<ModelsIcon />}
             >
                 <p>Model selection content goes here...</p>
             </TTPage>

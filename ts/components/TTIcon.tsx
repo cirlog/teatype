@@ -29,12 +29,13 @@ const MAX_RETRY_ATTEMPTS = 2;
 const FALLBACK_ICON_PATH = ['basic', 'cir.log-logo'] as const;
 
 interface iTTIconProps {
+    readonly animated?: boolean;
     readonly className?: string;
     readonly filled?: boolean;
     readonly id?: string;
-    readonly animated?: boolean;
     readonly path: readonly string[];
     readonly style?: CSSProperties;
+
     readonly onClick?: React.MouseEventHandler<HTMLElement>;
     readonly onError?: ErrorCallback;
     readonly onLoad?: LoadCallback;
@@ -66,7 +67,7 @@ const resolveIconSource = (
     basePath: readonly string[],
     override: readonly string[] | null,
     isFilled: boolean,
-    isAnimated: boolean
+    isAnimated: boolean,
 ): string => {
     const segments = [...(override ?? basePath)];
 
@@ -114,12 +115,12 @@ const TTIcon = memo<iTTIconProps>(function TTIcon({
                 dispatch({ type: 'FALLBACK' });
             }
         },
-        [onError, fallback.attempts, path]
+        [onError, fallback.attempts, path],
     );
 
     const svgSource = useMemo(
         () => resolveIconSource(path, fallback.overridePath, filled, animated),
-        [path, fallback.overridePath, filled, animated]
+        [path, fallback.overridePath, filled, animated],
     );
 
     const containerClasses = useMemo(() => ['icon', className].filter(Boolean).join(' '), [className]);

@@ -1,0 +1,12 @@
+{
+    "name": "@teatype/icons",
+    "version": "1.0.0",
+    "description": "Shared icons for Teatype apps",
+    "private": true,
+    "type": "module",
+    "main": "./index.ts",
+    "exports": {
+        ".": "./index.ts",
+        "./*": "./*.ts"
+    }
+}

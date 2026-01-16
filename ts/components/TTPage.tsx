@@ -13,36 +13,29 @@
  * all copies or substantial portions of the Software.
  */
 
-import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Components
-import { useTTApp } from './TTApp';
 import { TTInfotip } from './TTInfotip';
 
 // Style
 import './style/TTPage.scss';
 
 interface iTTPageProps {
+    appName?: string;
+    backPath?: string;
     children?: React.ReactNode;
     description?: string;
-    icon?: React.ReactNode;
-    id: string;
     title: string;
 }
 
-const TTPage: React.FC<iTTPageProps> = ({ children, description, icon, id, title }) => {
-    const { appName, activePage, registerPage, navigateTo } = useTTApp();
-
-    useEffect(() => {
-        registerPage({ id, title, description, icon });
-    }, [id, title, description, icon, registerPage]);
-
-    if (activePage !== id) return null;
+const TTPage: React.FC<iTTPageProps> = ({ appName, backPath = '/', children, description, title }) => {
+    const navigate = useNavigate();
 
     return (
         <div className='tt-page'>
             <header className='tt-page-header'>
-                <button className='tt-page-back' onClick={() => navigateTo(null)} aria-label='Go back'>
+                <button className='tt-page-back' onClick={() => navigate(backPath)} aria-label='Go back'>
                     <svg
                         width='24'
                         height='24'
@@ -57,7 +50,7 @@ const TTPage: React.FC<iTTPageProps> = ({ children, description, icon, id, title
                     </svg>
                 </button>
                 <div className='tt-page-header-content'>
-                    <p className='tt-page-flare'>{appName}</p>
+                    {appName && <p className='tt-page-flare'>{appName}</p>}
                     <div className='tt-page-title-row'>
                         <h1 className='tt-page-title'>{title}</h1>
                         {description && (

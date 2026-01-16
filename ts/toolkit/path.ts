@@ -33,12 +33,23 @@ const PATH_PREFIX = '/';
 const QUERY_PATTERN = /\?.*$/;
 const BACKSLASH_PATTERN = /\\\\/g;
 
+/** Default root path for assets */
+const DEFAULT_ROOT = '';
+
+/** Configurable root path - can be set once via path.setRoot() */
+let assetRoot: string = DEFAULT_ROOT;
+
+const normalizeRoot = (root: string): string => {
+    // Remove trailing slash if present
+    return root.endsWith('/') ? root.slice(0, -1) : root;
+};
+
 const joinSegments = (segments: PathSegments): string =>
     PATH_PREFIX + segments.join(SEGMENT_DELIMITER);
 
 const buildAssetPath = (type: AssetType, ext: FileExtension) =>
     (...segments: string[]): string =>
-        `${joinSegments([type, ...segments])}${ext}`;
+        `${assetRoot}${joinSegments([type, ...segments])}${ext}`;
 
 const stripOrigin = (url: string): string => {
     try {
@@ -61,8 +72,34 @@ const extractPathSegments = (url: string, startIdx: number, endOffset: number): 
 /**
  * Asset path resolution utilities.
  * Provides type-safe path construction for icons, animations, and images.
+ * 
+ * @example
+ * // Set root once at app initialization
+ * path.setRoot('/teatype/media');
+ * 
+ * // Then use relative paths
+ * path.icon('arrow');        // => '/teatype/media/icon/arrow.svg'
+ * path.img('logo');          // => '/teatype/media/img/logo.png'
+ * path.anim('spinner');      // => '/teatype/media/anim/spinner.svg'
  */
 export const path = {
+    /** 
+     * Sets the root path for all asset utilities.
+     * Call this once at app initialization.
+     * @param root - The root path (e.g., '/teatype/media')
+     */
+    setRoot: (root: string): void => {
+        assetRoot = normalizeRoot(root);
+    },
+
+    /** Gets the current root path */
+    getRoot: (): string => assetRoot,
+
+    /** Resets root to default (empty string) */
+    resetRoot: (): void => {
+        assetRoot = DEFAULT_ROOT;
+    },
+
     /** Constructs animation asset path (.svg) */
     anim: buildAssetPath(AssetType.Animation, FileExtension.SVG),
 

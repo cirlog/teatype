@@ -13,61 +13,30 @@
  * all copies or substantial portions of the Software.
  */
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 
 // Style
 import './style/TTApp.scss';
 
 export interface iPageInfo {
-    id: string;
+    path: string;
     title: string;
     description?: string;
     icon?: React.ReactNode;
 }
 
-interface iTTAppContext {
-    appName: string;
-    activePage: string | null;
-    pages: iPageInfo[];
-    registerPage: (page: iPageInfo) => void;
-    navigateTo: (pageId: string | null) => void;
-}
-
-const TTAppContext = createContext<iTTAppContext | null>(null);
-
-export const useTTApp = () => {
-    const context = useContext(TTAppContext);
-    if (!context) {
-        throw new Error('useTTApp must be used within a TTApp');
-    }
-    return context;
-};
-
 interface iTTAppProps {
     children: React.ReactNode;
-    defaultPage?: string;
     name: string;
 }
 
-const TTApp: React.FC<iTTAppProps> = ({ children, defaultPage = null, name }) => {
-    const [activePage, setActivePage] = useState<string | null>(defaultPage);
-    const [pages, setPages] = useState<iPageInfo[]>([]);
-
-    const registerPage = useCallback((page: iPageInfo) => {
-        setPages((prev) => {
-            if (prev.some((p) => p.id === page.id)) return prev;
-            return [...prev, page];
-        });
-    }, []);
-
-    const navigateTo = useCallback((pageId: string | null) => {
-        setActivePage(pageId);
-    }, []);
-
+const TTApp: React.FC<iTTAppProps> = ({ children, name }) => {
     return (
-        <TTAppContext.Provider value={{ appName: name, activePage, pages, registerPage, navigateTo }}>
-            <div id='tt-app'>{children}</div>
-        </TTAppContext.Provider>
+        <BrowserRouter>
+            <div id='tt-app' data-app-name={name}>
+                {children}
+            </div>
+        </BrowserRouter>
     );
 };
 

@@ -13,22 +13,21 @@
  * all copies or substantial portions of the Software.
  */
 
+import { NavLink } from 'react-router-dom';
+
 // Components
-import { useTTApp } from './TTApp';
+import { iPageInfo } from './TTApp';
 
 // Style
 import './style/TTNav.scss';
 
 interface iTTNavProps {
+    appName: string;
+    pages: iPageInfo[];
     subtitle?: string;
 }
 
-const TTNav: React.FC<iTTNavProps> = ({ subtitle }) => {
-    const { appName, activePage, pages, navigateTo } = useTTApp();
-
-    // Don't show nav when a page is active
-    if (activePage !== null) return null;
-
+const TTNav: React.FC<iTTNavProps> = ({ appName, pages, subtitle }) => {
     return (
         <div className='tt-nav'>
             <header className='tt-nav-header'>
@@ -38,10 +37,10 @@ const TTNav: React.FC<iTTNavProps> = ({ subtitle }) => {
 
             <div className='tt-nav-grid'>
                 {pages.map((page, index) => (
-                    <button
-                        key={page.id}
+                    <NavLink
+                        key={page.path}
+                        to={page.path}
                         className='tt-nav-tile'
-                        onClick={() => navigateTo(page.id)}
                         style={{ animationDelay: `${index * 0.05}s` }}
                     >
                         {page.icon && <div className='tt-nav-tile-icon'>{page.icon}</div>}
@@ -62,7 +61,7 @@ const TTNav: React.FC<iTTNavProps> = ({ subtitle }) => {
                         >
                             <path d='M5 12h14M12 5l7 7-7 7' />
                         </svg>
-                    </button>
+                    </NavLink>
                 ))}
             </div>
         </div>

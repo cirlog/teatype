@@ -3,6 +3,7 @@ packages:
     - baseconfig
     - platforms/*
     - components
+    - icons
     - hooks
     - style
     - toolkit

@@ -19,46 +19,5 @@
         "build-with-tsc": "tsc -b && vite build",
         "lint": "eslint .",
         "preview": "vite preview"
-    },
-    "dependencies": {
-        "axios": "^1.7.9",
-        "eslint-config-prettier": "^9.1.0",
-        "prettier": "^3.4.2",
-        "react": "^19.0.0",
-        "react-dom": "^19.0.0",
-        "react-flip-toolkit": "^7.2.4",
-        "react-hot-toast": "^2.4.1",
-        "react-inlinesvg": "^4.1.5",
-        "react-json-view": "^1.21.3",
-        "react-router-dom": "^7.0.2",
-        "react-swipeable": "^7.0.2",
-        "uuid": "^11.0.5"
-    },
-    "devDependencies": {
-        "@eslint/js": "^9.17.0",
-        "@types/node": "^22.10.2",
-        "@types/react": "^19.0.1",
-        "@types/react-dom": "^19.0.2",
-        "@typescript-eslint/eslint-plugin": "^8.18.1",
-        "@typescript-eslint/parser": "^8.18.1",
-        "@vitejs/plugin-react": "^4.3.4",
-        "eslint": "^9.17.0",
-        "eslint-plugin-react": "^7.37.2",
-        "eslint-plugin-react-hooks": "^5.1.0",
-        "eslint-plugin-react-refresh": "^0.4.16",
-        "fs": "0.0.1-security",
-        "globals": "^15.14.0",
-        "node": "^23.4.0",
-        "sass": "1.77.4",
-        "typescript": "~5.6.3",
-        "typescript-eslint": "^8.18.1",
-        "vite": "^5.4.11",
-        "vite-plugin-eslint": "^1.8.1"
-    },
-    "prettier": {
-        "jsxSingleQuote": true,
-        "singleQuote": true,
-        "printWidth": 120,
-        "tabWidth": 4
     }
 }
