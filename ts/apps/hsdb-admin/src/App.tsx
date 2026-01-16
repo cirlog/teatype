@@ -26,7 +26,7 @@ import { useStudents } from './hooks/useStudents';
 import { Student } from './api/students';
 
 // Style
-import './style/dashboard.scss';
+import './style/index.scss';
 
 export default function App() {
     const { students, loading, error, refresh, updateStudent, deleteStudent } = useStudents();
@@ -52,15 +52,15 @@ export default function App() {
     };
 
     return (
-        <div className='dashboard'>
+        <div className='hsdb-dashboard'>
             <Toaster position='top-right' />
 
-            <header className='dashboard__header'>
+            <header className='hsdb-dashboard__header'>
                 <h1>HSDB Admin Dashboard</h1>
                 <p>Manage your Django student database</p>
             </header>
 
-            <div className='dashboard__stats'>
+            <div className='hsdb-dashboard__stats'>
                 <div className='stat-card'>
                     <p className='stat-card__label'>Total Students</p>
                     <h2 className='stat-card__value'>{stats.total}</h2>
@@ -79,8 +79,8 @@ export default function App() {
                 </div>
             </div>
 
-            <div className='dashboard__content'>
-                <div className='dashboard__toolbar'>
+            <div className='hsdb-dashboard__content'>
+                <div className='hsdb-dashboard__toolbar'>
                     <h2>Students</h2>
                     <div className='actions'>
                         <button className='btn btn--primary' onClick={refresh} disabled={loading}>

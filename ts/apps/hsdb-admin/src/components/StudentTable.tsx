@@ -19,9 +19,6 @@ import { useMemo, useState } from 'react';
 // API
 import { Student } from '../api/students';
 
-// Style
-// import './style/StudentTable.scss';
-
 interface StudentTableProps {
     students: Student[];
     onEdit: (student: Student) => void;

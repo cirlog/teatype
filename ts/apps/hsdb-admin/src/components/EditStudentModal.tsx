@@ -19,9 +19,6 @@ import { useState, useEffect } from 'react';
 // API
 import { Student } from '../api/students';
 
-// Style
-// import './EditStudentModal.scss';
-
 interface EditStudentModalProps {
     student: Student | null;
     onSave: (id: string, updates: Partial<Student>) => Promise<void>;
