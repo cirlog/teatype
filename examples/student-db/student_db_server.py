@@ -103,8 +103,15 @@ if __name__ == '__main__':
     stopwatch('Seeding DB data')
     hybrid_storage = server.hybrid_storage
     db = hybrid_storage.index_db._db
+    
+    # First, create and add universities to the database
+    schools = random_schools()
+    universities = {school.id: school for school in schools}
+    db.update(universities)
+    
+    # Then create students with references to the persisted universities
     NUMBER_OF_STUDENTS = 1234
-    students = create_students_sequentially(NUMBER_OF_STUDENTS, random_first_names(), random_sur_names(), random_schools())
+    students = create_students_sequentially(NUMBER_OF_STUDENTS, random_first_names(), random_sur_names(), schools)
     db.update(students)
     stopwatch()
     
@@ -119,6 +126,7 @@ if __name__ == '__main__':
     
     student = Student.query.where('age').equals(18).first()
     print(student)
+    print(student.university)
     
     # Create a temporary module for URL configuration
     import types
