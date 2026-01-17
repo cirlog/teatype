@@ -96,6 +96,68 @@ class HSDBServer:
         )
         
         success(f'HSDBServer initialized on {host}:{port}')
+    
+    def _schema_view(self, request):
+        """
+        API endpoint that returns the full schema of all registered models.
+        Includes attributes, relations, and their configurations.
+        
+        Returns JSON like:
+        {
+            "models": {
+                "Student": {
+                    "model_name": "Student",
+                    "resource_name": "student",
+                    "resource_name_plural": "students",
+                    "attributes": {...},
+                    "relations": {...}
+                },
+                ...
+            },
+            "count": 4
+        }
+        """
+        from django.http import JsonResponse
+        
+        schema = {
+            'models': {},
+            'count': len(self.models)
+        }
+        
+        for model in self.models:
+            if hasattr(model, 'schema'):
+                schema['models'][model.__name__] = model.schema()
+        
+        return JsonResponse(schema)
+    
+    def _models_list_view(self, request):
+        """
+        API endpoint that returns a simple list of all registered models
+        with their basic info and entry counts.
+        
+        Returns JSON like:
+        {
+            "models": [
+                {"name": "Student", "resource": "students", "count": 1234},
+                {"name": "University", "resource": "universities", "count": 9},
+                ...
+            ]
+        }
+        """
+        from django.http import JsonResponse
+        from teatype.toolkit import kebabify
+        
+        models_list = []
+        
+        for model in self.models:
+            model_info = {
+                'name': model.__name__,
+                'resource': kebabify(model.__name__, remove='-model', plural=True),
+                'count': model.count() if hasattr(model, 'count') else 0
+            }
+            models_list.append(model_info)
+        
+        return JsonResponse({'models': models_list})
         
     def _configure_django_settings(self,
                                    debug:bool=None,
@@ -255,6 +317,14 @@ class HSDBServer:
         from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
         
         urlpatterns = []
+        
+        # Add HSDB schema/models endpoint
+        schema_route = f'{base_endpoint}/hsdb/schema/' if base_endpoint else 'hsdb/schema/'
+        urlpatterns.append(path(schema_route, self._schema_view, name='hsdb-schema'))
+        
+        # Add HSDB models list endpoint
+        models_route = f'{base_endpoint}/hsdb/models/' if base_endpoint else 'hsdb/models/'
+        urlpatterns.append(path(models_route, self._models_list_view, name='hsdb-models'))
         
         # Add admin if requested
         if include_admin:

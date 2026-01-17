@@ -144,6 +144,30 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
         # self.app_name = 'raw'
         # self.migration_id = 1
     
+    def __repr__(self):
+        """Return a readable string representation of the model instance."""
+        try:
+            id_val = self.id._value if hasattr(self.id, '_value') else str(self.id)
+            # Get a few key fields for preview
+            preview_fields = []
+            for attr_name in list(self._fields.keys())[:3]:
+                if attr_name not in ('id', 'created_at', 'updated_at'):
+                    try:
+                        val = getattr(self, attr_name)
+                        val = val._value if hasattr(val, '_value') else val
+                        if isinstance(val, str) and len(val) > 20:
+                            val = val[:17] + '...'
+                        preview_fields.append(f'{attr_name}={repr(val)}')
+                    except:
+                        pass
+            fields_str = ', '.join(preview_fields[:2])
+            return f'<{self.model_name} id={id_val[:8]}... {fields_str}>'
+        except:
+            return f'<{self.__class__.__name__} (uninitialized)>'
+    
+    def __str__(self):
+        return self.__repr__()
+    
     def __getattribute__(self, name):
         # If the field name is in our field cache, return the value from _fields
         _cache = object.__getattribute__(self, '_attribute_cache')
@@ -236,46 +260,80 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
     # TODO: Group data with key and base data into index data
     @classmethod
     def serialize(cls,
-                  object:object,
+                  instance:'HSDBModel',
                   fuse_data:bool=False,
-                  include_migration:bool=True,
-                  include_model:bool=True,
+                  include_migration:bool=False,
+                  include_model:bool=False,
+                  include_relations:bool=False,
+                  expand_relations:bool=False,
                   json_dump:bool=False,
                   strip_attributes:bool=False,
                   use_data_key:bool=False) -> dict|str:
-        serialized_data = object.serializer
+        """
+        Serialize a model instance to a dictionary.
+        
+        Args:
+            instance: The model instance to serialize
+            fuse_data: Whether to merge base_data and data into a flat dict
+            include_migration: Whether to include migration data
+            include_model: Whether to include model metadata
+            include_relations: Whether to include relations (as IDs)
+            expand_relations: Whether to expand relations to full serialized objects
+            json_dump: Whether to return a JSON string instead of dict
+            strip_attributes: Whether to strip attribute metadata
+            use_data_key: Whether to use resource-specific data key
+            
+        Returns:
+            Serialized dict or JSON string
+        """
+        serialized_data = instance.serializer.copy()
+        
+        # Handle relations
+        if include_relations or expand_relations:
+            from teatype.db.hsdb import HSDBRelation, HybridStorage
+            
+            if instance.__class__ in instance._attribute_cache:
+                for attr_name, attr in instance._attribute_cache[instance.__class__].items():
+                    if isinstance(attr, HSDBRelation._RelationFactory):
+                        try:
+                            relation_value = getattr(instance, attr_name)
+                            if relation_value is not None:
+                                if expand_relations:
+                                    # Fully serialize the related object
+                                    if hasattr(relation_value, 'model'):
+                                        serialized_data[attr_name] = relation_value.model.serialize(
+                                            relation_value,
+                                            include_relations=False,  # Prevent infinite recursion
+                                            expand_relations=False
+                                        )
+                                    elif isinstance(relation_value, list):
+                                        serialized_data[attr_name] = [
+                                            item.model.serialize(item, include_relations=False, expand_relations=False)
+                                            if hasattr(item, 'model') else str(item)
+                                            for item in relation_value
+                                        ]
+                                    else:
+                                        serialized_data[attr_name] = str(relation_value)
+                                else:
+                                    # Just include the ID(s)
+                                    if hasattr(relation_value, 'id'):
+                                        rel_id = relation_value.id
+                                        serialized_data[attr_name] = rel_id._value if hasattr(rel_id, '_value') else str(rel_id)
+                                    elif isinstance(relation_value, list):
+                                        serialized_data[attr_name] = [
+                                            (item.id._value if hasattr(item.id, '_value') else str(item.id))
+                                            if hasattr(item, 'id') else str(item)
+                                            for item in relation_value
+                                        ]
+                                    else:
+                                        serialized_data[attr_name] = str(relation_value)
+                        except Exception as e:
+                            # Relation couldn't be resolved
+                            serialized_data[attr_name] = None
+        
+        if json_dump:
+            return json.dumps(serialized_data, indent=4, default=str)
         return serialized_data
-    
-        serialized_data = dict()
-            
-        if fuse_data:
-            return {**base_data, **serializer}
-        else:
-            base_data = {
-                'created_at': str(self.created_at),
-                'id': self.id,
-                'updated_at': str(self.updated_at)
-            } 
-            serialized_data['base_data'] = base_data
-        
-        data_key = self.resource_name + '_data' if use_data_key else 'data'
-        serialized_data[data_key] = serializer
-        
-        if include_migration:
-            migration_data = {
-                'app_name': self.app_name,
-                'migration_id': self.migration_id,
-            }  
-            serialized_data['migration_data'] = migration_data
-            
-        if include_model:
-            model_data = {
-                'app_name': self.app_name,
-                'model_name': self.model_name,
-            }
-            serialized_data['model_data'] = model_data
-        
-        return serialized_data if not json_dump else json.dumps(serialized_data, indent=4)
     
     def snapshot(self) -> dict:
         snapshot_dict = {}
@@ -285,20 +343,218 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                 snapshot_dict[key] = str(value)
         return snapshot_dict
     
-    def save(self):
-        # TODO: Save to database and rawfile
-        pass
+    def save(self) -> 'HSDBModel':
+        """
+        Save this instance to the database.
+        If it already exists, updates it; otherwise creates it.
+        
+        Returns:
+            The saved model instance
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        entry_id = str(self.id)
+        
+        if entry_id in storage.index_db._db:
+            # Update existing
+            storage.index_db.update_entry(entry_id, self.serializer)
+        else:
+            # Add new
+            storage.index_db._db.add(entry_id, self)
+            storage.index_db._add_to_model_index(self.model_name, entry_id)
+            storage.index_db._index_entry_fields(self)
+        
+        return self
     
-    def update(self, data:dict):
-        # TODO: Patch the model with the given data in model, db and rawfile
+    def delete(self) -> bool:
+        """
+        Delete this instance from the database.
+        
+        Returns:
+            True if deletion was successful
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        result, code = storage.index_db.delete_entry(str(self.id))
+        return result
+    
+    def update(self, data:dict) -> 'HSDBModel':
+        """
+        Update this instance with new data and persist to database.
+        
+        Args:
+            data: Dictionary of field names to new values
+            
+        Returns:
+            The updated model instance
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        
+        # Unindex old values
+        storage.index_db._unindex_entry_fields(self)
+        
+        # Update fields
         for key, value in data.items():
-            setattr(self, key, value)
+            if key in self._attribute_cache.get(self.__class__, {}):
+                setattr(self, key, value)
+        
         self.updated_at = dt.now()
+        
+        # Re-index new values
+        storage.index_db._index_entry_fields(self)
+        
+        return self
     
     #################
     # Class methods #
     #################
     
     @classmethod
-    def load(cls, dict_data:dict):
-        pass
+    def create(cls, data:dict, save:bool=True) -> 'HSDBModel':
+        """
+        Create a new model instance and optionally save to database.
+        
+        Args:
+            data: Dictionary of field values
+            save: Whether to immediately persist to database (default: True)
+            
+        Returns:
+            The created model instance
+        """
+        instance = cls(data)
+        if save:
+            instance.save()
+        return instance
+    
+    @classmethod
+    def get(cls, id:str) -> 'HSDBModel':
+        """
+        Get a model instance by ID.
+        
+        Args:
+            id: The entry ID
+            
+        Returns:
+            The model instance or None if not found
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        try:
+            entry = storage.index_db.fetch_entry(str(id))
+            if entry and entry.model == cls:
+                return entry
+            return None
+        except KeyError:
+            return None
+    
+    @classmethod
+    def all(cls, serialize:bool=False, include_relations:bool=False, expand_relations:bool=False) -> List['HSDBModel']:
+        """
+        Get all instances of this model.
+        
+        Args:
+            serialize: Whether to return serialized dicts
+            include_relations: Whether to include relation IDs
+            expand_relations: Whether to expand relations to full objects
+            
+        Returns:
+            List of model instances or serialized dicts
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        return storage.index_db.fetch_model_entries(
+            cls, 
+            serialize=serialize,
+            include_relations=include_relations,
+            expand_relations=expand_relations
+        )
+    
+    @classmethod
+    def find_by(cls, field:str, value:any) -> List['HSDBModel']:
+        """
+        Find all instances where an indexed field equals a value.
+        Uses O(1) index lookup if the field is indexed.
+        
+        Args:
+            field: The field name to search by
+            value: The value to match
+            
+        Returns:
+            List of matching model instances
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        
+        # Try indexed lookup first
+        entry_ids = storage.index_db.lookup_by_field(cls.__name__, field, value)
+        if entry_ids:
+            return [storage.index_db.fetch_entry(eid) for eid in entry_ids]
+        
+        # Fall back to query
+        return list(cls.query.where(field).equals(value).all())
+    
+    @classmethod
+    def count(cls) -> int:
+        """
+        Get the count of all instances of this model.
+        Uses O(1) model index lookup.
+        
+        Returns:
+            Number of instances
+        """
+        from teatype.db.hsdb import HybridStorage
+        storage = HybridStorage.instance()
+        return len(storage.index_db.lookup_by_model(cls.__name__))
+    
+    @classmethod
+    def schema(cls) -> dict:
+        """
+        Get the schema/structure of this model including all attributes and relations.
+        
+        Returns:
+            Dictionary describing the model structure
+        """
+        from teatype.db.hsdb import HSDBAttribute, HSDBRelation
+        from teatype.toolkit import kebabify
+        
+        schema = {
+            'model_name': cls.__name__,
+            'resource_name': kebabify(cls.__name__, remove='-model', plural=False),
+            'resource_name_plural': kebabify(cls.__name__, remove='-model', plural=True),
+            'attributes': {},
+            'relations': {}
+        }
+        
+        # Traverse MRO to get all attributes including inherited ones
+        seen = set()
+        for model in reversed(cls.__mro__):
+            for attr_name, attr in model.__dict__.items():
+                if attr_name in seen:
+                    continue
+                    
+                if isinstance(attr, HSDBAttribute):
+                    seen.add(attr_name)
+                    schema['attributes'][attr_name] = {
+                        'type': attr.type.__name__,
+                        'required': attr.required,
+                        'computed': attr.computed,
+                        'editable': attr.editable,
+                        'indexed': attr.indexed,
+                        'unique': attr.unique,
+                        'searchable': attr.searchable,
+                        'description': attr.description,
+                        'default': attr.default,
+                        'max_size': attr.max_size if attr.type == str else None
+                    }
+                elif isinstance(attr, HSDBRelation._RelationFactory):
+                    seen.add(attr_name)
+                    schema['relations'][attr_name] = {
+                        'type': attr.relation_type,
+                        'target_model': attr.secondary_model.__name__,
+                        'required': attr.required,
+                        'editable': attr.editable,
+                        'relation_key': attr.relation_key
+                    }
+        
+        return schema

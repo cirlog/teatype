@@ -110,6 +110,7 @@ class HSDBQuery:
         try:
             """
             Execute a query representation on an in-memory db.
+            Uses model index for O(1) model filtering and field indices for O(1) equality lookups.
 
             Parameters:
             query: HSDBQuery instance with conditions and sort_key.
@@ -153,7 +154,7 @@ class HSDBQuery:
                 def __condition_matches(entry, condition):
                     attribute, operator, expected = condition
                     actual_attribute = __get_nested_value(entry, attribute)
-                    actual_value = actual_attribute._value
+                    actual_value = actual_attribute._value if hasattr(actual_attribute, '_value') else actual_attribute
                     if operator == '==':
                         return actual_value == expected
                     elif operator == '<':
@@ -172,24 +173,66 @@ class HSDBQuery:
                     
                 self._block_executed_query()
 
-                # First filter using conditions.
-                queryset = []
-                for entry_id, entry in self._hsdb_reference.index_db._db.items:
-                    if self.subset and entry_id not in self.subset:
-                        continue
+                # Try to use indexed lookups for equality conditions
+                candidate_ids = None
+                remaining_conditions = []
+                model_name = self.model.__name__
+                
+                for condition in self._conditions:
+                    attribute, operator, expected = condition
                     
-                    if entry.model != self.model:
-                        continue
-                    if all(__condition_matches(entry, condition) for condition in self._conditions):
-                        if self._return_ids:
-                            queryset.append(entry_id)
+                    # Only use index for simple equality on non-nested attributes
+                    if operator == '==' and '.' not in attribute:
+                        indexed_ids = self._hsdb_reference.index_db.lookup_by_field(
+                            model_name, attribute, expected
+                        )
+                        if indexed_ids:
+                            if candidate_ids is None:
+                                candidate_ids = indexed_ids
+                            else:
+                                # Intersection for multiple indexed conditions
+                                candidate_ids = candidate_ids & indexed_ids
                         else:
-                            queryset.append(entry)
+                            # No index for this field, check later
+                            remaining_conditions.append(condition)
+                    else:
+                        remaining_conditions.append(condition)
+                
+                # If no indexed conditions matched, use model index to get all entries of this model
+                if candidate_ids is None:
+                    candidate_ids = self._hsdb_reference.index_db.lookup_by_model(model_name)
+                
+                # Use subset if provided
+                if self.subset:
+                    candidate_ids = candidate_ids & set(self.subset)
+                
+                # Filter using remaining non-indexed conditions
+                queryset = []
+                for entry_id in candidate_ids:
+                    try:
+                        entry = self._hsdb_reference.index_db._db.fetch(entry_id)
+                        
+                        # Verify model type (safety check)
+                        if entry.model != self.model:
+                            continue
+                            
+                        # Check remaining conditions
+                        if all(__condition_matches(entry, condition) for condition in remaining_conditions):
+                            if self._return_ids:
+                                queryset.append(entry_id)
+                            else:
+                                queryset.append(entry)
+                    except KeyError:
+                        # Entry was deleted
+                        continue
 
                 # TODO: Add support for nested values in sorting and filtering
                 # Sort the queryset if needed.
                 if self._sort_key:
-                    queryset.sort(key=lambda entry: getattr(entry, self._sort_key)._value, reverse=self._sort_order == 'desc')
+                    def get_sort_value(entry):
+                        val = getattr(entry, self._sort_key, None)
+                        return val._value if hasattr(val, '_value') else val
+                    queryset.sort(key=get_sort_value, reverse=self._sort_order == 'desc')
                     
                 if self._filter_key:
                     queryset = [getattr(entry, self._filter_key) for entry in queryset]
@@ -307,17 +350,23 @@ class HSDBQuery:
     def get(self, id:str):
         # Get a record with the given id.
         self._executed_hook = 'get'
-        return 
+        return self._run_query(id=id)[0] if self._run_query(id=id) else None
     
     def first(self):
-        executed_query = self.paginate(0, 1)[0]
-        executed_query._executed_hook = 'first'
-        return executed_query
+        """
+        Get the first result or None if no results.
+        """
+        executed_query = self.paginate(0, 1)
+        self._executed_hook = 'first'
+        return executed_query[0] if executed_query else None
         
     def last(self):
-        executed_query = self.paginate(-1, 1)[0]
-        executed_query._executed_hook = 'last'
-        return executed_query
+        """
+        Get the last result or None if no results.
+        """
+        executed_query = self.paginate(-1, 1)
+        self._executed_hook = 'last'
+        return executed_query[0] if executed_query else None
     
     def paginate(self, page:int, page_size:int):
         self._pagination = (page, page_size)

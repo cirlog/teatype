@@ -15,4 +15,4 @@ from teatype.db.hsdb import HSDBAttribute, HSDBModel
 
 class University(HSDBModel):
     address = HSDBAttribute(str, required=True)
-    name    = HSDBAttribute(str, required=True)
+    name    = HSDBAttribute(str, required=True, indexed=True, unique=True)

@@ -23,6 +23,7 @@ _AVAILABLE_FIELDS = [
     'computed',
     'default',
     'description',
+    'indexed',
     'max_size',
     'required',
     'searchable',

@@ -102,17 +102,17 @@ if __name__ == '__main__':
     # Seed the database
     stopwatch('Seeding DB data')
     hybrid_storage = server.hybrid_storage
-    db = hybrid_storage.index_db._db
+    index_db = hybrid_storage.index_db
     
     # First, create and add universities to the database
     schools = random_schools()
-    universities = {school.id: school for school in schools}
-    db.update(universities)
+    universities = {str(school.id): school for school in schools}
+    index_db.update_directly(universities)
     
     # Then create students with references to the persisted universities
     NUMBER_OF_STUDENTS = 1234
     students = create_students_sequentially(NUMBER_OF_STUDENTS, random_first_names(), random_sur_names(), schools)
-    db.update(students)
+    index_db.update_directly(students)
     stopwatch()
     
     stopwatch('Measuring memory footprint')
@@ -125,8 +125,39 @@ if __name__ == '__main__':
     )
     
     student = Student.query.where('age').equals(18).first()
-    print(student)
-    print(student.university)
+    if student:
+        print(student)
+        print(student.university)
+    else:
+        print('No student with age 18 found')
+    
+    # Demonstrate new features
+    print('\n--- New Features Demo ---')
+    
+    # Model.count() - O(1) using model index
+    print(f'Total students: {Student.count()}')
+    print(f'Total universities: {University.count()}')
+    
+    # Model.all() with relation serialization
+    print('\n--- Student with expanded university ---')
+    students_sample = Student.query.where('age').equals(20).first()
+    if students_sample:
+        serialized = Student.serialize(students_sample, include_relations=True)
+        print(f'With relation ID: {serialized}')
+        serialized_expanded = Student.serialize(students_sample, expand_relations=True)
+        print(f'With expanded relation: {serialized_expanded}')
+    else:
+        print('No student with age 20 found for relation demo')
+    
+    # Model.find_by() - O(1) using field index
+    print('\n--- Fast indexed lookup ---')
+    male_students = Student.find_by('gender', 'male')
+    print(f'Found {len(male_students)} male students using indexed lookup')
+    
+    # Model.schema() - get model structure
+    print('\n--- Model Schema ---')
+    import json
+    print(json.dumps(Student.schema(), indent=2, default=str))
     
     # Create a temporary module for URL configuration
     import types
