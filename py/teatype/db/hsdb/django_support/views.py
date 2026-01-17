@@ -18,7 +18,7 @@ from typing import List, Type
 # Third-party imports
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
-from teatype.db.hsdb import HybridStorage
+from teatype.db.hsdb import HybridStorage, HSDBQuery
 from teatype.logging import *
 from teatype.toolkit import kebabify
 from teatype.comms.http.responses import Conflict, Gone, NotAllowed, ServerError, Success
@@ -45,6 +45,16 @@ class HSDBDjangoView(APIView):
         if self.is_collection:
             return [method for method in dir(self) if method in _COLLECTION_METHODS]
         return [method for method in dir(self) if method in _RESOURCE_METHODS]
+    
+    def _parse_bool_param(self, value:any) -> bool:
+        """Parse a query parameter value to a boolean."""
+        if value is None:
+            return False
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, list):
+            value = value[0] if value else ''
+        return str(value).lower() in ('true', '1', 'yes')
 
     def _auto_method(self, request, kwargs):
         try:
@@ -64,13 +74,50 @@ class HSDBDjangoView(APIView):
                 data = request.data[self.data_key]
             
             hybrid_storage = HybridStorage.instance()
+            
+            # Parse serialization options from query params
+            include_relations = self._parse_bool_param(request.GET.get('include_relations'))
+            expand_relations = self._parse_bool_param(request.GET.get('expand_relations'))
+            
             match request.method:
                 case 'GET':
                     if self.is_collection:
-                        query_response = hybrid_storage.fetch_model_entries(self.hsdb_model, serialize=True)
+                        # Check if there are any query params (excluding reserved ones)
+                        query_params = dict(request.GET)
+                        has_filter_params = any(
+                            key not in {'include_relations', 'expand_relations', 'sort', 'order', 
+                                       'page', 'page_size', 'limit', 'offset', 'fields', 'ids_only'}
+                            for key in query_params.keys()
+                        )
+                        
+                        if has_filter_params or any(k in query_params for k in ['sort', 'page', 'page_size', 'limit']):
+                            # Build query from params
+                            query = HSDBQuery.from_params(self.hsdb_model, query_params)
+                            results = query.collect()
+                            
+                            # Serialize results
+                            query_response = [
+                                entry.model.serialize(entry, 
+                                                     include_relations=include_relations,
+                                                     expand_relations=expand_relations)
+                                for entry in results
+                            ]
+                        else:
+                            # No filtering, get all entries
+                            query_response = hybrid_storage.fetch_model_entries(
+                                self.hsdb_model, 
+                                serialize=True,
+                                include_relations=include_relations,
+                                expand_relations=expand_relations
+                            )
                     else:
                         id = kwargs.get(self.api_id())
-                        query_response = hybrid_storage.fetch_entry(id, serialize=True)
+                        query_response = hybrid_storage.fetch_entry(
+                            id, 
+                            serialize=True,
+                            include_relations=include_relations,
+                            expand_relations=expand_relations
+                        )
                 case 'POST':
                     query_response, return_code = hybrid_storage.create_entry(self.hsdb_model, data)
                     if return_code == 409:
@@ -79,6 +126,13 @@ class HSDBDjangoView(APIView):
                         return Gone('Entry was lost')
                     elif return_code == 500:
                         return ServerError('Internal server error during entry creation')
+                    # Serialize the created entry
+                    if query_response:
+                        query_response = query_response.model.serialize(
+                            query_response,
+                            include_relations=include_relations,
+                            expand_relations=expand_relations
+                        )
                 # TODO: Implement other methods
                 case 'DELETE':
                     raise NotImplementedError('DELETE method not implemented yet')

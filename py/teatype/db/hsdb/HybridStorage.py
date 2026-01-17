@@ -186,23 +186,45 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
     def fetch_entry(self,
                     id:str, 
                     *,
-                    serialize:bool=False) -> dict:
+                    serialize:bool=False,
+                    include_relations:bool=False,
+                    expand_relations:bool=False) -> dict:
         """
         Retrieve an entry from the index database by its ID, 
         optionally returning a serialized version.
+        
+        Args:
+            id: The entry ID
+            serialize: Whether to serialize the entry to a dict
+            include_relations: Whether to include relation IDs in serialization
+            expand_relations: Whether to expand relations to full objects
         """
-        return self.index_db.fetch_entry(id, serialize)
+        return self.index_db.fetch_entry(id, serialize=serialize, 
+                                         include_relations=include_relations,
+                                         expand_relations=expand_relations)
 
     def fetch_model_entries(self,
                             model:object, 
                             *,
                             serialize:bool=False,
+                            include_relations:bool=False,
+                            expand_relations:bool=False,
                             sort_by:str='updated_at',
                             sort_desc:bool=True) -> List[dict]:
         """
         Return all entries for a given model, optionally serialized.
+        
+        Args:
+            model: The model class to fetch entries for
+            serialize: Whether to serialize entries to dicts
+            include_relations: Whether to include relation IDs in serialization
+            expand_relations: Whether to expand relations to full objects
+            sort_by: Field to sort by (default: 'updated_at')
+            sort_desc: Sort descending (default: True)
         """
-        entries = self.index_db.fetch_model_entries(model, serialize)
+        entries = self.index_db.fetch_model_entries(model, serialize=serialize,
+                                                    include_relations=include_relations,
+                                                    expand_relations=expand_relations)
         if sort_by == 'updated_at':
             entries.sort(key=lambda x: x['updated_at'], reverse=sort_desc)
         else:

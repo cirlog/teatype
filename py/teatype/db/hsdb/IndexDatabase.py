@@ -12,13 +12,12 @@
 
 # Standard-library imports
 import json
-import threading
 from typing import Dict, List, Set
 
 # Third-party imports
 from pympler import asizeof
 from teatype.enum import EscapeColor
-from teatype.db.hsdb.indices import Index, RelationalIndex
+from teatype.db.hsdb.indices import FieldsIndex, Index, ModelIndex, RelationalIndex
 from teatype.logging import *
 
 class _MemoryFootprint:
@@ -37,14 +36,10 @@ class _MemoryFootprint:
         
 class IndexDatabase:
     _db:Index # For all raw data
-    _indexed_fields:Dict[str, Dict[any, Set[str]]] # For all indexed fields for faster query lookups
-    _model_index:Dict[str, Set[str]] # For all model references for faster model query lookups
+    _indexed_fields:FieldsIndex # For all indexed fields for faster query lookups
+    _model_index:ModelIndex # For all model references for faster model query lookups
     _relational_index:RelationalIndex # For all relations between models parsed dynamically from the model definitions
     models:List[type] # For all models
-    
-    # Thread locks for concurrent access
-    _indexed_fields_lock:threading.Lock
-    _model_index_lock:threading.Lock
     
     def __init__(self,
                  models:List[type]):
@@ -55,18 +50,15 @@ class IndexDatabase:
                          max_size=None)
         
         # Initialize model index: maps model_name -> set of entry IDs
-        self._model_index = {}
-        self._model_index_lock = threading.Lock()
+        self._model_index = ModelIndex()
         
         # Initialize indexed fields: maps "ModelName.field_name" -> { value -> set of IDs }
-        self._indexed_fields = {}
-        self._indexed_fields_lock = threading.Lock()
+        self._indexed_fields = FieldsIndex()
         
         self._relational_index = RelationalIndex()
         
         # Pre-register models in the model index
-        for model in models:
-            self._model_index[model.__name__] = set()
+        self._model_index.register_models(models)
         
     ##############
     # Properties #
@@ -99,60 +91,36 @@ class IndexDatabase:
     
     def _add_to_model_index(self, model_name:str, entry_id:str) -> None:
         """Add an entry ID to the model index."""
-        with self._model_index_lock:
-            if model_name not in self._model_index:
-                self._model_index[model_name] = set()
-            self._model_index[model_name].add(entry_id)
+        self._model_index.add_entry(model_name, entry_id)
     
     def _remove_from_model_index(self, model_name:str, entry_id:str) -> None:
         """Remove an entry ID from the model index."""
-        with self._model_index_lock:
-            if model_name in self._model_index:
-                self._model_index[model_name].discard(entry_id)
+        self._model_index.remove_entry(model_name, entry_id)
     
     def _add_to_field_index(self, model_name:str, field_name:str, value:any, entry_id:str) -> None:
         """Add an entry to the field index for fast lookups."""
-        index_key = f'{model_name}.{field_name}'
-        with self._indexed_fields_lock:
-            if index_key not in self._indexed_fields:
-                self._indexed_fields[index_key] = {}
-            if value not in self._indexed_fields[index_key]:
-                self._indexed_fields[index_key][value] = set()
-            self._indexed_fields[index_key][value].add(entry_id)
+        self._indexed_fields.add_entry(model_name, field_name, value, entry_id)
     
     def _remove_from_field_index(self, model_name:str, field_name:str, value:any, entry_id:str) -> None:
         """Remove an entry from the field index."""
-        index_key = f'{model_name}.{field_name}'
-        with self._indexed_fields_lock:
-            if index_key in self._indexed_fields and value in self._indexed_fields[index_key]:
-                self._indexed_fields[index_key][value].discard(entry_id)
-                # Clean up empty sets
-                if not self._indexed_fields[index_key][value]:
-                    del self._indexed_fields[index_key][value]
+        self._indexed_fields.remove_entry(model_name, field_name, value, entry_id)
     
     def _update_field_index(self, model_name:str, field_name:str, old_value:any, new_value:any, entry_id:str) -> None:
         """Update an entry in the field index when a value changes."""
-        if old_value != new_value:
-            self._remove_from_field_index(model_name, field_name, old_value, entry_id)
-            self._add_to_field_index(model_name, field_name, new_value, entry_id)
+        self._indexed_fields.update_entry(model_name, field_name, old_value, new_value, entry_id)
     
     def lookup_by_field(self, model_name:str, field_name:str, value:any) -> Set[str]:
         """
         Fast O(1) lookup of entry IDs by indexed field value.
         Returns a set of entry IDs that have the given value for the field.
         """
-        index_key = f'{model_name}.{field_name}'
-        with self._indexed_fields_lock:
-            if index_key in self._indexed_fields:
-                return self._indexed_fields[index_key].get(value, set()).copy()
-        return set()
+        return self._indexed_fields.lookup(model_name, field_name, value)
     
     def lookup_by_model(self, model_name:str) -> Set[str]:
         """
         Fast O(1) lookup of all entry IDs for a given model type.
         """
-        with self._model_index_lock:
-            return self._model_index.get(model_name, set()).copy()
+        return self._model_index.lookup(model_name)
         
     ##################
     # ORM Operations #

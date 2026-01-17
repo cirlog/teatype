@@ -11,9 +11,11 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import re
 from functools import reduce
 from pprint import pprint
-from typing import List, Union
+from typing import Dict, List, Union
+from urllib.parse import parse_qs, urlencode
 
 # Third-party imports
 from teatype.db.hsdb import HybridStorage
@@ -26,6 +28,13 @@ _OPERATOR_VERBS = [('eq', 'equals'),
                    ('le', 'less_than_or_equals'),
                    ('lt', 'less_than'),
                    ('gt', 'greater_than')]
+
+# Reserved query params that are not field conditions
+_RESERVED_PARAMS = {'sort', 'order', 'page', 'page_size', 'limit', 'offset', 
+                    'include_relations', 'expand_relations', 'fields', 'ids_only'}
+
+# Operator pattern for parsing: field__op=value or field=value (default: equals)
+_OPERATOR_PATTERN = re.compile(r'^(.+?)__(eq|ne|gt|gte|lt|lte|contains|in)$')
 
 # TODO: Add support for running queries on querysets again after execution to allow reducing even further after initial query
 class HSDBQuery:
@@ -64,6 +73,221 @@ class HSDBQuery:
         self._sort_key = None
         self._sort_order = None
         self._verbose = False
+        
+    @classmethod
+    def from_params(cls, model:type, params:Dict[str, any]) -> 'HSDBQuery':
+        """
+        Build an HSDBQuery from a dictionary of query parameters.
+        
+        Supports the following parameter formats:
+            - field=value: Equals condition (field == value)
+            - field__eq=value: Equals condition
+            - field__ne=value: Not equals condition (not yet implemented)
+            - field__gt=value: Greater than condition
+            - field__gte=value: Greater than or equals condition
+            - field__lt=value: Less than condition
+            - field__lte=value: Less than or equals condition
+            - field__contains=value: Contains condition (for lists)
+            - field__in=value1,value2: In condition (not yet implemented)
+            
+        Reserved parameters:
+            - sort: Sort by field (e.g., sort=name or sort=-name for descending)
+            - order: Sort order ('asc' or 'desc'), defaults to 'asc'
+            - page: Page number (0-indexed)
+            - page_size: Number of items per page
+            - limit: Alias for page_size
+            - offset: Skip first N items
+            - include_relations: Include relation IDs in serialization
+            - expand_relations: Expand relations to full objects
+            - fields: Comma-separated list of fields to return
+            - ids_only: Return only IDs
+        
+        Args:
+            model: The HSDBModel class to query
+            params: Dictionary of query parameters (e.g., from request.GET)
+            
+        Returns:
+            HSDBQuery instance ready to be executed
+            
+        Example:
+            >>> params = {'age__gte': '18', 'gender': 'male', 'sort': '-name'}
+            >>> query = HSDBQuery.from_params(Student, params)
+            >>> results = query.collect()
+        """
+        query = cls(model)
+        
+        for key, value in params.items():
+            # Skip reserved parameters
+            if key in _RESERVED_PARAMS:
+                continue
+                
+            # Handle list values (e.g., from QueryDict)
+            if isinstance(value, list):
+                value = value[0] if len(value) == 1 else value
+            
+            # Try to parse operator from key
+            match = _OPERATOR_PATTERN.match(key)
+            if match:
+                field_name = match.group(1)
+                operator = match.group(2)
+            else:
+                field_name = key
+                operator = 'eq'  # Default to equals
+            
+            # Convert value to appropriate type
+            parsed_value = cls._parse_value(value)
+            
+            # Add condition based on operator
+            query.where(field_name)
+            if operator == 'eq':
+                query.equals(parsed_value)
+            elif operator == 'gt':
+                query.greater_than(parsed_value)
+            elif operator == 'gte':
+                query.greater_than_or_equals(parsed_value)
+            elif operator == 'lt':
+                query.less_than(parsed_value)
+            elif operator == 'lte':
+                query.less_than_or_equals(parsed_value)
+            elif operator == 'contains':
+                query.contains(parsed_value)
+            # TODO: Add 'ne' and 'in' operators
+        
+        # Handle sorting
+        sort_field = params.get('sort')
+        if sort_field:
+            if isinstance(sort_field, list):
+                sort_field = sort_field[0]
+            
+            # Support -field for descending order
+            if sort_field.startswith('-'):
+                query.sort_by(sort_field[1:], 'desc')
+            else:
+                sort_order = params.get('order', 'asc')
+                if isinstance(sort_order, list):
+                    sort_order = sort_order[0]
+                query.sort_by(sort_field, sort_order)
+        
+        # Handle pagination
+        page = params.get('page')
+        page_size = params.get('page_size') or params.get('limit')
+        if page is not None and page_size is not None:
+            if isinstance(page, list):
+                page = page[0]
+            if isinstance(page_size, list):
+                page_size = page_size[0]
+            query._pagination = (int(page), int(page_size))
+        
+        # Handle ids_only
+        if params.get('ids_only') in ('true', 'True', '1', True):
+            query.return_ids()
+        
+        # Handle filter_by (fields)
+        fields = params.get('fields')
+        if fields and isinstance(fields, str):
+            # For now, only support single field filtering
+            query.filter_by(fields.split(',')[0])
+        
+        return query
+    
+    @staticmethod
+    def _parse_value(value:any) -> any:
+        """
+        Parse a string value to the appropriate Python type.
+        
+        Handles:
+            - Integers: '123' -> 123
+            - Floats: '12.34' -> 12.34
+            - Booleans: 'true'/'false' -> True/False
+            - None: 'null'/'none' -> None
+            - Lists: 'a,b,c' (when comma present and not in quotes)
+            - Strings: Everything else
+        """
+        if value is None:
+            return None
+            
+        if not isinstance(value, str):
+            return value
+            
+        # Handle boolean strings
+        if value.lower() == 'true':
+            return True
+        if value.lower() == 'false':
+            return False
+            
+        # Handle null/none
+        if value.lower() in ('null', 'none'):
+            return None
+            
+        # Handle integers
+        try:
+            return int(value)
+        except ValueError:
+            pass
+            
+        # Handle floats
+        try:
+            return float(value)
+        except ValueError:
+            pass
+        
+        # Return as string
+        return value
+    
+    def to_query_string(self) -> str:
+        """
+        Convert the current query state to a URL query string.
+        
+        Returns:
+            URL-encoded query string (without leading ?)
+            
+        Example:
+            >>> query = Student.query.where('age').gte(18).sort_by('name', 'desc')
+            >>> query.to_query_string()
+            'age__gte=18&sort=-name'
+        """
+        params = {}
+        
+        # Add conditions
+        operator_map = {
+            '==': 'eq',
+            '>': 'gt',
+            '>=': 'gte',
+            '<': 'lt',
+            '<=': 'lte',
+            '∋': 'contains'
+        }
+        
+        for attribute, operator, value in self._conditions:
+            op_suffix = operator_map.get(operator, 'eq')
+            if op_suffix == 'eq':
+                param_key = attribute  # No suffix for equals
+            else:
+                param_key = f'{attribute}__{op_suffix}'
+            params[param_key] = str(value)
+        
+        # Add sorting
+        if self._sort_key:
+            if self._sort_order == 'desc':
+                params['sort'] = f'-{self._sort_key}'
+            else:
+                params['sort'] = self._sort_key
+        
+        # Add pagination
+        if self._pagination:
+            page, page_size = self._pagination
+            params['page'] = str(page)
+            params['page_size'] = str(page_size)
+        
+        # Add ids_only
+        if self._return_ids:
+            params['ids_only'] = 'true'
+        
+        # Add filter_by
+        if self._filter_key:
+            params['fields'] = self._filter_key
+        
+        return urlencode(params)
 
     def __repr__(self):
         repr = '<HSDBQuery '
@@ -147,6 +371,7 @@ class HSDBQuery:
                             # If it's an object, use getattr to get the attribute
                             return getattr(accumulated_value, part, None)
                         else:
+                            
                             return None
                     # Initial value is the entry object itself (which may be a dictionary or class instance)
                     return reduce(lookup_value, parts, entry)
