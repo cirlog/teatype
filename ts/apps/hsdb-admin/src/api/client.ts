@@ -14,9 +14,17 @@
  */
 
 import axios from 'axios';
+import { HSDBBaseAPI } from '@teatype/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
+// Configure the HSDB API client globally
+HSDBBaseAPI.configure({
+    baseUrl: API_BASE_URL,
+    timeout: 10000,
+});
+
+// Legacy axios client for backward compatibility
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
     timeout: 10000,
@@ -32,6 +40,8 @@ apiClient.interceptors.request.use(
         const token = localStorage.getItem('auth_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            // Also set on HSDB API
+            HSDBBaseAPI.setAuthToken(token);
         }
         return config;
     },
@@ -45,6 +55,7 @@ apiClient.interceptors.response.use(
         if (error.response?.status === 401) {
             // Handle unauthorized
             localStorage.removeItem('auth_token');
+            HSDBBaseAPI.setAuthToken(undefined);
             window.location.href = '/login';
         }
         return Promise.reject(error);

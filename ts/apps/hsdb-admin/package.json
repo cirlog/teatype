@@ -12,6 +12,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@teatype/api": "workspace:*",
         "@teatype/baseconfig": "workspace:*",
         "@teatype/style": "workspace:*",
         "axios": "^1.7.9",

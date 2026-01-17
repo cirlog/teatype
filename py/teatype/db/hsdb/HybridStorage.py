@@ -229,8 +229,6 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             entries.sort(key=lambda x: x['updated_at'], reverse=sort_desc)
         else:
             entries.sort(key=lambda x: x[sort_by], reverse=sort_desc)
-        from pprint import pprint
-        pprint(entries)
         return entries
 
     def modify_entry(self) -> bool:

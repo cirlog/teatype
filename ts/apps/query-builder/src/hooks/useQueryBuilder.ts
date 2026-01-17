@@ -24,19 +24,25 @@ import {
     QueryResponse,
     HttpMethod,
     SortOption,
+    RelationOptions,
     buildFullUrl,
 } from '../api/query';
 
 const DEFAULT_CONFIG: QueryConfig = {
     method: 'GET',
     baseUrl: 'http://localhost:8080',
-    endpoint: 'api/v1',
+    endpoint: '',
     resource: '',
     conditions: [],
     sort: undefined,
     limit: undefined,
     offset: undefined,
+    page: 0,
     body: undefined,
+    relations: {
+        includeRelations: false,
+        expandRelations: false,
+    },
 };
 
 export const useQueryBuilder = () => {
@@ -75,8 +81,26 @@ export const useQueryBuilder = () => {
         setConfig((prev) => ({ ...prev, offset }));
     }, []);
 
+    const setPage = useCallback((page: number | undefined) => {
+        setConfig((prev) => ({ ...prev, page }));
+    }, []);
+
     const setBody = useCallback((body: Record<string, unknown> | undefined) => {
         setConfig((prev) => ({ ...prev, body }));
+    }, []);
+
+    const setIncludeRelations = useCallback((include: boolean) => {
+        setConfig((prev) => ({
+            ...prev,
+            relations: { ...prev.relations, includeRelations: include } as RelationOptions,
+        }));
+    }, []);
+
+    const setExpandRelations = useCallback((expand: boolean) => {
+        setConfig((prev) => ({
+            ...prev,
+            relations: { ...prev.relations, expandRelations: expand } as RelationOptions,
+        }));
     }, []);
 
     // Condition management
@@ -84,7 +108,7 @@ export const useQueryBuilder = () => {
         const newCondition: QueryCondition = {
             id: uuidv4(),
             field: '',
-            operator: 'equals',
+            operator: 'eq',
             value: '',
         };
         setConfig((prev) => ({
@@ -215,7 +239,10 @@ export const useQueryBuilder = () => {
         setSort,
         setLimit,
         setOffset,
+        setPage,
         setBody,
+        setIncludeRelations,
+        setExpandRelations,
         // Condition management
         addCondition,
         updateCondition,

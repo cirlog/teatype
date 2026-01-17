@@ -18,21 +18,22 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 // API
-import { Student, studentsApi } from '../api/students';
+import { Student, StudentAPI } from '../api/students';
+import { HSDBFetchOptions, HSDBError } from '@teatype/api';
 
 export const useStudents = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (options?: HSDBFetchOptions) => {
         try {
             setLoading(true);
             setError(null);
-            const data = await studentsApi.getAll();
-            setStudents(data);
+            const response = await StudentAPI.fetchAll<Student>(options);
+            setStudents(response.data);
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Failed to fetch students';
+            const message = (err as HSDBError)?.message || 'Failed to fetch students';
             setError(message);
             toast.error(message);
         } finally {
@@ -42,12 +43,12 @@ export const useStudents = () => {
 
     const createStudent = async (student: Omit<Student, 'id'>) => {
         try {
-            const newStudent = await studentsApi.create(student);
-            setStudents((prev) => [...prev, newStudent]);
+            const response = await StudentAPI.create<Student>(student);
+            setStudents((prev) => [...prev, response.data]);
             toast.success('Student created successfully');
-            return newStudent;
+            return response.data;
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Failed to create student';
+            const message = (err as HSDBError)?.message || 'Failed to create student';
             toast.error(message);
             throw err;
         }
@@ -55,12 +56,12 @@ export const useStudents = () => {
 
     const updateStudent = async (id: string, updates: Partial<Student>) => {
         try {
-            const updated = await studentsApi.update(id, updates);
-            setStudents((prev) => prev.map((s) => (s.id === id ? updated : s)));
+            const response = await StudentAPI.update<Student>(id, updates, { partial: true });
+            setStudents((prev) => prev.map((s) => (s.id === id ? response.data : s)));
             toast.success('Student updated successfully');
-            return updated;
+            return response.data;
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Failed to update student';
+            const message = (err as HSDBError)?.message || 'Failed to update student';
             toast.error(message);
             throw err;
         }
@@ -68,11 +69,11 @@ export const useStudents = () => {
 
     const deleteStudent = async (id: string) => {
         try {
-            await studentsApi.delete(id);
+            await StudentAPI.delete(id);
             setStudents((prev) => prev.filter((s) => s.id !== id));
             toast.success('Student deleted successfully');
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Failed to delete student';
+            const message = (err as HSDBError)?.message || 'Failed to delete student';
             toast.error(message);
             throw err;
         }

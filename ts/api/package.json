@@ -1,0 +1,17 @@
+{
+    "name": "@teatype/api",
+    "version": "1.0.0",
+    "description": "HSDB API client for TypeScript applications",
+    "type": "module",
+    "main": "index.ts",
+    "types": "index.ts",
+    "exports": {
+        ".": "./index.ts"
+    },
+    "dependencies": {
+        "axios": "^1.7.9"
+    },
+    "peerDependencies": {
+        "axios": "^1.7.9"
+    }
+}
