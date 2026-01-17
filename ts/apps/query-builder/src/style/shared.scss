@@ -1,0 +1,217 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+// Shared styles for query-builder app
+// Uses teatype CSS custom properties for consistency
+
+$qb-radius-sm: 8px;
+$qb-radius-md: 12px;
+$qb-radius-lg: 16px;
+$qb-radius-pill: 999px;
+
+$qb-transition-fast: 0.15s ease;
+$qb-transition-base: 0.2s ease;
+
+// Button styles
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+
+    background: var(--surface-card);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: $qb-radius-sm;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    transition:
+        background $qb-transition-fast,
+        border-color $qb-transition-fast,
+        box-shadow $qb-transition-fast,
+        transform $qb-transition-fast;
+
+    &:hover:not(:disabled) {
+        background: var(--surface-elevated);
+        border-color: var(--accent);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    // Size variants
+    &--sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    &--lg {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+
+    // Color variants
+    &--primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--accent) 85%, #000);
+            border-color: color-mix(in srgb, var(--accent) 85%, #000);
+        }
+    }
+
+    &--success {
+        background: var(--success);
+        border-color: var(--success);
+        color: #fff;
+
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--success) 85%, #000);
+            border-color: color-mix(in srgb, var(--success) 85%, #000);
+        }
+    }
+
+    &--danger {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+
+        &:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+        }
+    }
+
+    &--secondary {
+        background: var(--surface-elevated);
+        border-color: var(--border);
+
+        &:hover:not(:disabled) {
+            border-color: var(--text-muted);
+        }
+    }
+
+    &--ghost {
+        background: transparent;
+        border-color: transparent;
+
+        &:hover:not(:disabled) {
+            background: var(--surface-card);
+            border-color: var(--border);
+        }
+    }
+}
+
+// Form elements
+.form-group {
+    margin-bottom: 1rem;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.375rem;
+
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+
+        background: var(--surface-card);
+        border: 1px solid var(--border);
+        border-radius: $qb-radius-sm;
+        color: var(--text-primary);
+        font-size: 0.9375rem;
+
+        transition:
+            border-color $qb-transition-fast,
+            box-shadow $qb-transition-fast;
+
+        &::placeholder {
+            color: var(--text-muted);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+    }
+
+    select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.25rem;
+
+        option {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+    }
+}
+
+// Loading state
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+}
+
+// Error state
+.error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: $qb-radius-md;
+    color: #ef4444;
+    text-align: center;
+
+    button {
+        @extend .btn;
+        @extend .btn--danger;
+    }
+}

@@ -79,7 +79,7 @@ class HSDBServer:
         self.port = port
         
         # Load environment variables (optional - doesn't fail if .env is missing)
-        env.load()
+        # env.load()
         
         # Initialize HSDB HybridStorage
         self.hybrid_storage = HybridStorage(models=self.models,

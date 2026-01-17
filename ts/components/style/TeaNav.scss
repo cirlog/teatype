@@ -21,16 +21,16 @@
 
         animation: tea-nav-header-fade-in 0.4s ease-out;
         text-align: center;
-    }
 
-    @keyframes tea-nav-header-fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(-12px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        @keyframes tea-nav-header-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     }
 
@@ -58,16 +58,16 @@
         margin: 0 auto 2rem;
 
         animation: tea-nav-filter-fade-in 0.4s ease-out 0.1s backwards;
-    }
 
-    @keyframes tea-nav-filter-fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        @keyframes tea-nav-filter-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     }
 
@@ -126,9 +126,10 @@
     }
 
     .tea-nav-grid {
-        display: grid;
+        display: flex;
+        flex-wrap: wrap;
         gap: 1rem;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        justify-content: flex-start;
         max-width: 1200px;
         margin: 0 auto;
     }
@@ -138,9 +139,10 @@
         align-items: center;
         gap: 1rem;
         padding: 1.25rem 1.5rem;
+        min-width: fit-content;
 
-        background: var(--surface-card);
         backdrop-filter: blur(12px);
+        background: var(--surface-card);
         border: 1px solid var(--border);
         border-radius: 16px;
         color: var(--text-primary);
@@ -148,11 +150,7 @@
         text-align: left;
 
         animation: tea-nav-tile-fade-in 0.4s ease-out backwards;
-        transition:
-            background 0.2s,
-            border-color 0.2s,
-            box-shadow 0.2s,
-            transform 0.2s;
+        transition: all 0.2s;
 
         &:hover {
             background: var(--surface-elevated);
@@ -169,16 +167,16 @@
         &:active {
             transform: translateY(0);
         }
-    }
 
-    @keyframes tea-nav-tile-fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(16px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        @keyframes tea-nav-tile-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     }
 
@@ -210,6 +208,7 @@
 
         font-size: 1rem;
         font-weight: 500;
+        white-space: nowrap;
     }
 
     .tea-nav-tile-description {

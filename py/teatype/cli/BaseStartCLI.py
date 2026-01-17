@@ -186,7 +186,9 @@ class BaseStartCLI(BaseCLI):
                                         verbose=False)
                 if not stop_script_found:
                     if not silent_mode:
-                        warn('No "stop" script found in scripts directory. Only limited functionality available.')
+                        warn('No "stop" script found. Creating default in-memory stop script using process_name...')
+                    # Create default in-memory stop script using process_name from start script
+                    self._create_default_stop_script(scripts_directory, silent_mode)
             finally:
                 # Ensure the temporary directory is removed from sys.path after import
                 sys.path.pop(0)
@@ -194,6 +196,69 @@ class BaseStartCLI(BaseCLI):
         # Sort the scripts dictionary by keys for consistent ordering
         scripts = dict(sorted(scripts.items()))
         return scripts
+    
+    def _create_default_stop_script(self, scripts_directory:str, silent_mode:bool=False):
+        """
+        Create a default in-memory stop script that uses the process_name from the start script.
+        This is used when no stop script is found in the scripts directory.
+        """
+        from teatype.cli import BaseIsRunningCLI
+        from teatype.cli.BaseStopCLI import BaseStopCLI as StopCLIBase
+        
+        # Get the process_name from the start script (set in pre_execute)
+        if not hasattr(self, 'process_name'):
+            if not silent_mode:
+                warn('Cannot create default stop script: no "self.process_name" defined in start script.')
+            return
+        
+        process_name = self.process_name
+        
+        # Create a dynamic IsRunning class that uses the process_name
+        class DefaultIsRunning(BaseIsRunningCLI):
+            def __init__(self, process_names_list, **kwargs):
+                self._process_names_list = process_names_list
+                super().__init__(**kwargs)
+                
+            def pre_execute(self):
+                self.process_names = self._process_names_list
+        
+        # Store reference for use in DefaultStop
+        default_is_running_cls = DefaultIsRunning
+        
+        # Create a dynamic Stop class that uses the DefaultIsRunning
+        class DefaultStop(StopCLIBase):
+            def __init__(self, process_names_list, **kwargs):
+                self._process_names_list = process_names_list
+                super().__init__(**kwargs)
+            
+            def load_script(self):
+                """
+                Override to use the in-memory IsRunning instead of loading from file.
+                """
+                # Create the is_running instance with the process names
+                self.is_running = default_is_running_cls(
+                    self._process_names_list,
+                    auto_validate=False,
+                    auto_execute=False
+                )
+                self.is_running.set_flag('silent', True)
+                self.is_running.pre_execute()
+                self.process_pids = self.is_running.execute()
+                self.process_names = self.is_running.process_names
+        
+        # Instantiate the default stop script
+        self.stop = DefaultStop(
+            [process_name],
+            auto_validate=False,
+            auto_execute=False
+        )
+        self.stop.scripts_directory = scripts_directory
+        # Perform pre-execution setup and execute to check for running processes
+        self.stop.pre_execute()
+        self.stop.execute()
+        
+        if not silent_mode:
+            log(f'Default stop script created for process: "{process_name}"')
 
     # TODO: Implement exclude paths from reloader
     # TODO: Make sure that multiple rapid changes do not trigger multiple restarts

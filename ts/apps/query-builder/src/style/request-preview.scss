@@ -1,0 +1,69 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.request-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+
+    &__method {
+        flex-shrink: 0;
+        padding: 0.25rem 0.5rem;
+
+        border-radius: 4px;
+        color: #fff;
+        font-family: 'Monaco', 'Fira Code', 'Consolas', monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    &__url {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+
+        font-family: 'Monaco', 'Fira Code', 'Consolas', monospace;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    &__base {
+        color: var(--text-muted);
+    }
+
+    &__separator {
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
+    &__endpoint {
+        color: var(--text-primary);
+    }
+
+    &__resource {
+        color: var(--accent);
+        font-weight: 500;
+    }
+
+    &__query {
+        color: var(--success);
+        opacity: 0.8;
+    }
+}
