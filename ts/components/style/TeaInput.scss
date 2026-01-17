@@ -1,0 +1,113 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.tea-input-group {
+    margin-bottom: 1rem;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    &__label {
+        display: block;
+        margin-bottom: 0.375rem;
+
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    &__input,
+    &__select,
+    &__textarea {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+
+        background: var(--surface-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9375rem;
+
+        transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+
+        &::placeholder {
+            color: var(--text-muted);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    &__select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.25rem;
+
+        option {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+    }
+
+    &__textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    &__error {
+        display: block;
+        margin-top: 0.375rem;
+
+        color: #ef4444;
+        font-size: 0.8125rem;
+    }
+
+    &__hint {
+        display: block;
+        margin-top: 0.375rem;
+
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+    }
+
+    // Error state
+    &--error {
+        .tea-input-group__input,
+        .tea-input-group__select,
+        .tea-input-group__textarea {
+            border-color: rgba(239, 68, 68, 0.5);
+
+            &:focus {
+                border-color: #ef4444;
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+            }
+        }
+    }
+}

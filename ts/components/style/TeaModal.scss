@@ -1,0 +1,139 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.tea-modal-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+
+    animation: tea-modal-overlay-fade-in 0.2s ease-out;
+
+    @keyframes tea-modal-overlay-fade-in {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+}
+
+.tea-modal {
+    width: 100%;
+    max-height: 90vh;
+
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+
+    animation: tea-modal-slide-in 0.25s ease-out;
+
+    @keyframes tea-modal-slide-in {
+        from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    // Size variants
+    &--sm {
+        max-width: 360px;
+    }
+
+    &--md {
+        max-width: 480px;
+    }
+
+    &--lg {
+        max-width: 640px;
+    }
+
+    &--xl {
+        max-width: 800px;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+
+        border-bottom: 1px solid var(--border);
+
+        h2 {
+            margin: 0;
+
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+    }
+
+    &__close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.25rem;
+        line-height: 1;
+
+        transition:
+            background 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover {
+            background: var(--surface-card);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+    }
+
+    &__body {
+        padding: 1.5rem;
+        overflow-y: auto;
+    }
+
+    &__footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding: 1rem 1.5rem;
+
+        background: var(--surface-card);
+        border-top: 1px solid var(--border);
+    }
+}

@@ -15,11 +15,15 @@
 
 // Components
 export { TeaApp } from './TeaApp';
+export { TeaButton } from './TeaButton';
 export { TeaIcon } from './TeaIcon';
 export { TeaInfotip } from './TeaInfotip';
+export { TeaInput, TeaSelect, TeaTextarea } from './TeaInput';
+export { TeaModal } from './TeaModal';
 export { TeaNav } from './TeaNav';
 export { TeaPage } from './TeaPage';
 export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaSettings';
+export { TeaTable, TeaTablePagination } from './TeaTable';
 export { TeaTag } from './TeaTag';
 export { TeaTags } from './TeaTags';
 export { TeaTooltip } from './TeaTooltip';
@@ -27,3 +31,4 @@ export { TeaTooltip } from './TeaTooltip';
 // Types
 export type { iPageInfo } from './TeaApp';
 export type { Theme } from './TeaSettings';
+export type { TeaTableColumn, TeaTableProps } from './TeaTable';

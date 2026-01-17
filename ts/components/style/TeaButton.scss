@@ -1,0 +1,153 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.tea-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+
+    background: var(--surface-card);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+
+    &:hover:not(:disabled) {
+        background: var(--surface-elevated);
+        border-color: var(--accent);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    // Icons
+    &__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 1em;
+            height: 1em;
+        }
+    }
+
+    // Loading spinner
+    &__spinner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 1em;
+            height: 1em;
+            animation: tea-btn-spin 0.75s linear infinite;
+        }
+    }
+
+    @keyframes tea-btn-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    &--loading {
+        pointer-events: none;
+    }
+
+    // Size variants
+    &--sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    &--lg {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+
+    // Color variants
+    &--primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--accent) 85%, #000);
+            border-color: color-mix(in srgb, var(--accent) 85%, #000);
+        }
+    }
+
+    &--secondary {
+        background: var(--surface-elevated);
+        border-color: var(--border);
+
+        &:hover:not(:disabled) {
+            border-color: var(--text-muted);
+        }
+    }
+
+    &--success {
+        background: var(--success);
+        border-color: var(--success);
+        color: #fff;
+
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--success) 85%, #000);
+            border-color: color-mix(in srgb, var(--success) 85%, #000);
+        }
+    }
+
+    &--danger {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+
+        &:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+        }
+    }
+
+    &--ghost {
+        background: transparent;
+        border-color: transparent;
+
+        &:hover:not(:disabled) {
+            background: var(--surface-card);
+            border-color: var(--border);
+        }
+    }
+}
