@@ -12,6 +12,7 @@
  * all copies or substantial portions of the Software.
  */
 
+@use 'globthemes' as *;
 @use 'globvars' as *;
 
 @font-face {
@@ -122,18 +123,8 @@ body,
 }
 
 :root {
-    --accent: #{$accent};
-    --accent-soft: #{$accent-soft};
-    --background: #{$teatype-gradient-allblue};
-    --border: #{$border};
-    --shadow: #{$shadow};
-    --success: #{$success};
-    --surface: #{$surface};
-    --surface-card: #{$surface-card};
-    --surface-elevated: #{$surface-elevated};
-    --text-muted: #{$text-muted};
-    --text-primary: #{$text-primary};
-    --warning: #{$warning};
-
     touch-action: pan-x pan-y;
+
+    height: 100%;
+    width: 100%;
 }

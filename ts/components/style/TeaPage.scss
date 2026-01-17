@@ -13,8 +13,11 @@
  */
 
 .tea-page {
-    min-height: 100vh;
-    padding-bottom: 4rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-bottom: 2rem;
+
     animation: tea-page-fade-in 0.3s ease-out;
 
     @keyframes tea-page-fade-in {
@@ -165,9 +168,12 @@
     }
 
     .tea-page-main {
-        max-width: var(--tea-content-width, 100%);
+        flex: 1;
+        min-height: 0;
         margin: 0 auto;
-        padding: 0 clamp(2rem, 8vw, 5rem) 2rem;
+        padding: 0 clamp(2rem, 8vw, 5rem);
+        width: 100%;
+        overflow: hidden;
 
         .grid {
             display: grid;

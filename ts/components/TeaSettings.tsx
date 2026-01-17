@@ -19,11 +19,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 export type Theme = 'dark' | 'flow' | 'light';
 
 interface TeaSettingsContextValue {
-    contentWidth: number; // 60-100 percentage
     isSettingsOpen: boolean;
     theme: Theme;
 
-    setContentWidth: (width: number) => void;
     setIsSettingsOpen: (open: boolean) => void;
     setTheme: (theme: Theme) => void;
 }
@@ -50,13 +48,6 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ childr
         return 'flow';
     });
 
-    const [contentWidth, setContentWidthState] = useState<number>(() => {
-        if (typeof window !== 'undefined') {
-            return parseInt(localStorage.getItem('tea-content-width') || '85', 10);
-        }
-        return 85;
-    });
-
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const setTheme = (newTheme: Theme) => {
@@ -64,26 +55,15 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ childr
         localStorage.setItem('tea-theme', newTheme);
     };
 
-    const setContentWidth = (width: number) => {
-        setContentWidthState(width);
-        localStorage.setItem('tea-content-width', width.toString());
-    };
-
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
-
-    useEffect(() => {
-        document.documentElement.style.setProperty('--tea-content-width', `${contentWidth}%`);
-    }, [contentWidth]);
 
     return (
         <TeaSettingsContext.Provider
             value={{
                 theme,
                 setTheme,
-                contentWidth,
-                setContentWidth,
                 isSettingsOpen,
                 setIsSettingsOpen,
             }}
@@ -98,7 +78,7 @@ interface TeaSettingsPanelProps {
 }
 
 export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) => {
-    const { theme, setTheme, contentWidth, setContentWidth } = useTeaSettings();
+    const { theme, setTheme } = useTeaSettings();
 
     const themes: { id: Theme; label: string; description: string }[] = [
         { id: 'dark', label: 'Dark', description: 'Black gradient with orange accents' },
@@ -132,25 +112,6 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
                                 <span className='tea-settings-theme-desc'>{t.description}</span>
                             </button>
                         ))}
-                    </div>
-                </section>
-
-                <section className='tea-settings-section'>
-                    <h3>Content Width</h3>
-                    <div className='tea-settings-slider-container'>
-                        <input
-                            type='range'
-                            min='60'
-                            max='100'
-                            value={contentWidth}
-                            onChange={(e) => setContentWidth(parseInt(e.target.value, 10))}
-                            className='tea-settings-slider'
-                        />
-                        <div className='tea-settings-slider-labels'>
-                            <span>Narrow</span>
-                            <span className='tea-settings-slider-value'>{contentWidth}%</span>
-                            <span>Full</span>
-                        </div>
                     </div>
                 </section>
             </div>

@@ -24,14 +24,14 @@ import { DatabaseIcon, ModelsIcon } from '@teatype/icons';
 
 const APP_NAME = 'Student DB Dashboard';
 const PAGES: iPageInfo[] = [
-    {
-        title: 'Model Selection',
-        path: '/models',
-        longDescription: 'Select and configure database models for your student database application.',
-        shortDescription: 'Configure Database Models',
-        icon: <ModelsIcon />,
-        tags: ['HSDB', 'Models', 'Configuration'],
-    },
+    // {
+    //     title: 'Model Selection',
+    //     path: '/models',
+    //     longDescription: 'Select and configure database models for your student database application.',
+    //     shortDescription: 'Configure Database Models',
+    //     icon: <ModelsIcon />,
+    //     tags: ['HSDB', 'Models', 'Configuration'],
+    // },
     {
         title: 'Database Management',
         path: '/database',

@@ -129,7 +129,7 @@
         display: grid;
         gap: 1rem;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        max-width: min(1200px, var(--tea-content-width, 85%));
+        max-width: 1200px;
         margin: 0 auto;
     }
 

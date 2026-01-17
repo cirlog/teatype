@@ -12,10 +12,17 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 -->
 
-<!DOCTYPE html>
+<!doctype html>
 
-<html lang="en">
+<html lang="en" data-theme="flow">
     <head>
+        <script>
+            // Apply saved theme before React loads to prevent flash
+            (function () {
+                const theme = localStorage.getItem('tea-theme') || 'flow';
+                document.documentElement.setAttribute('data-theme', theme);
+            })();
+        </script>
         <link rel="icon" type="image/png" href="/public/favicon.ico" />
         <link rel="manifest" href="/public/manifest.json" />
 
