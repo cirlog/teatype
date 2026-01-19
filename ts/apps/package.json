@@ -9,6 +9,9 @@
         ".": "./index.ts",
         "./*": "./*.ts"
     },
+    "dependencies": {
+        "@teatype/api": "workspace:*"
+    },
     "peerDependencies": {
         "react": "^19.0.0"
     }

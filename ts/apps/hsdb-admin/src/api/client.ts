@@ -13,7 +13,6 @@
  * all copies or substantial portions of the Software.
  */
 
-import axios from 'axios';
 import { HSDBBaseAPI } from '@teatype/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -24,40 +23,36 @@ HSDBBaseAPI.configure({
     timeout: 10000,
 });
 
-// Legacy axios client for backward compatibility
-export const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Request interceptor
-apiClient.interceptors.request.use(
-    (config) => {
-        // Add auth token if needed
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-            // Also set on HSDB API
-            HSDBBaseAPI.setAuthToken(token);
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// Response interceptor
-apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Handle unauthorized
-            localStorage.removeItem('auth_token');
-            HSDBBaseAPI.setAuthToken(undefined);
-            window.location.href = '/login';
-        }
-        return Promise.reject(error);
+/**
+ * Initialize auth token from localStorage if available
+ */
+export function initializeAuth(): void {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        HSDBBaseAPI.setAuthToken(token);
     }
-);
+}
+
+/**
+ * Set auth token and persist to localStorage
+ */
+export function setAuthToken(token: string | undefined): void {
+    if (token) {
+        localStorage.setItem('auth_token', token);
+        HSDBBaseAPI.setAuthToken(token);
+    } else {
+        localStorage.removeItem('auth_token');
+        HSDBBaseAPI.setAuthToken(undefined);
+    }
+}
+
+/**
+ * Clear auth and redirect to login
+ */
+export function handleUnauthorized(): void {
+    setAuthToken(undefined);
+    window.location.href = '/login';
+}
+
+// Initialize auth on module load
+initializeAuth();

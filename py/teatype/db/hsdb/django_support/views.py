@@ -133,16 +133,48 @@ class HSDBDjangoView(APIView):
                             include_relations=include_relations,
                             expand_relations=expand_relations
                         )
-                # TODO: Implement other methods
-                case 'DELETE':
-                    raise NotImplementedError('DELETE method not implemented yet')
-                    query_response = hybrid_storage.delete_entry()
                 case 'PUT':
-                    raise NotImplementedError('PUT method not implemented yet')
-                    query_response = hybrid_storage.create_entry()
+                    id = kwargs.get(self.api_id())
+                    if not id:
+                        return NotAllowed('ID is required for PUT requests')
+                    query_response, return_code = hybrid_storage.update_entry(id, data)
+                    if return_code == 404:
+                        return NotAllowed('Entry not found')
+                    elif return_code == 500:
+                        return ServerError('Internal server error during entry update')
+                    # Serialize the updated entry
+                    if query_response:
+                        query_response = query_response.model.serialize(
+                            query_response,
+                            include_relations=include_relations,
+                            expand_relations=expand_relations
+                        )
                 case 'PATCH':
-                    raise NotImplementedError('PATCH method not implemented yet')
-                    query_response = hybrid_storage.modify_entry()
+                    id = kwargs.get(self.api_id())
+                    if not id:
+                        return NotAllowed('ID is required for PATCH requests')
+                    query_response, return_code = hybrid_storage.update_entry(id, data)
+                    if return_code == 404:
+                        return NotAllowed('Entry not found')
+                    elif return_code == 500:
+                        return ServerError('Internal server error during entry update')
+                    # Serialize the updated entry
+                    if query_response:
+                        query_response = query_response.model.serialize(
+                            query_response,
+                            include_relations=include_relations,
+                            expand_relations=expand_relations
+                        )
+                case 'DELETE':
+                    id = kwargs.get(self.api_id())
+                    if not id:
+                        return NotAllowed('ID is required for DELETE requests')
+                    success, return_code = hybrid_storage.delete_entry(id)
+                    if return_code == 404:
+                        return NotAllowed('Entry not found')
+                    elif return_code == 500:
+                        return ServerError('Internal server error during entry deletion')
+                    query_response = {'deleted': True, 'id': id}
             # TODO: Implement proper query_response handling
             if query_response is not None:
                 return Success(query_response)

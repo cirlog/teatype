@@ -231,16 +231,72 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             entries.sort(key=lambda x: x[sort_by], reverse=sort_desc)
         return entries
 
-    def modify_entry(self) -> bool:
+    def update_entry(self,
+                     entry_id:str,
+                     data:dict,
+                     write:bool=True) -> Tuple[object|None, int]:
         """
-        Placeholder for entry modifications, returning True for now.
+        Update an existing entry in the database.
+        
+        Args:
+            entry_id: The ID of the entry to update
+            data: Dictionary of fields to update
+            write: Whether to write changes to disk
+            
+        Returns:
+            Tuple of (updated_entry, return_code)
+            Return codes: 200=success, 404=not found, 500=error
         """
-        # TODO: Make backup of data before modifications
-        #       Delete backup when write was succesful
-        return True
+        try:
+            entry, return_code = self.index_db.update_entry(entry_id, data)
+            if entry is None:
+                return None, return_code
+                
+            if write and return_code == 200:
+                try:
+                    self.rf_handler.update_entry(entry)
+                except Exception as e:
+                    err(f'HybridStorage.update_entry() failed to write to disk: {e}', traceback=True)
+                    # Entry is updated in memory, but disk write failed
+                    # You may want to handle this differently
+                    
+            return entry, return_code
+        except Exception as e:
+            err(f'HybridStorage.update_entry() encountered an exception: {e}', traceback=True)
+            return None, 500
 
-    def delete_entry(self) -> bool:
+    def delete_entry(self,
+                     entry_id:str,
+                     write:bool=True) -> Tuple[bool, int]:
         """
-        Placeholder for entry deletions, returning True for now.
+        Delete an entry from the database.
+        
+        Args:
+            entry_id: The ID of the entry to delete
+            write: Whether to delete from disk as well
+            
+        Returns:
+            Tuple of (success, return_code)
+            Return codes: 200=success, 404=not found, 500=error
         """
-        return True
+        try:
+            # Get entry first for file deletion
+            entry = self.index_db.fetch_entry(entry_id)
+            if entry is None:
+                return False, 404
+                
+            success, return_code = self.index_db.delete_entry(entry_id)
+            if not success:
+                return False, return_code
+                
+            if write and return_code == 200:
+                try:
+                    self.rf_handler.delete_entry(entry)
+                except Exception as e:
+                    err(f'HybridStorage.delete_entry() failed to delete from disk: {e}', traceback=True)
+                    # Entry is deleted from memory, but disk delete failed
+                    
+            return True, return_code
+        except Exception as e:
+            err(f'HybridStorage.delete_entry() encountered an exception: {e}', traceback=True)
+            return False, 500

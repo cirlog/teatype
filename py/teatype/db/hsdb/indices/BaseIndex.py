@@ -15,13 +15,13 @@ import threading
 
 class BaseIndex:
     primary_index:dict
-    transaction_lock:threading.Lock
+    transaction_lock:threading.RLock
     
     def __init__(self,
                  cache_entries:bool=False,
                  max_size:int=None) -> None:
         self.primary_index = dict()
-        self.transaction_lock = threading.Lock()
+        self.transaction_lock = threading.RLock()
     
     ##################
     # Dunder Methods #

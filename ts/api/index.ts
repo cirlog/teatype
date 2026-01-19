@@ -32,6 +32,7 @@ export type {
 } from './types';
 
 // API Client
+import { HSDBBaseAPI } from './HSDBBaseAPI';
 export {
     HSDBBaseAPI,
     HSDBQueryBuilder,
