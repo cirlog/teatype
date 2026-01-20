@@ -22,6 +22,7 @@ class GLOBAL_STOPWATCH_CONFIG:
     """
     DISABLE_STOPWATCHES:bool = False
     PRINT_START:bool = False
+    RAISE_EXCEPTIONS:bool = False # If True, raise exceptions on errors; if False, log and reset state
     TIME_CONVERSION:bool = False
 
 # Module-specific state tracker, unique to each importing module
@@ -56,9 +57,13 @@ def stopwatch(label:str=None, pad:Union[int,int]=(0,0), tab:int=0):
 
     # Check for an active stopwatch
     if STATE['active'] and label:
-        error_message = f'Stopwatch "{STATE["last_label"]}" is still active. Close it before starting a new one.'
+        error_message = f'Stopwatch "{STATE["last_label"]}" is still active. Forcefully resetting state.'
         err(f'Code runtime error: {error_message}', traceback=True)
-        raise RuntimeError(f'{error_message}')
+        if GLOBAL_STOPWATCH_CONFIG.RAISE_EXCEPTIONS:
+            raise RuntimeError(error_message)
+        # Reset state and continue
+        STATE['active'] = False
+        STATE['last_label'] = None
 
     if label:
         # Start a timer for the given label
@@ -110,5 +115,10 @@ def stopwatch(label:str=None, pad:Union[int,int]=(0,0), tab:int=0):
             STATE['active'] = False
         else:
             # Log an error if there is no active stopwatch to measure
-            err(f'No active stopwatch found to measure elapsed time.', traceback=True)
-            raise RuntimeError('No active stopwatch found to measure elapsed time.')
+            error_message = 'No active stopwatch found to measure elapsed time.'
+            err(f'{error_message}', traceback=True)
+            if GLOBAL_STOPWATCH_CONFIG.RAISE_EXCEPTIONS:
+                raise RuntimeError(error_message)
+            # Reset state
+            STATE['active'] = False
+            STATE['last_label'] = None
