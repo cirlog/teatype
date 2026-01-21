@@ -147,4 +147,63 @@
         color: var(--text-muted);
         font-size: 0.8125rem;
     }
+
+    .tea-settings-slider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        input[type='range'] {
+            flex: 1;
+            height: 4px;
+
+            appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+            cursor: pointer;
+
+            &::-webkit-slider-thumb {
+                width: 16px;
+                height: 16px;
+
+                appearance: none;
+                background: var(--accent);
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+
+                transition: transform 0.15s ease;
+
+                &:hover {
+                    transform: scale(1.15);
+                }
+            }
+
+            &::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+
+                background: var(--accent);
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+        }
+
+        &-value {
+            min-width: 3rem;
+
+            color: var(--text-muted);
+            font-family: 'Monaco', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.875rem;
+            text-align: right;
+        }
+    }
+
+    .tea-settings-hint {
+        margin: 0.5rem 0 0;
+
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+    }
 }

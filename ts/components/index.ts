@@ -23,6 +23,7 @@ export { TeaModal } from './TeaModal';
 export { TeaNav } from './TeaNav';
 export { TeaPage } from './TeaPage';
 export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaSettings';
+export { TeaSubNav } from './TeaSubNav';
 export { TeaTable, TeaTablePagination } from './TeaTable';
 export { TeaTag } from './TeaTag';
 export { TeaTags } from './TeaTags';
@@ -31,4 +32,5 @@ export { TeaTooltip } from './TeaTooltip';
 // Types
 export type { iPageInfo } from './TeaApp';
 export type { Theme } from './TeaSettings';
+export type { TeaSubNavItem, TeaSubNavProps } from './TeaSubNav';
 export type { TeaTableColumn, TeaTableProps } from './TeaTable';

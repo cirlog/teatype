@@ -120,16 +120,6 @@
                 }
             }
 
-            .tea-page-title-hover-zone {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 5;
-                cursor: help;
-            }
-
             .tea-page-tags-overlay {
                 position: absolute;
                 top: 50%;
@@ -152,6 +142,25 @@
                     opacity: 1;
                     transform: translate(-50%, -50%) scale(1);
                 }
+            }
+
+            .tea-page-tags-inline {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+
+                opacity: 1;
+                transition: opacity 0.2s ease;
+
+                &--hidden {
+                    opacity: 0;
+                    pointer-events: none;
+                }
+            }
+
+            .tea-page-infotip-wrapper {
+                display: flex;
+                align-items: center;
             }
 
             @keyframes tea-title-fade-in {
@@ -190,13 +199,6 @@
                     color: var(--accent);
                 }
             }
-
-            .tea-page-tags {
-                margin-top: 0.5rem;
-
-                opacity: 1;
-                transition: opacity 0.2s;
-            }
         }
     }
 
@@ -205,8 +207,11 @@
         min-height: 0;
         margin: 0 auto;
         padding: 0 clamp(2rem, 8vw, 5rem);
-        width: 100%;
+        width: var(--tea-page-width, 100%);
+        max-width: 100%;
         overflow: hidden;
+
+        transition: width 0.3s ease;
 
         .grid {
             display: grid;

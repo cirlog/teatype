@@ -18,7 +18,6 @@ import { useMemo, useState } from 'react';
 
 // Components
 import { TeaTable, TeaTableColumn, TeaTablePagination } from '@teatype/components';
-import { TeaTooltip } from '@teatype/components';
 import { TeaButton } from '@teatype/components';
 
 // API
@@ -30,7 +29,7 @@ interface StudentTableProps {
     onDelete: (id: string) => void;
 }
 
-type SortKey = 'name' | 'age' | 'gender' | 'height' | 'school';
+type SortKey = 'name' | 'age' | 'gender' | 'height';
 type SortDirection = 'asc' | 'desc';
 
 const PAGE_SIZE = 100;
@@ -96,32 +95,6 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
             sortable: true,
         },
         {
-            key: 'school',
-            header: 'School ID',
-            sortable: true,
-            className: 'mono',
-            render: (student) =>
-                student.school ? (
-                    <TeaTooltip
-                        trigger={<span className='id-preview'>{student.school.substring(0, 8)}...</span>}
-                        position='top'
-                    >
-                        <code>{student.school}</code>
-                    </TeaTooltip>
-                ) : (
-                    '-'
-                ),
-        },
-        {
-            key: 'id',
-            header: 'ID',
-            render: (student) => (
-                <TeaTooltip trigger={<span className='id-preview'>hover</span>} position='top'>
-                    <code>{student.id}</code>
-                </TeaTooltip>
-            ),
-        },
-        {
             key: 'actions',
             header: 'Actions',
             className: 'actions',
@@ -156,6 +129,7 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
                 sortDirection={sortDirection}
                 onSort={handleSort}
                 emptyMessage='No students found'
+                rowTooltip={(student) => <code>ID: {student.id}</code>}
             />
 
             {totalPages > 1 && (

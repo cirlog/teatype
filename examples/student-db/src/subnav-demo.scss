@@ -1,0 +1,92 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.subnav-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+
+    &__section {
+        background: var(--surface-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+
+        h2 {
+            margin: 0;
+            padding: 1rem 1.5rem;
+
+            background: var(--surface-elevated);
+            border-bottom: 1px solid var(--border);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tea-subnav {
+            padding: 0 1.5rem;
+        }
+    }
+
+    &__content {
+        padding: 1.5rem;
+
+        .demo-content {
+            h3 {
+                margin: 0 0 1rem;
+
+                color: var(--text-primary);
+                font-size: 1.125rem;
+                font-weight: 600;
+            }
+
+            p {
+                margin: 0 0 1rem;
+
+                color: var(--text-muted);
+                line-height: 1.6;
+            }
+
+            ul {
+                margin: 0;
+                padding-left: 1.5rem;
+
+                color: var(--text-muted);
+                line-height: 1.8;
+
+                li {
+                    margin-bottom: 0.5rem;
+                }
+
+                strong {
+                    color: var(--text-primary);
+                }
+            }
+
+            pre {
+                margin: 0;
+                padding: 1rem;
+
+                background: var(--surface-elevated);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                color: var(--text-muted);
+                font-family: 'Monaco', 'Fira Code', 'Consolas', monospace;
+                font-size: 0.8125rem;
+                line-height: 1.6;
+                overflow-x: auto;
+                white-space: pre-wrap;
+            }
+        }
+    }
+}

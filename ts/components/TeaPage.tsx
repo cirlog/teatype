@@ -59,17 +59,17 @@ const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, d
                                     <TeaTags tags={tags} />
                                 </div>
                             )}
-                            {/* Invisible hover zone over title */}
-                            {description && (
-                                <div
-                                    className='tea-page-title-hover-zone'
-                                    onMouseEnter={() => setIsInfoHovered(true)}
-                                    onMouseLeave={() => setIsInfoHovered(false)}
-                                />
-                            )}
                         </div>
+                        {tags && (
+                            <div
+                                className={`tea-page-tags-inline${isInfoHovered ? ' tea-page-tags-inline--hidden' : ''}`}
+                            >
+                                <TeaTags tags={tags} />
+                            </div>
+                        )}
                         {description && (
                             <div
+                                className='tea-page-infotip-wrapper'
                                 onMouseEnter={() => setIsInfoHovered(true)}
                                 onMouseLeave={() => setIsInfoHovered(false)}
                             >
@@ -77,7 +77,6 @@ const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, d
                             </div>
                         )}
                     </div>
-                    {tags && !isInfoHovered && <TeaTags className='tea-page-tags' tags={tags} />}
                 </div>
             </header>
 
