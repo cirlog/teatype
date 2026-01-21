@@ -13,31 +13,35 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+// Style
 import './style/TeaModal.scss';
 
 interface TeaModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    title?: string;
     children: React.ReactNode;
-    footer?: React.ReactNode;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
     closeOnOverlayClick?: boolean;
     closeOnEscape?: boolean;
+    footer?: React.ReactNode;
+    isOpen: boolean;
+    size?: 'sm' | 'md' | 'lg' | 'xl';
+    title?: string;
+
+    onClose: () => void;
 }
 
 export const TeaModal: React.FC<TeaModalProps> = ({
-    isOpen,
-    onClose,
-    title,
     children,
-    footer,
-    size = 'md',
     closeOnOverlayClick = true,
     closeOnEscape = true,
+    footer,
+    isOpen,
+    size = 'md',
+    title,
+
+    onClose,
 }) => {
     // Handle escape key
     useEffect(() => {
