@@ -16,6 +16,10 @@
 // React imports
 import { useState, useEffect } from 'react';
 
+// Components
+import { TeaModal } from '@teatype/components';
+import { TeaButton } from '@teatype/components';
+
 // API
 import { Student } from '../api/students';
 
@@ -47,13 +51,11 @@ export const EditStudentModal = ({ student, onSave, onClose }: EditStudentModalP
         }
     }, [student]);
 
-    if (!student) return null;
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
         try {
-            await onSave(student.id, formData);
+            await onSave(student!.id, formData);
             onClose();
         } catch {
             // Error is handled by the hook
@@ -70,83 +72,63 @@ export const EditStudentModal = ({ student, onSave, onClose }: EditStudentModalP
         }));
     };
 
+    const footerContent = (
+        <>
+            <TeaButton variant='secondary' onClick={onClose} disabled={saving}>
+                Cancel
+            </TeaButton>
+            <TeaButton variant='primary' onClick={handleSubmit} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Changes'}
+            </TeaButton>
+        </>
+    );
+
     return (
-        <div className='modal-overlay' onClick={onClose}>
-            <div className='modal' onClick={(e) => e.stopPropagation()}>
-                <div className='modal__header'>
-                    <h2>Edit Student</h2>
-                    <button className='modal__close' onClick={onClose}>
-                        ×
-                    </button>
+        <TeaModal isOpen={student !== null} onClose={onClose} title='Edit Student' footer={footerContent} size='md'>
+            <form onSubmit={handleSubmit} className='hsdb-form'>
+                <div className='form-group'>
+                    <label htmlFor='name'>Name</label>
+                    <input type='text' id='name' name='name' value={formData.name} onChange={handleChange} required />
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className='modal__body'>
-                        <div className='form-group'>
-                            <label htmlFor='name'>Name</label>
-                            <input
-                                type='text'
-                                id='name'
-                                name='name'
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className='form-group'>
-                            <label htmlFor='age'>Age</label>
-                            <input
-                                type='number'
-                                id='age'
-                                name='age'
-                                value={formData.age}
-                                onChange={handleChange}
-                                min={1}
-                                max={150}
-                                required
-                            />
-                        </div>
-                        <div className='form-group'>
-                            <label htmlFor='gender'>Gender</label>
-                            <select id='gender' name='gender' value={formData.gender} onChange={handleChange} required>
-                                <option value=''>Select...</option>
-                                <option value='male'>Male</option>
-                                <option value='female'>Female</option>
-                            </select>
-                        </div>
-                        <div className='form-group'>
-                            <label htmlFor='height'>Height (cm)</label>
-                            <input
-                                type='number'
-                                id='height'
-                                name='height'
-                                value={formData.height}
-                                onChange={handleChange}
-                                min={1}
-                                max={300}
-                                required
-                            />
-                        </div>
-                        <div className='form-group'>
-                            <label htmlFor='school'>School ID</label>
-                            <input
-                                type='text'
-                                id='school'
-                                name='school'
-                                value={formData.school}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
-                    <div className='modal__footer'>
-                        <button type='button' className='btn btn--secondary' onClick={onClose} disabled={saving}>
-                            Cancel
-                        </button>
-                        <button type='submit' className='btn btn--primary' disabled={saving}>
-                            {saving ? 'Saving...' : 'Save Changes'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <div className='form-group'>
+                    <label htmlFor='age'>Age</label>
+                    <input
+                        type='number'
+                        id='age'
+                        name='age'
+                        value={formData.age}
+                        onChange={handleChange}
+                        min={1}
+                        max={150}
+                        required
+                    />
+                </div>
+                <div className='form-group'>
+                    <label htmlFor='gender'>Gender</label>
+                    <select id='gender' name='gender' value={formData.gender} onChange={handleChange} required>
+                        <option value=''>Select...</option>
+                        <option value='male'>Male</option>
+                        <option value='female'>Female</option>
+                    </select>
+                </div>
+                <div className='form-group'>
+                    <label htmlFor='height'>Height (cm)</label>
+                    <input
+                        type='number'
+                        id='height'
+                        name='height'
+                        value={formData.height}
+                        onChange={handleChange}
+                        min={1}
+                        max={300}
+                        required
+                    />
+                </div>
+                <div className='form-group'>
+                    <label htmlFor='school'>School ID</label>
+                    <input type='text' id='school' name='school' value={formData.school} onChange={handleChange} />
+                </div>
+            </form>
+        </TeaModal>
     );
 };

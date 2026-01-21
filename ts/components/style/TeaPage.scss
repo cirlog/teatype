@@ -98,6 +98,11 @@
                 gap: 0.75rem;
             }
 
+            .tea-page-title-container {
+                position: relative;
+                display: inline-block;
+            }
+
             .tea-page-title {
                 margin: 0;
 
@@ -105,6 +110,48 @@
                 font-weight: 600;
 
                 animation: tea-title-fade-in 0.3s ease-out 0.1s backwards;
+                transition:
+                    filter 0.3s ease,
+                    opacity 0.3s ease;
+
+                &--blurred {
+                    filter: blur(8px);
+                    opacity: 0.3;
+                }
+            }
+
+            .tea-page-title-hover-zone {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 5;
+                cursor: help;
+            }
+
+            .tea-page-tags-overlay {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 10;
+
+                display: flex;
+                gap: 0.5rem;
+
+                animation: tea-tags-overlay-fade-in 0.2s ease-out;
+            }
+
+            @keyframes tea-tags-overlay-fade-in {
+                from {
+                    opacity: 0;
+                    transform: translate(-50%, -50%) scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: translate(-50%, -50%) scale(1);
+                }
             }
 
             @keyframes tea-title-fade-in {
@@ -145,24 +192,10 @@
             }
 
             .tea-page-tags {
-                position: absolute;
-                left: 0;
-                top: 100%;
-                z-index: 10;
+                margin-top: 0.5rem;
 
-                margin-top: -0.1rem;
-
-                opacity: 0;
-                pointer-events: none;
-                transform: translateY(-8px);
-                transition: all 0.2s;
-            }
-
-            // Show tags when hovering the tooltip trigger
-            &:has(.tea-tooltip:hover) .tea-page-tags {
                 opacity: 1;
-                pointer-events: auto;
-                transform: translateY(0);
+                transition: opacity 0.2s;
             }
         }
     }

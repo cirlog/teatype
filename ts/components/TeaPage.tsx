@@ -14,6 +14,7 @@
  */
 
 // React imports
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Components
@@ -37,6 +38,7 @@ interface iTeaPageProps {
 
 const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, description, tags, title }) => {
     const navigate = useNavigate();
+    const [isInfoHovered, setIsInfoHovered] = useState(false);
 
     return (
         <div className='tea-page'>
@@ -48,10 +50,34 @@ const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, d
                 <div className='tea-page-header-content'>
                     {appName && <p className='tea-page-flare'>{appName}</p>}
                     <div className='tea-page-title-row'>
-                        <h1 className='tea-page-title'>{title}</h1>
-                        {description && <TeaInfotip position='right'>{description}</TeaInfotip>}
+                        <div className='tea-page-title-container'>
+                            <h1 className={`tea-page-title${isInfoHovered ? ' tea-page-title--blurred' : ''}`}>
+                                {title}
+                            </h1>
+                            {tags && isInfoHovered && (
+                                <div className='tea-page-tags-overlay'>
+                                    <TeaTags tags={tags} />
+                                </div>
+                            )}
+                            {/* Invisible hover zone over title */}
+                            {description && (
+                                <div
+                                    className='tea-page-title-hover-zone'
+                                    onMouseEnter={() => setIsInfoHovered(true)}
+                                    onMouseLeave={() => setIsInfoHovered(false)}
+                                />
+                            )}
+                        </div>
+                        {description && (
+                            <div
+                                onMouseEnter={() => setIsInfoHovered(true)}
+                                onMouseLeave={() => setIsInfoHovered(false)}
+                            >
+                                <TeaInfotip position='right'>{description}</TeaInfotip>
+                            </div>
+                        )}
                     </div>
-                    {tags && <TeaTags className='tea-page-tags' tags={tags} />}
+                    {tags && !isInfoHovered && <TeaTags className='tea-page-tags' tags={tags} />}
                 </div>
             </header>
 
