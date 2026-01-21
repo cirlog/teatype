@@ -60,13 +60,6 @@ const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, d
                                 </div>
                             )}
                         </div>
-                        {tags && (
-                            <div
-                                className={`tea-page-tags-inline${isInfoHovered ? ' tea-page-tags-inline--hidden' : ''}`}
-                            >
-                                <TeaTags tags={tags} />
-                            </div>
-                        )}
                         {description && (
                             <div
                                 className='tea-page-infotip-wrapper'

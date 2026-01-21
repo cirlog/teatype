@@ -15,29 +15,15 @@
 
 // React imports
 import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
 
 // Components
-import { iPageInfo, TeaApp, TeaNav, TeaPage, TeaSubNav } from '@teatype/components';
+import { TeaSubNav } from '@teatype/components';
 
 // Icons
-import { DatabaseIcon, ModelsIcon, SettingsIcon, HomeIcon } from '@teatype/icons';
+import { DatabaseIcon, ArrowIcon, SettingsIcon } from '@teatype/icons';
 
 // Styles
 import './subnav-demo.scss';
-
-const APP_NAME = 'SubNav Demo';
-const PAGES: iPageInfo[] = [
-    {
-        title: 'SubNav Component Demo',
-        path: '/demo',
-        content: SubNavDemo,
-        longDescription: 'Demonstrates the TeaSubNav component with various configurations.',
-        shortDescription: 'Interactive SubNav examples',
-        icon: <ModelsIcon />,
-        tags: ['Component', 'Navigation', 'Demo'],
-    },
-];
 
 // Demo content components
 function OverviewContent() {
@@ -87,7 +73,7 @@ function SettingsContent() {
             <p>Configure the component through props:</p>
             <pre>{`<TeaSubNav
     items={[
-        { id: 'overview', label: 'Overview', icon: <HomeIcon /> },
+        { id: 'overview', label: 'Overview', icon: <ArrowIcon /> },
         { id: 'details', label: 'Details' },
         { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
     ]}
@@ -111,7 +97,7 @@ function SubNavDemo() {
     const [activeTab, setActiveTab] = useState('overview');
 
     const tabs = [
-        { id: 'overview', label: 'Overview', icon: <HomeIcon /> },
+        { id: 'overview', label: 'Overview', icon: <ArrowIcon /> },
         { id: 'details', label: 'Details', icon: <DatabaseIcon /> },
         { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
         { id: 'analytics', label: 'Analytics', disabled: false },
@@ -159,38 +145,4 @@ function SubNavDemo() {
     );
 }
 
-const SubNavDemoApp = () => {
-    return (
-        <TeaApp name={APP_NAME}>
-            <Routes>
-                <Route
-                    path='/'
-                    element={
-                        <TeaNav appName={APP_NAME} pages={PAGES} subtitle='Demonstration of the TeaSubNav component' />
-                    }
-                />
-                {PAGES.map((page) => {
-                    const PageContent = page.content;
-                    return (
-                        <Route
-                            key={page.path}
-                            path={page.path}
-                            element={
-                                <TeaPage
-                                    appName={APP_NAME}
-                                    title={page.title}
-                                    description={page.longDescription}
-                                    tags={page.tags}
-                                >
-                                    {PageContent && <PageContent />}
-                                </TeaPage>
-                            }
-                        />
-                    );
-                })}
-            </Routes>
-        </TeaApp>
-    );
-};
-
-export default SubNavDemoApp;
+export default SubNavDemo;
