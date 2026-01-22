@@ -253,22 +253,39 @@ class BaseStartCLI(BaseCLI):
             auto_execute=False
         )
         self.stop.scripts_directory = scripts_directory
-        # Perform pre-execution setup and execute to check for running processes
-        self.stop.pre_execute()
-        self.stop.execute()
+        # NOTE: Only store the stop script here, do NOT execute it yet.
+        # Execution happens in _run_with_reloader when a restart is needed.
         
         if not silent_mode:
             log(f'Default stop script created for process: "{process_name}"')
 
     # TODO: Implement exclude paths from reloader
     # TODO: Make sure that multiple rapid changes do not trigger multiple restarts
-    def _run_with_reloader(self, full_cmd:str, watch_paths:list[str], silent_mode:bool=False):
+    def _run_with_reloader(self, full_cmd:str, watch_paths:list[str], silent_mode:bool=False, detached:bool=False):
+        # If detached mode, fork the watcher process to run in background
+        if detached:
+            pid = os.fork()
+            if pid > 0:
+                # Parent process - return immediately
+                if not silent_mode:
+                    log(f'[reloader] started in background with PID {pid}')
+                return
+            else:
+                # Child process - detach from terminal
+                os.setsid()  # Create new session, detach from controlling terminal
+                # Redirect stdin/stdout/stderr to /dev/null for true detachment
+                sys.stdin = open(os.devnull, 'r')
+                sys.stdout = open(os.devnull, 'w')
+                sys.stderr = open(os.devnull, 'w')
+                silent_mode = True  # Force silent mode in detached child
+        
         restarting = False
         lock = threading.Lock()
         
         def start_process():
+            # Don't add combine_stdout_and_stderr here as the command may already
+            # have redirections (e.g., from --detached mode adding tee/dev/null)
             shell(full_cmd,
-                  combine_stdout_and_stderr=True,
                   detached=True)
 
         def stop_process():
@@ -499,7 +516,7 @@ class BaseStartCLI(BaseCLI):
         if reload_enabled:
             # Watch the module directory for changes and restart on .py edits
             watch_paths = [self.parent_path]
-            self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode)
+            self._run_with_reloader(full_cmd, watch_paths=watch_paths, silent_mode=silent_mode, detached=detached)
             # signal_handler(signal.SIGSTOP, None) # Kill the process after successful activation
             return
 
