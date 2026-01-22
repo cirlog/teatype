@@ -54,15 +54,16 @@ class BaseStopCLI(BaseCLI):
                 }
             ]
         }
-    
+        
     # TODO: Decouple this class from CheckIfRunning into BaseCLI to prevent DRY
-    def load_script(self):
+    def load_script(self, scripts_directory:str=None) -> dict:
         """
         Discover and import all Python scripts in the `scripts/` directory, skipping __init__.py and non-Python files.
         """
         scripts = {}
         # Get the parent directory of the current script
-        scripts_directory = path.caller_parent(skip_call_stacks=3)
+        if scripts_directory is None:
+            scripts_directory = path.caller_parent(skip_call_stacks=3)
         if hasattr(self, 'scripts_directory'):
             scripts_directory = self.scripts_directory
         # Create a temporary directory within the scripts directory for renaming and importing modules
