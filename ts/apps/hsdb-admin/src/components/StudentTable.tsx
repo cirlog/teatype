@@ -16,6 +16,10 @@
 // React imports
 import { useMemo, useState } from 'react';
 
+// Components
+import { TeaTable, TeaTableColumn, TeaTablePagination } from '@teatype/components';
+import { TeaButton } from '@teatype/components';
+
 // API
 import { Student } from '../api/students';
 
@@ -25,7 +29,7 @@ interface StudentTableProps {
     onDelete: (id: string) => void;
 }
 
-type SortKey = 'name' | 'age' | 'gender' | 'height' | 'school';
+type SortKey = 'name' | 'age' | 'gender' | 'height';
 type SortDirection = 'asc' | 'desc';
 
 const PAGE_SIZE = 100;
@@ -59,112 +63,82 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
         return sortedStudents.slice(start, start + PAGE_SIZE);
     }, [sortedStudents, currentPage]);
 
-    const handleSort = (key: SortKey) => {
+    const handleSort = (key: string) => {
         if (sortKey === key) {
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
-            setSortKey(key);
+            setSortKey(key as SortKey);
             setSortDirection('asc');
         }
         setCurrentPage(1);
     };
 
-    const getSortIndicator = (key: SortKey) => {
-        if (sortKey !== key) return ' ↕';
-        return sortDirection === 'asc' ? ' ↑' : ' ↓';
-    };
+    const columns: TeaTableColumn<Student>[] = [
+        {
+            key: 'name',
+            header: 'Name',
+            sortable: true,
+        },
+        {
+            key: 'age',
+            header: 'Age',
+            sortable: true,
+        },
+        {
+            key: 'gender',
+            header: 'Gender',
+            sortable: true,
+        },
+        {
+            key: 'height',
+            header: 'Height (cm)',
+            sortable: true,
+        },
+        {
+            key: 'actions',
+            header: 'Actions',
+            className: 'actions',
+            render: (student) => (
+                <>
+                    <TeaButton size='sm' variant='secondary' onClick={() => onEdit(student)}>
+                        Edit
+                    </TeaButton>
+                    <TeaButton
+                        size='sm'
+                        variant='danger'
+                        onClick={() => {
+                            if (confirm(`Delete ${student.name}?`)) {
+                                onDelete(student.id);
+                            }
+                        }}
+                    >
+                        Delete
+                    </TeaButton>
+                </>
+            ),
+        },
+    ];
 
     return (
         <div className='student-table'>
-            <div className='student-table__wrapper'>
-                <table>
-                    <thead>
-                        <tr>
-                            <th className='sortable' onClick={() => handleSort('name')}>
-                                Name{getSortIndicator('name')}
-                            </th>
-                            <th className='sortable' onClick={() => handleSort('age')}>
-                                Age{getSortIndicator('age')}
-                            </th>
-                            <th className='sortable' onClick={() => handleSort('gender')}>
-                                Gender{getSortIndicator('gender')}
-                            </th>
-                            <th className='sortable' onClick={() => handleSort('height')}>
-                                Height (cm){getSortIndicator('height')}
-                            </th>
-                            <th className='sortable' onClick={() => handleSort('school')}>
-                                School ID{getSortIndicator('school')}
-                            </th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedStudents.map((student) => (
-                            <tr key={student.id}>
-                                <td>{student.name}</td>
-                                <td>{student.age}</td>
-                                <td>{student.gender}</td>
-                                <td>{student.height}</td>
-                                <td className='mono'>
-                                    {student.school ? `${student.school.substring(0, 8)}...` : '-'}
-                                </td>
-                                <td className='actions'>
-                                    <button className='btn btn--sm btn--edit' onClick={() => onEdit(student)}>
-                                        Edit
-                                    </button>
-                                    <button
-                                        className='btn btn--sm btn--delete'
-                                        onClick={() => {
-                                            if (confirm(`Delete ${student.name}?`)) {
-                                                onDelete(student.id);
-                                            }
-                                        }}
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {students.length === 0 && (
-                <div className='empty-state'>
-                    <p>No students found</p>
-                </div>
-            )}
+            <TeaTable
+                columns={columns}
+                data={paginatedStudents}
+                keyExtractor={(student) => student.id}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                emptyMessage='No students found'
+                rowTooltip={(student) => <code>ID: {student.id}</code>}
+            />
 
             {totalPages > 1 && (
-                <div className='pagination'>
-                    <button className='btn btn--sm' onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-                        ««
-                    </button>
-                    <button
-                        className='btn btn--sm'
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                    >
-                        «
-                    </button>
-                    <span className='pagination__info'>
-                        Page {currentPage} of {totalPages} ({students.length} total)
-                    </span>
-                    <button
-                        className='btn btn--sm'
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                    >
-                        »
-                    </button>
-                    <button
-                        className='btn btn--sm'
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
-                    >
-                        »»
-                    </button>
-                </div>
+                <TeaTablePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={students.length}
+                    onPageChange={setCurrentPage}
+                />
             )}
         </div>
     );

@@ -13,9 +13,10 @@
  * all copies or substantial portions of the Software.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { TeaButton } from './TeaButton';
+import { TeaTooltip } from './TeaTooltip';
 
 import './style/TeaTable.scss';
 
@@ -37,6 +38,8 @@ export interface TeaTableProps<T> {
     emptyMessage?: string;
     loading?: boolean;
     className?: string;
+    /** Function to get tooltip content for a row (shown on row hover) */
+    rowTooltip?: (row: T, index: number) => React.ReactNode;
 }
 
 export function TeaTable<T>({
@@ -49,7 +52,10 @@ export function TeaTable<T>({
     emptyMessage = 'No data available',
     loading = false,
     className = '',
+    rowTooltip,
 }: TeaTableProps<T>) {
+    const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
+
     const renderSortIndicator = (column: TeaTableColumn<T>) => {
         if (!column.sortable || sortKey !== column.key) return null;
         return <span className='tea-table__sort-indicator'>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
@@ -88,12 +94,31 @@ export function TeaTable<T>({
                             </tr>
                         ) : (
                             data.map((row, index) => (
-                                <tr key={keyExtractor(row, index)}>
-                                    {columns.map((column) => (
+                                <tr
+                                    key={keyExtractor(row, index)}
+                                    className={hoveredRowIndex === index ? 'tea-table__row--hovered' : ''}
+                                    onMouseEnter={() => setHoveredRowIndex(index)}
+                                    onMouseLeave={() => setHoveredRowIndex(null)}
+                                >
+                                    {columns.map((column, colIndex) => (
                                         <td key={column.key} className={column.className || ''}>
-                                            {column.render
-                                                ? column.render(row, index)
-                                                : (row as Record<string, unknown>)[column.key]?.toString() || '-'}
+                                            {colIndex === 0 && rowTooltip ? (
+                                                <div className='tea-table__cell-with-tooltip'>
+                                                    {column.render
+                                                        ? column.render(row, index)
+                                                        : (row as Record<string, unknown>)[column.key]?.toString() ||
+                                                          '-'}
+                                                    {hoveredRowIndex === index && (
+                                                        <div className='tea-table__row-tooltip'>
+                                                            {rowTooltip(row, index)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : column.render ? (
+                                                column.render(row, index)
+                                            ) : (
+                                                (row as Record<string, unknown>)[column.key]?.toString() || '-'
+                                            )}
                                         </td>
                                     ))}
                                 </tr>

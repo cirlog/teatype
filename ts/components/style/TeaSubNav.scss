@@ -1,0 +1,139 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+.tea-subnav {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    &__tabs {
+        display: flex;
+        gap: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    &__tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        white-space: nowrap;
+
+        transition:
+            color 0.2s ease,
+            transform 0.2s ease,
+            border-color 0.2s ease;
+
+        &:hover:not(&--disabled) {
+            color: var(--text-primary);
+        }
+
+        &--selected {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            transform: translateY(-2px);
+
+            .tea-subnav__tab-label {
+                font-weight: 600;
+            }
+        }
+
+        &--hovered:not(&--selected) {
+            color: var(--text-primary);
+        }
+
+        &--disabled {
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        &-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1rem;
+            height: 1rem;
+
+            animation: tea-subnav-icon-fade-in 0.2s ease-out;
+
+            svg {
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        @keyframes tea-subnav-icon-fade-in {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        &-label {
+            transition: font-weight 0.15s ease;
+        }
+    }
+
+    &__line-container {
+        position: relative;
+        height: 2px;
+        margin-top: -2px;
+    }
+
+    &__line-base {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+
+        background: var(--border);
+        opacity: 0;
+
+        transition: opacity 0.25s ease;
+
+        &--visible {
+            opacity: 1;
+        }
+    }
+
+    &__line-highlight {
+        position: absolute;
+        top: 0;
+        height: 2px;
+
+        background: var(--accent);
+
+        transition:
+            left 0.2s ease,
+            width 0.2s ease;
+    }
+}
