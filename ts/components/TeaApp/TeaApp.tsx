@@ -20,7 +20,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { TeaSettingsProvider, TeaSettingsPanel, useTeaSettings } from './TeaSettings';
 
 // Icons
-import { SettingsIcon } from '../icons';
+import { SettingsIcon } from '../../icons';
 
 // Style
 import './style/TeaApp.scss';

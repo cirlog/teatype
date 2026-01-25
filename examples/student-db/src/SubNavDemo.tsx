@@ -95,6 +95,8 @@ function AnalyticsContent() {
 
 function SubNavDemo() {
     const [activeTab, setActiveTab] = useState('overview');
+    const [disabledExampleTab, setDisabledExampleTab] = useState('active1');
+    const [minimalExampleTab, setMinimalExampleTab] = useState('tab1');
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: <ArrowIcon /> },
@@ -125,8 +127,8 @@ function SubNavDemo() {
                         { id: 'active2', label: 'Another Tab' },
                         { id: 'disabled', label: 'Disabled', disabled: true },
                     ]}
-                    selectedId='active1'
-                    onSelect={() => {}}
+                    selectedId={disabledExampleTab}
+                    onSelect={setDisabledExampleTab}
                 />
             </div>
 
@@ -137,8 +139,8 @@ function SubNavDemo() {
                         { id: 'tab1', label: 'First' },
                         { id: 'tab2', label: 'Second' },
                     ]}
-                    selectedId='tab1'
-                    onSelect={() => {}}
+                    selectedId={minimalExampleTab}
+                    onSelect={setMinimalExampleTab}
                 />
             </div>
         </div>

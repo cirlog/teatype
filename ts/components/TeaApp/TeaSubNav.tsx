@@ -67,18 +67,18 @@ export interface TeaSubNavProps {
 export const TeaSubNav: React.FC<TeaSubNavProps> = ({ items, selectedId, onSelect, className = '' }) => {
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [hoveredRect, setHoveredRect] = useState<{ left: number; width: number } | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const tabsRef = useRef<HTMLDivElement>(null);
     const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
     // Update hover position when hovering
     useEffect(() => {
-        if (hoveredId && containerRef.current) {
+        if (hoveredId && tabsRef.current) {
             const tabEl = tabRefs.current.get(hoveredId);
             if (tabEl) {
-                const containerRect = containerRef.current.getBoundingClientRect();
+                const tabsRect = tabsRef.current.getBoundingClientRect();
                 const tabRect = tabEl.getBoundingClientRect();
                 setHoveredRect({
-                    left: tabRect.left - containerRect.left,
+                    left: tabRect.left - tabsRect.left,
                     width: tabRect.width,
                 });
             }
@@ -102,12 +102,8 @@ export const TeaSubNav: React.FC<TeaSubNavProps> = ({ items, selectedId, onSelec
     };
 
     return (
-        <nav
-            ref={containerRef}
-            className={`tea-subnav${className ? ` ${className}` : ''}`}
-            onMouseLeave={() => setHoveredId(null)}
-        >
-            <div className='tea-subnav__tabs'>
+        <nav className={`tea-subnav${className ? ` ${className}` : ''}`} onMouseLeave={() => setHoveredId(null)}>
+            <div ref={tabsRef} className='tea-subnav__tabs'>
                 {items.map((item) => {
                     const isSelected = item.id === selectedId;
                     const isHovered = item.id === hoveredId;
@@ -123,7 +119,7 @@ export const TeaSubNav: React.FC<TeaSubNavProps> = ({ items, selectedId, onSelec
                             aria-selected={isSelected}
                             role='tab'
                         >
-                            {isSelected && item.icon && <span className='tea-subnav__tab-icon'>{item.icon}</span>}
+                            {item.icon && <span className='tea-subnav__tab-icon'>{item.icon}</span>}
                             <span className='tea-subnav__tab-label'>{item.label}</span>
                         </button>
                     );

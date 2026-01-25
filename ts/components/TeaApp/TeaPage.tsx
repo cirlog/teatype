@@ -18,11 +18,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Components
-import { TeaInfotip } from './TeaInfotip';
-import { TeaTags } from './TeaTags';
+import { TeaInfotip } from '../TeaInfotip';
+import { TeaTags } from '../TeaTags/TeaTags';
 
 // Icons
-import { ArrowIcon } from '../icons';
+import { ArrowIcon } from '../../icons';
 
 // Style
 import './style/TeaPage.scss';

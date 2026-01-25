@@ -35,7 +35,7 @@ const PAGES: iPageInfo[] = [
         longDescription: 'View and manage student (and adjacent) records in the hybrid database.',
         shortDescription: 'Manage Student Records',
         icon: <DatabaseIcon />,
-        tags: ['HSDB', 'Students', 'Records'],
+        tags: ['Admin', 'HSDB'],
     },
     {
         title: 'Data Query Builder',
@@ -44,7 +44,7 @@ const PAGES: iPageInfo[] = [
         longDescription: 'Build and execute custom queries against the HSDB server to fetch student and related data.',
         shortDescription: 'Build Custom Data Queries',
         icon: <ModelsIcon />,
-        tags: ['HSDB', 'Query', 'Builder', 'Configuration'],
+        tags: ['Admin', 'Config', 'HSDB', 'Test'],
     },
     {
         title: 'SubNav Demo',
@@ -53,7 +53,7 @@ const PAGES: iPageInfo[] = [
         longDescription: 'Demonstration of the TeaSubNav component with tab-style navigation and hover effects.',
         shortDescription: 'SubNav Component Demo',
         icon: <ArrowIcon />,
-        tags: ['Components', 'Navigation', 'Demo'],
+        tags: ['Dev', 'Test'],
     },
 ];
 

@@ -14,23 +14,23 @@
  */
 
 // Components
-export { TeaApp } from './TeaApp';
+export { TeaApp } from './TeaApp/TeaApp';
 export { TeaButton } from './TeaButton';
 export { TeaIcon } from './TeaIcon';
 export { TeaInfotip } from './TeaInfotip';
 export { TeaInput, TeaSelect, TeaTextarea } from './TeaInput';
 export { TeaModal } from './TeaModal';
-export { TeaNav } from './TeaNav';
-export { TeaPage } from './TeaPage';
-export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaSettings';
-export { TeaSubNav } from './TeaSubNav';
+export { TeaNav } from './TeaApp/TeaNav';
+export { TeaPage } from './TeaApp/TeaPage';
+export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaApp/TeaSettings';
+export { TeaSubNav } from './TeaApp/TeaSubNav';
 export { TeaTable, TeaTablePagination } from './TeaTable';
-export { TeaTag } from './TeaTag';
-export { TeaTags } from './TeaTags';
+export { TeaTag } from './TeaTags/TeaTag';
+export { TeaTags } from './TeaTags/TeaTags';
 export { TeaTooltip } from './TeaTooltip';
 
 // Types
-export type { iPageInfo } from './TeaApp';
-export type { Theme } from './TeaSettings';
-export type { TeaSubNavItem, TeaSubNavProps } from './TeaSubNav';
+export type { iPageInfo } from './TeaApp/TeaApp';
+export type { Theme } from './TeaApp/TeaSettings';
+export type { TeaSubNavItem, TeaSubNavProps } from './TeaApp/TeaSubNav';
 export type { TeaTableColumn, TeaTableProps } from './TeaTable';

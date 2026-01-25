@@ -13,6 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import { useState, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 
@@ -24,18 +25,20 @@ import './style/TeaNav.scss';
 
 interface iTeaNavProps {
     appName: string;
+    filtersEnabled?: boolean;
     navType?: 'apps';
     pages: iPageInfo[];
     subtitle?: string;
 }
 
-interface AppNavigationProps {
+interface iAppNavProps {
     appName: string;
+    filtersEnabled?: boolean;
     pages: iPageInfo[];
     subtitle?: string;
 }
 
-const AppNavigation: React.FC<AppNavigationProps> = (props) => {
+const AppNav: React.FC<iAppNavProps> = (props) => {
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
     // Collect all unique tags from pages
@@ -53,6 +56,8 @@ const AppNavigation: React.FC<AppNavigationProps> = (props) => {
         return props.pages.filter((page) => page.tags?.some((tag) => selectedTags.includes(tag)));
     }, [props.pages, selectedTags]);
 
+    const filtersEnabled = useMemo(() => props.filtersEnabled ?? true, [props.filtersEnabled]);
+
     const toggleTag = (tag: string) => {
         setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
     };
@@ -68,7 +73,7 @@ const AppNavigation: React.FC<AppNavigationProps> = (props) => {
                 {props.subtitle && <p className='tea-nav-subtitle'>{props.subtitle}</p>}
             </header>
 
-            {allTags.length > 0 && (
+            {filtersEnabled && allTags.length > 0 && (
                 <div className='tea-nav-filter'>
                     <div className='tea-nav-filter-tags'>
                         {allTags.map((tag) => (
@@ -101,6 +106,7 @@ const AppNavigation: React.FC<AppNavigationProps> = (props) => {
 
                         <div className='tea-nav-tile-content'>
                             <h2 className='tea-nav-tile-title'>{page.title}</h2>
+
                             {page.shortDescription && (
                                 <p className='tea-nav-tile-description'>{page.shortDescription}</p>
                             )}
@@ -137,9 +143,15 @@ const TeaNav: React.FC<iTeaNavProps> = (props) => {
     const navType = 'apps'; // Currently only 'apps' type is supported
     let navContent = null;
     if (navType === 'apps') {
-        navContent = <AppNavigation appName={props.appName} pages={props.pages} subtitle={props.subtitle} />;
+        navContent = (
+            <AppNav
+                appName={props.appName}
+                filtersEnabled={props.filtersEnabled}
+                pages={props.pages}
+                subtitle={props.subtitle}
+            />
+        );
     }
-
     return <nav id='tea-nav'>{navContent}</nav>;
 };
 
