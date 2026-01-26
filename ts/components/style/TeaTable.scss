@@ -19,7 +19,7 @@
     min-height: 0;
 
     background: var(--surface-card);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(1rem);
     border: 1px solid var(--border);
     border-radius: 16px;
     overflow: hidden;
@@ -39,10 +39,10 @@
 
     // Scrollable table wrapper
     &__wrapper {
-        flex: 1;
         overflow-y: auto;
-        // Only scroll horizontally when truly needed
         overflow-x: hidden;
+
+        flex: 1;
 
         &:hover {
             overflow-x: auto;
@@ -57,11 +57,12 @@
         thead {
             position: sticky;
             top: 0;
-            z-index: 1;
 
             background: var(--surface-elevated);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(0.5rem);
             border-bottom: 1px solid var(--border);
+
+            z-index: 1;
 
             th {
                 padding: 0.875rem 1rem;

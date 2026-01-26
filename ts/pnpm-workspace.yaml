@@ -10,6 +10,7 @@ packages:
     - style
     - toolkit
     - ../examples/*
+    - ../../lockkliye
 
 ignoredBuiltDependencies:
     - '@parcel/watcher'

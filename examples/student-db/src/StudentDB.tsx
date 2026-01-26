@@ -52,7 +52,7 @@ const PAGES: iPageInfo[] = [
         content: SubNavDemo,
         longDescription: 'Demonstration of the TeaSubNav component with tab-style navigation and hover effects.',
         shortDescription: 'SubNav Component Demo',
-        icon: <ArrowIcon />,
+        icon: null,
         tags: ['Dev', 'Test'],
     },
 ];
@@ -64,7 +64,12 @@ const StudentDB = () => {
                 <Route
                     path='/'
                     element={
-                        <TeaNav appName={APP_NAME} pages={PAGES} subtitle='Test-Application for the HSDB Server OEM' />
+                        <TeaNav
+                            appName={APP_NAME}
+                            filtersEnabled={false}
+                            pages={PAGES}
+                            subtitle='Test-Application for the HSDB Server OEM'
+                        />
                     }
                 />
                 {PAGES.map((page) => {

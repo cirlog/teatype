@@ -102,7 +102,7 @@ const AppNav: React.FC<iAppNavProps> = (props) => {
                         className='tea-nav-tile'
                         style={{ animationDelay: `${index * 0.05}s` }}
                     >
-                        {page.icon && <div className='tea-nav-tile-icon'>{page.icon}</div>}
+                        <div className='tea-nav-tile-icon'>{page.icon || page.title.charAt(0).toUpperCase()}</div>
 
                         <div className='tea-nav-tile-content'>
                             <h2 className='tea-nav-tile-title'>{page.title}</h2>
