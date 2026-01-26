@@ -16,7 +16,7 @@
 import React, { useState } from 'react';
 
 import { TeaButton } from './TeaButton';
-import { TeaTooltip } from './TeaTooltip';
+import { TeaModal } from './TeaModal';
 
 import './style/TeaTable.scss';
 
@@ -38,8 +38,8 @@ export interface TeaTableProps<T> {
     emptyMessage?: string;
     loading?: boolean;
     className?: string;
-    /** Function to get tooltip content for a row (shown on row hover) */
-    rowTooltip?: (row: T, index: number) => React.ReactNode;
+    /** Enable clicking rows to view full data in modal */
+    clickableRows?: boolean;
 }
 
 export function TeaTable<T>({
@@ -52,13 +52,19 @@ export function TeaTable<T>({
     emptyMessage = 'No data available',
     loading = false,
     className = '',
-    rowTooltip,
+    clickableRows = false,
 }: TeaTableProps<T>) {
-    const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
+    const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
     const renderSortIndicator = (column: TeaTableColumn<T>) => {
         if (!column.sortable || sortKey !== column.key) return null;
         return <span className='tea-table__sort-indicator'>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+    };
+
+    const formatValue = (value: unknown): string => {
+        if (value === null || value === undefined) return '-';
+        if (typeof value === 'object') return JSON.stringify(value, null, 2);
+        return String(value);
     };
 
     return (
@@ -96,29 +102,14 @@ export function TeaTable<T>({
                             data.map((row, index) => (
                                 <tr
                                     key={keyExtractor(row, index)}
-                                    className={hoveredRowIndex === index ? 'tea-table__row--hovered' : ''}
-                                    onMouseEnter={() => setHoveredRowIndex(index)}
-                                    onMouseLeave={() => setHoveredRowIndex(null)}
+                                    className={clickableRows ? 'tea-table__row--clickable' : ''}
+                                    onClick={() => clickableRows && setSelectedRow(row)}
                                 >
-                                    {columns.map((column, colIndex) => (
+                                    {columns.map((column) => (
                                         <td key={column.key} className={column.className || ''}>
-                                            {colIndex === 0 && rowTooltip ? (
-                                                <div className='tea-table__cell-with-tooltip'>
-                                                    {column.render
-                                                        ? column.render(row, index)
-                                                        : (row as Record<string, unknown>)[column.key]?.toString() ||
-                                                          '-'}
-                                                    {hoveredRowIndex === index && (
-                                                        <div className='tea-table__row-tooltip'>
-                                                            {rowTooltip(row, index)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : column.render ? (
-                                                column.render(row, index)
-                                            ) : (
-                                                (row as Record<string, unknown>)[column.key]?.toString() || '-'
-                                            )}
+                                            {column.render
+                                                ? column.render(row, index)
+                                                : (row as Record<string, unknown>)[column.key]?.toString() || '-'}
                                         </td>
                                     ))}
                                 </tr>
@@ -127,6 +118,22 @@ export function TeaTable<T>({
                     </tbody>
                 </table>
             </div>
+
+            {/* Row detail modal */}
+            <TeaModal isOpen={selectedRow !== null} onClose={() => setSelectedRow(null)} title='Row Details' size='md'>
+                {selectedRow && (
+                    <div className='tea-table__row-details'>
+                        {Object.entries(selectedRow as Record<string, unknown>).map(([key, value]) => (
+                            <div key={key} className='tea-table__row-detail'>
+                                <span className='tea-table__row-detail-key'>{key}</span>
+                                <span className='tea-table__row-detail-value'>
+                                    {typeof value === 'object' ? <pre>{formatValue(value)}</pre> : formatValue(value)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </TeaModal>
         </div>
     );
 }

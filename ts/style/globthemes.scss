@@ -3,6 +3,7 @@
     // Core colors
     --surface: #0a0a0a;
     --surface-elevated: #141414;
+    --surface-elevated-rgb: 20, 20, 20;
     --surface-card: rgba(20, 20, 20, 0.75);
     --background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
     --text-primary: #f5f5f5;
@@ -30,6 +31,7 @@
     // Core colors
     --surface: #0f172a;
     --surface-elevated: #14213d;
+    --surface-elevated-rgb: 20, 33, 61;
     --surface-card: rgba(20, 33, 61, 0.65);
     --background:
         radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),
@@ -59,6 +61,7 @@
     // Core colors
     --surface: #ffffff;
     --surface-elevated: #f8fafc;
+    --surface-elevated-rgb: 248, 250, 252;
     --surface-card: rgba(255, 255, 255, 0.85);
     --background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
     --text-primary: #1e293b;
