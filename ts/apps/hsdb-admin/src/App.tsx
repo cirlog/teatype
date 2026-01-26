@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 // Components
+import { TeaConfirmProvider } from '@teatype/components';
 import { StudentTable } from './components/StudentTable';
 import { EditStudentModal } from './components/EditStudentModal';
 
@@ -52,54 +53,56 @@ export default function App() {
     };
 
     return (
-        <div className='hsdb-dashboard'>
-            <Toaster position='top-right' />
+        <TeaConfirmProvider>
+            <div className='hsdb-dashboard'>
+                <Toaster position='top-right' />
 
-            <div className='hsdb-dashboard__stats'>
-                <div className='stat-card'>
-                    <p className='stat-card__label'>Total Students</p>
-                    <h2 className='stat-card__value'>{stats.total}</h2>
-                </div>
-                <div className='stat-card'>
-                    <p className='stat-card__label'>Male Students</p>
-                    <h2 className='stat-card__value'>{stats.male}</h2>
-                </div>
-                <div className='stat-card'>
-                    <p className='stat-card__label'>Female Students</p>
-                    <h2 className='stat-card__value'>{stats.female}</h2>
-                </div>
-                <div className='stat-card'>
-                    <p className='stat-card__label'>Average Age</p>
-                    <h2 className='stat-card__value'>{stats.avgAge}</h2>
-                </div>
-            </div>
-
-            <div className='hsdb-dashboard__content'>
-                <div className='hsdb-dashboard__toolbar'>
-                    <h2>Students</h2>
-                    <div className='actions'>
-                        <button className='btn btn--primary' onClick={refresh} disabled={loading}>
-                            {loading ? 'Loading...' : 'Refresh'}
-                        </button>
+                <div className='hsdb-dashboard__stats'>
+                    <div className='stat-card'>
+                        <p className='stat-card__label'>Total Students</p>
+                        <h2 className='stat-card__value'>{stats.total}</h2>
+                    </div>
+                    <div className='stat-card'>
+                        <p className='stat-card__label'>Male Students</p>
+                        <h2 className='stat-card__value'>{stats.male}</h2>
+                    </div>
+                    <div className='stat-card'>
+                        <p className='stat-card__label'>Female Students</p>
+                        <h2 className='stat-card__value'>{stats.female}</h2>
+                    </div>
+                    <div className='stat-card'>
+                        <p className='stat-card__label'>Average Age</p>
+                        <h2 className='stat-card__value'>{stats.avgAge}</h2>
                     </div>
                 </div>
 
-                {loading && <div className='loading'>Loading students...</div>}
-
-                {error && (
-                    <div className='error'>
-                        Error loading students: {error}
-                        <button onClick={refresh}>Retry</button>
+                <div className='hsdb-dashboard__content'>
+                    <div className='hsdb-dashboard__toolbar'>
+                        <h2>Students</h2>
+                        <div className='actions'>
+                            <button className='btn btn--primary' onClick={refresh} disabled={loading}>
+                                {loading ? 'Loading...' : 'Refresh'}
+                            </button>
+                        </div>
                     </div>
-                )}
 
-                {!loading && !error && (
-                    <StudentTable students={students} onEdit={handleEdit} onDelete={deleteStudent} />
-                )}
+                    {loading && <div className='loading'>Loading students...</div>}
+
+                    {error && (
+                        <div className='error'>
+                            Error loading students: {error}
+                            <button onClick={refresh}>Retry</button>
+                        </div>
+                    )}
+
+                    {!loading && !error && (
+                        <StudentTable students={students} onEdit={handleEdit} onDelete={deleteStudent} />
+                    )}
+                </div>
+
+                <EditStudentModal student={editingStudent} onSave={handleSave} onClose={handleCloseModal} />
             </div>
-
-            <EditStudentModal student={editingStudent} onSave={handleSave} onClose={handleCloseModal} />
-        </div>
+        </TeaConfirmProvider>
     );
 }
 

@@ -17,7 +17,7 @@
 import { useMemo, useState } from 'react';
 
 // Components
-import { TeaTable, TeaTableColumn, TeaTablePagination } from '@teatype/components';
+import { TeaTable, TeaTableColumn, TeaTablePagination, useConfirm } from '@teatype/components';
 import { TeaButton } from '@teatype/components';
 
 // API
@@ -30,16 +30,22 @@ interface StudentTableProps {
 }
 
 type SortKey = 'name' | 'age' | 'gender' | 'height';
-type SortDirection = 'asc' | 'desc';
+type SortDirection = 'asc' | 'desc' | null;
 
 const PAGE_SIZE = 100;
 
 export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) => {
-    const [sortKey, setSortKey] = useState<SortKey>('name');
-    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+    const [sortKey, setSortKey] = useState<SortKey | null>(null);
+    const [sortDirection, setSortDirection] = useState<SortDirection>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const confirm = useConfirm();
 
     const sortedStudents = useMemo(() => {
+        // If no sort key or direction, return original order
+        if (!sortKey || !sortDirection) {
+            return students;
+        }
+
         return [...students].sort((a, b) => {
             const aVal = a[sortKey] ?? '';
             const bVal = b[sortKey] ?? '';
@@ -63,12 +69,13 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
         return sortedStudents.slice(start, start + PAGE_SIZE);
     }, [sortedStudents, currentPage]);
 
-    const handleSort = (key: string) => {
-        if (sortKey === key) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    const handleSort = (key: string, direction: 'asc' | 'desc' | null) => {
+        if (direction === null) {
+            setSortKey(null);
+            setSortDirection(null);
         } else {
             setSortKey(key as SortKey);
-            setSortDirection('asc');
+            setSortDirection(direction);
         }
         setCurrentPage(1);
     };
@@ -100,14 +107,28 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
             className: 'actions',
             render: (student) => (
                 <>
-                    <TeaButton size='sm' variant='secondary' onClick={() => onEdit(student)}>
+                    <TeaButton
+                        size='sm'
+                        variant='secondary'
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(student);
+                        }}
+                    >
                         Edit
                     </TeaButton>
                     <TeaButton
                         size='sm'
                         variant='danger'
-                        onClick={() => {
-                            if (confirm(`Delete ${student.name}?`)) {
+                        onClick={async (e) => {
+                            e.stopPropagation();
+                            const confirmed = await confirm({
+                                title: 'Delete Student',
+                                message: `Are you sure you want to delete ${student.name}?`,
+                                confirmText: 'Delete',
+                                variant: 'danger',
+                            });
+                            if (confirmed) {
                                 onDelete(student.id);
                             }
                         }}
@@ -129,7 +150,7 @@ export const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) 
                 sortDirection={sortDirection}
                 onSort={handleSort}
                 emptyMessage='No students found'
-                rowTooltip={(student) => <code>ID: {student.id}</code>}
+                clickableRows
             />
 
             {totalPages > 1 && (

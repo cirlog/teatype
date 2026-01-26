@@ -32,9 +32,10 @@ export interface TeaTableProps<T> {
     columns: TeaTableColumn<T>[];
     data: T[];
     keyExtractor: (row: T, index: number) => string | number;
-    sortKey?: string;
-    sortDirection?: 'asc' | 'desc';
-    onSort?: (key: string) => void;
+    sortKey?: string | null;
+    sortDirection?: 'asc' | 'desc' | null;
+    /** Called with key and direction. Direction is null to clear sort. */
+    onSort?: (key: string, direction: 'asc' | 'desc' | null) => void;
     emptyMessage?: string;
     loading?: boolean;
     className?: string;
@@ -57,8 +58,29 @@ export function TeaTable<T>({
     const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
     const renderSortIndicator = (column: TeaTableColumn<T>) => {
-        if (!column.sortable || sortKey !== column.key) return null;
+        if (!column.sortable || sortKey !== column.key || !sortDirection) return null;
         return <span className='tea-table__sort-indicator'>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+    };
+
+    const handleSort = (column: TeaTableColumn<T>) => {
+        if (!column.sortable || !onSort) return;
+
+        let newDirection: 'asc' | 'desc' | null;
+        if (sortKey !== column.key) {
+            // New column: start with asc
+            newDirection = 'asc';
+        } else if (sortDirection === 'asc') {
+            // Same column, was asc: go to desc
+            newDirection = 'desc';
+        } else if (sortDirection === 'desc') {
+            // Same column, was desc: clear sort
+            newDirection = null;
+        } else {
+            // No sort: start with asc
+            newDirection = 'asc';
+        }
+
+        onSort(column.key, newDirection);
     };
 
     const formatValue = (value: unknown): string => {
@@ -77,7 +99,7 @@ export function TeaTable<T>({
                                 <th
                                     key={column.key}
                                     className={`${column.sortable ? 'sortable' : ''} ${column.className || ''}`}
-                                    onClick={() => column.sortable && onSort?.(column.key)}
+                                    onClick={() => handleSort(column)}
                                 >
                                     {column.header}
                                     {renderSortIndicator(column)}

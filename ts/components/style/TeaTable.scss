@@ -83,11 +83,17 @@
             // Semi-transparent with blur
             background: rgba(var(--surface-elevated-rgb, 20, 20, 20), 0.85);
             backdrop-filter: blur(1rem);
-            // -webkit-backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(1rem);
             border-bottom: 1px solid var(--border);
+
+            tr {
+                display: table-row;
+                width: 100%;
+            }
 
             th {
                 padding: 0.875rem 1rem;
+                background: inherit;
 
                 color: var(--text-muted);
                 font-size: 0.75rem;
