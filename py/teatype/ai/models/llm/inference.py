@@ -256,14 +256,14 @@ if __name__ == '__main__':
                 file_size = file.size(model_file_path, human_readable=True)
                 log(f'  [{available_model_index}] {available_model_name} ({file_size})')
             selection = prompt('Please enter the number corresponding to your choice:',
-                               options=prompt_options,
-                               return_bool=False)
+                               choices=prompt_options,
+                               return_input=True)
             default_model = available_local_models[int(selection)-1]
             file.write(default_model_file_path, default_model)
         
         default_model = file.read(path.join(conversational_model_directory, 'default-model.txt'))
         
-        user_prompt = prompt('Enter your prompt:', return_bool=False)
+        user_prompt = prompt('Enter your prompt:', return_input=True)
         
         from teatype.ai.models.llm import Inferencer
         llm = Inferencer(model=default_model,

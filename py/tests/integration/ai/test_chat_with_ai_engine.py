@@ -44,7 +44,7 @@ def test_chat_with_ai_engine():
     response = llm.chat('Instruction: Greet the user.', stream_response=stream)
     try:
         while True:
-            user_input = prompt('[You]:', return_bool=False)
+            user_input = prompt('[You]:', return_input=True)
             if user_input.lower() in ['exit', 'quit', 'q', 'bye']:
                 println()
                 break
