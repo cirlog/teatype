@@ -1,0 +1,334 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+// ============================================================================
+// TeaToast Styles
+// ============================================================================
+
+.tea-toast-container {
+    position: fixed;
+    z-index: 10000;
+    display: flex;
+    gap: 12px;
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+
+    pointer-events: none;
+
+    // Position variants
+    &--bottom-right {
+        right: 24px;
+        bottom: 24px;
+
+        flex-direction: column-reverse;
+    }
+
+    &--bottom-left {
+        bottom: 24px;
+        left: 24px;
+
+        flex-direction: column-reverse;
+    }
+
+    &--bottom-center {
+        right: 50%;
+        bottom: 24px;
+
+        flex-direction: column-reverse;
+        transform: translateX(50%);
+    }
+
+    &--top-right {
+        top: 24px;
+        right: 24px;
+
+        flex-direction: column;
+    }
+
+    &--top-left {
+        top: 24px;
+        left: 24px;
+
+        flex-direction: column;
+    }
+
+    &--top-center {
+        top: 24px;
+        right: 50%;
+
+        flex-direction: column;
+        transform: translateX(50%);
+    }
+}
+
+.tea-toast {
+    --tea-toast-color: var(--accent, #6366f1);
+    --tea-toast-bg: rgba(99, 102, 241, 0.15);
+
+    position: relative;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 14px 18px;
+    overflow: visible;
+
+    background: var(--surface-elevated, rgba(20, 20, 22, 0.85));
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: none;
+    border-radius: 12px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+
+    animation: tea-toast-slide-in 300ms ease forwards;
+    pointer-events: auto;
+
+    // Conic gradient border timer
+    &::before {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        z-index: -1;
+        padding: 2px;
+
+        background: conic-gradient(
+            from 0deg,
+            var(--tea-toast-color) 0deg,
+            var(--tea-toast-color) var(--tea-toast-progress, 360deg),
+            transparent var(--tea-toast-progress, 360deg),
+            transparent 360deg
+        );
+        border-radius: calc(12px + 1px);
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+
+        pointer-events: none;
+    }
+
+    &:hover {
+        background: var(--surface-card, rgba(30, 30, 34, 0.9));
+        transform: translateX(-4px);
+
+        .tea-toast__border-timer {
+            animation-play-state: paused;
+        }
+    }
+
+    // Closing animation
+    &--closing {
+        animation: tea-toast-slide-out 300ms ease forwards;
+    }
+
+    // Type variants
+    &--success {
+        --tea-toast-color: #34c759;
+        --tea-toast-bg: rgba(52, 199, 89, 0.15);
+    }
+
+    &--error {
+        --tea-toast-color: #ff453a;
+        --tea-toast-bg: rgba(255, 69, 58, 0.15);
+    }
+
+    &--warning {
+        --tea-toast-color: #ff9f0a;
+        --tea-toast-bg: rgba(255, 159, 10, 0.15);
+    }
+
+    &--info {
+        --tea-toast-color: #0a84ff;
+        --tea-toast-bg: rgba(10, 132, 255, 0.15);
+    }
+
+    // Progress bar (alternative visual)
+    &__border-timer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 3px;
+
+        background: var(--tea-toast-color);
+        border-radius: 2px;
+
+        animation: tea-toast-progress-bar var(--tea-toast-duration, 5000ms) linear forwards;
+    }
+
+    &__content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+
+        background: var(--tea-toast-bg);
+        border-radius: 50%;
+        color: var(--tea-toast-color);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    &__message {
+        flex: 1;
+
+        color: var(--text-primary, rgba(255, 255, 255, 0.95));
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    &__action {
+        flex-shrink: 0;
+        padding: 6px 12px;
+
+        background: var(--tea-toast-bg);
+        border: 1px solid var(--tea-toast-color);
+        border-radius: 6px;
+        color: var(--tea-toast-color);
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 500;
+
+        transition:
+            background 0.15s,
+            color 0.15s;
+
+        &:hover {
+            background: var(--tea-toast-color);
+            color: #fff;
+        }
+    }
+}
+
+// ============================================================================
+// Animations
+// ============================================================================
+
+@keyframes tea-toast-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes tea-toast-slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+@keyframes tea-toast-progress-bar {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+// ============================================================================
+// Position-specific slide animations
+// ============================================================================
+
+.tea-toast-container--top-left,
+.tea-toast-container--bottom-left {
+    .tea-toast {
+        animation-name: tea-toast-slide-in-left;
+
+        &--closing {
+            animation-name: tea-toast-slide-out-left;
+        }
+
+        &:hover {
+            transform: translateX(4px);
+        }
+    }
+}
+
+.tea-toast-container--top-center,
+.tea-toast-container--bottom-center {
+    .tea-toast {
+        animation-name: tea-toast-slide-in-center;
+
+        &--closing {
+            animation-name: tea-toast-slide-out-center;
+        }
+
+        &:hover {
+            transform: translateY(-4px);
+        }
+    }
+}
+
+@keyframes tea-toast-slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes tea-toast-slide-out-left {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+}
+
+@keyframes tea-toast-slide-in-center {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes tea-toast-slide-out-center {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}

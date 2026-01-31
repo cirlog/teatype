@@ -24,14 +24,44 @@ export { TeaModal } from './TeaModal';
 export { TeaNav } from './TeaApp/TeaNav';
 export { TeaPage } from './TeaApp/TeaPage';
 export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaApp/TeaSettings';
+export {
+    TeaSidebar,
+    TeaSidebarSettings,
+    TeaSidebarSlider,
+    TeaSidebarToggle,
+    TeaSidebarButton,
+    TeaSidebarButtonGroup,
+    useTeaSidebar,
+} from './TeaSidebar';
 export { TeaSubNav } from './TeaApp/TeaSubNav';
 export { TeaTable, TeaTablePagination } from './TeaTable';
 export { TeaTag } from './TeaTags/TeaTag';
 export { TeaTags } from './TeaTags/TeaTags';
+export {
+    TeaToastContainer,
+    TeaToastProvider,
+    useTeaToast,
+    useTeaToastContext,
+} from './TeaToast';
 export { TeaTooltip } from './TeaTooltip';
 
 // Types
 export type { iPageInfo } from './TeaApp/TeaApp';
 export type { Theme } from './TeaApp/TeaSettings';
+export type {
+    iTeaSidebarItem,
+    iTeaSidebarSection,
+    iTeaSidebarAction,
+    iTeaSidebarProps,
+    iTeaSidebarSettingsSection,
+    iTeaSidebarSettingsProps,
+} from './TeaSidebar';
 export type { TeaSubNavItem, TeaSubNavProps } from './TeaApp/TeaSubNav';
 export type { TeaTableColumn, TeaTableProps } from './TeaTable';
+export type {
+    tTeaToastType,
+    tTeaToastPosition,
+    iTeaToastOptions,
+    iTeaToastItem,
+    iUseTeaToastReturn,
+} from './TeaToast';

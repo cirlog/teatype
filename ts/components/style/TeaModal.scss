@@ -125,6 +125,14 @@
     &__body {
         padding: 1.5rem;
         overflow-y: auto;
+
+        p {
+            margin: 0;
+
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
     }
 
     &__footer {
@@ -135,5 +143,49 @@
 
         background: var(--surface-card);
         border-top: 1px solid var(--border);
+    }
+}
+
+// Modal button styles (for use in footer)
+.tea-modal-btn {
+    padding: 0.5rem 1rem;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+
+    &--primary {
+        background: var(--accent);
+        color: #fff;
+
+        &:hover {
+            background: var(--accent-hover, var(--accent));
+        }
+    }
+
+    &--secondary {
+        background: var(--surface-elevated);
+        border-color: var(--border);
+        color: var(--text-primary);
+
+        &:hover {
+            background: var(--surface-card);
+        }
+    }
+
+    &--danger {
+        background: var(--error, #ff453a);
+        color: #fff;
+
+        &:hover {
+            background: var(--error-hover, #ff6961);
+        }
     }
 }
