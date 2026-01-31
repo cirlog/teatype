@@ -31,7 +31,7 @@ from teatype.logging import *
 from teatype.io import path as path_functions
 
 # TODO: Implement with context handling
-class _File:
+class File:
     def __init__(self, path:str, content:any=None, trimmed:bool=False, nested_depth:int=None):
         """
         Initializes a File object with various attributes based on the given path.
@@ -138,7 +138,7 @@ class _File:
         
         Parameters:
             force_format (str, optional): The format to force when reading data. Defaults to None.
-            return_file (bool, optional): Whether to return a _File object with additional attributes. Defaults to False.
+            return_file (bool, optional): Whether to return a File object with additional attributes. Defaults to False.
             trim_file (bool, optional): Whether to skip retrieving additional file attributes. Defaults to False.
         
         Returns:
@@ -293,21 +293,21 @@ def exists(path:PosixPath|str,
            *,
            alt_extensions:List[str]=None,
            return_file:bool=False,
-           trim_file:bool=False) -> bool|_File:
+           trim_file:bool=False) -> bool|File:
     """
     Check if a file exists at the specified path.
 
     Parameters:
         path (str): The path to the file.
-        return_file (bool): Whether to return a _File object with additional attributes.
+        return_file (bool): Whether to return a File object with additional attributes.
         trim_file (bool): Whether to skip retrieving additional file attributes.
 
     Returns:
         bool: True if the file exists, False otherwise.
     """
     if trim_file and not return_file:
-        # Warn the user that trimming is ignored because a _File object is not being returned
-        warn('Cannot trim file without returning a _File object. Ignoring "trim_file" parameter.')
+        # Warn the user that trimming is ignored because a File object is not being returned
+        warn('Cannot trim file without returning a File object. Ignoring "trim_file" parameter.')
     
     # Check if the provided path is a PosixPath object
     if isinstance(path, PosixPath):
@@ -329,8 +329,8 @@ def exists(path:PosixPath|str,
                 file_exists = True
                 break
     if return_file:
-        # Return a _File object with the specified path and trimming option if requested
-        return _File(path_string, trimmed=trim_file) if file_exists else None
+        # Return a File object with the specified path and trimming option if requested
+        return File(path_string, trimmed=trim_file) if file_exists else None
     # Otherwise, return a boolean indicating whether the path exists
     return file_exists
 
@@ -360,7 +360,7 @@ def list(directory:str,
          ignore_folders:List[str]=None,
          only_include:List[str]=None, # TODO: Seperate include_extensions and include_regex
          trim_files:bool=True,
-         stringify:bool=False) -> List[_File]:
+         stringify:bool=False) -> List[File]:
     """
     Walk through a directory and return a list of files and subdirectories.
 
@@ -403,7 +403,7 @@ def list(directory:str,
                         continue
                     
                     # Append directory details to the results list
-                    results.append(_File(entry.path, trimmed=trim_files, nested_depth=current_depth))
+                    results.append(File(entry.path, trimmed=trim_files, nested_depth=current_depth))
                     # Recursively walk through the subdirectory, increasing the depth
                     walk_directory(entry.path, current_depth + 1)
                 else:
@@ -412,7 +412,7 @@ def list(directory:str,
                         if not entry.name.endswith(tuple(only_include)):
                             continue
                     # Append directory details to the results list
-                    results.append(_File(entry.path, trimmed=trim_files, nested_depth=current_depth))
+                    results.append(File(entry.path, trimmed=trim_files, nested_depth=current_depth))
                     
         if not walk:
             depth = 1
@@ -470,7 +470,7 @@ def move(source:str, destination:str, create_parents:bool=True, overwrite:bool=T
         err(f'Error moving file from {source} to {destination}: {exc}')
         return False
 
-def read(file:_File|PosixPath|str,
+def read(file:File|PosixPath|str,
          force_format:str=None,
          return_file:bool=False,
          trim_file:bool=False,
@@ -492,7 +492,7 @@ def read(file:_File|PosixPath|str,
         any: The data read from the file, or None if an error occurred.
     """
     try:
-        if isinstance(file, _File):
+        if isinstance(file, File):
             path_string = file.path
             file_extension = file.extension
         if isinstance(file, PosixPath):
@@ -506,7 +506,7 @@ def read(file:_File|PosixPath|str,
         # handlers = {
         #     'json': read_json,
         # }
-        file_class =_File(path_string, trimmed=trim_file)
+        file_class =File(path_string, trimmed=trim_file)
         if file_class.exists:
             if file_class.is_file:
                 content = None
@@ -599,7 +599,7 @@ def read(file:_File|PosixPath|str,
                     return None
                 
                 if return_file:
-                    # Return a _File object with the content if requested
+                    # Return a File object with the content if requested
                     file_class.content = content
                     return f
                 return content

@@ -65,11 +65,11 @@ class Operations(BaseTUI):
         
     def dispatch(self):
         receiver = prompt('Enter the ID of the Modulo unit to dispatch command to:',
-                          return_bool=False)
+                          return_input=True)
         command = prompt('Enter the command to dispatch to the Modulo unit:',
-                         return_bool=False)
+                         return_input=True)
         payload = prompt('Enter any additional payload data (or leave blank):',
-                         return_bool=False)
+                         return_input=True)
         is_async = prompt('Dispatch command asynchronously?')
 
         if payload == '':
@@ -86,10 +86,10 @@ class Operations(BaseTUI):
         
     def fire(self):
         unit_type = prompt('Which Modulo unit would you like to launch?',
-                            options=['backend', 'service', 'workhorse'],
-                            return_bool=False)
+                            choices=['backend', 'service', 'workhorse'],
+                            return_input=True)
         unit_name = prompt(f'Enter the name of the {unit_type} unit to launch:',
-                           return_bool=False)
+                           return_input=True)
         LaunchPad.fire(unit_name, unit_type)
         return f'Launched {unit_type} unit: {unit_name}'
         

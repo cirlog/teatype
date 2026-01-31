@@ -139,6 +139,9 @@ const AppNav: React.FC<iAppNavProps> = (props) => {
     );
 };
 
+// TODO: implement the exact lockkliye sidebar as additional nav type
+// TODO: Also implement the taskbar as a teatype component
+// TODO: Enforce Tea compnents usage in lockkliye as very first production app
 const TeaNav: React.FC<iTeaNavProps> = (props) => {
     const navType = 'apps'; // Currently only 'apps' type is supported
     let navContent = null;
