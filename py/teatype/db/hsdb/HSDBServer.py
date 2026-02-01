@@ -158,6 +158,108 @@ class HSDBServer:
             models_list.append(model_info)
         
         return JsonResponse({'models': models_list})
+    
+    def _api_registry_view(self, request):
+        """
+        API endpoint that returns a comprehensive registry of all available APIs,
+        including model info, allowed methods, field schemas, and endpoints.
+        
+        This is used by frontend clients to dynamically initialize API clients
+        based on the registered models and their associated views.
+        
+        Returns JSON like:
+        {
+            "apis": [
+                {
+                    "name": "Student",
+                    "resource": "students",
+                    "endpoint": "/students",
+                    "count": 1234,
+                    "allowedMethods": {
+                        "collection": ["GET", "POST"],
+                        "resource": ["GET", "PUT", "PATCH", "DELETE"]
+                    },
+                    "fields": {
+                        "name": {"type": "str", "required": true, "indexed": false},
+                        "age": {"type": "int", "required": true, "indexed": true},
+                        ...
+                    },
+                    "relations": {
+                        "school": {"model": "School", "type": "one"},
+                        ...
+                    }
+                },
+                ...
+            ],
+            "baseEndpoint": "api/v1",
+            "timestamp": "2026-02-01T12:00:00Z"
+        }
+        """
+        from django.http import JsonResponse
+        from teatype.toolkit import kebabify
+        from datetime import datetime, timezone
+        
+        apis = []
+        
+        for model in self.models:
+            resource_name = kebabify(model.__name__, remove='-model', plural=True)
+            
+            # Build field schema
+            fields = {}
+            if hasattr(model, 'attributes'):
+                for attr in model.attributes():
+                    attr_name = attr.key
+                    if attr_name in ['id', 'created_at', 'updated_at', 'model', 'model_name', 
+                                     'path', 'resource_name', 'resource_name_plural', 'migration_id']:
+                        continue  # Skip base/computed fields
+                    fields[attr_name] = {
+                        'type': attr.type.__name__ if hasattr(attr.type, '__name__') else str(attr.type),
+                        'required': not attr.nullable,
+                        'indexed': attr.indexed,
+                        'unique': attr.unique,
+                        'computed': attr.computed,
+                    }
+                    if attr.default is not None:
+                        fields[attr_name]['default'] = attr.default
+            
+            # Build relations schema
+            relations = {}
+            if hasattr(model, 'relations') and callable(model.relations):
+                for rel in model.relations():
+                    rel_name = rel.key
+                    relations[rel_name] = {
+                        'model': rel.model.__name__ if hasattr(rel.model, '__name__') else str(rel.model),
+                        'type': 'many' if rel.is_list else 'one',
+                        'backref': rel.backref,
+                    }
+            
+            # Default allowed methods for auto views
+            allowed_methods = {
+                'collection': ['GET', 'POST'],
+                'resource': ['GET', 'PUT', 'PATCH', 'DELETE']
+            }
+            
+            api_info = {
+                'name': model.__name__,
+                'resource': resource_name,
+                'endpoint': f'/{resource_name}',
+                'count': model.count() if hasattr(model, 'count') else 0,
+                'allowedMethods': allowed_methods,
+                'fields': fields,
+                'relations': relations,
+            }
+            apis.append(api_info)
+        
+        # Determine base endpoint from config
+        base_endpoint = ''
+        if hasattr(self, '_base_endpoint'):
+            base_endpoint = self._base_endpoint
+        
+        return JsonResponse({
+            'apis': apis,
+            'baseEndpoint': base_endpoint,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+        })
         
     def _configure_django_settings(self,
                                    debug:bool=None,
@@ -316,6 +418,9 @@ class HSDBServer:
         from django.conf.urls.static import static
         from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
         
+        # Store base endpoint for API registry
+        self._base_endpoint = base_endpoint or ''
+        
         urlpatterns = []
         
         # Add HSDB schema/models endpoint
@@ -325,6 +430,10 @@ class HSDBServer:
         # Add HSDB models list endpoint
         models_route = f'{base_endpoint}/hsdb/models/' if base_endpoint else 'hsdb/models/'
         urlpatterns.append(path(models_route, self._models_list_view, name='hsdb-models'))
+        
+        # Add HSDB API registry endpoint (comprehensive model + API info for frontend clients)
+        registry_route = f'{base_endpoint}/hsdb/registry/' if base_endpoint else 'hsdb/registry/'
+        urlpatterns.append(path(registry_route, self._api_registry_view, name='hsdb-registry'))
         
         # Add admin if requested
         if include_admin:

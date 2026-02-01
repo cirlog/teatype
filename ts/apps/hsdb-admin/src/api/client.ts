@@ -13,7 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
-import { HSDBBaseAPI } from '@teatype/api';
+import { HSDBBaseAPI, HSDBAPIRegistry } from '@teatype/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -52,6 +52,19 @@ export function setAuthToken(token: string | undefined): void {
 export function handleUnauthorized(): void {
     setAuthToken(undefined);
     window.location.href = '/login';
+}
+
+/**
+ * Initialize the API registry from the server
+ * This fetches all available APIs based on registered models
+ */
+export async function initializeAPIRegistry(): Promise<void> {
+    try {
+        await HSDBAPIRegistry.initialize();
+        console.log('API Registry initialized:', HSDBAPIRegistry.getResourceNames());
+    } catch (error) {
+        console.error('Failed to initialize API registry:', error);
+    }
 }
 
 // Initialize auth on module load

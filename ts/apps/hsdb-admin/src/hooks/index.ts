@@ -1,4 +1,5 @@
 /**
+ * @license
  * Copyright (C) 2024-2026 Burak Günaydin
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +13,5 @@
  * all copies or substantial portions of the Software.
  */
 
-// Import global teatype styles when running standalone
-// Note: When embedded in another teatype app, these are already loaded
-@import './dashboard.scss';
-@import './student-table.scss';
-@import './modal.scss';
-@import './shared.scss';
-@import './dynamic.scss';
+export { useAPIRegistry, useDynamicResource } from './useAPIRegistry';
+export { useStudents } from './useStudents';

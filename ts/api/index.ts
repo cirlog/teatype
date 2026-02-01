@@ -31,6 +31,16 @@ export type {
     HSDBEntity,
 } from './types';
 
+// API Registry Types
+export type {
+    HSDBFieldSchema,
+    HSDBRelationSchema,
+    HSDBAllowedMethods,
+    HSDBAPIInfo,
+    HSDBRegistryResponse,
+    DynamicAPI,
+} from './HSDBAPIRegistry';
+
 // API Client
 import { HSDBBaseAPI } from './HSDBBaseAPI';
 export {
@@ -39,5 +49,8 @@ export {
     buildQueryString,
     parseQueryString,
 } from './HSDBBaseAPI';
+
+// API Registry
+export { HSDBAPIRegistry } from './HSDBAPIRegistry';
 
 export default HSDBBaseAPI;
