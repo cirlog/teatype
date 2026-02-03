@@ -136,7 +136,7 @@ def copy(source:str, destination:str, sudo:bool=False) -> bool:
             # If sudo is required, use the 'sudo' command
             os.system(f'sudo cp -r "{source}" "{destination}"')
         else:
-            shutil.copy(source, f"{destination}") # Copy the directory
+            shutil.copytree(source, destination) # Copy the directory
         return True
     except Exception as exc:
         err(f'Error copying folder "{source}": {exc}')
