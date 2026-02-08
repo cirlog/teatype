@@ -16,7 +16,7 @@
 import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { TeaConfirmProvider } from '@teatype/components';
-import { useAPIRegistry } from '../hooks/useAPIRegistry';
+import { useAPIRegistry } from '@teatype/hooks';
 import { DynamicResourceView } from './DynamicResourceView';
 
 /**

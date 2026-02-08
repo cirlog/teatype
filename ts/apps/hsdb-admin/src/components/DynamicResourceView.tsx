@@ -15,7 +15,7 @@
 
 import { useState } from 'react';
 import { HSDBEntity } from '@teatype/api';
-import { useDynamicResource } from '../hooks/useAPIRegistry';
+import { useDynamicResource } from '@teatype/hooks';
 import { DynamicResourceTable } from './DynamicResourceTable';
 import { DynamicEditModal } from './DynamicEditModal';
 

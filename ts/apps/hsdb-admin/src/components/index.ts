@@ -18,7 +18,3 @@ export { DynamicDashboard } from './DynamicDashboard';
 export { DynamicResourceView } from './DynamicResourceView';
 export { DynamicResourceTable } from './DynamicResourceTable';
 export { DynamicEditModal } from './DynamicEditModal';
-
-// Static/custom components
-export { StudentTable } from './StudentTable';
-export { EditStudentModal } from './EditStudentModal';

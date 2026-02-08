@@ -104,7 +104,7 @@ export function DynamicResourceTable<E extends HSDBEntity>({
                                     const confirmed = await confirm({
                                         title: `Delete ${apiInfo.name}`,
                                         message: `Are you sure you want to delete this ${apiInfo.name.toLowerCase()}? This action cannot be undone.`,
-                                        confirmLabel: 'Delete',
+                                        confirmText: 'Delete',
                                         variant: 'danger',
                                     });
                                     if (confirmed) {

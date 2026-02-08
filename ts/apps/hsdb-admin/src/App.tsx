@@ -13,97 +13,27 @@
  * all copies or substantial portions of the Software.
  */
 
-// React imports
-import { useState } from 'react';
-import { Toaster } from 'react-hot-toast';
-
 // Components
-import { TeaConfirmProvider } from '@teatype/components';
-import { StudentTable } from './components/StudentTable';
-import { EditStudentModal } from './components/EditStudentModal';
-
-// Hooks
-import { useStudents } from './hooks/useStudents';
-import { Student } from './api/students';
+import { DynamicDashboard } from './components/DynamicDashboard';
 
 // Style
 import './style/index.scss';
 
+/**
+ * HSDB Admin Application
+ *
+ * A fully dynamic admin dashboard that auto-generates views for all resources
+ * registered in the HSDB API Registry. No hardcoded models - all CRUD operations
+ * are determined by the server's registry endpoint.
+ *
+ * @example
+ * ```tsx
+ * // Simply render the app - it will discover all available resources
+ * <App />
+ * ```
+ */
 export default function App() {
-    const { students, loading, error, refresh, updateStudent, deleteStudent } = useStudents();
-    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-
-    const handleEdit = (student: Student) => {
-        setEditingStudent(student);
-    };
-
-    const handleSave = async (id: string, updates: Partial<Student>) => {
-        await updateStudent(id, updates);
-    };
-
-    const handleCloseModal = () => {
-        setEditingStudent(null);
-    };
-
-    const stats = {
-        total: students.length,
-        male: students.filter((s) => s.gender === 'male').length,
-        female: students.filter((s) => s.gender === 'female').length,
-        avgAge: students.length > 0 ? (students.reduce((sum, s) => sum + s.age, 0) / students.length).toFixed(1) : 0,
-    };
-
-    return (
-        <TeaConfirmProvider>
-            <div className='hsdb-dashboard'>
-                <Toaster position='top-right' />
-
-                <div className='hsdb-dashboard__stats'>
-                    <div className='stat-card'>
-                        <p className='stat-card__label'>Total Students</p>
-                        <h2 className='stat-card__value'>{stats.total}</h2>
-                    </div>
-                    <div className='stat-card'>
-                        <p className='stat-card__label'>Male Students</p>
-                        <h2 className='stat-card__value'>{stats.male}</h2>
-                    </div>
-                    <div className='stat-card'>
-                        <p className='stat-card__label'>Female Students</p>
-                        <h2 className='stat-card__value'>{stats.female}</h2>
-                    </div>
-                    <div className='stat-card'>
-                        <p className='stat-card__label'>Average Age</p>
-                        <h2 className='stat-card__value'>{stats.avgAge}</h2>
-                    </div>
-                </div>
-
-                <div className='hsdb-dashboard__content'>
-                    <div className='hsdb-dashboard__toolbar'>
-                        <h2>Students</h2>
-                        <div className='actions'>
-                            <button className='btn btn--primary' onClick={refresh} disabled={loading}>
-                                {loading ? 'Loading...' : 'Refresh'}
-                            </button>
-                        </div>
-                    </div>
-
-                    {loading && <div className='loading'>Loading students...</div>}
-
-                    {error && (
-                        <div className='error'>
-                            Error loading students: {error}
-                            <button onClick={refresh}>Retry</button>
-                        </div>
-                    )}
-
-                    {!loading && !error && (
-                        <StudentTable students={students} onEdit={handleEdit} onDelete={deleteStudent} />
-                    )}
-                </div>
-
-                <EditStudentModal student={editingStudent} onSave={handleSave} onClose={handleCloseModal} />
-            </div>
-        </TeaConfirmProvider>
-    );
+    return <DynamicDashboard />;
 }
 
 export { App as HSDBAdmin };

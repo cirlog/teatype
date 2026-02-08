@@ -13,5 +13,6 @@
  * all copies or substantial portions of the Software.
  */
 
-export { useAPIRegistry, useDynamicResource } from './useAPIRegistry';
-export { useStudents } from './useStudents';
+// Re-export from shared @teatype/hooks
+export { useAPIRegistry, useDynamicResource } from '@teatype/hooks';
+export type { UseAPIRegistryResult, UseDynamicResourceResult } from '@teatype/hooks';
