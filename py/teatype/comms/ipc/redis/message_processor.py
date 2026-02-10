@@ -32,6 +32,8 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
     _message_handlers:Dict[str,List[Dict[str,any]]]
     _preprocess_function:Optional[Callable]
     _pubsub_instance:redis.client.PubSub
+    _response_callback:Optional[Callable]
+    _send_response_callback:Optional[Callable]
     _shutdown_event:threading.Event
     
     def __init__(self,
@@ -40,6 +42,8 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                  on_shutdown:Optional[Callable]=None,
                  owner:Optional[object]=None,
                  preprocess_function:Optional[Callable]=None,
+                 response_callback:Optional[Callable]=None,
+                 send_response_callback:Optional[Callable]=None,
                  verbose_logging:Optional[bool]=False) -> None:
         threading.Thread.__init__(self, daemon=True)
         super().__init__(max_buffer_size=max_buffer_size,
@@ -52,6 +56,8 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
         self._shutdown_event = threading.Event()
         self._message_handler_lock = threading.RLock()
         self._preprocess_function = preprocess_function
+        self._response_callback = response_callback
+        self._send_response_callback = send_response_callback
         
         if owner:
             try:
@@ -149,6 +155,11 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                 handlers = self._message_handlers.get(message_type)
                 
                 if not handlers:
+                    # Special case: response messages are handled via callback
+                    if message_type == 'response' and self._response_callback:
+                        response_obj = RedisResponse.from_dict(message)
+                        self._response_callback(response_obj)
+                        return
                     if self.verbose_logging:
                         err(f'No handler for message type: {message_type}')
                     return
@@ -163,18 +174,37 @@ class RedisMessageProcessor(RedisBaseInterface, threading.Thread):
                         warn(f'No handler for dispatch command: {command}')
                         return
                     # Execute the matching handler
-                    matching_handlers[0]['callable'](RedisDispatch.from_dict(message))
+                    dispatch_obj = RedisDispatch.from_dict(message)
+                    handler_result = matching_handlers[0]['callable'](dispatch_obj)
+                    
+                    # Send automatic response if requested
+                    if dispatch_obj.response_requested and self._send_response_callback:
+                        response_message = handler_result if isinstance(handler_result, str) else 'Dispatch processed successfully'
+                        payload = handler_result if not isinstance(handler_result, str) else None
+                        self._send_response_callback(dispatch_obj, response_message, payload)
+                        
                 elif message_type == 'broadcast':
                     channel = message.get('channel', None)
+                    broadcast_obj = RedisBroadcast.from_dict(message)
                     for handler in handlers:
                         # Channel filtering
                         if handler['listen_channels'] is not None:
                             if channel not in handler['listen_channels']:
                                 continue
             
-                        handler['callable'](RedisBroadcast.from_dict(message))
+                        handler_result = handler['callable'](broadcast_obj)
+                    
+                    # Send automatic response if requested (after all handlers)
+                    if broadcast_obj.response_requested and self._send_response_callback:
+                        response_message = handler_result if isinstance(handler_result, str) else 'Broadcast processed successfully'
+                        payload = handler_result if not isinstance(handler_result, str) else None
+                        self._send_response_callback(broadcast_obj, response_message, payload)
+                        
                 elif message_type == 'response':
-                    # Responses are handled internally; ignore here
+                    # Route response to callback for awaiting senders
+                    if self._response_callback:
+                        response_obj = RedisResponse.from_dict(message)
+                        self._response_callback(response_obj)
                     return
                 else:
                     raise ValueError(f'Unknown message type: {message_type}')

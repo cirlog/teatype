@@ -11,6 +11,7 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import inspect
 import json
 from abc import ABC
 # Third-party imports
@@ -20,12 +21,14 @@ from teatype.toolkit import generate_id
 class _BaseRedisMessage(ABC):
     channel:str
     id:str
+    response_requested:bool
     source:str
     type:str
 
-    def __init__(self, channel:str, source:str) -> None:
+    def __init__(self, channel:str, source:str, response_requested:bool=False) -> None:
         self.channel = channel
         self.source = source
+        self.response_requested = response_requested
 
         # Sets the message type based on the subclass name
         self.id = generate_id(truncate=16)
@@ -43,13 +46,27 @@ class _BaseRedisMessage(ABC):
         :param data: Dictionary representing the message data.
         :return: An instance of RedisMessage with the loaded data.
         """
-        init_data = {key: value for key, value in data.items()}
-        id = init_data.pop('id', None)
-        type = init_data.pop('type')
+        # Get valid parameter names for the constructor
+        sig = inspect.signature(cls.__init__)
+        valid_params = set(sig.parameters.keys()) - {'self'}
+        
+        # Separate constructor args from post-init attributes
+        init_data = {key: value for key, value in data.items() if key in valid_params}
+        extra_data = {key: value for key, value in data.items() if key not in valid_params}
+        
+        # Create instance with valid constructor args
         instance = cls(**init_data)
-        if id is not None:
-            instance.id = id
-        instance.type = type
+        
+        # Set extra attributes (like 'id', 'type') that are generated in __init__
+        # but should be preserved from serialized data
+        if 'id' in extra_data:
+            instance.id = extra_data['id']
+        if 'type' in extra_data:
+            instance.type = extra_data['type']
+        # Preserve response_requested if it exists in data but wasn't a constructor param
+        if 'response_requested' in extra_data:
+            instance.response_requested = extra_data['response_requested']
+            
         return instance
         
     ##############
@@ -76,8 +93,9 @@ class RedisBroadcast(_BaseRedisMessage):
                  channel:str,
                  source:str,
                  message:str,
-                 value:any=None) -> None:
-        super().__init__(channel, source)
+                 value:any=None,
+                 response_requested:bool=False) -> None:
+        super().__init__(channel, source, response_requested)
         
         self.message = message
         self.value = value
@@ -87,8 +105,14 @@ class RedisDispatch(_BaseRedisMessage):
     receiver:str
     payload:any
     
-    def __init__(self, channel:str, source:str, command:str, receiver:str, payload:any=None) -> None:
-        super().__init__(channel, source)
+    def __init__(self,
+                 channel:str,
+                 source:str,
+                 command:str,
+                 receiver:str,
+                 payload:any=None,
+                 response_requested:bool=False) -> None:
+        super().__init__(channel, source, response_requested)
         
         self.command = command
         self.receiver = receiver
@@ -96,8 +120,17 @@ class RedisDispatch(_BaseRedisMessage):
         
 class RedisResponse(_BaseRedisMessage):
     response_message:str
+    response_to:str  # ID of the original message being responded to
+    payload:any
     
-    def __init__(self, channel:str, source:str, response_message:str) -> None:
-        super().__init__(channel, source)
+    def __init__(self,
+                 channel:str,
+                 source:str,
+                 response_to:str,
+                 response_message:str='Message processed successfully',
+                 payload:any=None) -> None:
+        super().__init__(channel, source, response_requested=False)
         
         self.response_message = response_message
+        self.response_to = response_to
+        self.payload = payload

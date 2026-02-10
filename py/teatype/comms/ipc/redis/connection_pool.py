@@ -19,9 +19,11 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 # Third-party imports
 import redis
 from teatype.logging import *
+
 # Local imports
 from teatype.comms.ipc.redis.base_interface import RedisBaseInterface
 from teatype.comms.ipc.redis.channels import RedisChannel
