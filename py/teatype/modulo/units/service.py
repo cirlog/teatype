@@ -113,7 +113,7 @@ class ServiceUnit(CoreUnit):
         Returns:
             Connection status
         """
-        return self.redis_service.pool.is_connected
+        return self.redis_service.pool._is_connected
     
     @property
     def is_subscribed(self) -> bool:
@@ -123,7 +123,7 @@ class ServiceUnit(CoreUnit):
         Returns:
             Subscription status
         """
-        return self.redis_service.pool.is_subscribed
+        return self.redis_service.pool._is_subscribed
 
     ##################
     # Redis handlers #
@@ -136,14 +136,23 @@ class ServiceUnit(CoreUnit):
         
     @dispatch_handler
     def fetch_state(self, dispatch:RedisDispatch) -> None:
+        # Only include JSON-serializable state fields
+        serializable_state = {
+            'name': self.name,
+            'type': self.type,
+            'id': self.id,
+            'designation': self.designation,
+            'pod': self.pod,
+            'status': self._status,
+            'loop_idle_time': self.loop_idle_time,
+            'loop_iter': self.loop_iter,
+            'is_connected': self.is_connected,
+            'is_subscribed': self.is_subscribed,
+        }
         self.redis_service.send_response(
             original_message=dispatch,
             response_message='State fetch successful',
-            payload={
-                **self.__dict__
-                # 'status': self._status,
-                # 'history': list(self._history_stack.queue)
-            }
+            payload=serializable_state
         )
     
     ##############
