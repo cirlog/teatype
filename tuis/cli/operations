@@ -134,7 +134,7 @@ class Operations(BaseTUI):
                     return self.dispatch()
                 case 'check':
                     state = self.operations.check(id=option)
-                    return f'Status of Modulo unit {option}: {state}'
+                    return f'Status of Modulo unit {option}: {state.__dict__}'
                 case 'fire':
                     return self.fire()
                 case 'kill':

@@ -36,6 +36,7 @@ class RedisConnectionPool(RedisBaseInterface):
     _connection:redis.Redis
     _connection_lock:threading.RLock
     _is_connected:bool
+    _is_subscribed:bool
     
     DEFAULT_DECODE_RESPONSES=True
     
@@ -54,6 +55,7 @@ class RedisConnectionPool(RedisBaseInterface):
         self._connection = None
         self._connection_lock = threading.RLock()
         self._is_connected = False
+        self._is_subscribed = False
         
         self.pubsub = None
         
@@ -79,6 +81,7 @@ class RedisConnectionPool(RedisBaseInterface):
         try:
             self.pubsub.unsubscribe(*self._active_subscriptions)
             self._active_subscriptions.clear()
+            self._is_subscribed = False
             return True
         except Exception as exc:
             err(f'Unsubscribe error: {exc}')
@@ -219,6 +222,7 @@ class RedisConnectionPool(RedisBaseInterface):
             channel_names = self._normalize_channels(channels or list(RedisChannel))
             self.pubsub.subscribe(*channel_names)
             self._active_subscriptions.update(channel_names)
+            self._is_subscribed = True
             
             if self.verbose_logging:
                 log('Subscribed to channels:')
@@ -256,3 +260,10 @@ class RedisConnectionPool(RedisBaseInterface):
         Check if connection is active and healthy.
         """
         return self._is_connected and self._verify_connection()
+    
+    @property
+    def is_subscribed(self) -> bool:
+        """
+        Check if subscribed to any channels.
+        """
+        return self._is_subscribed and len(self._active_subscriptions) > 0
