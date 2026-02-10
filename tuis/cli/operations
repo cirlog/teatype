@@ -132,6 +132,9 @@ class Operations(BaseTUI):
             match user_input:
                 case 'dispatch':
                     return self.dispatch()
+                case 'check':
+                    state = self.operations.check(id=option)
+                    return f'Status of Modulo unit {option}: {state}'
                 case 'fire':
                     return self.fire()
                 case 'kill':

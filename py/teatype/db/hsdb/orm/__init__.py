@@ -10,18 +10,4 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# Third-party imports
-from teatype.modulo.units.service import ServiceUnit
-
-class WorkhorseUnit(ServiceUnit):
-    """
-    Lightweight one-shot worker unit for specialized tasks within the Teatype Modulo framework.
-    """
-    def __init__(self, name:str) -> None:
-        """
-        Initialize the workhorse unit.
-        
-        Args:
-            name: Name of the workhorse unit
-        """
-        super().__init__(name=name)
+# Local imports

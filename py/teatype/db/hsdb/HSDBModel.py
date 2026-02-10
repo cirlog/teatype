@@ -406,10 +406,11 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
         
         return self
     
-    #################
-    # Class methods #
-    #################
+    #######
+    # ORM #
+    #######
     
+    # TODO: Replace with on-init ORM overload
     @classmethod
     def create(cls, data:dict, save:bool=True) -> 'HSDBModel':
         """
@@ -507,6 +508,10 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
         storage = HybridStorage.instance()
         return len(storage.index_db.lookup_by_model(cls.__name__))
     
+    #################
+    # Class methods #
+    #################
+    
     @classmethod
     def schema(cls) -> dict:
         """
@@ -556,5 +561,4 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                         'editable': attr.editable,
                         'relation_key': attr.relation_key
                     }
-        
         return schema

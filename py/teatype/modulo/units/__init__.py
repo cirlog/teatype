@@ -19,10 +19,11 @@ from .socket import SocketUnit
 from .workhorse import WorkhorseUnit
 
 __all__ = [
-    'ApplicationUnit',
-    'CoreUnit',
     'parse_designation',
     'print_designation',
+    
+    'ApplicationUnit',
+    'CoreUnit',
     'BackendUnit',
     'ServiceUnit',
     'SocketUnit',

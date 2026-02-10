@@ -9,21 +9,25 @@
 #
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-
+ 
 # System imports
 from typing import Dict, List, Optional
 
 # Local imports
 from teatype.logging import *
 from teatype.modulo.units import parse_designation, print_designation
-from teatype.comms.ipc.redis import RedisServiceManager, RedisDispatch, RedisChannel
+from teatype.comms.ipc.redis import RedisServiceManager, RedisDispatch, RedisChannel, RedisResponse
 
 class Operations:
     def __init__(self, verbose_logging:Optional[bool]=False):
         self.redis_service = RedisServiceManager(client_name='teatype.modulo.operations',
                                                  verbose_logging=verbose_logging)
         
-    def dispatch(self, id:str, command:str, is_async:bool=True, payload:any=None) -> None:
+    def dispatch(self,
+                 id:str,
+                 command:str,
+                 is_async:bool=True,
+                 payload:any=None) -> RedisResponse|None:
         """
         Dispatch command to a Modulo unit.
         
@@ -38,8 +42,27 @@ class Operations:
                                  command,
                                  id,
                                  payload)
-        if is_async:
-            self.redis_service.send_message(dispatch)
+        response = self.redis_service.send_message(dispatch, await_response=not is_async)
+        return response
+            
+    def check(self, id:str) -> any:
+        """
+        Check the status of a Modulo unit.
+        
+        Args:
+            id (str): ID of the Modulo unit.
+            
+        Returns:
+            any: Status of the Modulo unit.
+        """
+        response = self.redis_service.send_message(
+            RedisDispatch(RedisChannel.COMMANDS.value,
+                          'modulo.operations.check',
+                          'fetch_state',
+                          id),
+            await_response=True
+        )
+        return response
         
     def list(self, filters:List[tuple[str,str]]=None, print:bool=False) -> List[Dict]|None:
         """
@@ -66,10 +89,10 @@ class Operations:
                         continue
                 units.append({
                     'designation': client_name,
-                    'name': designation_info.get('name'),
-                    'type': designation_info.get('type'),
                     'id': designation_info.get('id'),
-                    'pod': designation_info.get('pod')
+                    'name': designation_info.get('name'),
+                    'pod': designation_info.get('pod'),
+                    'type': designation_info.get('type')
                 })
             except ValueError:
                 continue

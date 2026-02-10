@@ -11,17 +11,8 @@
 # all copies or substantial portions of the Software.
 
 # Third-party imports
-from teatype.modulo.units.service import ServiceUnit
+from teatype.modulo.units.service import CoreUnit
 
-class WorkhorseUnit(ServiceUnit):
-    """
-    Lightweight one-shot worker unit for specialized tasks within the Teatype Modulo framework.
-    """
+class RAXUnit(CoreUnit):
     def __init__(self, name:str) -> None:
-        """
-        Initialize the workhorse unit.
-        
-        Args:
-            name: Name of the workhorse unit
-        """
         super().__init__(name=name)

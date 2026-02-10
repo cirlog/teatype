@@ -120,7 +120,7 @@ class RedisDispatch(_BaseRedisMessage):
         
 class RedisResponse(_BaseRedisMessage):
     response_message:str
-    response_to:str  # ID of the original message being responded to
+    response_to:str # ID of the original message being responded to
     payload:any
     
     def __init__(self,

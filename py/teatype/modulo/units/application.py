@@ -13,6 +13,7 @@
 # Third-party imports
 from teatype.modulo.units.backend import BackendUnit
 from teatype.modulo.units.core import CoreUnit
+from teatype.modulo.units.rax import RAXUnit
 from teatype.modulo.units.service import ServiceUnit
 from teatype.modulo.units.socket import SocketUnit
 
@@ -24,10 +25,15 @@ class ApplicationUnit(CoreUnit):
                  name:str,
                  *,
                  backend_host:str='127.0.0.1',
-                 backend_port:int=8080):
+                 backend_port:int=8080,
+                 include_rax:bool=True,
+                 include_service:bool=True,
+                 include_socket:bool=True,):
         self.backend = BackendUnit.create(name=name, host=backend_host, port=backend_port)
-        self.service = ServiceUnit.create(name=name)
-        self.socket = SocketUnit.create(name=name)
+        
+        self.rax = RAXUnit.create(name=name) if include_rax else None
+        self.service = ServiceUnit.create(name=name) if include_service else None
+        self.socket = SocketUnit.create(name=name) if include_socket else None
         
     ##############
     # Public API #

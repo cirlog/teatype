@@ -14,9 +14,9 @@
 from enum import Enum
 
 class RedisChannel(Enum):
-    ALERTS='channel:alerts' # System alerts and critical notifications
-    COMMANDS='channel:commands' # Commands sent to modulos for execution
-    COMMS='channel:comms' # Bi-directional communication channel for modulo that enforce request-response patterns
+    ALERTS='channel:alerts'               # System alerts and critical notifications
+    COMMANDS='channel:commands'           # Commands sent to modulos for execution
+    COMMS='channel:comms'                 # Bi-directional communication channel for modulo that enforce request-response patterns
     NOTIFICATIONS='channel:notifications' # General notifications and informational messages
     SYSTEM_STATUS='channel:status:system' # System-wide status updates
-    UNIT_STATUS='channel:status:unit' # Status updates specific to individual modulo
+    UNIT_STATUS='channel:status:unit'     # Status updates specific to individual modulo

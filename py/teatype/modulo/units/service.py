@@ -14,7 +14,10 @@
 from typing import Optional
 
 # Third-party imports
-from teatype.comms.ipc.redis import RedisChannel, RedisDispatch, RedisServiceManager, dispatch_handler
+from teatype.comms.ipc.redis import (
+    dispatch_handler, response_handler,
+    RedisChannel, RedisDispatch, RedisResponse, RedisServiceManager
+)
 from teatype.logging import *
 from teatype.modulo.units.core import CoreUnit
 
@@ -128,8 +131,20 @@ class ServiceUnit(CoreUnit):
     
     @dispatch_handler
     def kill(self, dispatch:RedisDispatch) -> None:
-        hint(f'Received "kill" command. Initiating shutdown ...')
+        whisper(f'Received "kill" command. Initiating shutdown ...')
         self.shutdown()
+        
+    @dispatch_handler
+    def fetch_state(self, dispatch:RedisDispatch) -> None:
+        self.redis_service.send_response(
+            original_message=dispatch,
+            response_message='State fetch successful',
+            payload={
+                **self.__dict__
+                # 'status': self._status,
+                # 'history': list(self._history_stack.queue)
+            }
+        )
     
     ##############
     # Public API #
@@ -186,7 +201,7 @@ class ServiceUnit(CoreUnit):
             force: If True, bypass shutdown-in-progress check
         """
         if not force and self._shutdown_in_progress:
-            print('Shutdown already in progress')
+            log('Shutdown already in progress')
             return
         
         self._shutdown_in_progress = True

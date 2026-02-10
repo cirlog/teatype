@@ -23,7 +23,9 @@ def _ensure_aria2():
         return True
 
     system = platform.system().lower()
-    warn('aria2 is not installed. Attempting to install it ...', use_prefix=False)
+    warn('aria2 is not installed. Attempting to install it ...',
+         include_symbol=True,
+         use_prefix=False)
 
     try:
         if system == 'linux':

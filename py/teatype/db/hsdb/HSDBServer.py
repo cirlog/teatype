@@ -22,7 +22,7 @@ from teatype.db.hsdb import HybridStorage
 from teatype.io import env, path
 from teatype.logging import *
 
-class HSDBServer:
+class HSDBServer():
     """
     Hybrid Storage Database Server with integrated Django functionality.
     

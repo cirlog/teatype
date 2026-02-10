@@ -15,6 +15,7 @@ import threading
 import time
 from queue import LifoQueue
 from typing import Optional, Union
+
 # Third-party imports
 from teatype.enum import EscapeColor
 from teatype.logging import *
