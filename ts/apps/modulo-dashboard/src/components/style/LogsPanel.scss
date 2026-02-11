@@ -1,0 +1,110 @@
+/**
+ * @license
+ * Copyright (C) 2024-2026 Burak Günaydin
+ * LogsPanel styles
+ */
+
+.logs-panel {
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        h2 {
+            margin: 0;
+        }
+    }
+
+    &__controls {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__count {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    &__error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: #ef4444;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    &__container {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        overflow-y: auto;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.85rem;
+        line-height: 1.6;
+
+        // Custom scrollbar
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+        }
+    }
+
+    &__empty {
+        color: rgba(255, 255, 255, 0.4);
+        text-align: center;
+        padding: 2rem;
+        font-style: italic;
+    }
+}
+
+.log-entry {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    &__time {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.8rem;
+        min-width: 70px;
+        flex-shrink: 0;
+    }
+
+    &__level {
+        font-weight: 600;
+        font-size: 0.8rem;
+        min-width: 90px;
+        flex-shrink: 0;
+    }
+
+    &__message {
+        color: #e2e8f0;
+        word-break: break-word;
+        flex: 1;
+    }
+}

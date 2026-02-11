@@ -27,7 +27,8 @@ from teatype.logging import hint, log
 from teatype.modulo.units.core import CoreUnit
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[4]
-REACT_DASHBOARD_ROOT = PACKAGE_ROOT / 'react' / 'dashboard'
+# React dashboard is located in ts/apps/modulo-dashboard
+REACT_DASHBOARD_ROOT = PACKAGE_ROOT / 'ts' / 'apps' / 'modulo-dashboard'
 REACT_DIST_DIR = REACT_DASHBOARD_ROOT / 'dist'
 REACT_INDEX_FILE = REACT_DIST_DIR / 'index.html'
 REACT_ASSETS_DIR = REACT_DIST_DIR / 'assets'

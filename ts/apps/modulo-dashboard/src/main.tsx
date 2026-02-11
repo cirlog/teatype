@@ -13,13 +13,12 @@
  * all copies or substantial portions of the Software.
  */
 
-// Components
-export { default as ModuloStatusModal } from './src/components/ModuloStatusModal';
-export { ControlsPanel } from './src/components/ControlsPanel';
-export { LogsPanel } from './src/components/LogsPanel';
-export { StatusCard } from './src/components/StatusCard';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import ModuloStatusModal from './components/ModuloStatusModal';
 
-// Hooks
-export { default as useStatusPulse } from './src/hooks/useStatusPulse';
-export { useAppLogs } from './src/hooks/useAppLogs';
-export { useAppCommands } from './src/hooks/useAppCommands';
+createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+        <ModuloStatusModal />
+    </StrictMode>,
+);

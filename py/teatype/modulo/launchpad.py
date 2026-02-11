@@ -19,6 +19,7 @@ from typing import Literal
 from teatype.io import path, shell
 from teatype.logging import *
 from teatype.modulo.units import *
+from teatype.modulo.units.application import ApplicationUnit
 from teatype.toolkit import dt
 
 class LaunchPad:
@@ -37,25 +38,49 @@ class LaunchPad:
     
     @classmethod
     def create(cls,
-               unit_type:Literal['backend','service','socket','workhorse']|type,
+               unit_type:Literal['application','backend','service','socket','workhorse']|type,
                unit_name:str=None,
                host:str|None=None,
                port:int|None=None,
-               **kwargs) -> BackendUnit|ServiceUnit|SocketUnit|WorkhorseUnit:
+               dashboard_host:str|None=None,
+               dashboard_port:int|None=None,
+               include_dashboard:bool=True,
+               **kwargs) -> ApplicationUnit|BackendUnit|ServiceUnit|SocketUnit|WorkhorseUnit:
         """
         Launch a Teatype Modulo unit.
         
         Args:
-            unit_type: Type of the unit ('backend', 'service', 'workhorse')
+            unit_type: Type of the unit ('application', 'backend', 'service', 'workhorse')
             unit_name: Name of the unit to launch
-            host: Optional server host
-            port: Optional server port
+            host: Optional server host (for backend and application units)
+            port: Optional server port (for backend and application units)
+            dashboard_host: Optional dashboard host (for application units)
+            dashboard_port: Optional dashboard port (for application units)
+            include_dashboard: Whether to include React dashboard dev server (for application units)
         
         Returns:
             Instance of the launched unit
         """
         if type(unit_type) == str:
-            if unit_type == 'backend':
+            if unit_type == 'application':
+                if host is None:
+                    host = '127.0.0.1'
+                if port is None:
+                    port = 8080
+                if dashboard_host is None:
+                    dashboard_host = '127.0.0.1'
+                if dashboard_port is None:
+                    dashboard_port = 5173
+                unit = ApplicationUnit.create(
+                    name=unit_name,
+                    backend_host=host,
+                    backend_port=port,
+                    dashboard_host=dashboard_host,
+                    dashboard_port=dashboard_port,
+                    include_dashboard=include_dashboard,
+                    **kwargs
+                )
+            elif unit_type == 'backend':
                 if host is None or port is None:
                     raise err('Host and port must be specified for backend units.',
                             raise_exception=ValueError)
@@ -79,10 +104,12 @@ class LaunchPad:
     
     @classmethod
     def fire(cls,
-             unit_type:Literal['backend','service','socket','workhorse']|type,
+             unit_type:Literal['application','backend','service','socket','workhorse']|type,
              unit_name:str=None,
              host:str|None=None,
              port:int|None=None,
+             dashboard_host:str|None=None,
+             dashboard_port:int|None=None,
              detached:bool=True) -> bool:
         """
         Launch the worker in its own detached process.
@@ -98,6 +125,15 @@ class LaunchPad:
                     raise err('Host and port must be specified for backend units.',
                             raise_exception=ValueError)
                 launch_command += f' --host={host} --port={port}'
+            elif unit_type == 'application':
+                if host is not None:
+                    launch_command += f' --host={host}'
+                if port is not None:
+                    launch_command += f' --port={port}'
+                if dashboard_host is not None:
+                    launch_command += f' --dashboard-host={dashboard_host}'
+                if dashboard_port is not None:
+                    launch_command += f' --dashboard-port={dashboard_port}'
         else:
             class_path = inspect.getfile(unit_type)
             launch_command = f'{python_executable} {class_path}'
@@ -126,7 +162,7 @@ if __name__ == "__main__":
     
     parser.add_argument('unit_type',
                         type=str,
-                        choices=['backend', 'service', 'socket', 'workhorse'],
+                        choices=['application', 'backend', 'service', 'socket', 'workhorse'],
                         help='Type of unit to launch')
     parser.add_argument('unit_name',
                         type=str,
@@ -134,11 +170,22 @@ if __name__ == "__main__":
     parser.add_argument('--host',
                         type=str,
                         default=None,
-                        help='Server host (required for backend units)')
+                        help='Server host (required for backend units, optional for application)')
     parser.add_argument('--port',
                         type=int,
                         default=None,
-                        help='Server port (required for backend units)')
+                        help='Server port (required for backend units, optional for application)')
+    parser.add_argument('--dashboard-host',
+                        type=str,
+                        default='127.0.0.1',
+                        help='Dashboard dev server host (for application units)')
+    parser.add_argument('--dashboard-port',
+                        type=int,
+                        default=5173,
+                        help='Dashboard dev server port (for application units)')
+    parser.add_argument('--no-dashboard',
+                        action='store_true',
+                        help='Disable React dashboard dev server (for application units)')
     parser.add_argument('--detached',
                         action='store_true',
                         help='Launch unit in detached mode')
@@ -151,10 +198,35 @@ if __name__ == "__main__":
     
     # Launch the unit
     if args.detached:
-        LaunchPad.fire(args.unit_type, args.unit_name, host=args.host, port=args.port)
+        LaunchPad.fire(
+            args.unit_type, 
+            args.unit_name, 
+            host=args.host, 
+            port=args.port,
+            dashboard_host=args.dashboard_host if hasattr(args, 'dashboard_host') else None,
+            dashboard_port=args.dashboard_port if hasattr(args, 'dashboard_port') else None
+        )
     else:
         try:
-            unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port, verbose_logging=True)
+            if args.unit_type == 'application':
+                unit = LaunchPad.create(
+                    args.unit_type, 
+                    args.unit_name, 
+                    host=args.host or '127.0.0.1', 
+                    port=args.port or 8080,
+                    dashboard_host=args.dashboard_host,
+                    dashboard_port=args.dashboard_port,
+                    include_dashboard=not args.no_dashboard,
+                    verbose_logging=True
+                )
+            else:
+                unit = LaunchPad.create(
+                    args.unit_type, 
+                    args.unit_name, 
+                    host=args.host, 
+                    port=args.port, 
+                    verbose_logging=True
+                )
             # Run unit directly (blocking mode)
             unit.start()
             unit.join()

@@ -16,7 +16,8 @@ class ReactDashboardBase(BaseCLI):
                  auto_validate: bool = True,
                  auto_execute: bool = True):
         self.repo_root = Path(path.caller_parent(reverse_depth=4))
-        self.project_root = self.repo_root / 'react' / 'dashboard'
+        # React dashboard is located in ts/apps/modulo-dashboard
+        self.project_root = self.repo_root / 'ts' / 'apps' / 'modulo-dashboard'
         self.logs_dir = Path(path.create(self.repo_root, 'logs'))
         self.pid_file = self.project_root / '.devserver.pid'
         super().__init__(auto_init=auto_init,

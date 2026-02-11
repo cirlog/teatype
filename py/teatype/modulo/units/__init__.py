@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # TODO: Add launch key, so that only Launchpad can execute this script
     parser.add_argument('unit_type',
                         type=str,
-                        choices=['backend', 'service', 'socket', 'workhorse'],
+                        choices=['application', 'backend', 'service', 'socket', 'workhorse'],
                         help='Type of the unit to launch')
     parser.add_argument('unit_name',
                         type=str,
@@ -48,11 +48,22 @@ if __name__ == '__main__':
     parser.add_argument('--host',
                         type=str,
                         default=None,
-                        help='Host address for backend units')
+                        help='Host address for backend/application units')
     parser.add_argument('--port',
                         type=int,
                         default=None,
-                        help='Port number for backend units')
+                        help='Port number for backend/application units')
+    parser.add_argument('--dashboard-host',
+                        type=str,
+                        default='127.0.0.1',
+                        help='Dashboard dev server host (for application units)')
+    parser.add_argument('--dashboard-port',
+                        type=int,
+                        default=5173,
+                        help='Dashboard dev server port (for application units)')
+    parser.add_argument('--no-dashboard',
+                        action='store_true',
+                        help='Disable React dashboard dev server (for application units)')
     
     args = parser.parse_args()
     unit_type = args.unit_type
@@ -61,7 +72,18 @@ if __name__ == '__main__':
     try:
         from teatype.modulo.launchpad import LaunchPad
         println()
-        unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
+        if args.unit_type == 'application':
+            unit = LaunchPad.create(
+                args.unit_type, 
+                args.unit_name, 
+                host=args.host or '127.0.0.1', 
+                port=args.port or 8080,
+                dashboard_host=args.dashboard_host,
+                dashboard_port=args.dashboard_port,
+                include_dashboard=not args.no_dashboard
+            )
+        else:
+            unit = LaunchPad.create(args.unit_type, args.unit_name, host=args.host, port=args.port)
         # Run unit directly (blocking mode)
         unit.start()
         unit.join()

@@ -14,10 +14,12 @@
  */
 
 // Components
+import { ControlsPanel } from './ControlsPanel';
+import { LogsPanel } from './LogsPanel';
 import { StatusCard } from './StatusCard';
 
 // Hooks
-import { useStatusPulse } from '../hooks/useStatusPulse';
+import useStatusPulse from '../hooks/useStatusPulse';
 
 // Style
 import './style/ModuloStatusModal.scss';
@@ -42,15 +44,21 @@ const ModuloStatusModal = () => {
                     <p className='hero__eyebrow'>Realtime module vitals</p>
                     <h1>Operations Pulse</h1>
                     <p className='hero__lede'>
-                        A lightweight dashboard pinging the backend status endpoint. Rebuilt in React + Vite for faster
-                        iteration.
+                        A lightweight dashboard for monitoring and controlling your Modulo application. View live
+                        status, logs, and execute commands.
                     </p>
                     <HeroTags name={status.unit} pod={0} type={status.type} />
                 </div>
             </header>
 
-            <main className='grid'>
-                <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
+            <main className='dashboard-grid'>
+                {/* Top row - Status and Controls */}
+                <div className='dashboard-grid__row'>
+                    <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
+                    <ControlsPanel onActionComplete={refresh} />
+                </div>
+
+                {/* Activity timeline */}
                 <section className='card card--timeline'>
                     <h2>Activity</h2>
                     <ul>
@@ -59,6 +67,9 @@ const ModuloStatusModal = () => {
                         ))}
                     </ul>
                 </section>
+
+                {/* Full-width logs panel */}
+                <LogsPanel maxHeight='350px' />
             </main>
         </div>
     );

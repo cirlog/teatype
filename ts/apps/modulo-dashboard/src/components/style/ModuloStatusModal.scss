@@ -73,6 +73,20 @@ $transition-base: 0.2s ease;
     padding: 0 $padding-horizontal;
 }
 
+// New dashboard grid layout
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 0 $padding-horizontal;
+
+    &__row {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+}
+
 .card {
     background: var(--surface-card);
     border-radius: $radius-card;
