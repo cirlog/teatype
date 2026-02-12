@@ -24,7 +24,7 @@
 
     &__count {
         font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.5);
+        color: var(--text-muted);
     }
 
     &__error {
@@ -38,13 +38,14 @@
     }
 
     &__container {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--surface-card);
         border-radius: 0.5rem;
         padding: 1rem;
         overflow-y: auto;
         font-family: 'JetBrains Mono', 'Fira Code', monospace;
         font-size: 0.85rem;
         line-height: 1.6;
+        border: 1px solid var(--border);
 
         // Custom scrollbar
         &::-webkit-scrollbar {
@@ -52,22 +53,22 @@
         }
 
         &::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--surface-card);
             border-radius: 4px;
         }
 
         &::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--border);
             border-radius: 4px;
 
             &:hover {
-                background: rgba(255, 255, 255, 0.3);
+                background: var(--text-muted);
             }
         }
     }
 
     &__empty {
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--text-muted);
         text-align: center;
         padding: 2rem;
         font-style: italic;
@@ -78,18 +79,18 @@
     display: flex;
     gap: 0.75rem;
     padding: 0.25rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border);
 
     &:last-child {
         border-bottom: none;
     }
 
     &:hover {
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--surface-hover);
     }
 
     &__time {
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--text-muted);
         font-size: 0.8rem;
         min-width: 70px;
         flex-shrink: 0;
@@ -103,7 +104,7 @@
     }
 
     &__message {
-        color: #e2e8f0;
+        color: var(--text);
         word-break: break-word;
         flex: 1;
     }

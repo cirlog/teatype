@@ -17,10 +17,6 @@ $radius-pill: 999px;
 $radius-card: 24px;
 $transition-base: 0.2s ease;
 
-.page {
-    padding-bottom: 4rem;
-}
-
 .hero {
     padding: 4rem $padding-horizontal 2rem;
     display: flex;
@@ -56,14 +52,6 @@ $transition-base: 0.2s ease;
         margin-top: 1.5rem;
         flex-wrap: wrap;
     }
-
-    &__tag {
-        padding: 0.25rem 0.9rem;
-        border-radius: $radius-pill;
-        border: 1px solid var(--border);
-        background: var(--surface-card);
-        font-size: 0.85rem;
-    }
 }
 
 .grid {
@@ -73,7 +61,7 @@ $transition-base: 0.2s ease;
     padding: 0 $padding-horizontal;
 }
 
-// New dashboard grid layout
+// Dashboard grid layout
 .dashboard-grid {
     display: flex;
     flex-direction: column;
@@ -152,24 +140,5 @@ $transition-base: 0.2s ease;
             margin: 0.35rem 0 0;
             font-size: 1.1rem;
         }
-    }
-}
-
-.refresh-btn {
-    width: 100%;
-    border: none;
-    border-radius: 16px;
-    padding: 0.9rem 1.2rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899);
-    color: #0f172a;
-    cursor: pointer;
-    transition:
-        transform $transition-base,
-        box-shadow $transition-base;
-    box-shadow: 0 15px 30px rgba(236, 72, 153, 0.3);
-
-    &:hover {
-        transform: translateY(-2px);
     }
 }

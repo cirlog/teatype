@@ -14,6 +14,10 @@
  */
 
 import { useEffect, useRef } from 'react';
+
+// Teatype components
+import { TeaButton } from '../../../../components';
+
 import { useAppLogs, type tLogEntry } from '../hooks/useAppLogs';
 
 import './style/LogsPanel.scss';
@@ -91,9 +95,9 @@ export function LogsPanel({ autoScroll = true, maxHeight = '400px' }: iLogsPanel
                 <h2>Application Logs</h2>
                 <div className='logs-panel__controls'>
                     <span className='logs-panel__count'>{logs.length} entries</span>
-                    <button className='btn btn--small' onClick={refresh} disabled={loading}>
+                    <TeaButton size='sm' variant='ghost' onClick={refresh} disabled={loading}>
                         {loading ? '...' : '🔄'}
-                    </button>
+                    </TeaButton>
                 </div>
             </div>
 

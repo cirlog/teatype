@@ -31,6 +31,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
+            '@teatype/style': resolve(__dirname, '../../style'),
         },
     },
     css: {

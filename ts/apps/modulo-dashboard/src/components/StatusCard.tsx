@@ -13,6 +13,9 @@
  * all copies or substantial portions of the Software.
  */
 
+// Teatype components
+import { TeaButton } from '../../../../components';
+
 import type { tStatusSnapshot } from '../hooks/useStatusPulse';
 
 interface iStatusCardProps {
@@ -58,9 +61,9 @@ export function StatusCard({ status, updating, error, onRefresh }: iStatusCardPr
                     </div>
                 </dl>
             </div>
-            <button className='refresh-btn' data-refresh onClick={onRefresh} disabled={updating}>
+            <TeaButton variant='primary' onClick={onRefresh} disabled={updating} loading={updating}>
                 {updating ? 'Syncing …' : 'Status pulse'}
-            </button>
+            </TeaButton>
         </section>
     );
 }

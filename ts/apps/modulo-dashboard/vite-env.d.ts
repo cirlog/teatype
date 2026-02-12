@@ -13,20 +13,15 @@
  * all copies or substantial portions of the Software.
  */
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+/// <reference types="vite/client" />
 
-import ModuloDashboard from './App';
+// Type declarations for SCSS modules
+declare module '*.scss' {
+    const content: { [className: string]: string };
+    export default content;
+}
 
-// Global teatype styles
-import '@teatype/style/globstyle.scss';
-import '@teatype/style/globvars.scss';
-
-createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <BrowserRouter>
-            <ModuloDashboard />
-        </BrowserRouter>
-    </StrictMode>,
-);
+// Type declarations for side-effect SCSS imports from workspace packages
+declare module '@teatype/style/*.scss';
+declare module '@teatype/style/globstyle.scss';
+declare module '@teatype/style/globvars.scss';

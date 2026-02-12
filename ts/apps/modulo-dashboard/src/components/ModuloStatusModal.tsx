@@ -13,6 +13,9 @@
  * all copies or substantial portions of the Software.
  */
 
+// Teatype components
+import { TeaTag } from '../../../../components';
+
 // Components
 import { ControlsPanel } from './ControlsPanel';
 import { LogsPanel } from './LogsPanel';
@@ -27,9 +30,9 @@ import './style/ModuloStatusModal.scss';
 const HeroTags = ({ name, pod, type }: { name: string; pod: number; type: string }) => {
     return (
         <div className='hero__tags'>
-            <span className='hero__tag'>{name}</span>
-            <span className='hero__tag'>pod {pod}</span>
-            <span className='hero__tag'>{type}</span>
+            <TeaTag>{name}</TeaTag>
+            <TeaTag>pod {pod}</TeaTag>
+            <TeaTag>{type}</TeaTag>
         </div>
     );
 };

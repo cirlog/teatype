@@ -15,6 +15,9 @@
 
 import { useState } from 'react';
 
+// Teatype components
+import { TeaButton, TeaInput } from '../../../../components';
+
 import { useAppCommands } from '../hooks/useAppCommands';
 
 import './style/ControlsPanel.scss';
@@ -81,43 +84,37 @@ export function ControlsPanel({ onActionComplete }: iControlsPanelProps) {
             <h2>Application Controls</h2>
 
             <div className='controls-panel__buttons'>
-                <button
-                    className={`btn btn--danger ${showConfirm === 'stop' ? 'btn--confirm' : ''}`}
+                <TeaButton
+                    variant={showConfirm === 'stop' ? 'danger' : 'danger'}
                     onClick={handleStop}
                     disabled={loading}
                 >
                     {showConfirm === 'stop' ? '⚠️ Confirm Stop' : '⏹️ Stop'}
-                </button>
+                </TeaButton>
 
-                <button
-                    className={`btn btn--warning ${showConfirm === 'reboot' ? 'btn--confirm' : ''}`}
-                    onClick={handleReboot}
-                    disabled={loading}
-                >
+                <TeaButton variant='secondary' onClick={handleReboot} disabled={loading}>
                     {showConfirm === 'reboot' ? '⚠️ Confirm Reboot' : '🔄 Reboot'}
-                </button>
+                </TeaButton>
 
                 {showConfirm && (
-                    <button className='btn btn--secondary' onClick={cancelConfirm}>
+                    <TeaButton variant='ghost' onClick={cancelConfirm}>
                         Cancel
-                    </button>
+                    </TeaButton>
                 )}
             </div>
 
             <form className='controls-panel__command-form' onSubmit={handleCommandSubmit}>
                 <div className='command-input-wrapper'>
                     <span className='command-prompt'>$</span>
-                    <input
-                        type='text'
-                        className='command-input'
+                    <TeaInput
                         placeholder='Enter command (e.g., ping, status, custom_cmd:{"key":"value"})'
                         value={commandInput}
                         onChange={(e) => setCommandInput(e.target.value)}
                         disabled={loading}
                     />
-                    <button type='submit' className='btn btn--primary' disabled={loading || !commandInput.trim()}>
+                    <TeaButton type='submit' variant='primary' size='sm' disabled={loading || !commandInput.trim()}>
                         {loading ? '...' : '▶'}
-                    </button>
+                    </TeaButton>
                 </div>
             </form>
 

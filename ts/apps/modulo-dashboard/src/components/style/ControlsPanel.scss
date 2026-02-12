@@ -19,36 +19,38 @@
     .command-input-wrapper {
         display: flex;
         align-items: center;
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--surface-card);
         border-radius: 0.5rem;
         padding: 0.25rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border);
+        gap: 0.5rem;
 
         &:focus-within {
-            border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-soft);
         }
     }
 
     .command-prompt {
-        color: #10b981;
+        color: var(--accent);
         font-family: 'JetBrains Mono', 'Fira Code', monospace;
         font-weight: 600;
         padding: 0 0.75rem;
     }
 
-    .command-input {
+    .tea-input-group {
         flex: 1;
-        background: transparent;
-        border: none;
-        color: #e2e8f0;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        font-size: 0.9rem;
-        padding: 0.75rem 0;
-        outline: none;
+        margin: 0;
 
-        &::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+        .tea-input-group__input {
+            background: transparent;
+            border: none;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+
+            &:focus {
+                box-shadow: none;
+            }
         }
     }
 
@@ -63,7 +65,7 @@
     }
 
     &__result {
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--surface-card);
         border-radius: 0.5rem;
         padding: 1rem;
         font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -84,99 +86,5 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-    }
-}
-
-// Button styles
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    outline: none;
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    &--primary {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: white;
-
-        &:hover:not(:disabled) {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            transform: translateY(-1px);
-        }
-    }
-
-    &--secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: #e2e8f0;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-
-        &:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.15);
-        }
-    }
-
-    &--danger {
-        background: linear-gradient(135deg, #dc2626, #ef4444);
-        color: white;
-
-        &:hover:not(:disabled) {
-            background: linear-gradient(135deg, #b91c1c, #dc2626);
-            transform: translateY(-1px);
-        }
-
-        &.btn--confirm {
-            animation: pulse-danger 1s infinite;
-        }
-    }
-
-    &--warning {
-        background: linear-gradient(135deg, #d97706, #f59e0b);
-        color: white;
-
-        &:hover:not(:disabled) {
-            background: linear-gradient(135deg, #b45309, #d97706);
-            transform: translateY(-1px);
-        }
-
-        &.btn--confirm {
-            animation: pulse-warning 1s infinite;
-        }
-    }
-
-    &--small {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8rem;
-    }
-}
-
-@keyframes pulse-danger {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-    }
-}
-
-@keyframes pulse-warning {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
     }
 }
