@@ -18,6 +18,7 @@
     },
     "dependencies": {
         "@teatype/baseconfig": "workspace:*",
+        "@teatype/hooks": "workspace:*",
         "@teatype/style": "workspace:*",
         "axios": "^1.7.9",
         "eslint-config-prettier": "^9.1.0",

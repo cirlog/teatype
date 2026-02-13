@@ -1,0 +1,38 @@
+{
+    "dashboard": {
+        "title": "Panel",
+        "status": "Durum",
+        "controls": "Kontroller",
+        "activity": "Aktivite",
+        "logs": "Günlükler"
+    },
+    "status": {
+        "running": "Çalışıyor",
+        "stopped": "Durduruldu",
+        "error": "Hata",
+        "unknown": "Bilinmiyor",
+        "refresh": "Yenile",
+        "uptime": "Çalışma Süresi",
+        "units": "Birimler"
+    },
+    "controls": {
+        "start": "Başlat",
+        "stop": "Durdur",
+        "restart": "Yeniden Başlat",
+        "execute": "Çalıştır"
+    },
+    "logs": {
+        "title": "Günlükler",
+        "noLogs": "Günlük bulunamadı",
+        "clear": "Temizle",
+        "download": "İndir"
+    },
+    "common": {
+        "loading": "Yükleniyor...",
+        "error": "Bir hata oluştu",
+        "retry": "Tekrar Dene",
+        "cancel": "İptal",
+        "save": "Kaydet",
+        "close": "Kapat"
+    }
+}

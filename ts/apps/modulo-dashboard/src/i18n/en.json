@@ -1,0 +1,38 @@
+{
+    "dashboard": {
+        "title": "Dashboard",
+        "status": "Status",
+        "controls": "Controls",
+        "activity": "Activity",
+        "logs": "Logs"
+    },
+    "status": {
+        "running": "Running",
+        "stopped": "Stopped",
+        "error": "Error",
+        "unknown": "Unknown",
+        "refresh": "Refresh",
+        "uptime": "Uptime",
+        "units": "Units"
+    },
+    "controls": {
+        "start": "Start",
+        "stop": "Stop",
+        "restart": "Restart",
+        "execute": "Execute"
+    },
+    "logs": {
+        "title": "Logs",
+        "noLogs": "No logs available",
+        "clear": "Clear",
+        "download": "Download"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "retry": "Retry",
+        "cancel": "Cancel",
+        "save": "Save",
+        "close": "Close"
+    }
+}

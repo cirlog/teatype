@@ -16,21 +16,23 @@
 // React imports
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
+// Flag icons
+import { FlagEN, FlagDE, FlagTR } from '@teatype/icons';
+
 export type Theme = 'dark' | 'flow' | 'light';
-export type Language = 'en' | 'de' | 'fr' | 'tr';
+export type Language = 'en' | 'de' | 'tr';
 
 export interface LanguageInfo {
     code: Language;
     name: string;
     nativeName: string;
-    flag: string; // Emoji flag
+    Flag: React.FC; // SVG flag component
 }
 
 export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
-    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-    { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-    { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
+    { code: 'en', name: 'English', nativeName: 'English', Flag: FlagEN },
+    { code: 'de', name: 'German', nativeName: 'Deutsch', Flag: FlagDE },
+    { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', Flag: FlagTR },
 ];
 
 interface TeaSettingsContextValue {
@@ -173,12 +175,14 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
                         {SUPPORTED_LANGUAGES.map((lang) => (
                             <button
                                 key={lang.code}
-                                className={`tea-settings-language-option ${language === lang.code ? 'active' : ''}`}
+                                className={`tea-settings-flag-btn ${language === lang.code ? 'active' : ''}`}
                                 onClick={() => setLanguage(lang.code)}
-                                title={lang.name}
+                                title={lang.nativeName}
+                                aria-label={lang.name}
                             >
-                                <span className='tea-settings-language-flag'>{lang.flag}</span>
-                                <span className='tea-settings-language-name'>{lang.nativeName}</span>
+                                <span className='tea-settings-flag'>
+                                    <lang.Flag />
+                                </span>
                             </button>
                         ))}
                     </div>

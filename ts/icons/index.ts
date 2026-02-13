@@ -17,3 +17,6 @@ export { ArrowIcon } from './ArrowIcon';
 export { DatabaseIcon } from './DatabaseIcon';
 export { ModelsIcon } from './ModelsIcon';
 export { SettingsIcon } from './SettingsIcon';
+export { FlagEN } from './FlagEN';
+export { FlagDE } from './FlagDE';
+export { FlagTR } from './FlagTR';

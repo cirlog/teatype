@@ -20,12 +20,17 @@ import { StatusCard } from './StatusCard';
 
 // Hooks
 import useStatusPulse from '../hooks/useStatusPulse';
+import { useTranslation } from '../../../../hooks';
+
+// Translations
+import { translations } from '../i18n';
 
 // Style
 import './style/ModuloDashboard.scss';
 
 const ModuloDashboard = () => {
     const { status, history, updating, error, refresh } = useStatusPulse();
+    const { t } = useTranslation(translations);
 
     return (
         <div id='modulo-dashboard'>
@@ -37,7 +42,7 @@ const ModuloDashboard = () => {
 
             {/* Activity timeline */}
             <section className='card card--timeline'>
-                <h2>Activity</h2>
+                <h2>{t('dashboard.activity')}</h2>
                 <ul>
                     {history.map((entry, idx) => (
                         <li key={`${entry}-${idx}`}>{entry}</li>

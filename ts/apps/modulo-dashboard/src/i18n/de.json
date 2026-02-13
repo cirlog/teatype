@@ -1,0 +1,38 @@
+{
+    "dashboard": {
+        "title": "Dashboard",
+        "status": "Status",
+        "controls": "Steuerung",
+        "activity": "Aktivität",
+        "logs": "Protokolle"
+    },
+    "status": {
+        "running": "Läuft",
+        "stopped": "Gestoppt",
+        "error": "Fehler",
+        "unknown": "Unbekannt",
+        "refresh": "Aktualisieren",
+        "uptime": "Laufzeit",
+        "units": "Einheiten"
+    },
+    "controls": {
+        "start": "Starten",
+        "stop": "Stoppen",
+        "restart": "Neustarten",
+        "execute": "Ausführen"
+    },
+    "logs": {
+        "title": "Protokolle",
+        "noLogs": "Keine Protokolle verfügbar",
+        "clear": "Löschen",
+        "download": "Herunterladen"
+    },
+    "common": {
+        "loading": "Laden...",
+        "error": "Ein Fehler ist aufgetreten",
+        "retry": "Erneut versuchen",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "close": "Schließen"
+    }
+}

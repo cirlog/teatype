@@ -15,16 +15,16 @@
  * For more details, check the LICENSE file in the root directory of this repository.
  */
 
-const DatabaseIcon = () => {
+const FlagDE = () => {
     return (
-        <svg fill='none' stroke='currentColor' viewBox='2.5 1.5 19 21'>
-            <ellipse cx='12' cy='5' rx='9' ry='3' />
-            <path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3' />
-            <path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5' />
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 3'>
+            <rect width='5' height='3' fill='#000' />
+            <rect width='5' height='2' y='1' fill='#D00' />
+            <rect width='5' height='1' y='2' fill='#FFCE00' />
         </svg>
     );
 };
 
-export default DatabaseIcon;
+export default FlagDE;
 
-export { DatabaseIcon };
+export { FlagDE };
