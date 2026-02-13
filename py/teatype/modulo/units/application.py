@@ -27,7 +27,7 @@ from typing import Any, Dict, Optional
 from teatype.enum import EscapeColor
 from teatype.io import path, shell
 from teatype.logging import err, hint, log, println, success, warn, whisper
-from teatype.modulo.units.backend import BackendUnit
+from teatype.modulo.units.backend import BackendUnit, find_available_port
 from teatype.modulo.units.core import CoreUnit
 from teatype.modulo.units.rax import RAXUnit
 from teatype.modulo.units.service import ServiceUnit
@@ -36,10 +36,10 @@ from teatype.comms.ipc.redis import RedisDispatch
 from teatype.toolkit import dt
 
 
-# Package paths for React dashboard
+# Package paths for default vanilla React dashboard
 PACKAGE_ROOT = Path(__file__).resolve().parents[4]
-# React dashboard is located in ts/apps/modulo-dashboard
-REACT_DASHBOARD_ROOT = PACKAGE_ROOT / 'ts' / 'apps' / 'modulo-dashboard'
+# Default React dashboard is located in ts/apps/modulo-dashboard
+DEFAULT_DASHBOARD_ROOT = PACKAGE_ROOT / 'ts' / 'apps' / 'modulo-dashboard'
 
 class ApplicationUnit(CoreUnit):
     """
@@ -49,10 +49,21 @@ class ApplicationUnit(CoreUnit):
     Features:
     - FastAPI backend server for API and dashboard hosting
     - Optional React dashboard dev server with Vite
+    - Pluggable frontend: use vanilla Modulo dashboard or your own React app
     - Redis-based service for IPC and command handling
     - Integrated logging with history buffer
     - Graceful shutdown with signal handling
     - Built-in commands: stop, reboot, status
+    
+    Usage with vanilla dashboard:
+        app = ApplicationUnit.create('my-app', include_dashboard=True)
+        
+    Usage with custom React app:
+        app = ApplicationUnit.create(
+            'my-app',
+            include_dashboard=True,
+            dashboard_root=Path('/path/to/my-react-app')
+        )
     """
     
     # Log buffer for dashboard display
@@ -63,9 +74,10 @@ class ApplicationUnit(CoreUnit):
                  name: str,
                  *,
                  backend_host: str = '127.0.0.1',
-                 backend_port: int = 8080,
+                 backend_port: Optional[int] = None,
                  dashboard_host: str = '127.0.0.1',
-                 dashboard_port: int = 5173,
+                 dashboard_port: Optional[int] = None,
+                 dashboard_root: Optional[Path] = None,
                  include_dashboard: bool = True,
                  include_rax: bool = True,
                  include_service: bool = True,
@@ -78,10 +90,13 @@ class ApplicationUnit(CoreUnit):
         Args:
             name: Name of the application
             backend_host: Host for the FastAPI backend server
-            backend_port: Port for the FastAPI backend server
+            backend_port: Port for the FastAPI backend server. If None, auto-finds available port starting from 8080.
             dashboard_host: Host for the React dashboard dev server
-            dashboard_port: Port for the React dashboard dev server  
-            include_dashboard: Whether to start the React dashboard dev server
+            dashboard_port: Port for the React dashboard dev server. If None, auto-finds available port starting from 5173.
+            dashboard_root: Path to the React dashboard root directory.
+                           If None and include_dashboard=True, uses the vanilla Modulo dashboard.
+                           Set to a custom path to use your own React frontend.
+            include_dashboard: Whether to enable dashboard serving and start the dev server
             include_rax: Whether to include the RAX unit
             include_service: Whether to include the Service unit
             include_socket: Whether to include the Socket unit
@@ -90,12 +105,19 @@ class ApplicationUnit(CoreUnit):
         """
         super().__init__(name=name, verbose_logging=verbose_logging)
         
-        # Configuration
+        # Configuration - auto-find available ports if not specified
         self.backend_host = backend_host
-        self.backend_port = backend_port
+        self.backend_port = backend_port if backend_port is not None else find_available_port(8080)
         self.dashboard_host = dashboard_host
-        self.dashboard_port = dashboard_port
+        # Find dashboard port starting from 5173, but skip backend port to avoid conflicts
+        if dashboard_port is not None:
+            self.dashboard_port = dashboard_port
+        else:
+            self.dashboard_port = find_available_port(5173)
         self.include_dashboard = include_dashboard
+        
+        # Dashboard root - use default vanilla dashboard if not specified
+        self.dashboard_root = Path(dashboard_root) if dashboard_root else (DEFAULT_DASHBOARD_ROOT if include_dashboard else None)
         
         # Log buffer for dashboard
         self._log_buffer = deque(maxlen=log_buffer_size)
@@ -103,8 +125,8 @@ class ApplicationUnit(CoreUnit):
         self._start_time = None
         
         # Dashboard dev server process
-        self._dashboard_process: Optional[subprocess.Popen] = None
-        self._dashboard_thread: Optional[threading.Thread] = None
+        self._dashboard_process:Optional[subprocess.Popen] = None
+        self._dashboard_thread:Optional[threading.Thread] = None
         
         # Reboot flag
         self._reboot_requested = False
@@ -113,7 +135,8 @@ class ApplicationUnit(CoreUnit):
         self.backend = BackendUnit.create(
             name=name, 
             host=backend_host, 
-            port=backend_port, 
+            port=backend_port,
+            dashboard_root=self.dashboard_root,
             verbose_logging=verbose_logging
         )
         
@@ -139,12 +162,16 @@ class ApplicationUnit(CoreUnit):
     #############
     
     def _register_application_routes(self) -> None:
-        """Register additional API routes for application management."""
+        """
+        Register additional API routes for application management.
+        """
         app = self.backend._app
         
         @app.get('/api/logs', name='get_logs')
         async def get_logs(limit: int = 100) -> Dict[str, Any]:
-            """Get recent application logs."""
+            """
+            Get recent application logs.
+            """
             with self._log_lock:
                 logs = list(self._log_buffer)[-limit:]
             return {
@@ -155,50 +182,70 @@ class ApplicationUnit(CoreUnit):
         
         @app.get('/api/app/status', name='app_status')
         async def app_status() -> Dict[str, Any]:
-            """Get comprehensive application status."""
+            """
+            Get comprehensive application status.
+            """
             return self._get_full_status()
         
         @app.post('/api/app/command', name='dispatch_command')
         async def dispatch_command_route(command: str, payload: Optional[Dict] = None) -> Dict[str, Any]:
-            """Dispatch a command to the application."""
+            """
+            Dispatch a command to the application.
+            """
             return await self._handle_command(command, payload or {})
         
         @app.post('/api/app/stop', name='stop_app')
         async def stop_app_route() -> Dict[str, str]:
-            """Stop the application gracefully."""
+            """
+            Stop the application gracefully.
+            """
             self._add_log('INFO', 'Stop command received via API')
             # Schedule shutdown in a separate thread to allow response to be sent
             threading.Thread(target=self._delayed_shutdown, args=(0.5,), daemon=True).start()
-            return {'status': 'shutdown_initiated', 'message': 'Application will stop shortly'}
+            return {
+                'status': 'shutdown_initiated', 'message': 'Application will stop shortly'
+            }
         
         @app.post('/api/app/reboot', name='reboot_app')
         async def reboot_app_route() -> Dict[str, str]:
-            """Reboot the application."""
+            """
+            Reboot the application.
+            """
             self._add_log('INFO', 'Reboot command received via API')
             self._reboot_requested = True
             threading.Thread(target=self._delayed_shutdown, args=(0.5,), daemon=True).start()
-            return {'status': 'reboot_initiated', 'message': 'Application will reboot shortly'}
+            return {
+                'status': 'reboot_initiated', 'message': 'Application will reboot shortly'
+            }
     
     def _register_service_handlers(self) -> None:
-        """Register Redis command handlers on the service unit."""
+        """
+        Register Redis command handlers on the service unit.
+        """
         # Create handler functions that match the expected signature
         # The message processor matches handlers by function name to dispatch command
         
         def stop(dispatch: RedisDispatch) -> None:
-            """Handle stop command from Redis."""
+            """
+            Handle stop command from Redis.
+            """
             whisper('Received "stop" command via Redis. Initiating shutdown ...')
             self._add_log('INFO', 'Stop command received via Redis')
             self.shutdown()
         
         def reboot(dispatch: RedisDispatch) -> None:
-            """Handle reboot command from Redis."""
+            """
+            Handle reboot command from Redis.
+            """
             whisper('Received "reboot" command via Redis. Initiating reboot ...')
             self._add_log('INFO', 'Reboot command received via Redis')
             self._reboot_requested = True
             self.shutdown()
         
         def fetch_logs(dispatch: RedisDispatch) -> None:
-            """Handle fetch_logs command from Redis."""
+            """
+            Handle fetch_logs command from Redis.
+            """
             with self._log_lock:
                 logs = list(self._log_buffer)[-100:]
             self.service.redis_service.send_response(
@@ -208,7 +255,9 @@ class ApplicationUnit(CoreUnit):
             )
         
         def app_status(dispatch: RedisDispatch) -> None:
-            """Handle app_status command from Redis."""
+            """
+            Handle app_status command from Redis.
+            """
             status = self._get_full_status()
             self.service.redis_service.send_response(
                 original_message=dispatch,
@@ -226,7 +275,9 @@ class ApplicationUnit(CoreUnit):
         processor.register_handler(RD, app_status, None)
     
     def _setup_signal_handlers(self) -> None:
-        """Setup signal handlers for graceful shutdown."""
+        """
+        Setup signal handlers for graceful shutdown.
+        """
         def signal_handler(signum, frame):
             signal_name = signal.Signals(signum).name
             self._add_log('INFO', f'Received signal {signal_name}')
@@ -243,9 +294,11 @@ class ApplicationUnit(CoreUnit):
             signal.signal(signal.SIGQUIT, signal_handler)
     
     def _start_dashboard_dev_server(self) -> None:
-        """Start the React dashboard Vite dev server in background."""
-        if not REACT_DASHBOARD_ROOT.exists():
-            warn(f'React dashboard not found at {REACT_DASHBOARD_ROOT}. Skipping dashboard server.')
+        """
+        Start the React dashboard Vite dev server in background.
+        """
+        if not self.dashboard_root or not self.dashboard_root.exists():
+            warn(f'React dashboard not found at {self.dashboard_root}. Skipping dashboard server.')
             self._add_log('WARN', 'React dashboard sources not found, skipping dev server')
             return
         
@@ -257,13 +310,19 @@ class ApplicationUnit(CoreUnit):
                 # Start Vite dev server
                 cmd = f'{pnpm_cmd} start --host {self.dashboard_host} --port {self.dashboard_port}'
                 
+                # Set up environment with backend port for Vite proxy configuration
+                env = os.environ.copy()
+                env['VITE_BACKEND_PORT'] = str(self.backend_port)
+                env['VITE_DASHBOARD_PORT'] = str(self.dashboard_port)
+                
                 self._dashboard_process = subprocess.Popen(
                     cmd,
                     shell=True,
-                    cwd=str(REACT_DASHBOARD_ROOT),
+                    cwd=str(self.dashboard_root),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
+                    env=env,
                     preexec_fn=os.setsid  # Create new process group for clean termination
                 )
                 
@@ -284,7 +343,9 @@ class ApplicationUnit(CoreUnit):
         self._dashboard_thread.start()
     
     def _stop_dashboard_dev_server(self) -> None:
-        """Stop the React dashboard Vite dev server."""
+        """
+        Stop the React dashboard Vite dev server.
+        """
         if self._dashboard_process:
             try:
                 # Kill the entire process group
@@ -302,7 +363,9 @@ class ApplicationUnit(CoreUnit):
                 self._dashboard_process = None
     
     def _add_log(self, level: str, message: str) -> None:
-        """Add a log entry to the buffer."""
+        """
+        Add a log entry to the buffer.
+        """
         timestamp = datetime.now().isoformat()
         entry = {
             'timestamp': timestamp,
@@ -314,7 +377,9 @@ class ApplicationUnit(CoreUnit):
             self._log_buffer.append(entry)
     
     def _get_full_status(self) -> Dict[str, Any]:
-        """Get comprehensive status of all application components."""
+        """
+        Get comprehensive status of all application components.
+        """
         uptime_seconds = 0
         if self._start_time:
             uptime_seconds = (datetime.now() - self._start_time).total_seconds()
@@ -334,6 +399,7 @@ class ApplicationUnit(CoreUnit):
                 'enabled': self.include_dashboard,
                 'host': self.dashboard_host,
                 'port': self.dashboard_port,
+                'root': str(self.dashboard_root) if self.dashboard_root else None,
                 'url': f'http://{self.dashboard_host}:{self.dashboard_port}' if self.include_dashboard else None,
                 'running': self._dashboard_process is not None
             },
@@ -352,8 +418,10 @@ class ApplicationUnit(CoreUnit):
         }
         return status
     
-    async def _handle_command(self, command: str, payload: Dict) -> Dict[str, Any]:
-        """Handle a command dispatched to the application."""
+    async def _handle_command(self, command:str, payload:Dict) -> Dict[str,Any]:
+        """
+        Handle a command dispatched to the application.
+        """
         self._add_log('INFO', f'Handling command: {command}')
         
         if command == 'status':
@@ -376,16 +444,21 @@ class ApplicationUnit(CoreUnit):
             return {'success': False, 'error': f'Unknown command: {command}'}
     
     def _delayed_shutdown(self, delay: float) -> None:
-        """Shutdown after a short delay to allow API response to be sent."""
+        """
+        Shutdown after a short delay to allow API response to be sent.
+        """
         time.sleep(delay)
         self.shutdown()
     
     def _cleanup(self) -> None:
-        """Cleanup resources on exit."""
+        """
+        Cleanup resources on exit."""
         self._stop_dashboard_dev_server()
     
     def _print_startup_banner(self) -> None:
-        """Print startup banner with clickable URLs."""
+        """
+        Print startup banner with clickable URLs.
+        """
         println()
         log(f'{EscapeColor.GREEN}╔══════════════════════════════════════════════════════════╗{EscapeColor.RESET}')
         log(f'{EscapeColor.GREEN}║{EscapeColor.RESET}  {EscapeColor.CYAN}TeaType Modulo Application Unit Started{EscapeColor.RESET}                 {EscapeColor.GREEN}║{EscapeColor.RESET}')
@@ -416,7 +489,9 @@ class ApplicationUnit(CoreUnit):
     ##############
 
     def start(self) -> None:
-        """Start all application components."""
+        """
+        Start all application components.
+        """
         self._start_time = datetime.now()
         self._add_log('INFO', 'Application starting')
         
@@ -440,7 +515,9 @@ class ApplicationUnit(CoreUnit):
         success('All application components started', include_symbol=True)
     
     def join(self) -> None:
-        """Wait for all components to finish."""
+        """
+        Wait for all components to finish.
+        """
         self.backend.join()
         
         if self.socket:
@@ -450,7 +527,9 @@ class ApplicationUnit(CoreUnit):
             self.service.join()
     
     def shutdown(self, force: bool = False) -> None:
-        """Gracefully shutdown all application components."""
+        """
+        Gracefully shutdown all application components.
+        """
         if not force and self._shutdown_in_progress:
             return
         
@@ -487,13 +566,17 @@ class ApplicationUnit(CoreUnit):
             os.execl(python, python, *sys.argv)
     
     def broadcast_message(self, *args, **kwargs) -> None:
-        """Broadcast a message via the service unit."""
+        """
+        Broadcast a message via the service unit.
+        """
         if self.service:
             return self.service.broadcast(*args, **kwargs)
         warn('Service unit not enabled, cannot broadcast message')
     
     def dispatch_command(self, *args, **kwargs) -> None:
-        """Dispatch a command via the service unit."""
+        """
+        Dispatch a command via the service unit.
+        """
         if self.service:
             return self.service.dispatch(*args, **kwargs)
         warn('Service unit not enabled, cannot dispatch command')

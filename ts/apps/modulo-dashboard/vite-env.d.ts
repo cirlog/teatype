@@ -22,6 +22,7 @@ declare module '*.scss' {
 }
 
 // Type declarations for side-effect SCSS imports from workspace packages
-declare module '@teatype/style/*.scss';
-declare module '@teatype/style/globstyle.scss';
-declare module '@teatype/style/globvars.scss';
+declare module '@teatype/style/globstyle.scss' { }
+declare module '@teatype/style/globvars.scss' { }
+declare module '@teatype/style/globthemes.scss' { }
+declare module '@teatype/style/globzindex.scss' { }

@@ -16,6 +16,9 @@
 // React imports
 import { useCallback, useState } from 'react';
 
+// Config
+import { apiUrl } from '../config';
+
 /**
  * Hook for sending commands to the application via the API.
  */
@@ -32,7 +35,7 @@ const useAppCommands = () => {
         setError(null);
 
         try {
-            const response = await fetch('/api/app/command', {
+            const response = await fetch(apiUrl('/api/app/command'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,7 +67,7 @@ const useAppCommands = () => {
         setError(null);
 
         try {
-            const response = await fetch('/api/app/stop', {
+            const response = await fetch(apiUrl('/api/app/stop'), {
                 method: 'POST',
             });
 
@@ -92,7 +95,7 @@ const useAppCommands = () => {
         setError(null);
 
         try {
-            const response = await fetch('/api/app/reboot', {
+            const response = await fetch(apiUrl('/api/app/reboot'), {
                 method: 'POST',
             });
 

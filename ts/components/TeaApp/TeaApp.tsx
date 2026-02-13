@@ -14,10 +14,14 @@
  */
 
 // React imports
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Components
+import NotFound from '../Errors/NotFound';
 import { TeaSettingsProvider, TeaSettingsPanel, useTeaSettings } from './TeaSettings';
+import { TeaNav } from './TeaNav';
+import { TeaPage } from './TeaPage';
+import { TeaButton } from '../TeaButton';
 
 // Icons
 import { SettingsIcon } from '../../icons';
@@ -37,11 +41,32 @@ interface iPageInfo {
 }
 
 interface iTeaAppProps {
-    children: React.ReactNode;
+    /** Name of the application, displayed in header */
     name: string;
+    /** Subtitle/description shown on the nav page */
+    subtitle?: string;
+    /**
+     * Array of page definitions. When provided, routing is handled automatically.
+     * If omitted, use `children` for custom routing.
+     */
+    pages?: iPageInfo[];
+    /** Custom children content (used when pages is not provided) */
+    children?: React.ReactNode;
+    /**
+     * Force showing the navigation home page even for single-page apps.
+     * Default: false (single-page apps auto-redirect to the page)
+     */
+    forceShowNav?: boolean;
+    /** Enable tag/filter functionality on nav page. Default: false */
+    filtersEnabled?: boolean;
 }
 
-const TeaAppContent: React.FC<iTeaAppProps> = (props) => {
+interface iTeaAppContentProps {
+    name: string;
+    children: React.ReactNode;
+}
+
+const TeaAppContent: React.FC<iTeaAppContentProps> = (props) => {
     const { isSettingsOpen, setIsSettingsOpen } = useTeaSettings();
 
     return (
@@ -63,11 +88,71 @@ const TeaAppContent: React.FC<iTeaAppProps> = (props) => {
     );
 };
 
-const TeaApp: React.FC<iTeaAppProps> = (props) => {
+/**
+ * TeaApp - Main application wrapper with settings panel and optional routing.
+ *
+ * For single-page apps (pages.length === 1), automatically redirects to that page
+ * unless forceShowNav is set to true.
+ */
+const TeaApp: React.FC<iTeaAppProps> = ({
+    name,
+    subtitle,
+    pages,
+    children,
+    forceShowNav = false,
+    filtersEnabled = false,
+}) => {
+    const isSinglePage = pages && pages.length === 1 && !forceShowNav;
+    const singlePage = isSinglePage ? pages[0] : null;
+
+    // Determine content: automatic routing with pages, or custom children
+    const content = pages ? (
+        <Routes>
+            {/* Home page - Navigation or redirect for single-page apps */}
+            <Route
+                path='/'
+                element={
+                    isSinglePage && singlePage ? (
+                        <Navigate to={singlePage.path} replace />
+                    ) : (
+                        <TeaNav appName={name} filtersEnabled={filtersEnabled} pages={pages} subtitle={subtitle} />
+                    )
+                }
+            />
+
+            {/* All pages */}
+            {pages.map((page) => {
+                const PageContent = page.content;
+                return (
+                    <Route
+                        key={page.path}
+                        path={page.path}
+                        element={
+                            <TeaPage
+                                appName={name}
+                                title={page.title}
+                                description={page.longDescription}
+                                tags={page.tags}
+                                hideBackButton={isSinglePage}
+                            >
+                                {PageContent && <PageContent />}
+                            </TeaPage>
+                        }
+                    />
+                );
+            })}
+
+            {/* 404 - Page not found */}
+            <Route path='*' element={<NotFound />} />
+        </Routes>
+    ) : (
+        children
+    );
+
     return (
         <BrowserRouter>
             <TeaSettingsProvider>
-                <TeaAppContent name={props.name}>{props.children}</TeaAppContent>
+                <TeaAppContent name={name}>{content}</TeaAppContent>
             </TeaSettingsProvider>
         </BrowserRouter>
     );
@@ -77,4 +162,4 @@ export default TeaApp;
 
 export { TeaApp };
 
-export type { iPageInfo };
+export type { iPageInfo, iTeaAppProps };

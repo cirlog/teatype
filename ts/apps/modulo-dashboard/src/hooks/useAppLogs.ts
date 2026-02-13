@@ -16,6 +16,9 @@
 // React imports
 import { useCallback, useEffect, useState } from 'react';
 
+// Config
+import { apiUrl } from '../config';
+
 /**
  * Represents a single log entry from the application.
  */
@@ -40,7 +43,7 @@ const useAppLogs = (endpoint?: string, pollInterval: number = 5000, limit: numbe
     const [error, setError] = useState<string | null>(null);
 
     // Determine the target endpoint
-    const targetEndpoint = endpoint || '/api/logs';
+    const targetEndpoint = endpoint || apiUrl('/api/logs');
 
     const refresh = useCallback(async () => {
         setLoading(true);

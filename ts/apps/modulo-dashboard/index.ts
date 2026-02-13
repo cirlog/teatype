@@ -13,11 +13,8 @@
  * all copies or substantial portions of the Software.
  */
 
-// Main App
-export { default as ModuloDashboard } from './src/App';
-
 // Components
-export { default as ModuloStatusModal } from './src/components/ModuloStatusModal';
+export { default as ModuloDashboard } from './src/components/ModuloDashboard';
 export { ControlsPanel } from './src/components/ControlsPanel';
 export { LogsPanel } from './src/components/LogsPanel';
 export { StatusCard } from './src/components/StatusCard';

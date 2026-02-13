@@ -13,10 +13,13 @@
  */
 
 .tea-page {
+    overflow-x: hidden;
+    overflow-y: visible;
+
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding-bottom: 2rem;
+    // padding-bottom: 2rem;
 
     animation: tea-page-fade-in 0.3s ease-out;
 
@@ -35,7 +38,7 @@
         display: flex;
         align-items: flex-start;
         gap: 1rem;
-        padding: 4rem clamp(2rem, 8vw, 5rem) 2rem;
+        padding: 2rem clamp(2rem, 8vw, 5rem) 2rem;
 
         .tea-page-back {
             display: flex;
@@ -190,15 +193,38 @@
     }
 
     .tea-page-main {
+        overflow-y: auto;
+
         flex: 1;
         min-height: 0;
-        margin: 0 auto;
-        padding: 0 clamp(2rem, 8vw, 5rem);
-        width: var(--tea-page-width, 100%);
         max-width: 100%;
-        overflow: hidden;
+        height: fit-content;
+        margin-bottom: 0 auto;
+        padding: 0 clamp(2rem, 8vw, 5rem);
+        padding-bottom: 2rem;
+        width: var(--tea-page-width, 100%);
 
         transition: width 0.3s ease;
+
+        // Fade effect at top only when content is scrolled (soft gradient)
+        &--scrolled {
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(0, 0, 0, 0.1) 0.5rem,
+                rgba(0, 0, 0, 0.4) 1.5rem,
+                rgba(0, 0, 0, 0.7) 2.5rem,
+                black 3.5rem
+            );
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(0, 0, 0, 0.1) 0.5rem,
+                rgba(0, 0, 0, 0.4) 1.5rem,
+                rgba(0, 0, 0, 0.7) 2.5rem,
+                black 3.5rem
+            );
+        }
 
         .grid {
             display: grid;

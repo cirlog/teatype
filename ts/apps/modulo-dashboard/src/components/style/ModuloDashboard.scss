@@ -1,0 +1,76 @@
+/**
+ * Copyright (C) 2024-2026 Burak Günaydin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
+
+$padding-horizontal: clamp(2rem, 8vw, 5rem);
+$radius-pill: 999px;
+
+// Dashboard grid layout
+#modulo-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        padding: 0 $padding-horizontal;
+    }
+
+    .row {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+
+    .status {
+        &-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        &-pill {
+            padding: 0.35rem 0.85rem;
+            border-radius: $radius-pill;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        &-body {
+            margin: 1.5rem 0;
+
+            dl {
+                display: grid;
+                gap: 1rem;
+                margin: 0;
+            }
+
+            dt {
+                font-size: 0.85rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.2rem;
+            }
+
+            dd {
+                margin: 0.35rem 0 0;
+                font-size: 1.1rem;
+            }
+        }
+    }
+}

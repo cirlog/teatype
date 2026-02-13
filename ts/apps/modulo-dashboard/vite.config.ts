@@ -17,10 +17,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
     plugins: [react()],
     root: '.',
-    base: '/dashboard/',
+    // Use /dashboard/ base path only for production builds, not for dev server
+    base: command === 'build' ? '/dashboard/' : '/',
     build: {
         outDir: 'dist',
         emptyOutDir: true,
@@ -37,25 +38,26 @@ export default defineConfig({
     css: {
         preprocessorOptions: {
             scss: {
-                additionalData: '',
+                additionalData: `@use "${resolve(__dirname, '../../style/globstyle').replace(/\\/g, '/')}" as *;\n`,
             },
         },
     },
     server: {
         cors: true,
         host: '0.0.0.0',
-        port: 5173,
+        port: parseInt(process.env.VITE_DASHBOARD_PORT || '5173'),
         open: false,
         // Proxy API requests to the FastAPI backend during development
+        // Use VITE_BACKEND_PORT env var or default to 8080
         proxy: {
             '/api': {
-                target: 'http://127.0.0.1:8080',
+                target: `http://127.0.0.1:${process.env.VITE_BACKEND_PORT || '8080'}`,
                 changeOrigin: true,
             },
             '/status': {
-                target: 'http://127.0.0.1:8080',
+                target: `http://127.0.0.1:${process.env.VITE_BACKEND_PORT || '8080'}`,
                 changeOrigin: true,
             },
         },
     },
-});
+}));

@@ -16,6 +16,9 @@
 // React imports
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+// Config
+import { apiUrl } from '../config';
+
 /**
  * Represents a snapshot of the current system status at a point in time.
  * Contains information about the unit state, designation, status message,
@@ -64,15 +67,11 @@ const useStatusPulse = (endpoint?: string) => {
     // State to store any error message from the last failed request, null if no error
     const [error, setError] = useState<string | null>(null);
 
-    // Memoized endpoint URL resolution: prioritizes explicit endpoint prop, then window config, then default
+    // Memoized endpoint URL resolution: prioritizes explicit endpoint prop, then config-based URL
     // Only recalculates when the endpoint prop changes, preventing unnecessary refresh callback recreations
     const targetEndpoint = useMemo(() => {
         if (endpoint) return endpoint;
-        // Check if running in browser environment before accessing window object
-        if (typeof window !== 'undefined') {
-            return (window as any).__statusEndpoint || '/status';
-        }
-        return '/status';
+        return apiUrl('/status');
     }, [endpoint]);
 
     // Memoized callback function that fetches the latest status from the endpoint

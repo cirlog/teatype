@@ -46,7 +46,7 @@ export {
 export { TeaTooltip } from './TeaTooltip';
 
 // Types
-export type { iPageInfo } from './TeaApp/TeaApp';
+export type { iPageInfo, iTeaAppProps } from './TeaApp/TeaApp';
 export type { Theme } from './TeaApp/TeaSettings';
 export type {
     iTeaSidebarItem,

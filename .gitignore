@@ -200,3 +200,6 @@ logs
 */*llama-cpp-python
 tsconfig.tsbuildinfo
 examples/chkobba/public/cards
+
+deps-injections/*
+!deps-injections/place_deps_here

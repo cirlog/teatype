@@ -55,7 +55,8 @@ $shadow: 0 25px 50px rgba(15, 23, 42, 0.35);
 
 // Gradients
 $teatype-gradient: linear-gradient(90deg, #f48a51 0%, #ef6a5f 25%, #e03a7d 50%, #c8329a 75%, #9b28b0 100%);
-$teatype-gradient-allblue: radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),
+$teatype-gradient-allblue:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 60%),
     radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.2), transparent 35%), var(--surface);
 $teatype-gradient-alt: linear-gradient(90deg, #64d74f 0%, #3acd6a 25%, #1fc582 50%, #10959f 75%, #0b75ae 100%);
 $teatype-gradient-dark: linear-gradient(90deg, #b25f34 0%, #a64a46 25%, #9c265a 50%, #7a2f70 75%, #6b1c7d 100%);

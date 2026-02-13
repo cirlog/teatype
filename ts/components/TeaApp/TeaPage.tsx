@@ -14,7 +14,7 @@
  */
 
 // React imports
-import { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Components
@@ -32,20 +32,47 @@ interface iTeaPageProps {
     backPath?: string;
     children?: React.ReactNode;
     description?: string;
+    /** Hide the back button (useful for single-page apps) */
+    hideBackButton?: boolean;
     tags?: string[];
     title: string;
 }
 
-const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, description, tags, title }) => {
+const TeaPage: React.FC<iTeaPageProps> = ({
+    appName,
+    backPath = '/',
+    children,
+    description,
+    hideBackButton = false,
+    tags,
+    title,
+}) => {
     const navigate = useNavigate();
     const [isInfoHovered, setIsInfoHovered] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const mainRef = useRef<HTMLElement>(null);
+
+    // Track scroll position to apply fade effect only when scrolled
+    useEffect(() => {
+        const mainEl = mainRef.current;
+        if (!mainEl) return;
+
+        const handleScroll = () => {
+            setIsScrolled(mainEl.scrollTop > 0);
+        };
+
+        mainEl.addEventListener('scroll', handleScroll);
+        return () => mainEl.removeEventListener('scroll', handleScroll);
+    }, []);
 
     return (
         <div className='tea-page'>
             <header className='tea-page-header'>
-                <button className='tea-page-back' onClick={() => navigate(backPath)} aria-label='Go back'>
-                    <ArrowIcon />
-                </button>
+                {!hideBackButton && (
+                    <button className='tea-page-back' onClick={() => navigate(backPath)} aria-label='Go back'>
+                        <ArrowIcon />
+                    </button>
+                )}
 
                 <div className='tea-page-header-content'>
                     {appName && <p className='tea-page-flare'>{appName}</p>}
@@ -73,7 +100,9 @@ const TeaPage: React.FC<iTeaPageProps> = ({ appName, backPath = '/', children, d
                 </div>
             </header>
 
-            <main className='tea-page-main'>{children}</main>
+            <main ref={mainRef} className={`tea-page-main${isScrolled ? ' tea-page-main--scrolled' : ''}`}>
+                {children}
+            </main>
         </div>
     );
 };

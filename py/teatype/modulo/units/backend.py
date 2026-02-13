@@ -12,6 +12,7 @@
 
 
 # Standard-library imports
+import socket
 import threading
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -26,12 +27,30 @@ from fastapi.staticfiles import StaticFiles
 from teatype.logging import hint, log
 from teatype.modulo.units.core import CoreUnit
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[4]
-# React dashboard is located in ts/apps/modulo-dashboard
-REACT_DASHBOARD_ROOT = PACKAGE_ROOT / 'ts' / 'apps' / 'modulo-dashboard'
-REACT_DIST_DIR = REACT_DASHBOARD_ROOT / 'dist'
-REACT_INDEX_FILE = REACT_DIST_DIR / 'index.html'
-REACT_ASSETS_DIR = REACT_DIST_DIR / 'assets'
+
+def find_available_port(start_port: int = 8080, max_attempts: int = 100) -> int:
+    """
+    Find an available port starting from start_port.
+    
+    Args:
+        start_port: The port number to start searching from
+        max_attempts: Maximum number of ports to try
+        
+    Returns:
+        An available port number
+        
+    Raises:
+        RuntimeError: If no available port is found within max_attempts
+    """
+    for offset in range(max_attempts):
+        port = start_port + offset
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
+    raise RuntimeError(f'Could not find an available port after {max_attempts} attempts starting from {start_port}')
 
 class UvicornWorker(threading.Thread):
     def __init__(self, app:FastAPI, host:str, port:int):
@@ -50,20 +69,49 @@ class UvicornWorker(threading.Thread):
 
 class BackendUnit(CoreUnit):
     """
-    FastAPI-powered backend with dashboard rendering.
+    FastAPI-powered backend server.
+    
+    Dashboard serving is optional and configured via dashboard_root parameter.
+    When dashboard_root is provided, the backend will serve the React dashboard
+    from that directory's dist/ folder.
     """
     def __init__(self,
                  name:str,
                  *,
                  host:Optional[str]='127.0.0.1',
-                 port:Optional[int]=8080,
+                 port:Optional[int]=None,
+                 dashboard_root:Optional[Path]=None,
                  verbose_logging:Optional[bool]=True) -> None:
+        """
+        Initialize the backend unit.
+        
+        Args:
+            name: Name of the backend unit
+            host: Host to bind the server to
+            port: Port to bind the server to. If None, automatically finds an available port starting from 8080.
+            dashboard_root: Path to the React dashboard root directory.
+                           If provided, serves dashboard from {dashboard_root}/dist/
+                           If None, dashboard routes return 503 with help message.
+            verbose_logging: Whether to enable verbose logging
+        """
         super().__init__(name=name, verbose_logging=verbose_logging)
         
         self.host = host
-        self.port = port
+        # Auto-find available port if none specified
+        self.port = port if port is not None else find_available_port(8080)
+        self.dashboard_root = Path(dashboard_root) if dashboard_root else None
         
-        self._app = FastAPI(title=f'TeaType Moduloe Backend Unit · {name}', version='1.0.0')
+        # Compute dashboard paths if root is provided
+        if self.dashboard_root:
+            self.dashboard_dist_dir = self.dashboard_root / 'dist'
+            self.dashboard_index_file = self.dashboard_dist_dir / 'index.html'
+            self.dashboard_assets_dir = self.dashboard_dist_dir / 'assets'
+        else:
+            self.dashboard_dist_dir = None
+            self.dashboard_index_file = None
+            self.dashboard_assets_dir = None
+        
+        self._app = FastAPI(title=f'TeaType Modulo Backend Unit · {name}', version='1.0.0')
         self._server_thread = None
 
         self._mount_static_assets()
@@ -71,11 +119,13 @@ class BackendUnit(CoreUnit):
 
     # FastAPI wiring
     def _mount_static_assets(self) -> None:
-        self._app.mount(
-            '/assets',
-            StaticFiles(directory=str(REACT_ASSETS_DIR), check_dir=False),
-            name='dashboard_assets'
-        )
+        """Mount static assets if dashboard is configured."""
+        if self.dashboard_assets_dir and self.dashboard_assets_dir.exists():
+            self._app.mount(
+                '/assets',
+                StaticFiles(directory=str(self.dashboard_assets_dir), check_dir=False),
+                name='dashboard_assets'
+            )
 
     def _register_routes(self) -> None:
         @self._app.get('/status', name='status_endpoint')
@@ -131,15 +181,35 @@ class BackendUnit(CoreUnit):
             'type': self.type
         }
 
-    def _react_dashboard_response(self) -> FileResponse:
-        if not REACT_INDEX_FILE.exists():
+    def _react_dashboard_response(self) -> HTMLResponse:
+        """Serve the React dashboard index.html with injected config."""
+        if not self.dashboard_index_file or not self.dashboard_index_file.exists():
             raise HTTPException(status_code=503, detail=self._react_dashboard_help())
-        return FileResponse(str(REACT_INDEX_FILE))
+        
+        # Read the HTML and inject configuration
+        html_content = self.dashboard_index_file.read_text()
+        
+        # Inject runtime config script before the closing </head> tag
+        config_script = f'''<script>
+    window.__MODULO_CONFIG__ = {{
+        apiBaseUrl: '',
+        backendPort: {self.port},
+        backendHost: '{self.host}'
+    }};
+</script>'''
+        
+        # Insert config script before </head>
+        if '</head>' in html_content:
+            html_content = html_content.replace('</head>', f'{config_script}\n</head>')
+        
+        return HTMLResponse(content=html_content)
 
-    @staticmethod
-    def _react_dashboard_help() -> str:
+    def _react_dashboard_help(self) -> str:
+        """Return help message when dashboard build is missing."""
+        if not self.dashboard_root:
+            return 'No dashboard configured for this backend unit.'
         return (
-            'React dashboard build missing. Run "python packages/teatype/scripts/frontend/react-dashboard/build" '
-            'to generate dist assets, or use "python packages/teatype/scripts/frontend/react-dashboard/start" '
-            'to rely on the Vite dev server during development.'
+            f'React dashboard build missing at {self.dashboard_dist_dir}. '
+            f'Build the dashboard first with "pnpm build" in {self.dashboard_root}, '
+            'or use the Vite dev server during development.'
         )

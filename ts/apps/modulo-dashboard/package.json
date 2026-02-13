@@ -1,9 +1,14 @@
 {
     "name": "@teatype/modulo-dashboard",
     "version": "1.0.0",
-    "description": "Modulo Dashboard app",
+    "description": "Modulo Dashboard app - standalone and embeddable React dashboard for monitoring Modulo applications",
     "private": true,
     "type": "module",
+    "main": "src/index.tsx",
+    "exports": {
+        ".": "./src/index.tsx",
+        "./ModuloDashboard": "./src/ModuloDashboard.tsx"
+    },
     "scripts": {
         "start": "vite",
         "build": "vite build",

@@ -13,20 +13,28 @@
  * all copies or substantial portions of the Software.
  */
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+// React imports
+import { useNavigate } from 'react-router-dom';
 
-import ModuloDashboard from './App';
+// Components
+import { TeaButton } from '../TeaButton';
 
-// Global teatype styles
-import '@teatype/style/globstyle.scss';
-import '@teatype/style/globvars.scss';
+// Style
+import './style/NotFound.scss';
 
-createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <BrowserRouter>
-            <ModuloDashboard />
-        </BrowserRouter>
-    </StrictMode>,
-);
+/**
+ * 404 page component shown when navigating to an unknown route.
+ */
+const NotFound: React.FC = () => {
+    const navigate = useNavigate();
+
+    return (
+        <div id='not-found'>
+            <h1>404</h1>
+            <p>This page does not exist.</p>
+            <TeaButton onClick={() => navigate('/', { replace: true })}>Go to Home</TeaButton>
+        </div>
+    );
+};
+
+export default NotFound;
