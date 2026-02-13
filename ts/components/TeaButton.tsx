@@ -19,8 +19,9 @@ import React from 'react';
 // Style
 import './style/TeaButton.scss';
 
-type tButtonSize = 'sm' | 'md' | 'lg';
-type tButtonVariant = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
+type tButtonSize = 'small' | 'medium' | 'large';
+type tButtonTheme = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
+type tButtonVariant = 'default';
 
 interface iTeaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     children?: React.ReactNode;
@@ -28,6 +29,7 @@ interface iTeaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
     icon?: React.ReactNode;
     iconPosition?: 'left' | 'right';
     loading?: boolean;
+    theme?: tButtonTheme;
     variant?: tButtonVariant;
 }
 

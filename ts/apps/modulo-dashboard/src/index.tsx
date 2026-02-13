@@ -31,7 +31,7 @@ import ClientKit from './components/ClientKit';
 import ModuloDashboard from './components/ModuloDashboard';
 
 // Utility
-import Store from '../../../toolkit';
+import { Store } from '../../../toolkit';
 
 // Icons
 import { ModelsIcon, SettingsIcon } from '../../../icons';
@@ -41,7 +41,7 @@ const SUBTITLE = 'Lightweight dashboard for monitoring and controlling Modulo Un
 
 // Set to true to enable development features like React DevTools integration and verbose logging
 const DEV_MODE = true;
-Store.local.set('devMode', DEV_MODE);
+Store.memory.set('devMode', DEV_MODE);
 
 const PAGES: iPageInfo[] = [
     {

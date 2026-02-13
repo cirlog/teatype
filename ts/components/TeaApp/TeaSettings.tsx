@@ -301,7 +301,7 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
                     <p className='tea-settings-hint'>Adjust the maximum width of page content.</p>
                 </section>
 
-                {(Store.local.get('devMode') as boolean) && (
+                {(Store.memory.get('devMode') as boolean) && (
                     <section className='tea-settings-section tea-settings-section--danger'>
                         <h3>Reset Settings</h3>
 

@@ -23,6 +23,10 @@ const ClientKit = () => {
     return (
         <div id='client-kit'>
             <TeaPanel title='Buttons' variant='framed'>
+                <TeaButton theme='default' variant='default'>
+                    Default
+                </TeaButton>
+                <TeaButton>Vanilla</TeaButton>
                 <TeaButton>Vanilla</TeaButton>
             </TeaPanel>
         </div>
