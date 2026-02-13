@@ -1,4 +1,5 @@
 /**
+ * @license
  * Copyright (C) 2024-2026 Burak Günaydin
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -11,42 +12,3 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-
-#not-found {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 1rem;
-    justify-content: center;
-    height: 100%;
-    min-height: 60vh;
-    padding: 2rem;
-
-    text-align: center;
-
-    h1 {
-        margin: 0;
-
-        color: $blue-gray;
-        font-size: 6rem;
-        font-weight: bold;
-        line-height: 1;
-    }
-
-    span {
-        display: flex;
-        gap: 0.25rem;
-        margin: 0;
-
-        font-size: 1.25rem;
-        opacity: 0.7;
-
-        #path {
-            color: $blue;
-        }
-    }
-
-    .tea-button {
-        // margin-top: 1rem;
-    }
-}

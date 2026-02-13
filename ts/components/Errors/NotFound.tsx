@@ -31,8 +31,13 @@ const NotFound: React.FC = () => {
     return (
         <div id='not-found'>
             <h1>404</h1>
-            <p>This page does not exist.</p>
-            <TeaButton onClick={() => navigate('/', { replace: true })}>Go to Home</TeaButton>
+
+            <span>
+                <p id='path'>{window.location.pathname}</p>
+                <p> does not exist.</p>
+            </span>
+
+            <TeaButton onClick={() => navigate('/', { replace: true })}>Go to home</TeaButton>
         </div>
     );
 };

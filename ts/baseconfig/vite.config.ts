@@ -15,7 +15,6 @@
 
 import { defineConfig, type UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import eslint from 'vite-plugin-eslint';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -33,18 +32,19 @@ const loadSSLCertificate = (certPath: string, keyPath: string): { cert: Buffer; 
 
 const sslConfig = loadSSLCertificate('ssl.crt', 'ssl.key');
 
-export const getBaseViteConfig = (): UserConfig => ({
-    plugins: [react(), eslint()],
+export const getBaseViteConfig = (dirname: string): UserConfig => ({
+    plugins: [react()],
     resolve: {
         alias: {
-            '@': resolve(__dirname, 'src'),
+            '@': resolve(dirname, 'src'),
+            '@teatype/style': resolve(dirname, '../../style'),
         },
     },
     css: {
         preprocessorOptions: {
             scss: {
-                additionalData: [
-                ].join('\n'),
+                // Inject globvars into all SCSS files so $variables are available everywhere
+                additionalData: `@use "${resolve(dirname, '../../style/globvars').replace(/\\/g, '/')}" as *;\n`,
             },
         },
     },
@@ -57,4 +57,4 @@ export const getBaseViteConfig = (): UserConfig => ({
     },
 });
 
-export default defineConfig(getBaseViteConfig());
+export default defineConfig(getBaseViteConfig(__dirname));

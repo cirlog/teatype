@@ -14,19 +14,21 @@
  */
 
 // React imports
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
 import NotFound from '../Errors/NotFound';
 import { TeaSettingsProvider, TeaSettingsPanel, useTeaSettings } from './TeaSettings';
 import { TeaNav } from './TeaNav';
 import { TeaPage } from './TeaPage';
-import { TeaButton } from '../TeaButton';
 
 // Icons
 import { SettingsIcon } from '../../icons';
 
-// Style
+// Global styles (makes TeaApp self-contained)
+import '../../style/globstyle.scss';
+
+// Component styles
 import './style/TeaApp.scss';
 import './style/TeaSettings.scss';
 
