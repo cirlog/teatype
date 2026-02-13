@@ -170,6 +170,23 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
 
             <div className='tea-settings-content'>
                 <section className='tea-settings-section'>
+                    <h3>Theme</h3>
+                    <div className='tea-settings-theme-grid'>
+                        {themes.map((t) => (
+                            <button
+                                key={t.id}
+                                className={`tea-settings-theme-option ${theme === t.id ? 'active' : ''}`}
+                                onClick={() => setTheme(t.id)}
+                            >
+                                <div className={`tea-settings-theme-preview theme-${t.id}`} />
+                                <span className='tea-settings-theme-label'>{t.label}</span>
+                                <span className='tea-settings-theme-desc'>{t.description}</span>
+                            </button>
+                        ))}
+                    </div>
+                </section>
+
+                <section className='tea-settings-section'>
                     <h3>Language</h3>
                     <div className='tea-settings-language-grid'>
                         {SUPPORTED_LANGUAGES.map((lang) => (
@@ -183,23 +200,6 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
                                 <span className='tea-settings-flag'>
                                     <lang.Flag />
                                 </span>
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                <section className='tea-settings-section'>
-                    <h3>Theme</h3>
-                    <div className='tea-settings-theme-grid'>
-                        {themes.map((t) => (
-                            <button
-                                key={t.id}
-                                className={`tea-settings-theme-option ${theme === t.id ? 'active' : ''}`}
-                                onClick={() => setTheme(t.id)}
-                            >
-                                <div className={`tea-settings-theme-preview theme-${t.id}`} />
-                                <span className='tea-settings-theme-label'>{t.label}</span>
-                                <span className='tea-settings-theme-desc'>{t.description}</span>
                             </button>
                         ))}
                     </div>

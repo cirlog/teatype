@@ -9,6 +9,10 @@
         ".": "./index.ts",
         "./*": "./*.ts"
     },
+    "dependencies": {
+        "@teatype/api": "workspace:*",
+        "react-hot-toast": "^2.4.1"
+    },
     "peerDependencies": {
         "react": "^19.0.0"
     }
