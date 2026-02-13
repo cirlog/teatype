@@ -23,7 +23,7 @@ export { TeaInput, TeaSelect, TeaTextarea } from './TeaInput';
 export { TeaModal } from './TeaModal';
 export { TeaNav } from './TeaApp/TeaNav';
 export { TeaPage } from './TeaApp/TeaPage';
-export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings } from './TeaApp/TeaSettings';
+export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings, SUPPORTED_LANGUAGES } from './TeaApp/TeaSettings';
 export {
     TeaSidebar,
     TeaSidebarSettings,
@@ -47,7 +47,7 @@ export { TeaTooltip } from './TeaTooltip';
 
 // Types
 export type { iPageInfo, iTeaAppProps } from './TeaApp/TeaApp';
-export type { Theme } from './TeaApp/TeaSettings';
+export type { Theme, Language, LanguageInfo } from './TeaApp/TeaSettings';
 export type {
     iTeaSidebarItem,
     iTeaSidebarSection,

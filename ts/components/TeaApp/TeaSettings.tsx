@@ -14,18 +14,35 @@
  */
 
 // React imports
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 export type Theme = 'dark' | 'flow' | 'light';
+export type Language = 'en' | 'de' | 'fr' | 'tr';
+
+export interface LanguageInfo {
+    code: Language;
+    name: string;
+    nativeName: string;
+    flag: string; // Emoji flag
+}
+
+export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+    { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
+];
 
 interface TeaSettingsContextValue {
     isSettingsOpen: boolean;
     theme: Theme;
     pageWidth: number;
+    language: Language;
 
     setIsSettingsOpen: (open: boolean) => void;
     setTheme: (theme: Theme) => void;
     setPageWidth: (width: number) => void;
+    setLanguage: (lang: Language) => void;
 }
 
 const TeaSettingsContext = createContext<TeaSettingsContextValue | null>(null);
@@ -40,9 +57,17 @@ export const useTeaSettings = () => {
 
 interface TeaSettingsProviderProps {
     children: React.ReactNode;
+    /** Callback when language changes - use this to update your i18n instance */
+    onLanguageChange?: (lang: Language) => void;
+    /** Default language if not set in localStorage */
+    defaultLanguage?: Language;
 }
 
-export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ children }) => {
+export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({
+    children,
+    onLanguageChange,
+    defaultLanguage = 'en',
+}) => {
     const [theme, setThemeState] = useState<Theme>(() => {
         if (typeof window !== 'undefined') {
             return (localStorage.getItem('tea-theme') as Theme) || 'flow';
@@ -58,6 +83,13 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ childr
         return 100;
     });
 
+    const [language, setLanguageState] = useState<Language>(() => {
+        if (typeof window !== 'undefined') {
+            return (localStorage.getItem('tea-language') as Language) || defaultLanguage;
+        }
+        return defaultLanguage;
+    });
+
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const setTheme = (newTheme: Theme) => {
@@ -70,6 +102,16 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ childr
         localStorage.setItem('tea-page-width', String(width));
     };
 
+    const setLanguage = useCallback(
+        (lang: Language) => {
+            setLanguageState(lang);
+            localStorage.setItem('tea-language', lang);
+            document.documentElement.setAttribute('lang', lang);
+            onLanguageChange?.(lang);
+        },
+        [onLanguageChange],
+    );
+
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
@@ -78,6 +120,10 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ childr
         document.documentElement.style.setProperty('--tea-page-width', `${pageWidth}%`);
     }, [pageWidth]);
 
+    useEffect(() => {
+        document.documentElement.setAttribute('lang', language);
+    }, [language]);
+
     return (
         <TeaSettingsContext.Provider
             value={{
@@ -85,6 +131,8 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({ childr
                 setTheme,
                 pageWidth,
                 setPageWidth,
+                language,
+                setLanguage,
                 isSettingsOpen,
                 setIsSettingsOpen,
             }}
@@ -99,7 +147,7 @@ interface TeaSettingsPanelProps {
 }
 
 export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) => {
-    const { theme, setTheme, pageWidth, setPageWidth } = useTeaSettings();
+    const { theme, setTheme, pageWidth, setPageWidth, language, setLanguage } = useTeaSettings();
 
     const themes: { id: Theme; label: string; description: string }[] = [
         { id: 'dark', label: 'Dark', description: 'Black gradient with orange accents' },
@@ -119,6 +167,23 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
             </div>
 
             <div className='tea-settings-content'>
+                <section className='tea-settings-section'>
+                    <h3>Language</h3>
+                    <div className='tea-settings-language-grid'>
+                        {SUPPORTED_LANGUAGES.map((lang) => (
+                            <button
+                                key={lang.code}
+                                className={`tea-settings-language-option ${language === lang.code ? 'active' : ''}`}
+                                onClick={() => setLanguage(lang.code)}
+                                title={lang.name}
+                            >
+                                <span className='tea-settings-language-flag'>{lang.flag}</span>
+                                <span className='tea-settings-language-name'>{lang.nativeName}</span>
+                            </button>
+                        ))}
+                    </div>
+                </section>
+
                 <section className='tea-settings-section'>
                     <h3>Theme</h3>
                     <div className='tea-settings-theme-grid'>
