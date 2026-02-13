@@ -13,6 +13,20 @@
  * all copies or substantial portions of the Software.
  */
 
-// Utility
-export { path } from './path';
-export { Store } from './Store';
+// Components
+import { TeaButton, TeaPanel } from '../../../../components';
+
+// Style
+import './style/ClientKit.scss';
+
+const ClientKit = () => {
+    return (
+        <div id='client-kit'>
+            <TeaPanel title='Buttons' variant='framed'>
+                <TeaButton>Vanilla</TeaButton>
+            </TeaPanel>
+        </div>
+    );
+};
+
+export default ClientKit;

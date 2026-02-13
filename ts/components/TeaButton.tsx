@@ -13,22 +13,25 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import React from 'react';
 
+// Style
 import './style/TeaButton.scss';
 
-type ButtonVariant = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type tButtonSize = 'sm' | 'md' | 'lg';
+type tButtonVariant = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
 
-interface TeaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: ButtonVariant;
-    size?: ButtonSize;
+interface iTeaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    children?: React.ReactNode;
+    size?: tButtonSize;
     icon?: React.ReactNode;
     iconPosition?: 'left' | 'right';
     loading?: boolean;
+    variant?: tButtonVariant;
 }
 
-export const TeaButton: React.FC<TeaButtonProps> = ({
+const TeaButton: React.FC<iTeaButtonProps> = ({
     children,
     variant = 'default',
     size = 'md',
@@ -39,25 +42,37 @@ export const TeaButton: React.FC<TeaButtonProps> = ({
     className = '',
     ...props
 }) => {
-    const classes = ['tea-btn', `tea-btn--${variant}`, `tea-btn--${size}`, loading && 'tea-btn--loading', className]
+    // Constants
+    const classes = [
+        'tea-button',
+        `tea-button--${size}`,
+        `tea-button--${variant}`,
+        loading && 'tea-button--loading',
+        className,
+    ]
         .filter(Boolean)
         .join(' ');
 
     return (
         <button className={classes} disabled={disabled || loading} {...props}>
             {loading && (
-                <span className='tea-btn__spinner'>
+                <span className='tea-button__spinner'>
                     <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
                         <circle cx='12' cy='12' r='10' opacity='0.25' />
                         <path d='M12 2a10 10 0 0 1 10 10' />
                     </svg>
                 </span>
             )}
-            {icon && iconPosition === 'left' && !loading && <span className='tea-btn__icon'>{icon}</span>}
-            {children && <span className='tea-btn__text'>{children}</span>}
-            {icon && iconPosition === 'right' && !loading && <span className='tea-btn__icon'>{icon}</span>}
+
+            {icon && iconPosition === 'left' && !loading && <span className='tea-button__icon'>{icon}</span>}
+
+            {children && <span className='tea-button__text'>{children}</span>}
+
+            {icon && iconPosition === 'right' && !loading && <span className='tea-button__icon'>{icon}</span>}
         </button>
     );
 };
 
 export default TeaButton;
+
+export { TeaButton };

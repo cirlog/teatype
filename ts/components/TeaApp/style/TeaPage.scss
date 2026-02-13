@@ -113,12 +113,10 @@
                 font-weight: 600;
 
                 animation: tea-title-fade-in 0.3s ease-out 0.1s backwards;
-                transition:
-                    filter 0.3s ease,
-                    opacity 0.3s ease;
+                transition: all 0.3s ease;
 
                 &--blurred {
-                    filter: blur(8px);
+                    filter: blur(0.4rem);
                     opacity: 0.3;
                 }
             }
@@ -206,22 +204,30 @@
 
         transition: width 0.3s ease;
 
-        // Fade effect at top only when content is scrolled (soft gradient)
+        // Progressive fade effect at top based on scroll progress (0-1)
+        // Uses --scroll-progress CSS variable set by JavaScript
+        --scroll-progress: 0;
+
         &--scrolled {
+            // Calculate mask stops that interpolate based on scroll progress
+            // At progress=0: fully visible (no mask)
+            // At progress=1: full mask effect
+            $mask-height: 3.5rem;
+
             mask-image: linear-gradient(
                 to bottom,
-                transparent 0%,
-                rgba(0, 0, 0, 0.1) 0.5rem,
-                rgba(0, 0, 0, 0.4) 1.5rem,
-                rgba(0, 0, 0, 0.7) 2.5rem,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress))) 0%,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress) * 0.9)) 0.5rem,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress) * 0.6)) 1.5rem,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress) * 0.3)) 2.5rem,
                 black 3.5rem
             );
             -webkit-mask-image: linear-gradient(
                 to bottom,
-                transparent 0%,
-                rgba(0, 0, 0, 0.1) 0.5rem,
-                rgba(0, 0, 0, 0.4) 1.5rem,
-                rgba(0, 0, 0, 0.7) 2.5rem,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress))) 0%,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress) * 0.9)) 0.5rem,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress) * 0.6)) 1.5rem,
+                rgba(0, 0, 0, calc(1 - var(--scroll-progress) * 0.3)) 2.5rem,
                 black 3.5rem
             );
         }

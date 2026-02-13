@@ -16,14 +16,38 @@
 // React imports
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Flag icons
+// Icons
 import { FlagEN, FlagDE, FlagTR } from '@teatype/icons';
 
-export type Theme = 'dark' | 'flow' | 'light';
-export type Language = 'en' | 'de' | 'tr';
+// Utility
+import { Store } from '@teatype/toolkit/Store';
+
+export type tLanguage = 'en' | 'de' | 'tr';
+export type tTheme = 'dark' | 'flow' | 'light';
+
+// Storage key prefix for all TeaType settings
+export const TEATYPE_STORAGE_PREFIX = 'teatype';
+export const TEATYPE_SETTINGS_INITIALIZED_KEY = 'teatype.settings._initialized';
+
+// Default settings values
+export const DEFAULT_SETTINGS = {
+    theme: 'flow' as tTheme,
+    pageWidth: 100,
+    language: 'en' as tLanguage,
+};
+
+/**
+ * Utility function to clear all TeaType settings from storage.
+ * Can be used outside of React context (e.g., in utility scripts).
+ */
+export const clearAllTeaTypeSettings = (): void => {
+    Store.local.clearByPrefix(TEATYPE_STORAGE_PREFIX);
+    Store.session.clearByPrefix(TEATYPE_STORAGE_PREFIX);
+    Store.memory.clearByPrefix(TEATYPE_STORAGE_PREFIX);
+};
 
 export interface LanguageInfo {
-    code: Language;
+    code: tLanguage;
     name: string;
     nativeName: string;
     Flag: React.FC; // SVG flag component
@@ -37,14 +61,16 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
 
 interface TeaSettingsContextValue {
     isSettingsOpen: boolean;
-    theme: Theme;
+    theme: tTheme;
     pageWidth: number;
-    language: Language;
+    language: tLanguage;
 
     setIsSettingsOpen: (open: boolean) => void;
-    setTheme: (theme: Theme) => void;
+    setTheme: (theme: tTheme) => void;
     setPageWidth: (width: number) => void;
-    setLanguage: (lang: Language) => void;
+    setLanguage: (lang: tLanguage) => void;
+    /** Clears all TeaType settings and resets to defaults */
+    clearSettings: () => void;
 }
 
 const TeaSettingsContext = createContext<TeaSettingsContextValue | null>(null);
@@ -60,9 +86,9 @@ export const useTeaSettings = () => {
 interface TeaSettingsProviderProps {
     children: React.ReactNode;
     /** Callback when language changes - use this to update your i18n instance */
-    onLanguageChange?: (lang: Language) => void;
+    onLanguageChange?: (lang: tLanguage) => void;
     /** Default language if not set in localStorage */
-    defaultLanguage?: Language;
+    defaultLanguage?: tLanguage;
 }
 
 export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({
@@ -70,56 +96,103 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({
     onLanguageChange,
     defaultLanguage = 'en',
 }) => {
-    const [theme, setThemeState] = useState<Theme>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem('tea-theme') as Theme) || 'flow';
+    // Initialize defaults on first run
+    const initializeDefaults = useCallback(() => {
+        if (typeof window === 'undefined') return;
+
+        const isInitialized = Store.local.get(TEATYPE_SETTINGS_INITIALIZED_KEY);
+        if (!isInitialized) {
+            // First time app initialization - set defaults
+            Store.local.set('teatype.settings.theme', DEFAULT_SETTINGS.theme);
+            Store.local.set('teatype.settings.pageWidth', String(DEFAULT_SETTINGS.pageWidth));
+            Store.local.set('teatype.settings.language', defaultLanguage || DEFAULT_SETTINGS.language);
+            Store.local.set(TEATYPE_SETTINGS_INITIALIZED_KEY, 'true');
         }
-        return 'flow';
+    }, [defaultLanguage]);
+
+    // Run initialization on mount
+    useEffect(() => {
+        initializeDefaults();
+    }, [initializeDefaults]);
+
+    const [theme, setThemeState] = useState<tTheme>(() => {
+        if (typeof window !== 'undefined') {
+            return (Store.local.get('teatype.settings.theme') as tTheme) || DEFAULT_SETTINGS.theme;
+        }
+        return DEFAULT_SETTINGS.theme;
     });
 
     const [pageWidth, setPageWidthState] = useState<number>(() => {
         if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('tea-page-width');
-            return saved ? parseInt(saved, 10) : 100;
+            const saved = Store.local.get('teatype.settings.pageWidth') as string | null;
+            return saved ? parseInt(saved, 10) : DEFAULT_SETTINGS.pageWidth;
         }
-        return 100;
+        return DEFAULT_SETTINGS.pageWidth;
     });
 
-    const [language, setLanguageState] = useState<Language>(() => {
+    const [language, setLanguageState] = useState<tLanguage>(() => {
         if (typeof window !== 'undefined') {
-            return (localStorage.getItem('tea-language') as Language) || defaultLanguage;
+            return (Store.local.get('teatype.settings.language') as tLanguage) || defaultLanguage;
         }
         return defaultLanguage;
     });
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    const setTheme = (newTheme: Theme) => {
+    const setTheme = (newTheme: tTheme) => {
         setThemeState(newTheme);
-        localStorage.setItem('tea-theme', newTheme);
+        Store.local.set('teatype.settings.theme', newTheme);
     };
 
     const setPageWidth = (width: number) => {
         setPageWidthState(width);
-        localStorage.setItem('tea-page-width', String(width));
+        Store.local.set('teatype.settings.pageWidth', String(width));
     };
 
     const setLanguage = useCallback(
-        (lang: Language) => {
+        (lang: tLanguage) => {
             setLanguageState(lang);
-            localStorage.setItem('tea-language', lang);
+            Store.local.set('teatype.settings.language', lang);
             document.documentElement.setAttribute('lang', lang);
             onLanguageChange?.(lang);
         },
         [onLanguageChange],
     );
 
+    /**
+     * Clears all TeaType-specific settings from all storage types and resets to defaults.
+     */
+    const clearSettings = useCallback(() => {
+        // Clear all teatype-prefixed keys from all storage types
+        Store.local.clearByPrefix(TEATYPE_STORAGE_PREFIX);
+        Store.session.clearByPrefix(TEATYPE_STORAGE_PREFIX);
+        Store.memory.clearByPrefix(TEATYPE_STORAGE_PREFIX);
+
+        // Reset state to defaults
+        setThemeState(DEFAULT_SETTINGS.theme);
+        setPageWidthState(DEFAULT_SETTINGS.pageWidth);
+        setLanguageState(defaultLanguage || DEFAULT_SETTINGS.language);
+
+        // Re-apply defaults to storage (mark as initialized again)
+        Store.local.set('teatype.settings.theme', DEFAULT_SETTINGS.theme);
+        Store.local.set('teatype.settings.pageWidth', String(DEFAULT_SETTINGS.pageWidth));
+        Store.local.set('teatype.settings.language', defaultLanguage || DEFAULT_SETTINGS.language);
+        Store.local.set(TEATYPE_SETTINGS_INITIALIZED_KEY, 'true');
+
+        // Apply to DOM
+        document.documentElement.setAttribute('data-theme', DEFAULT_SETTINGS.theme);
+        document.documentElement.style.setProperty('--tea-pageWidth', `${DEFAULT_SETTINGS.pageWidth}%`);
+        document.documentElement.setAttribute('lang', defaultLanguage || DEFAULT_SETTINGS.language);
+
+        onLanguageChange?.(defaultLanguage || DEFAULT_SETTINGS.language);
+    }, [defaultLanguage, onLanguageChange]);
+
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
 
     useEffect(() => {
-        document.documentElement.style.setProperty('--tea-page-width', `${pageWidth}%`);
+        document.documentElement.style.setProperty('--tea-pageWidth', `${pageWidth}%`);
     }, [pageWidth]);
 
     useEffect(() => {
@@ -137,6 +210,7 @@ export const TeaSettingsProvider: React.FC<TeaSettingsProviderProps> = ({
                 setLanguage,
                 isSettingsOpen,
                 setIsSettingsOpen,
+                clearSettings,
             }}
         >
             {children}
@@ -149,9 +223,15 @@ interface TeaSettingsPanelProps {
 }
 
 export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) => {
-    const { theme, setTheme, pageWidth, setPageWidth, language, setLanguage } = useTeaSettings();
+    const { theme, setTheme, pageWidth, setPageWidth, language, setLanguage, clearSettings } = useTeaSettings();
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-    const themes: { id: Theme; label: string; description: string }[] = [
+    const handleClearSettings = () => {
+        clearSettings();
+        setShowClearConfirm(false);
+    };
+
+    const themes: { id: tTheme; label: string; description: string }[] = [
         { id: 'dark', label: 'Dark', description: 'Black gradient with orange accents' },
         { id: 'flow', label: 'Flow', description: 'Deep blue gradient with purple accents' },
         { id: 'light', label: 'Light', description: 'Clean white with subtle shadows' },
@@ -220,6 +300,34 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
                     </div>
                     <p className='tea-settings-hint'>Adjust the maximum width of page content.</p>
                 </section>
+
+                {(Store.local.get('devMode') as boolean) && (
+                    <section className='tea-settings-section tea-settings-section--danger'>
+                        <h3>Reset Settings</h3>
+
+                        {showClearConfirm ? (
+                            <div className='tea-settings-confirm'>
+                                <span>Are you sure?</span>
+                                <button
+                                    className='tea-settings-confirm-btn tea-settings-confirm-btn--cancel'
+                                    onClick={() => setShowClearConfirm(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className='tea-settings-confirm-btn tea-settings-confirm-btn--confirm'
+                                    onClick={handleClearSettings}
+                                >
+                                    Yes, Reset
+                                </button>
+                            </div>
+                        ) : (
+                            <button className='tea-settings-clear-btn' onClick={() => setShowClearConfirm(true)}>
+                                Clear All Settings
+                            </button>
+                        )}
+                    </section>
+                )}
             </div>
         </div>
     );

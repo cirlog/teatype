@@ -10,30 +10,42 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-
 # Standard-library imports
+import random
 import socket
-import threading
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional, Type
 
 # Third-party imports
-import uvicorn
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import HTTPException
+from fastapi.responses import HTMLResponse
 
 # Local imports
 from teatype.logging import hint, log
 from teatype.modulo.units.core import CoreUnit
+from teatype.modulo.units.adapters import BaseBackendAdapter, FastAPIBackendAdapter, DjangoBackendAdapter, _DJANGO_AVAILABLE
 
+# Adapter type mapping - Django only available if django is installed
+ADAPTER_TYPES: Dict[str, Type[BaseBackendAdapter]] = {
+    'fastapi': FastAPIBackendAdapter,
+}
 
-def find_available_port(start_port: int = 8080, max_attempts: int = 100) -> int:
+# Add Django adapter if available
+if _DJANGO_AVAILABLE and DjangoBackendAdapter is not None:
+    ADAPTER_TYPES['django'] = DjangoBackendAdapter
+
+# Type alias for adapter choice
+AdapterType = Literal['fastapi', 'django']
+
+# Port range for random port selection (common unprivileged port range)
+PORT_RANGE_MIN = 10000
+PORT_RANGE_MAX = 60000
+
+def find_random_available_port(max_attempts: int = 100) -> int:
     """
-    Find an available port starting from start_port.
+    Find a random available port within the configured range.
     
     Args:
-        start_port: The port number to start searching from
         max_attempts: Maximum number of ports to try
         
     Returns:
@@ -42,64 +54,74 @@ def find_available_port(start_port: int = 8080, max_attempts: int = 100) -> int:
     Raises:
         RuntimeError: If no available port is found within max_attempts
     """
-    for offset in range(max_attempts):
-        port = start_port + offset
+    for _ in range(max_attempts):
+        port = random.randint(PORT_RANGE_MIN, PORT_RANGE_MAX)
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind(('127.0.0.1', port))
                 return port
         except OSError:
             continue
-    raise RuntimeError(f'Could not find an available port after {max_attempts} attempts starting from {start_port}')
-
-class UvicornWorker(threading.Thread):
-    def __init__(self, app:FastAPI, host:str, port:int):
-        super().__init__(daemon=True)
-        
-        self._server = uvicorn.Server(uvicorn.Config(app,
-                                                     host=host,
-                                                     port=port,
-                                                     log_level='debug'))
-
-    def run(self) -> None:
-        self._server.run()
-
-    def shutdown(self) -> None:
-        self._server.should_exit = True
+    raise RuntimeError(f'Could not find an available port after {max_attempts} attempts in range {PORT_RANGE_MIN}-{PORT_RANGE_MAX}')
 
 class BackendUnit(CoreUnit):
     """
-    FastAPI-powered backend server.
+    Pluggable backend server supporting multiple web frameworks.
+    
+    This unit provides a unified interface for running backend servers
+    using different frameworks (FastAPI, Django). The adapter pattern
+    allows seamless switching between frameworks.
     
     Dashboard serving is optional and configured via dashboard_root parameter.
     When dashboard_root is provided, the backend will serve the React dashboard
     from that directory's dist/ folder.
+    
+    Example with FastAPI (default):
+        backend = BackendUnit.create(
+            'my-app',
+            adapter='fastapi',
+            port=8080
+        )
+    
+    Example with Django:
+        backend = BackendUnit.create(
+            'my-app',
+            adapter='django',
+            port=8080,
+            apps=['myapp']  # Django apps
+        )
     """
     def __init__(self,
-                 name:str,
+                 name: str,
                  *,
+                 adapter:AdapterType='fastapi',
+                 dashboard_root:Optional[Path]=None,
                  host:Optional[str]='127.0.0.1',
                  port:Optional[int]=None,
-                 dashboard_root:Optional[Path]=None,
-                 verbose_logging:Optional[bool]=True) -> None:
+                 verbose_logging:Optional[bool]=True,
+                 **adapter_kwargs) -> None:
         """
         Initialize the backend unit.
         
         Args:
             name: Name of the backend unit
+            adapter: Backend adapter type ('fastapi' or 'django')
             host: Host to bind the server to
-            port: Port to bind the server to. If None, automatically finds an available port starting from 8080.
+            port: Port to bind the server to. If None, automatically finds a random available port.
             dashboard_root: Path to the React dashboard root directory.
                            If provided, serves dashboard from {dashboard_root}/dist/
                            If None, dashboard routes return 503 with help message.
             verbose_logging: Whether to enable verbose logging
+            **adapter_kwargs: Additional keyword arguments passed to the adapter
+                             (e.g., 'apps' for Django, 'debug' for Django)
         """
         super().__init__(name=name, verbose_logging=verbose_logging)
         
         self.host = host
-        # Auto-find available port if none specified
-        self.port = port if port is not None else find_available_port(8080)
+        # Auto-find random available port if none specified
+        self.port = port if port is not None else find_random_available_port()
         self.dashboard_root = Path(dashboard_root) if dashboard_root else None
+        self.adapter_type = adapter
         
         # Compute dashboard paths if root is provided
         if self.dashboard_root:
@@ -111,34 +133,57 @@ class BackendUnit(CoreUnit):
             self.dashboard_index_file = None
             self.dashboard_assets_dir = None
         
-        self._app = FastAPI(title=f'TeaType Modulo Backend Unit · {name}', version='1.0.0')
-        self._server_thread = None
-
-        self._mount_static_assets()
+        # Create the backend adapter
+        AdapterClass = ADAPTER_TYPES.get(adapter)
+        if not AdapterClass:
+            raise ValueError(f"Unknown adapter type: {adapter}. Available: {list(ADAPTER_TYPES.keys())}")
+        
+        self._adapter: BaseBackendAdapter = AdapterClass(
+            name=name,
+            host=host,
+            port=self.port,
+            dashboard_root=dashboard_root,
+            **adapter_kwargs
+        )
+        
+        # Mount static assets and register routes
+        self._adapter.mount_static_assets()
         self._register_routes()
-
-    # FastAPI wiring
-    def _mount_static_assets(self) -> None:
-        """Mount static assets if dashboard is configured."""
-        if self.dashboard_assets_dir and self.dashboard_assets_dir.exists():
-            self._app.mount(
-                '/assets',
-                StaticFiles(directory=str(self.dashboard_assets_dir), check_dir=False),
-                name='dashboard_assets'
-            )
+    
+    @property
+    def app(self) -> Any:
+        """Get the underlying web application from the adapter."""
+        return self._adapter.app
+    
+    @property 
+    def adapter(self) -> BaseBackendAdapter:
+        """
+        Get the backend adapter instance.
+        """
+        return self._adapter
 
     def _register_routes(self) -> None:
-        @self._app.get('/status', name='status_endpoint')
+        """
+        Register default routes on the adapter.
+        """
+        # Status endpoint
         async def status_route() -> Dict[str, Any]:
             return self._status_snapshot()
-
-        @self._app.get('/dashboard', response_class=HTMLResponse)
-        async def dashboard_entrypoint():
-            return self._react_dashboard_response()
-
-        @self._app.get('/dashboard/{_:path}', response_class=HTMLResponse)
-        async def dashboard_spa(_: str):
-            return self._react_dashboard_response()
+        
+        self._adapter.add_get('/status', status_route, name='status_endpoint')
+        
+        # Dashboard endpoints (only for FastAPI - Django handles differently)
+        if self.adapter_type == 'fastapi':
+            async def dashboard_entrypoint():
+                return self._react_dashboard_response()
+            
+            async def dashboard_spa(_: str):
+                return self._react_dashboard_response()
+            
+            self._adapter.add_get('/dashboard', dashboard_entrypoint, name='dashboard')
+            # For catch-all SPA routing, add directly to FastAPI app
+            from fastapi.responses import HTMLResponse
+            self._adapter.app.get('/dashboard/{_:path}', response_class=HTMLResponse, name='dashboard_spa')(dashboard_spa)
 
     # Lifecycle
     def on_loop_start(self) -> None:
@@ -159,18 +204,14 @@ class BackendUnit(CoreUnit):
 
     # Internals
     def _start_server(self) -> None:
-        if self._server_thread:
+        if self._adapter.is_running():
             return
-        self._server_thread = UvicornWorker(self._app, self.host, self.port)
-        self._server_thread.start()
-        log(f'Backend server listening on http://{self.host}:{self.port}')
+        self._adapter.start()
 
     def _stop_server(self) -> None:
-        if not self._server_thread:
+        if not self._adapter.is_running():
             return
-        self._server_thread.shutdown()
-        self._server_thread.join(timeout=5)
-        self._server_thread = None
+        self._adapter.stop()
 
     def _status_snapshot(self) -> Dict[str, Any]:
         return {
@@ -178,38 +219,13 @@ class BackendUnit(CoreUnit):
             'designation': self.designation,
             'status': self._status or 'idle',
             'loop_iter': self.loop_iter,
-            'type': self.type
+            'type': self.type,
+            'adapter': self.adapter_type
         }
 
     def _react_dashboard_response(self) -> HTMLResponse:
         """Serve the React dashboard index.html with injected config."""
-        if not self.dashboard_index_file or not self.dashboard_index_file.exists():
-            raise HTTPException(status_code=503, detail=self._react_dashboard_help())
-        
-        # Read the HTML and inject configuration
-        html_content = self.dashboard_index_file.read_text()
-        
-        # Inject runtime config script before the closing </head> tag
-        config_script = f'''<script>
-    window.__MODULO_CONFIG__ = {{
-        apiBaseUrl: '',
-        backendPort: {self.port},
-        backendHost: '{self.host}'
-    }};
-</script>'''
-        
-        # Insert config script before </head>
-        if '</head>' in html_content:
-            html_content = html_content.replace('</head>', f'{config_script}\n</head>')
-        
+        html_content = self._adapter.get_dashboard_html(inject_config=True)
+        if not html_content:
+            raise HTTPException(status_code=503, detail=self._adapter.get_dashboard_help_message())
         return HTMLResponse(content=html_content)
-
-    def _react_dashboard_help(self) -> str:
-        """Return help message when dashboard build is missing."""
-        if not self.dashboard_root:
-            return 'No dashboard configured for this backend unit.'
-        return (
-            f'React dashboard build missing at {self.dashboard_dist_dir}. '
-            f'Build the dashboard first with "pnpm build" in {self.dashboard_root}, '
-            'or use the Vite dev server during development.'
-        )

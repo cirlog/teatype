@@ -12,7 +12,9 @@
  * all copies or substantial portions of the Software.
  */
 
-.tea-btn {
+.tea-button {
+    cursor: pointer;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -24,7 +26,6 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text-primary);
-    cursor: pointer;
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
@@ -70,11 +71,11 @@
         svg {
             width: 1em;
             height: 1em;
-            animation: tea-btn-spin 0.75s linear infinite;
+            animation: tea-button-spin 0.75s linear infinite;
         }
     }
 
-    @keyframes tea-btn-spin {
+    @keyframes tea-button-spin {
         from {
             transform: rotate(0deg);
         }

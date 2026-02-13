@@ -63,14 +63,6 @@ class LaunchPad:
         """
         if type(unit_type) == str:
             if unit_type == 'application':
-                if host is None:
-                    host = '127.0.0.1'
-                if port is None:
-                    port = 8080
-                if dashboard_host is None:
-                    dashboard_host = '127.0.0.1'
-                if dashboard_port is None:
-                    dashboard_port = 5173
                 unit = ApplicationUnit.create(
                     name=unit_name,
                     backend_host=host,
@@ -177,11 +169,11 @@ if __name__ == "__main__":
                         help='Server port (required for backend units, optional for application)')
     parser.add_argument('--dashboard-host',
                         type=str,
-                        default='127.0.0.1',
+                        default=None,
                         help='Dashboard dev server host (for application units)')
     parser.add_argument('--dashboard-port',
                         type=int,
-                        default=5173,
+                        default=None,
                         help='Dashboard dev server port (for application units)')
     parser.add_argument('--no-dashboard',
                         action='store_true',
@@ -212,8 +204,8 @@ if __name__ == "__main__":
                 unit = LaunchPad.create(
                     args.unit_type, 
                     args.unit_name, 
-                    host=args.host or '127.0.0.1', 
-                    port=args.port or 8080,
+                    host=args.host, 
+                    port=args.port,
                     dashboard_host=args.dashboard_host,
                     dashboard_port=args.dashboard_port,
                     include_dashboard=not args.no_dashboard,

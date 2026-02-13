@@ -162,6 +162,24 @@ abstract class StorageAdapter {
      * Clears all stored data.
      */
     abstract clear(): void;
+
+    /**
+     * Clears all keys that start with the given prefix.
+     * @param prefix - The prefix to match (e.g., 'teatype' matches 'teatype.settings.theme')
+     */
+    clearByPrefix(prefix: string): void {
+        const keysToRemove = this.keys().filter((key) => key.startsWith(prefix));
+        for (const key of keysToRemove) {
+            this.delete(key);
+        }
+    }
+
+    /**
+     * Returns all keys in storage.
+     */
+    getKeys(): string[] {
+        return this.keys();
+    }
 }
 
 /**
@@ -210,6 +228,16 @@ class BrowserStorageAdapter extends StorageAdapter {
 
     clear(): void {
         this.storage.clear();
+    }
+
+    /**
+     * Clears all keys that start with the given prefix.
+     */
+    clearByPrefix(prefix: string): void {
+        const keysToRemove = this.keys().filter((key) => key.startsWith(prefix));
+        for (const key of keysToRemove) {
+            this.storage.removeItem(key);
+        }
     }
 
     /**
@@ -276,6 +304,16 @@ class MemoryStorageAdapter extends StorageAdapter {
 
     clear(): void {
         this.data = {};
+    }
+
+    /**
+     * Clears all keys that start with the given prefix.
+     */
+    clearByPrefix(prefix: string): void {
+        const keysToRemove = this.keys().filter((key) => key.startsWith(prefix));
+        for (const key of keysToRemove) {
+            delete this.data[key];
+        }
     }
 
     /**

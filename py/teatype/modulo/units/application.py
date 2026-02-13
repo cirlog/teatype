@@ -27,7 +27,7 @@ from typing import Any, Dict, Optional
 from teatype.enum import EscapeColor
 from teatype.io import path, shell
 from teatype.logging import err, hint, log, println, success, warn, whisper
-from teatype.modulo.units.backend import BackendUnit, find_available_port
+from teatype.modulo.units.backend import BackendUnit, find_random_available_port
 from teatype.modulo.units.core import CoreUnit
 from teatype.modulo.units.rax import RAXUnit
 from teatype.modulo.units.service import ServiceUnit
@@ -47,7 +47,7 @@ class ApplicationUnit(CoreUnit):
     and an integrated React dashboard with logging, command dispatch, and lifecycle management.
     
     Features:
-    - FastAPI backend server for API and dashboard hosting
+    - Pluggable backend server (FastAPI or Django)
     - Optional React dashboard dev server with Vite
     - Pluggable frontend: use vanilla Modulo dashboard or your own React app
     - Redis-based service for IPC and command handling
@@ -55,7 +55,7 @@ class ApplicationUnit(CoreUnit):
     - Graceful shutdown with signal handling
     - Built-in commands: stop, reboot, status
     
-    Usage with vanilla dashboard:
+    Usage with vanilla dashboard (FastAPI backend):
         app = ApplicationUnit.create('my-app', include_dashboard=True)
         
     Usage with custom React app:
@@ -64,35 +64,46 @@ class ApplicationUnit(CoreUnit):
             include_dashboard=True,
             dashboard_root=Path('/path/to/my-react-app')
         )
+    
+    Usage with Django backend (for HSDB integration):
+        app = ApplicationUnit.create(
+            'my-app',
+            backend_adapter='django',
+            apps=['myapp'],  # Django apps to include
+            include_dashboard=True
+        )
     """
     
     # Log buffer for dashboard display
-    _log_buffer: deque
-    _log_lock: threading.Lock
+    _log_buffer:deque
+    _log_lock:threading.Lock
     
     def __init__(self,
-                 name: str,
+                 name:str,
                  *,
-                 backend_host: str = '127.0.0.1',
-                 backend_port: Optional[int] = None,
-                 dashboard_host: str = '127.0.0.1',
-                 dashboard_port: Optional[int] = None,
-                 dashboard_root: Optional[Path] = None,
-                 include_dashboard: bool = True,
-                 include_rax: bool = True,
-                 include_service: bool = True,
-                 include_socket: bool = True,
-                 log_buffer_size: int = 500,
-                 verbose_logging: bool = True) -> None:
+                 backend_adapter:str='fastapi',
+                 backend_host:str='127.0.0.1',
+                 backend_port:Optional[int]=None,
+                 dashboard_host:str='127.0.0.1',
+                 dashboard_port:Optional[int]=None,
+                 dashboard_root:Optional[Path]=None,
+                 include_dashboard:bool=True,
+                 include_rax:bool=True,
+                 include_service:bool=True,
+                 include_socket:bool=True,
+                 log_buffer_size:int=500,
+                 verbose_logging:bool=True,
+                 **backend_adapter_kwargs) -> None:
         """
         Initialize the ApplicationUnit with all sub-units and configuration.
         
         Args:
             name: Name of the application
-            backend_host: Host for the FastAPI backend server
-            backend_port: Port for the FastAPI backend server. If None, auto-finds available port starting from 8080.
+            backend_adapter: Backend framework adapter ('fastapi' or 'django')
+            backend_host: Host for the backend server
+            backend_port: Port for the backend server. If None, picks a random available port.
             dashboard_host: Host for the React dashboard dev server
-            dashboard_port: Port for the React dashboard dev server. If None, auto-finds available port starting from 5173.
+            dashboard_port: Port for the React dashboard dev server. If None, picks a random available port.
             dashboard_root: Path to the React dashboard root directory.
                            If None and include_dashboard=True, uses the vanilla Modulo dashboard.
                            Set to a custom path to use your own React frontend.
@@ -102,18 +113,21 @@ class ApplicationUnit(CoreUnit):
             include_socket: Whether to include the Socket unit
             log_buffer_size: Maximum number of log entries to keep in memory
             verbose_logging: Whether to print verbose startup information
+            **backend_adapter_kwargs: Additional kwargs passed to the backend adapter
+                                     (e.g., 'apps' for Django, 'debug' for Django)
         """
         super().__init__(name=name, verbose_logging=verbose_logging)
         
         # Configuration - auto-find available ports if not specified
-        self.backend_host = backend_host
-        self.backend_port = backend_port if backend_port is not None else find_available_port(8080)
-        self.dashboard_host = dashboard_host
-        # Find dashboard port starting from 5173, but skip backend port to avoid conflicts
+        self.backend_adapter = backend_adapter
+        self.backend_host = backend_host or '127.0.0.1'
+        self.backend_port = backend_port if backend_port is not None else find_random_available_port()
+        self.dashboard_host = dashboard_host or '127.0.0.1'
+        # Find random available port if not specified
         if dashboard_port is not None:
             self.dashboard_port = dashboard_port
         else:
-            self.dashboard_port = find_available_port(5173)
+            self.dashboard_port = find_random_available_port()
         self.include_dashboard = include_dashboard
         
         # Dashboard root - use default vanilla dashboard if not specified
@@ -133,11 +147,13 @@ class ApplicationUnit(CoreUnit):
         
         # Create sub-units
         self.backend = BackendUnit.create(
-            name=name, 
-            host=backend_host, 
-            port=backend_port,
+            name=name,
+            adapter=backend_adapter,
+            host=self.backend_host, 
+            port=self.backend_port,
             dashboard_root=self.dashboard_root,
-            verbose_logging=verbose_logging
+            verbose_logging=verbose_logging,
+            **backend_adapter_kwargs
         )
         
         self.rax = RAXUnit.create(name=name) if include_rax else None
@@ -164,8 +180,15 @@ class ApplicationUnit(CoreUnit):
     def _register_application_routes(self) -> None:
         """
         Register additional API routes for application management.
+        
+        Note: This method registers routes directly on the FastAPI app.
+        For Django adapter, routes should be added differently (via add_route on adapter).
         """
-        app = self.backend._app
+        # Only register routes if using FastAPI adapter
+        if self.backend_adapter != 'fastapi':
+            return
+        
+        app = self.backend.app
         
         @app.get('/api/logs', name='get_logs')
         async def get_logs(limit: int = 100) -> Dict[str, Any]:
@@ -580,3 +603,54 @@ class ApplicationUnit(CoreUnit):
         if self.service:
             return self.service.dispatch(*args, **kwargs)
         warn('Service unit not enabled, cannot dispatch command')
+    
+    #####################
+    # HSDB Integration  #
+    #####################
+    
+    @property
+    def app(self) -> Any:
+        """
+        Get the underlying web application from the backend adapter.
+        
+        For FastAPI: Returns the FastAPI application instance.
+        For Django: Returns the ASGI application.
+        
+        This is useful for HSDB integration where you need to add
+        additional routes or middleware.
+        """
+        return self.backend.app
+    
+    @property
+    def adapter(self):
+        """
+        Get the backend adapter instance.
+        
+        Returns:
+            The backend adapter (FastAPIBackendAdapter or DjangoBackendAdapter)
+        """
+        return self.backend.adapter
+    
+    def add_route(self, path: str, handler, methods: list = None, name: str = None, **kwargs) -> None:
+        """
+        Add a route to the backend application.
+        
+        This is a convenience method for adding routes to the backend
+        that works with both FastAPI and Django adapters.
+        
+        Args:
+            path: URL path for the route
+            handler: Handler function/coroutine
+            methods: HTTP methods to allow (default: ['GET'])
+            name: Optional route name
+            **kwargs: Additional framework-specific options
+        """
+        self.backend.adapter.add_route(path, handler, methods=methods, name=name, **kwargs)
+    
+    def is_using_fastapi(self) -> bool:
+        """Check if the application is using FastAPI backend."""
+        return self.backend_adapter == 'fastapi'
+    
+    def is_using_django(self) -> bool:
+        """Check if the application is using Django backend."""
+        return self.backend_adapter == 'django'

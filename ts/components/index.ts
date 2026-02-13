@@ -23,6 +23,7 @@ export { TeaInput, TeaSelect, TeaTextarea } from './TeaInput';
 export { TeaModal } from './TeaModal';
 export { TeaNav } from './TeaApp/TeaNav';
 export { TeaPage } from './TeaApp/TeaPage';
+export { TeaPanel } from './TeaPanel';
 export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings, SUPPORTED_LANGUAGES } from './TeaApp/TeaSettings';
 export {
     TeaSidebar,

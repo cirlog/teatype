@@ -85,9 +85,9 @@ export function ControlsPanel({ onActionComplete }: iControlsPanelProps) {
 
             <div className='controls-panel__buttons'>
                 <TeaButton
-                    variant={showConfirm === 'stop' ? 'danger' : 'danger'}
-                    onClick={handleStop}
                     disabled={loading}
+                    onClick={handleStop}
+                    variant={showConfirm === 'stop' ? 'danger' : 'danger'}
                 >
                     {showConfirm === 'stop' ? '⚠️ Confirm Stop' : '⏹️ Stop'}
                 </TeaButton>

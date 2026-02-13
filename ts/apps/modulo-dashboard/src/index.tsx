@@ -27,17 +27,25 @@ import { createRoot } from 'react-dom/client';
 
 // Components
 import { iPageInfo, TeaApp } from '../../../components';
+import ClientKit from './components/ClientKit';
 import ModuloDashboard from './components/ModuloDashboard';
 
+// Utility
+import Store from '../../../toolkit';
+
 // Icons
-import { SettingsIcon } from '../../../icons';
+import { ModelsIcon, SettingsIcon } from '../../../icons';
 
 const APP_NAME = 'Modulo';
 const SUBTITLE = 'Lightweight dashboard for monitoring and controlling Modulo Units';
 
+// Set to true to enable development features like React DevTools integration and verbose logging
+const DEV_MODE = true;
+Store.local.set('devMode', DEV_MODE);
+
 const PAGES: iPageInfo[] = [
     {
-        title: 'Dashboard',
+        title: 'Unit Dashboard',
         path: '/dashboard',
         content: ModuloDashboard,
         longDescription: 'Monitor and control your Modulo application with live status, logs, and command execution.',
@@ -46,6 +54,17 @@ const PAGES: iPageInfo[] = [
         tags: ['Admin', 'Modulo'],
     },
 ];
+if (DEV_MODE) {
+    PAGES.push({
+        title: 'Client-Kit',
+        path: '/client-kit',
+        content: ClientKit,
+        longDescription: 'A playground for testing and showcasing client-side components and interactions.',
+        shortDescription: 'Client-side Component Kit',
+        icon: <ModelsIcon />,
+        tags: ['Dev'],
+    });
+}
 
 /**
  * StandaloneModuloDashboard - Entry point for standalone Modulo Dashboard.

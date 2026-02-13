@@ -14,7 +14,7 @@
  */
 
 // React imports
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Components
@@ -32,33 +32,44 @@ interface iTeaPageProps {
     backPath?: string;
     children?: React.ReactNode;
     description?: string;
-    /** Hide the back button (useful for single-page apps) */
     hideBackButton?: boolean;
     tags?: string[];
     title: string;
 }
 
-const TeaPage: React.FC<iTeaPageProps> = ({
-    appName,
-    backPath = '/',
-    children,
-    description,
-    hideBackButton = false,
-    tags,
-    title,
-}) => {
+interface iTeaPageState {
+    isInfoHovered: boolean;
+    scrollProgress: number;
+}
+
+const TeaPage: React.FC<iTeaPageProps> = (props) => {
+    // Hooks
     const navigate = useNavigate();
-    const [isInfoHovered, setIsInfoHovered] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
+
+    // State
+    const [isInfoHovered, setIsInfoHovered] = useState<iTeaPageState['isInfoHovered']>(false);
+    const [scrollProgress, setScrollProgress] = useState<iTeaPageState['scrollProgress']>(0);
+
+    // Refs
     const mainRef = useRef<HTMLElement>(null);
 
-    // Track scroll position to apply fade effect only when scrolled
+    // Constants
+    const backPath = props.backPath ?? '/';
+    const hideBackButton = props.hideBackButton ?? false;
+
+    // Track scroll position to apply progressive fade effect
     useEffect(() => {
         const mainEl = mainRef.current;
         if (!mainEl) return;
 
         const handleScroll = () => {
-            setIsScrolled(mainEl.scrollTop > 0);
+            // Calculate scroll progress (0-1) over the first 100px of scroll
+            const scrollTop = mainEl.scrollTop;
+            const progress = Math.min(scrollTop / 100, 1);
+            setScrollProgress(progress);
+
+            // Apply scroll progress as CSS custom property for smooth mask transition
+            mainEl.style.setProperty('--scroll-progress', progress.toString());
         };
 
         mainEl.addEventListener('scroll', handleScroll);
@@ -75,33 +86,33 @@ const TeaPage: React.FC<iTeaPageProps> = ({
                 )}
 
                 <div className='tea-page-header-content'>
-                    {appName && <p className='tea-page-flare'>{appName}</p>}
+                    {props.appName && <p className='tea-page-flare'>{props.appName}</p>}
                     <div className='tea-page-title-row'>
                         <div className='tea-page-title-container'>
                             <h1 className={`tea-page-title${isInfoHovered ? ' tea-page-title--blurred' : ''}`}>
-                                {title}
+                                {props.title}
                             </h1>
-                            {tags && isInfoHovered && (
+                            {props.tags && isInfoHovered && (
                                 <div className='tea-page-tags-overlay'>
-                                    <TeaTags tags={tags} />
+                                    <TeaTags tags={props.tags} />
                                 </div>
                             )}
                         </div>
-                        {description && (
+                        {props.description && (
                             <div
                                 className='tea-page-infotip-wrapper'
                                 onMouseEnter={() => setIsInfoHovered(true)}
                                 onMouseLeave={() => setIsInfoHovered(false)}
                             >
-                                <TeaInfotip position='right'>{description}</TeaInfotip>
+                                <TeaInfotip position='right'>{props.description}</TeaInfotip>
                             </div>
                         )}
                     </div>
                 </div>
             </header>
 
-            <main ref={mainRef} className={`tea-page-main${isScrolled ? ' tea-page-main--scrolled' : ''}`}>
-                {children}
+            <main ref={mainRef} className={`tea-page-main${scrollProgress > 0 ? ' tea-page-main--scrolled' : ''}`}>
+                {props.children}
             </main>
         </div>
     );
