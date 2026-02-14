@@ -34,13 +34,38 @@
         width: 100%;
     }
 
-    &.variant-card {
+    &.use-theme {
+        .title {
+            color: var(--accent);
+
+            svg {
+                fill: var(--accent);
+            }
+        }
     }
 
     &.variant-default {
+        padding: 1rem;
+
+        backdrop-filter: blur(16px);
         background: var(--surface-card);
-        border-radius: 0.5rem;
+        border-radius: 12px;
+    }
+
+    &.variant-card {
+        padding: 1.75rem;
+
+        backdrop-filter: blur(16px);
+        background: var(--surface-card);
         border: 1px solid var(--border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+
+        .title {
+            svg {
+                opacity: 0.75;
+            }
+        }
     }
 
     &.variant-framed {
@@ -50,15 +75,31 @@
 
         fieldset {
             padding: 0.75rem;
+            padding-top: 0.4rem;
 
             border: 0.15rem solid $gray-very-light;
             border-radius: 0.5rem;
         }
 
         .title {
-            padding: 0 1rem;
+            padding: 0 0.75rem;
 
             color: $gray-light;
+        }
+    }
+
+    .title {
+        display: flex;
+        gap: 0.4rem;
+
+        font-size: 0.85rem;
+        font-weight: bold;
+        opacity: 0.75;
+
+        svg {
+            margin: auto 0;
+            height: 0.75rem;
+            width: 0.75rem;
         }
     }
 }

@@ -15,9 +15,13 @@
  * For more details, check the LICENSE file in the root directory of this repository.
  */
 
-// Style
+// React imports
 import { ReactElement } from 'react';
 
+// Icons
+import { RoundedSquareIcon } from '@teatype/icons';
+
+// Style
 import './style/TeaPanel.scss';
 
 interface iTeaPanelProps {
@@ -28,7 +32,8 @@ interface iTeaPanelProps {
     padding?: 'none' | 'small' | 'medium' | 'large';
     size?: 'dymnamic' | 'full';
     title?: string;
-    variant?: 'default' | 'framed';
+    useTheme?: boolean;
+    variant?: 'card' | 'framed';
 }
 
 const TeaPanel: React.FC<iTeaPanelProps> = (props) => {
@@ -37,6 +42,7 @@ const TeaPanel: React.FC<iTeaPanelProps> = (props) => {
         props.className || '',
         props.padding ? `padding-${props.padding}` : 'padding-none',
         props.size ? `size-${props.size}` : 'size-dynamic',
+        props.useTheme && 'use-theme',
         props.variant ? `variant-${props.variant}` : 'variant-default',
     ]
         .filter(Boolean)
@@ -53,7 +59,13 @@ const TeaPanel: React.FC<iTeaPanelProps> = (props) => {
         <div className={className}>
             {wrapComponent(
                 <>
-                    {props.title && <legend className='title'>{props.title}</legend>}
+                    {props.title && (
+                        <legend className='title'>
+                            {/* <RoundedSquareIcon /> */}
+
+                            {props.title}
+                        </legend>
+                    )}
 
                     {props.children}
                 </>,

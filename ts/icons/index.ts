@@ -21,4 +21,5 @@ export { FlagTR } from './FlagTR';
 export { ArrowIcon } from './ArrowIcon';
 export { DatabaseIcon } from './DatabaseIcon';
 export { ModelsIcon } from './ModelsIcon';
+export { RoundedSquareIcon } from './RoundedSquareIcon';
 export { SettingsIcon } from './SettingsIcon';
