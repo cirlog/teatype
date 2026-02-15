@@ -18,6 +18,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
 import NotFound from '../Errors/NotFound';
+import TeaButton from '../TeaButton';
 import { TeaSettingsProvider, TeaSettingsPanel, useTeaSettings } from './TeaSettings';
 import { TeaNav } from './TeaNav';
 import { TeaPage } from './TeaPage';
@@ -73,11 +74,11 @@ const TeaAppContent: React.FC<iTeaAppContentProps> = (props) => {
 
     return (
         <div id='tea-app' data-app-name={props.name} className={isSettingsOpen ? 'settings-open' : ''}>
-            <button
-                className='tea-app-settings-toggle'
-                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                aria-label='Toggle settings'
-            >
+            <TeaButton id='settings-toggle' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+                <SettingsIcon />
+            </TeaButton>
+
+            <button className='tea-app-settings-toggle' aria-label='Toggle settings'>
                 <SettingsIcon />
             </button>
 

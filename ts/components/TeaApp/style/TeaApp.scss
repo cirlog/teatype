@@ -57,6 +57,12 @@ body {
     min-height: 100vh;
     overflow: hidden;
 
+    #settings-toggle {
+        position: fixed;
+        top: 1.25rem;
+        right: 4rem;
+    }
+
     // Settings toggle button
     .tea-app-settings-toggle {
         position: fixed;
@@ -77,11 +83,7 @@ body {
         color: var(--text-muted);
         cursor: pointer;
 
-        transition:
-            background 0.2s,
-            border-color 0.2s,
-            color 0.2s,
-            transform 0.2s;
+        transition: all 0.2s;
 
         svg {
             width: 1.25rem;

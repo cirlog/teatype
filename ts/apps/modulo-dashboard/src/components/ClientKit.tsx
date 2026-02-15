@@ -48,7 +48,7 @@ const ClientKit = () => {
             <TeaPanel title='Buttons' variant='framed'>
                 <TeaButton>Default</TeaButton>
 
-                <TeaButton theme='accent'>Default</TeaButton>
+                <TeaButton theme='filled'>Filled</TeaButton>
 
                 {/* <TeaButton>
                     <RoundedSquareIcon />

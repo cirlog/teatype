@@ -15,22 +15,58 @@
 .tea-button {
     cursor: pointer;
 
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     padding: 0.625rem 1rem;
 
-    background: var(--surface-card);
     backdrop-filter: blur(8px);
-    border: 1px solid var(--border);
+    border-color: transparent;
     border-radius: 8px;
+    border-style: solid;
+    border-width: 1px;
     color: var(--text-primary);
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
 
     transition: all 0.15s ease;
+
+    svg {
+        transition: all 0.3s ease;
+    }
+
+    // Icons
+    .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 1em;
+            height: 1em;
+        }
+    }
+
+    @keyframes tea-button-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    &:hover {
+        background: var(--surface-elevated);
+        border-color: var(--accent);
+        color: var(--accent);
+
+        svg {
+            transform: rotate(45deg);
+        }
+    }
 
     &:hover:not(:disabled) {
         background: var(--surface-elevated);
@@ -46,20 +82,18 @@
         cursor: not-allowed;
     }
 
-    // Icons
-    &__icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    &.size-medium {
+        height: 2.5rem;
+        min-width: 2.5rem;
 
         svg {
-            width: 1em;
-            height: 1em;
+            width: 1.25rem;
+            height: 1.25rem;
         }
     }
 
     // Loading spinner
-    &__spinner {
+    &.spinner {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -71,32 +105,31 @@
         }
     }
 
-    @keyframes tea-button-spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    &--loading {
+    &.loading {
         pointer-events: none;
     }
 
     // Size variants
-    &--small {
+    &.size-small {
         padding: 0.375rem 0.75rem;
         font-size: 0.8125rem;
     }
 
-    &--large {
+    &.size-large {
         padding: 0.75rem 1.25rem;
         font-size: 1rem;
     }
 
     // Color variants
-    &--primary {
+    &.theme-default {
+        background: var(--surface-elevated);
+
+        &:hover:not(:disabled) {
+            border-color: var(--accent);
+        }
+    }
+
+    &.theme-filled {
         background: var(--accent);
         border-color: var(--accent);
         color: #fff;
@@ -107,16 +140,7 @@
         }
     }
 
-    &--secondary {
-        background: var(--surface-elevated);
-        border-color: var(--border);
-
-        &:hover:not(:disabled) {
-            border-color: var(--text-muted);
-        }
-    }
-
-    &--success {
+    &.theme-success {
         background: var(--success);
         border-color: var(--success);
         color: #fff;
@@ -127,7 +151,7 @@
         }
     }
 
-    &--danger {
+    &.theme-danger {
         background: rgba(239, 68, 68, 0.15);
         border-color: rgba(239, 68, 68, 0.3);
         color: #ef4444;
@@ -138,7 +162,7 @@
         }
     }
 
-    &--ghost {
+    &.theme-ghost {
         background: transparent;
         border-color: transparent;
 
@@ -147,9 +171,4 @@
             border-color: var(--border);
         }
     }
-
-    // svg {
-    //     height: 0.7rem;
-    //     width: 0.7rem;
-    // }
 }

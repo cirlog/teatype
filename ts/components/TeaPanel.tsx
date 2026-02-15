@@ -37,7 +37,7 @@ interface iTeaPanelProps {
 }
 
 const TeaPanel: React.FC<iTeaPanelProps> = (props) => {
-    const className = [
+    const classes = [
         'tea-panel',
         props.className || '',
         props.padding ? `padding-${props.padding}` : 'padding-none',
@@ -56,7 +56,7 @@ const TeaPanel: React.FC<iTeaPanelProps> = (props) => {
     };
 
     return (
-        <div className={className}>
+        <div className={classes}>
             {wrapComponent(
                 <>
                     {props.title && (

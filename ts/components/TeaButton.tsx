@@ -20,45 +20,43 @@ import React from 'react';
 import './style/TeaButton.scss';
 
 type tButtonSize = 'small' | 'medium' | 'large';
-type tButtonTheme = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
+type tButtonTheme = 'default' | 'filled' | 'success' | 'danger' | 'ghost';
 type tButtonVariant = 'default';
 
 interface iTeaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     children?: React.ReactNode;
-    size?: tButtonSize;
     icon?: React.ReactNode;
     iconPosition?: 'left' | 'right';
     loading?: boolean;
+    size?: tButtonSize;
     theme?: tButtonTheme;
     variant?: tButtonVariant;
 }
 
-const TeaButton: React.FC<iTeaButtonProps> = ({
-    children,
-    variant = 'default',
-    size = 'md',
-    icon,
-    iconPosition = 'left',
-    loading = false,
-    disabled,
-    className = '',
-    ...props
-}) => {
+const TeaButton: React.FC<iTeaButtonProps> = (props) => {
+    // Default props
+    const iconPosition = props.iconPosition ?? 'left';
+    const loading = props.loading ?? false;
+    const size = props.size ?? 'medium';
+    const theme = props.theme ?? 'default';
+    const variant = props.variant ?? 'default';
+
     // Constants
     const classes = [
         'tea-button',
-        `tea-button--${size}`,
-        `tea-button--${variant}`,
-        loading && 'tea-button--loading',
-        className,
+        `size-${size}`,
+        `theme-${theme}`,
+        `variant-${variant}`,
+        loading && 'loading',
+        props.className ?? '',
     ]
         .filter(Boolean)
         .join(' ');
 
     return (
-        <button className={classes} disabled={disabled || loading} {...props}>
+        <button className={classes} disabled={props.disabled || loading} {...props}>
             {loading && (
-                <span className='tea-button__spinner'>
+                <span className='spinner'>
                     <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
                         <circle cx='12' cy='12' r='10' opacity='0.25' />
                         <path d='M12 2a10 10 0 0 1 10 10' />
@@ -66,11 +64,11 @@ const TeaButton: React.FC<iTeaButtonProps> = ({
                 </span>
             )}
 
-            {icon && iconPosition === 'left' && !loading && <span className='tea-button__icon'>{icon}</span>}
+            {props.icon && iconPosition === 'left' && !loading && <span className='icon'>{props.icon}</span>}
 
-            {children && <span className='tea-button__text'>{children}</span>}
+            {props.children && <span className='text'>{props.children}</span>}
 
-            {icon && iconPosition === 'right' && !loading && <span className='tea-button__icon'>{icon}</span>}
+            {props.icon && iconPosition === 'right' && !loading && <span className='icon'>{props.icon}</span>}
         </button>
     );
 };
