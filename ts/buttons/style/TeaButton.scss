@@ -57,11 +57,6 @@
         }
     }
 
-    &:hover:not(:disabled) {
-        background: var(--surface-elevated);
-        border-color: var(--accent);
-    }
-
     // Icons
     .icon {
         display: flex;
@@ -91,6 +86,7 @@
 
         svg {
             color: var(--text-muted);
+            fill: var(--text-muted);
         }
     }
 
@@ -155,12 +151,12 @@
     }
 
     &.theme-success {
-        background: var(--success);
+        // background: var(--success);
         border-color: var(--success);
         color: #fff;
 
         &:hover:not(:disabled) {
-            background: color-mix(in srgb, var(--success) 85%, #000);
+            // background: color-mix(in srgb, var(--success) 85%, #000);
             border-color: color-mix(in srgb, var(--success) 85%, #000);
         }
     }

@@ -34,7 +34,6 @@ const ModuloDashboard = () => {
 
     return (
         <div id='modulo-dashboard'>
-            {/* Top row - Status and Controls */}
             <div className='row'>
                 <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
                 <ControlsPanel onActionComplete={refresh} />

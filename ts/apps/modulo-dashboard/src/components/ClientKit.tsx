@@ -50,11 +50,13 @@ const ClientKit = () => {
             <TeaPanel title='Buttons' variant='framed'>
                 <TeaButton>Default</TeaButton>
 
+                <TeaButton theme='success'>Success</TeaButton>
+
                 <TeaButton theme='filled'>Filled</TeaButton>
 
-                {/* <TeaButton>
+                <TeaButton>
                     <RoundedSquareIcon />
-                </TeaButton> */}
+                </TeaButton>
             </TeaPanel>
         </div>
     );
