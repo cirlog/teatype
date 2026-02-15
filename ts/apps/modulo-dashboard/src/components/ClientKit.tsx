@@ -27,22 +27,24 @@ const LLOREM_IPSUM = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.';
 const ClientKit = () => {
     return (
         <div id='client-kit'>
-            <TeaPanel title='Default Panel'>{LLOREM_IPSUM}</TeaPanel>
+            <TeaPanel title='Panels' variant='framed'>
+                <TeaPanel title='Default Panel'>{LLOREM_IPSUM}</TeaPanel>
 
-            <TeaPanel useTheme title='Colored Default Panel'>
-                {LLOREM_IPSUM}
-            </TeaPanel>
+                <TeaPanel useTheme title='Colored Default Panel'>
+                    {LLOREM_IPSUM}
+                </TeaPanel>
 
-            <TeaPanel title='Card Panel' variant='card'>
-                {LLOREM_IPSUM}
-            </TeaPanel>
+                <TeaPanel title='Card Panel' variant='card'>
+                    {LLOREM_IPSUM}
+                </TeaPanel>
 
-            <TeaPanel useTheme title='Colored Card Panel' variant='card'>
-                {LLOREM_IPSUM}
-            </TeaPanel>
+                <TeaPanel useTheme title='Colored Card Panel' variant='card'>
+                    {LLOREM_IPSUM}
+                </TeaPanel>
 
-            <TeaPanel title='Framed Panel' variant='framed'>
-                {LLOREM_IPSUM}
+                <TeaPanel title='Framed Panel' variant='framed'>
+                    {LLOREM_IPSUM}
+                </TeaPanel>
             </TeaPanel>
 
             <TeaPanel title='Buttons' variant='framed'>

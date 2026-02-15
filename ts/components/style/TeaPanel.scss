@@ -79,18 +79,19 @@
 
             border: 0.15rem solid $gray-very-light;
             border-radius: 0.5rem;
-        }
 
-        .title {
-            padding: 0 0.75rem;
+            > .title {
+                padding: 0 0.75rem;
 
-            color: $gray-light;
+                color: $gray-light;
+            }
         }
     }
 
     .title {
         display: flex;
         gap: 0.4rem;
+        padding: 0;
 
         font-size: 0.85rem;
         font-weight: bold;

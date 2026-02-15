@@ -13,33 +13,8 @@
  * all copies or substantial portions of the Software.
  */
 
-// React imports
-import { useNavigate } from 'react-router-dom';
-
 // Components
-import { TeaButton } from '../../buttons/TeaButton';
-
-// Style
-import './style/NotFound.scss';
-
-/**
- * 404 page component shown when navigating to an unknown route.
- */
-const NotFound: React.FC = () => {
-    const navigate = useNavigate();
-
-    return (
-        <div id='not-found'>
-            <h1>404</h1>
-
-            <span>
-                <p id='path'>{window.location.pathname}</p>
-                <p> does not exist.</p>
-            </span>
-
-            <TeaButton onClick={() => navigate('/', { replace: true })}>Go to home</TeaButton>
-        </div>
-    );
-};
-
-export default NotFound;
+// export { ArrowButton } from './ArrowButton';
+// export { BackButton } from './BackButton';
+// export { CloseButton } from './CloseButton';
+export { TeaButton } from '../buttons/TeaButton';

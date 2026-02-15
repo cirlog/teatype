@@ -15,7 +15,7 @@
 
 // Components
 export { TeaApp } from './TeaApp/TeaApp';
-export { TeaButton } from './TeaButton';
+export { TeaButton } from '../buttons/TeaButton';
 export { TeaConfirmProvider, useConfirm } from './TeaConfirm';
 export { TeaIcon } from './TeaIcon';
 export { TeaInfotip } from './TeaInfotip';

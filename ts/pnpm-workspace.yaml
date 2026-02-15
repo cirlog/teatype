@@ -3,7 +3,7 @@ packages:
     - apps
     - apps/*
     - baseconfig
-    - platforms/*
+    - buttons
     - components
     - icons
     - hooks

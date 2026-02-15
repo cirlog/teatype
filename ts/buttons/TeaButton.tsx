@@ -14,7 +14,10 @@
  */
 
 // React imports
-import React from 'react';
+import React, { useMemo } from 'react';
+
+// Components
+import { TeaIcon } from '../components/TeaIcon';
 
 // Style
 import './style/TeaButton.scss';
@@ -41,17 +44,47 @@ const TeaButton: React.FC<iTeaButtonProps> = (props) => {
     const theme = props.theme ?? 'default';
     const variant = props.variant ?? 'default';
 
+    const isIconOnlyChild = useMemo(() => {
+        const children = React.Children.toArray(props.children).filter((child) => {
+            if (!child) {
+                return false;
+            }
+
+            if (typeof child === 'string') {
+                return child.trim().length > 0;
+            }
+
+            return true;
+        });
+
+        if (children.length !== 1) {
+            return false;
+        }
+
+        const child = children[0];
+        if (!React.isValidElement(child)) {
+            return false;
+        }
+
+        return child.type === 'svg' || child.type === TeaIcon;
+    }, [props.children]);
+
     // Constants
-    const classes = [
-        'tea-button',
-        `size-${size}`,
-        `theme-${theme}`,
-        `variant-${variant}`,
-        loading && 'loading',
-        props.className ?? '',
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const classes = useMemo(
+        () =>
+            [
+                'tea-button',
+                `size-${size}`,
+                `theme-${theme}`,
+                `variant-${variant}`,
+                isIconOnlyChild && 'icon-only',
+                loading && 'loading',
+                props.className ?? '',
+            ]
+                .filter(Boolean)
+                .join(' '),
+        [size, theme, variant, isIconOnlyChild, loading, props.className],
+    );
 
     return (
         <button className={classes} disabled={props.disabled || loading} {...props}>
@@ -66,7 +99,7 @@ const TeaButton: React.FC<iTeaButtonProps> = (props) => {
 
             {props.icon && iconPosition === 'left' && !loading && <span className='icon'>{props.icon}</span>}
 
-            {props.children && <span className='text'>{props.children}</span>}
+            {props.children}
 
             {props.icon && iconPosition === 'right' && !loading && <span className='icon'>{props.icon}</span>}
         </button>
