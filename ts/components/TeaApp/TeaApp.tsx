@@ -78,10 +78,6 @@ const TeaAppContent: React.FC<iTeaAppContentProps> = (props) => {
                 <SettingsIcon />
             </TeaButton>
 
-            <button className='tea-app-settings-toggle' aria-label='Toggle settings'>
-                <SettingsIcon />
-            </button>
-
             <div className='tea-app-content'>{props.children}</div>
 
             <aside className='tea-app-settings-sidebar'>

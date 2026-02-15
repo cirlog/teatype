@@ -60,47 +60,9 @@ body {
     #settings-toggle {
         position: fixed;
         top: 1.25rem;
-        right: 4rem;
-    }
-
-    // Settings toggle button
-    .tea-app-settings-toggle {
-        position: fixed;
-        top: 1.25rem;
         right: 1.25rem;
+
         z-index: 100;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-
-        background: var(--surface-card);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        color: var(--text-muted);
-        cursor: pointer;
-
-        transition: all 0.2s;
-
-        svg {
-            width: 1.25rem;
-            height: 1.25rem;
-
-            transition: transform 0.3s ease;
-        }
-
-        &:hover {
-            background: var(--surface-elevated);
-            border-color: var(--accent);
-            color: var(--accent);
-
-            svg {
-                transform: rotate(45deg);
-            }
-        }
     }
 
     // Main content area

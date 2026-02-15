@@ -66,7 +66,11 @@ const TeaButton: React.FC<iTeaButtonProps> = (props) => {
             return false;
         }
 
-        return child.type === 'svg' || child.type === TeaIcon;
+        return (
+            child.type === 'svg' ||
+            child.type === TeaIcon ||
+            (typeof child.type === 'function' && (child.type as Function).name?.endsWith('Icon'))
+        );
     }, [props.children]);
 
     // Constants
@@ -74,10 +78,9 @@ const TeaButton: React.FC<iTeaButtonProps> = (props) => {
         () =>
             [
                 'tea-button',
-                `size-${size}`,
+                isIconOnlyChild ? 'size-icon-only' : `size-${size}`,
                 `theme-${theme}`,
                 `variant-${variant}`,
-                isIconOnlyChild && 'icon-only',
                 loading && 'loading',
                 props.className ?? '',
             ]
