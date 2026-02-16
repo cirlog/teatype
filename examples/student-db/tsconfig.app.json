@@ -60,5 +60,5 @@
         }
     },
     // Files and directories to include in the compilation
-    "include": ["src", "*.tsx", "*.ts", "vite-env.d.ts"]
+    "include": ["src", "*.tsx", "*.ts", "vite-env.d.ts", "../../ts/apps/modulo-dashboard/src/components/SubNavDemo.tsx"]
 }

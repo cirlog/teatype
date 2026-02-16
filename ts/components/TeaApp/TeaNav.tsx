@@ -95,38 +95,42 @@ const AppNav: React.FC<iAppNavProps> = (props) => {
             )}
 
             <main className='tea-nav-grid'>
-                {filteredPages.map((page, index) => (
-                    <NavLink
-                        key={page.path}
-                        to={page.path}
-                        className='tea-nav-tile'
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                        <div className='tea-nav-tile-icon'>{page.icon || page.title.charAt(0).toUpperCase()}</div>
-
-                        <div className='tea-nav-tile-content'>
-                            <h2 className='tea-nav-tile-title'>{page.title}</h2>
-
-                            {page.shortDescription && (
-                                <p className='tea-nav-tile-description'>{page.shortDescription}</p>
-                            )}
-                        </div>
-
-                        <svg
-                            className='tea-nav-tile-arrow'
-                            width='20'
-                            height='20'
-                            viewBox='0 0 24 24'
-                            fill='none'
-                            stroke='currentColor'
-                            strokeWidth='2'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
+                {filteredPages.map((page, index) => {
+                    // Strip wildcard suffix for navigation (e.g., /path/* -> /path)
+                    const navPath = page.path.replace(/\/\*$/, '');
+                    return (
+                        <NavLink
+                            key={page.path}
+                            to={navPath}
+                            className='tea-nav-tile'
+                            style={{ animationDelay: `${index * 0.05}s` }}
                         >
-                            <path d='M5 12h14M12 5l7 7-7 7' />
-                        </svg>
-                    </NavLink>
-                ))}
+                            <div className='tea-nav-tile-icon'>{page.icon || page.title.charAt(0).toUpperCase()}</div>
+
+                            <div className='tea-nav-tile-content'>
+                                <h2 className='tea-nav-tile-title'>{page.title}</h2>
+
+                                {page.shortDescription && (
+                                    <p className='tea-nav-tile-description'>{page.shortDescription}</p>
+                                )}
+                            </div>
+
+                            <svg
+                                className='tea-nav-tile-arrow'
+                                width='20'
+                                height='20'
+                                viewBox='0 0 24 24'
+                                fill='none'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                            >
+                                <path d='M5 12h14M12 5l7 7-7 7' />
+                            </svg>
+                        </NavLink>
+                    );
+                })}
 
                 {filteredPages.length === 0 && (
                     <div className='tea-nav-empty'>

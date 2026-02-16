@@ -48,7 +48,8 @@ export { TeaTooltip } from './TeaTooltip';
 
 // Types
 export type { iPageInfo, iTeaAppProps } from './TeaApp/TeaApp';
-export type { Theme, Language, LanguageInfo } from './TeaApp/TeaSettings';
+export type { tTheme, tLanguage, LanguageInfo } from './TeaApp/TeaSettings';
+export type { iTeaSubNavItem, iTeaSubNavProps } from './TeaApp/TeaSubNav';
 export type {
     iTeaSidebarItem,
     iTeaSidebarSection,
@@ -57,7 +58,6 @@ export type {
     iTeaSidebarSettingsSection,
     iTeaSidebarSettingsProps,
 } from './TeaSidebar';
-export type { TeaSubNavItem, TeaSubNavProps } from './TeaApp/TeaSubNav';
 export type { TeaTableColumn, TeaTableProps } from './TeaTable';
 export type {
     tTeaToastType,

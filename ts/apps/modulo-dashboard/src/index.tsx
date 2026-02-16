@@ -46,7 +46,7 @@ Store.memory.set('devMode', DEV_MODE);
 const PAGES: iPageInfo[] = [
     {
         title: 'Unit Dashboard',
-        path: '/dashboard',
+        path: '/dashboard/*',
         content: ModuloDashboard,
         longDescription: 'Monitor and control your Modulo application with live status, logs, and command execution.',
         shortDescription: 'Operations Pulse Dashboard',
@@ -62,7 +62,7 @@ if (DEV_MODE) {
         longDescription: 'A playground for testing and showcasing client-side components and interactions.',
         shortDescription: 'Client-side Component Kit',
         icon: <ModelsIcon />,
-        tags: ['Dev'],
+        tags: ['Dev', 'Test'],
     });
 }
 

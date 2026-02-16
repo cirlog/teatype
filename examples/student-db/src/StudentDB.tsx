@@ -21,10 +21,7 @@ import { HSDBAdmin } from '@teatype/apps';
 import { QueryBuilder } from '@teatype/apps';
 import { iPageInfo, TeaApp, TeaNav, TeaPage } from '@teatype/components';
 
-import { DatabaseIcon, ModelsIcon, ArrowIcon } from '@teatype/icons';
-
-// Local components
-import SubNavDemo from './SubNavDemo';
+import { DatabaseIcon, ModelsIcon } from '@teatype/icons';
 
 const APP_NAME = 'Student DB Dashboard';
 const PAGES: iPageInfo[] = [
@@ -45,15 +42,6 @@ const PAGES: iPageInfo[] = [
         shortDescription: 'Build Custom Data Queries',
         icon: <ModelsIcon />,
         tags: ['Admin', 'Config', 'HSDB', 'Test'],
-    },
-    {
-        title: 'SubNav Demo',
-        path: '/subnav-demo',
-        content: SubNavDemo,
-        longDescription: 'Demonstration of the TeaSubNav component with tab-style navigation and hover effects.',
-        shortDescription: 'SubNav Component Demo',
-        icon: null,
-        tags: ['Dev', 'Test'],
     },
 ];
 

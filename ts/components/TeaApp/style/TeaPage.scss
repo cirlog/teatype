@@ -38,7 +38,8 @@
         display: flex;
         align-items: flex-start;
         gap: 1rem;
-        padding: 2rem clamp(2rem, 8vw, 5rem) 2rem;
+        // padding: 2rem clamp(2rem, 8vw, 5rem) 2rem;
+        padding: 2rem clamp(2rem, 8vw, 5rem) 1rem;
 
         .tea-page-back {
             display: flex;

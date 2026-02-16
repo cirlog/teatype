@@ -17,10 +17,16 @@
 import { ControlsPanel } from './ControlsPanel';
 import { LogsPanel } from './LogsPanel';
 import { StatusCard } from './StatusCard';
+import { TeaSubNav, iTeaSubNavItem } from '../../../../components';
+
+// Context
+import { DashboardProvider, useDashboard } from '../context/DashboardContext';
 
 // Hooks
-import useStatusPulse from '../hooks/useStatusPulse';
 import { useTranslation } from '../../../../hooks';
+
+// Icons
+import { RoundedSquareIcon, SettingsIcon, DatabaseIcon, ArrowIcon } from '../../../../icons';
 
 // Translations
 import { translations } from '../i18n';
@@ -28,30 +34,52 @@ import { translations } from '../i18n';
 // Style
 import './style/ModuloDashboard.scss';
 
-const ModuloDashboard = () => {
-    const { status, history, updating, error, refresh } = useStatusPulse();
+// Tab wrapper components that consume context
+function StatusTabContent() {
+    const { status, updating, error, refresh } = useDashboard();
+    return <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />;
+}
+
+function ControlsTabContent() {
+    const { refresh } = useDashboard();
+    return <ControlsPanel onActionComplete={refresh} />;
+}
+
+function LogsTabContent() {
+    return <LogsPanel maxHeight='500px' />;
+}
+
+function ActivityTabContent() {
+    const { history } = useDashboard();
     const { t } = useTranslation(translations);
 
     return (
-        <div id='modulo-dashboard'>
-            <div className='row'>
-                <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
-                <ControlsPanel onActionComplete={refresh} />
+        <section className='card card--timeline'>
+            <h2>{t('dashboard.activity')}</h2>
+            <ul>
+                {history.map((entry, idx) => (
+                    <li key={`${entry}-${idx}`}>{entry}</li>
+                ))}
+            </ul>
+        </section>
+    );
+}
+
+// Tab configuration with paths and components
+const TABS: iTeaSubNavItem[] = [
+    { id: 'status', label: 'Status', path: 'status', component: StatusTabContent, icon: <RoundedSquareIcon /> },
+    { id: 'controls', label: 'Controls', path: 'controls', component: ControlsTabContent, icon: <SettingsIcon /> },
+    { id: 'logs', label: 'Logs', path: 'logs', component: LogsTabContent, icon: <DatabaseIcon /> },
+    { id: 'activity', label: 'Activity', path: 'activity', component: ActivityTabContent, icon: <ArrowIcon /> },
+];
+
+const ModuloDashboard = () => {
+    return (
+        <DashboardProvider>
+            <div id='modulo-dashboard'>
+                <TeaSubNav items={TABS} basePath='/dashboard' />
             </div>
-
-            {/* Activity timeline */}
-            <section className='card card--timeline'>
-                <h2>{t('dashboard.activity')}</h2>
-                <ul>
-                    {history.map((entry, idx) => (
-                        <li key={`${entry}-${idx}`}>{entry}</li>
-                    ))}
-                </ul>
-            </section>
-
-            {/* Full-width logs panel */}
-            <LogsPanel maxHeight='350px' />
-        </div>
+        </DashboardProvider>
     );
 };
 
