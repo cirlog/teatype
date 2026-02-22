@@ -15,11 +15,11 @@
 
 // Components
 export { TeaApp } from './TeaApp/TeaApp';
-export { TeaButton } from '../buttons/TeaButton';
+export { TeaButton } from './TeaInput/TeaButton';
 export { TeaConfirmProvider, useConfirm } from './TeaConfirm';
 export { TeaIcon } from './TeaIcon';
 export { TeaInfotip } from './TeaInfotip';
-export { TeaInput, TeaSelect, TeaTextarea } from './TeaInput';
+export { TeaInput, TeaSelect, TeaTextarea } from './TeaInput/TeaInput';
 export { TeaModal } from './TeaModal';
 export { TeaNav } from './TeaApp/TeaNav';
 export { TeaPage } from './TeaApp/TeaPage';

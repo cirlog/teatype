@@ -17,7 +17,7 @@
 import React, { useMemo } from 'react';
 
 // Components
-import { TeaIcon } from '../components/TeaIcon';
+import { TeaIcon } from '../TeaIcon';
 
 // Style
 import './style/TeaButton.scss';

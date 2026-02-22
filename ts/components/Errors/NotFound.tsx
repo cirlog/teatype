@@ -17,7 +17,7 @@
 import { useNavigate } from 'react-router-dom';
 
 // Components
-import { TeaButton } from '../../buttons/TeaButton';
+import { TeaButton } from '../TeaInput/TeaButton';
 
 // Style
 import './style/NotFound.scss';
