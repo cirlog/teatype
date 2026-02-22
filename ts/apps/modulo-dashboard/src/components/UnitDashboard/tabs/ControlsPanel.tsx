@@ -16,9 +16,9 @@
 import { useState } from 'react';
 
 // Teatype components
-import { TeaButton, TeaInput } from '../../../../components';
+import { TeaButton, TeaInput } from '../../../../../../components';
 
-import { useAppCommands } from '../hooks/useAppCommands';
+import { useAppCommands } from '../../../hooks/useAppCommands';
 
 import './style/ControlsPanel.scss';
 

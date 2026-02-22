@@ -17,7 +17,7 @@
 import { TeaButton, TeaPanel } from '../../../../components';
 
 // Icons
-import { RoundedSquareIcon } from '../../../../icons';
+import { ModelsIcon, RoundedSquareIcon } from '../../../../icons';
 
 // Style
 import './style/ClientKit.scss';
@@ -62,4 +62,16 @@ const ClientKit = () => {
     );
 };
 
+const ClientKitApp = {
+    title: 'Client-Kit',
+    path: '/client-kit',
+    content: ClientKit,
+    longDescription: 'A playground for testing and showcasing client-side components and interactions.',
+    shortDescription: 'Client-side Component Kit',
+    icon: <ModelsIcon />,
+    tags: ['Dev', 'Test'],
+};
+
 export default ClientKit;
+
+export { ClientKitApp };

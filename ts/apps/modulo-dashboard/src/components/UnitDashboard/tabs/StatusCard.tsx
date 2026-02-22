@@ -14,9 +14,9 @@
  */
 
 // Teatype components
-import { TeaButton } from '../../../../components';
+import { TeaButton } from '../../../../../../components';
 
-import type { tStatusSnapshot } from '../hooks/useStatusPulse';
+import type { tStatusSnapshot } from '../../../hooks/useStatusPulse';
 
 interface iStatusCardProps {
     error: string | null;

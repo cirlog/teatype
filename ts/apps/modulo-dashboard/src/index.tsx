@@ -26,15 +26,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // Components
+import { ClientKitApp } from './components/ClientKit';
+import { ModuloDashboardApp } from './components/UnitDashboard/ModuloDashboard';
 import { iPageInfo, TeaApp } from '../../../components';
-import ClientKit from './components/ClientKit';
-import ModuloDashboard from './components/ModuloDashboard';
 
 // Utility
 import { Store } from '../../../toolkit';
-
-// Icons
-import { ModelsIcon, SettingsIcon } from '../../../icons';
 
 const APP_NAME = 'Modulo';
 const SUBTITLE = 'Lightweight dashboard for monitoring and controlling Modulo Units';
@@ -43,27 +40,9 @@ const SUBTITLE = 'Lightweight dashboard for monitoring and controlling Modulo Un
 const DEV_MODE = true;
 Store.memory.set('devMode', DEV_MODE);
 
-const PAGES: iPageInfo[] = [
-    {
-        title: 'Unit Dashboard',
-        path: '/dashboard/*',
-        content: ModuloDashboard,
-        longDescription: 'Monitor and control your Modulo application with live status, logs, and command execution.',
-        shortDescription: 'Operations Pulse Dashboard',
-        icon: <SettingsIcon />,
-        tags: ['Admin', 'Modulo'],
-    },
-];
+const PAGES: iPageInfo[] = [ModuloDashboardApp];
 if (DEV_MODE) {
-    PAGES.push({
-        title: 'Client-Kit',
-        path: '/client-kit',
-        content: ClientKit,
-        longDescription: 'A playground for testing and showcasing client-side components and interactions.',
-        shortDescription: 'Client-side Component Kit',
-        icon: <ModelsIcon />,
-        tags: ['Dev', 'Test'],
-    });
+    PAGES.push(ClientKitApp);
 }
 
 /**
@@ -85,4 +64,4 @@ if (rootElement) {
 export default StandaloneModuloDashboard;
 
 // Re-export the embeddable page component for use in other apps
-export { default as ModuloDashboard } from './components/ModuloDashboard';
+export { default as ModuloDashboard } from './components/UnitDashboard/ModuloDashboard';

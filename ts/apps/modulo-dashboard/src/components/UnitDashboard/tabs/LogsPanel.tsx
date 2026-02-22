@@ -16,9 +16,9 @@
 import { useEffect, useRef } from 'react';
 
 // Teatype components
-import { TeaButton } from '../../../../components';
+import { TeaButton } from '../../../../../../components';
 
-import { useAppLogs, type tLogEntry } from '../hooks/useAppLogs';
+import { useAppLogs, type tLogEntry } from '../../../hooks/useAppLogs';
 
 import './style/LogsPanel.scss';
 
