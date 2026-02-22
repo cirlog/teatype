@@ -34,6 +34,7 @@ export {
     TeaSidebarButtonGroup,
     useTeaSidebar,
 } from './TeaSidebar';
+export { TeaSlider } from './TeaInput/TeaSlider';
 export { TeaSubNav } from './TeaApp/TeaSubNav';
 export { TeaTable, TeaTablePagination } from './TeaTable';
 export { TeaTag } from './TeaTags/TeaTag';
@@ -49,6 +50,7 @@ export { TeaTooltip } from './TeaTooltip';
 // Types
 export type { iPageInfo, iTeaAppProps } from './TeaApp/TeaApp';
 export type { tTheme, tLanguage, LanguageInfo } from './TeaApp/TeaSettings';
+export type { iTeaSliderProps, tSliderSize, tSliderTheme } from './TeaInput/TeaSlider';
 export type { iTeaSubNavItem, iTeaSubNavProps } from './TeaApp/TeaSubNav';
 export type {
     iTeaSidebarItem,

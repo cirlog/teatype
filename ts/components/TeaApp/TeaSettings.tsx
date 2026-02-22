@@ -19,6 +19,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 // Icons
 import { FlagEN, FlagDE, FlagTR } from '@teatype/icons';
 
+// Components
+import { TeaSlider } from '../TeaInput/TeaSlider';
+
 // Utility
 import { Store } from '@teatype/toolkit/Store';
 
@@ -286,19 +289,17 @@ export const TeaSettingsPanel: React.FC<TeaSettingsPanelProps> = ({ onClose }) =
                 </section>
 
                 <section className='tea-settings-section'>
-                    <h3>Page Width</h3>
-                    <div className='tea-settings-slider'>
-                        <input
-                            type='range'
-                            min='50'
-                            max='100'
-                            step='5'
-                            value={pageWidth}
-                            onChange={(e) => setPageWidth(Number(e.target.value))}
-                        />
-                        <span className='tea-settings-slider-value'>{pageWidth}%</span>
-                    </div>
-                    <p className='tea-settings-hint'>Adjust the maximum width of page content.</p>
+                    <TeaSlider
+                        label='Page Width'
+                        value={pageWidth}
+                        onChange={setPageWidth}
+                        min={50}
+                        max={100}
+                        step={5}
+                        marks
+                        formatValue={(v) => `${v}%`}
+                        hint='Adjust the maximum width of page content.'
+                    />
                 </section>
 
                 {(Store.memory.get('devMode') as boolean) && (

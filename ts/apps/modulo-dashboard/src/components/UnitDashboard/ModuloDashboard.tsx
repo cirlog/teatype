@@ -40,7 +40,7 @@ function StatusTabContent() {
     const { history } = useDashboard();
     const { t } = useTranslation(translations);
     return (
-        <div>
+        <div id='controls'>
             <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
 
             <section className='card card--timeline'>
@@ -58,7 +58,7 @@ function StatusTabContent() {
 function ControlsTabContent() {
     const { refresh } = useDashboard();
     return (
-        <div>
+        <div id='status'>
             <ControlsPanel onActionComplete={refresh} />
             <LogsPanel maxHeight='500px' />
         </div>

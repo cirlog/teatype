@@ -34,6 +34,13 @@ $radius-pill: 999px;
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     }
 
+    #controls,
+    #status {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
     .status {
         &-header {
             display: flex;

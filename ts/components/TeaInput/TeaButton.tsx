@@ -14,7 +14,7 @@
  */
 
 // React imports
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 
 // Components
 import { TeaIcon } from '../TeaIcon';
@@ -31,6 +31,8 @@ interface iTeaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
     icon?: React.ReactNode;
     iconPosition?: 'left' | 'right';
     loading?: boolean;
+    /** Disable ripple effect (default: false) */
+    disableRipple?: boolean;
     size?: tButtonSize;
     theme?: tButtonTheme;
     variant?: tButtonVariant;
@@ -40,9 +42,58 @@ const TeaButton: React.FC<iTeaButtonProps> = (props) => {
     // Default props
     const iconPosition = props.iconPosition ?? 'left';
     const loading = props.loading ?? false;
+    const disableRipple = props.disableRipple ?? false;
     const size = props.size ?? 'medium';
     const theme = props.theme ?? 'default';
     const variant = props.variant ?? 'default';
+
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    /** Spawn a Material-UI style ripple circle at the click coordinates */
+    const spawnRipple = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            if (disableRipple || props.disabled || loading) return;
+
+            const button = buttonRef.current;
+            if (!button) return;
+
+            const rect = button.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Diameter must cover the furthest corner
+            const size =
+                Math.max(
+                    Math.hypot(x, y),
+                    Math.hypot(rect.width - x, y),
+                    Math.hypot(x, rect.height - y),
+                    Math.hypot(rect.width - x, rect.height - y),
+                ) * 2;
+
+            const ripple = document.createElement('span');
+            ripple.className = 'tea-button__ripple';
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+            ripple.style.left = `${x - size / 2}px`;
+            ripple.style.top = `${y - size / 2}px`;
+
+            button.appendChild(ripple);
+
+            // Clean up after animation finishes
+            ripple.addEventListener('animationend', () => {
+                ripple.remove();
+            });
+        },
+        [disableRipple, props.disabled, loading],
+    );
+
+    const handleClick = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            spawnRipple(e);
+            props.onClick?.(e);
+        },
+        [spawnRipple, props.onClick],
+    );
 
     const isIconOnlyChild = useMemo(() => {
         const children = React.Children.toArray(props.children).filter((child) => {
@@ -90,7 +141,13 @@ const TeaButton: React.FC<iTeaButtonProps> = (props) => {
     );
 
     return (
-        <button className={classes} disabled={props.disabled || loading} {...props}>
+        <button
+            ref={buttonRef}
+            className={classes}
+            disabled={props.disabled || loading}
+            {...props}
+            onClick={handleClick}
+        >
             {loading && (
                 <span className='spinner'>
                     <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>

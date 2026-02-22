@@ -13,11 +13,14 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
+// Components
 import { TeaButton } from './TeaInput/TeaButton';
 import { TeaModal } from './TeaModal';
 
+// Style
 import './style/TeaConfirm.scss';
 
 interface ConfirmOptions {
@@ -39,7 +42,7 @@ interface ConfirmState extends ConfirmOptions {
     resolve: ((value: boolean) => void) | null;
 }
 
-export const TeaConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const TeaConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, setState] = useState<ConfirmState>({
         isOpen: false,
         message: '',
@@ -92,7 +95,7 @@ export const TeaConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
 };
 
-export const useConfirm = (): ((options: ConfirmOptions) => Promise<boolean>) => {
+const useConfirm = (): ((options: ConfirmOptions) => Promise<boolean>) => {
     const context = useContext(ConfirmContext);
     if (!context) {
         throw new Error('useConfirm must be used within a TeaConfirmProvider');
@@ -101,3 +104,5 @@ export const useConfirm = (): ((options: ConfirmOptions) => Promise<boolean>) =>
 };
 
 export default TeaConfirmProvider;
+
+export { TeaConfirmProvider, useConfirm };

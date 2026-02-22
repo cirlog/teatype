@@ -17,7 +17,7 @@
 import { TeaButton, TeaPanel } from '../../../../components';
 
 // Icons
-import { ModelsIcon, RoundedSquareIcon } from '../../../../icons';
+import { ModelsIcon, SettingsIcon } from '../../../../icons';
 
 // Style
 import './style/ClientKit.scss';
@@ -50,14 +50,29 @@ const ClientKit = () => {
             <TeaPanel title='Buttons' variant='framed'>
                 <TeaButton>Default</TeaButton>
 
-                <TeaButton theme='success'>Success</TeaButton>
+                {/* <TeaButton theme='success'>Success</TeaButton> */}
 
                 <TeaButton theme='filled'>Filled</TeaButton>
 
                 <TeaButton>
-                    <RoundedSquareIcon />
+                    <SettingsIcon />
                 </TeaButton>
             </TeaPanel>
+
+            {/* <TeaPanel title='Containers' variant='framed'>
+                <TeaButton theme='filled'>Modal</TeaButton>
+
+                <TeaButton
+                    theme='filled'
+                    onClick={() => {
+                        toast('This is a toast message!');
+                    }}
+                >
+                    Toast
+                </TeaButton>
+
+                <TeaButton theme='filled'>Confirm</TeaButton>
+            </TeaPanel> */}
         </div>
     );
 };

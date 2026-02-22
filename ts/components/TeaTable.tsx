@@ -20,7 +20,7 @@ import { TeaModal } from './TeaModal';
 
 import './style/TeaTable.scss';
 
-export interface TeaTableColumn<T> {
+export interface iTeaTableColumn<T> {
     key: string;
     header: string;
     sortable?: boolean;
@@ -28,8 +28,8 @@ export interface TeaTableColumn<T> {
     className?: string;
 }
 
-export interface TeaTableProps<T> {
-    columns: TeaTableColumn<T>[];
+export interface iTeaTableProps<T> {
+    columns: iTeaTableColumn<T>[];
     data: T[];
     keyExtractor: (row: T, index: number) => string | number;
     sortKey?: string | null;
@@ -54,15 +54,15 @@ export function TeaTable<T>({
     loading = false,
     className = '',
     clickableRows = false,
-}: TeaTableProps<T>) {
+}: iTeaTableProps<T>) {
     const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
-    const renderSortIndicator = (column: TeaTableColumn<T>) => {
+    const renderSortIndicator = (column: iTeaTableColumn<T>) => {
         if (!column.sortable || sortKey !== column.key || !sortDirection) return null;
         return <span className='tea-table__sort-indicator'>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
     };
 
-    const handleSort = (column: TeaTableColumn<T>) => {
+    const handleSort = (column: iTeaTableColumn<T>) => {
         if (!column.sortable || !onSort) return;
 
         let newDirection: 'asc' | 'desc' | null;
@@ -161,14 +161,14 @@ export function TeaTable<T>({
 }
 
 // Pagination component to use with TeaTable
-interface TeaTablePaginationProps {
+interface iTeaTablePaginationProps {
     currentPage: number;
     totalPages: number;
     totalItems: number;
     onPageChange: (page: number) => void;
 }
 
-export const TeaTablePagination: React.FC<TeaTablePaginationProps> = ({
+const TeaTablePagination: React.FC<iTeaTablePaginationProps> = ({
     currentPage,
     totalPages,
     totalItems,
@@ -176,19 +176,23 @@ export const TeaTablePagination: React.FC<TeaTablePaginationProps> = ({
 }) => {
     return (
         <div className='tea-table__pagination'>
-            <TeaButton size='sm' onClick={() => onPageChange(1)} disabled={currentPage === 1}>
+            <TeaButton disabled={currentPage === 1} size='small' onClick={() => onPageChange(1)}>
                 «
             </TeaButton>
-            <TeaButton size='sm' onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>
+
+            <TeaButton disabled={currentPage === 1} size='small' onClick={() => onPageChange(currentPage - 1)}>
                 ‹
             </TeaButton>
+
             <span className='tea-table__pagination-info'>
                 Page {currentPage} of {totalPages} ({totalItems} total)
             </span>
-            <TeaButton size='sm' onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+
+            <TeaButton disabled={currentPage === totalPages} size='small' onClick={() => onPageChange(currentPage + 1)}>
                 ›
             </TeaButton>
-            <TeaButton size='sm' onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages}>
+
+            <TeaButton disabled={currentPage === totalPages} size='small' onClick={() => onPageChange(totalPages)}>
                 »
             </TeaButton>
         </div>
@@ -196,3 +200,5 @@ export const TeaTablePagination: React.FC<TeaTablePaginationProps> = ({
 };
 
 export default TeaTable;
+
+export { TeaTablePagination };

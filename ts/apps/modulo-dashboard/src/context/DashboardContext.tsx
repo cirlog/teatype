@@ -13,15 +13,18 @@
  * all copies or substantial portions of the Software.
  */
 
+// React imports
 import React, { createContext, useContext } from 'react';
 
+// Hooks
 import useStatusPulse, { tStatusSnapshot } from '../hooks/useStatusPulse';
 
 interface iDashboardContextValue {
-    status: tStatusSnapshot;
-    history: string[];
-    updating: boolean;
     error: string | null;
+    history: string[];
+    status: tStatusSnapshot;
+    updating: boolean;
+
     refresh: () => Promise<void>;
 }
 
