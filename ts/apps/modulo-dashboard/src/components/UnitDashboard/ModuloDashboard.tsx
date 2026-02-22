@@ -17,7 +17,7 @@
 import { ControlsPanel } from './tabs/ControlsPanel';
 import { LogsPanel } from './tabs/LogsPanel';
 import { StatusCard } from './tabs/StatusCard';
-import { TeaSubNav, iTeaSubNavItem } from '../../../../../components';
+import { TeaPanel, TeaSubNav, iTeaSubNavItem } from '../../../../../components';
 
 // Context
 import { DashboardProvider, useDashboard } from '../../context/DashboardContext';
@@ -43,14 +43,20 @@ function StatusTabContent() {
         <div id='controls'>
             <StatusCard status={status} updating={updating} error={error} onRefresh={refresh} />
 
-            <section className='card card--timeline'>
-                <h2>{t('dashboard.activity')}</h2>
+            <TeaPanel
+                useTheme
+                className='card--timeline'
+                padding='medium'
+                size='full'
+                title={t('dashboard.activity')}
+                variant='card'
+            >
                 <ul>
                     {history.map((entry, idx) => (
                         <li key={`${entry}-${idx}`}>{entry}</li>
                     ))}
                 </ul>
-            </section>
+            </TeaPanel>
         </div>
     );
 }
