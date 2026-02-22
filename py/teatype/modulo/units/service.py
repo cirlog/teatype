@@ -14,10 +14,7 @@
 from typing import Optional
 
 # Third-party imports
-from teatype.comms.ipc.redis import (
-    dispatch_handler, response_handler,
-    RedisChannel, RedisDispatch, RedisResponse, RedisServiceManager
-)
+from teatype.comms.ipc.redis import dispatch_handler, RedisChannel, RedisDispatch, RedisServiceManager
 from teatype.logging import *
 from teatype.modulo.units.core import CoreUnit
 

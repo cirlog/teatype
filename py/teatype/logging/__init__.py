@@ -22,4 +22,4 @@ __all__ = [
     'whisper'
 ]
 
-from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, warn, whisper
+from .logging import GLOBAL_LOGGING_CONFIG, err, hint, log, println, success, treeprint, warn, whisper

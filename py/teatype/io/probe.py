@@ -17,8 +17,8 @@ import sys
 # Third-party imports
 from teatype.logging import *
 
-def ip(ip: str) -> bool:
-    pass
+# def ip(ip: str) -> bool:
+#     pass
 
 def memory(obj:object, print_results:bool=False) -> int:
     def _get_size(obj, seen=None):
@@ -54,8 +54,8 @@ def memory(obj:object, print_results:bool=False) -> int:
         print(f'  {memory_mb:.4f} MB')
     return memory_bytes
 
-def port(port: int) -> bool:
-    pass
+# def port(port: int) -> bool:
+#     pass
 
 def package(package_name:str, silent:bool=True) -> bool:
     try:
@@ -66,8 +66,8 @@ def package(package_name:str, silent:bool=True) -> bool:
             err(f'Probe failed: Package {package_name} not found')
         return False
 
-def process(process: str) -> bool:
-    pass
+# def process(process: str) -> bool:
+#     pass
 
-def url(url: str) -> bool:
-    pass
+# def url(url: str) -> bool:
+#     pass

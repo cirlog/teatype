@@ -17,9 +17,9 @@ from queue import LifoQueue
 from typing import Optional, Union
 
 # Third-party imports
+from teatype.comms.ipc.redis import *
 from teatype.enum import EscapeColor
 from teatype.logging import *
-from teatype.comms.ipc.redis import *
 from teatype.toolkit import generate_id, kebabify
 
 def parse_designation(designation:str) -> dict[Union[str,str|int]]:
