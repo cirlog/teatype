@@ -50,9 +50,9 @@ class License(BaseCLI):
                     'help': 'Print the license for HTML'
                 },
                 {
-                    'name': 'jsonc',
+                    'name': 'json',
                     'shorthand': 'jc',
-                    'help': 'Print the license for JSONC'
+                    'help': 'Print the license for json'
                 },
                 {
                     'name': 'python',
@@ -97,7 +97,7 @@ class License(BaseCLI):
             comment_character = '// '
         elif selected_language == 'html':
             comment_character = ''
-        elif selected_language == 'jsonc':
+        elif selected_language == 'json':
             comment_character = ' * '
         elif selected_language == 'python':
             comment_character = '# '
@@ -112,7 +112,7 @@ class License(BaseCLI):
         # Wrap the formatted license with multi-line comment syntax if needed
         if selected_language == 'h' or selected_language == 'html':
             formatted_license = f'<!--\n{formatted_license}\n-->'
-        if selected_language == 'jc' or selected_language == 'jsonc':
+        if selected_language == 'jc' or selected_language == 'json':
             formatted_license = f'/**\n{formatted_license}\n */'
         elif selected_language == 'ts' or selected_language == 'typescript':
             formatted_license = f'/**\n * @license\n{formatted_license}\n */'

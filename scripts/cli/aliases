@@ -107,7 +107,7 @@ class Aliases(BaseCLI):
         
         for filename, aliases in grouped_aliases.items():
             println()
-            log(f'{EscapeColor.MAGENTA}{filename.replace(".jsonc", "")}:')
+            log(f'{EscapeColor.MAGENTA}{filename.replace(".json", "")}:')
             for alias in aliases:
                 log(f'{EscapeColor.LIGHT_CYAN}  {alias.name}: {alias.description}') # Log each alias name and description
 

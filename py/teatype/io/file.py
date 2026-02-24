@@ -561,7 +561,7 @@ def read(file:File|PosixPath|str,
                         config = configparser.ConfigParser()
                         config.read(path_string)
                         content = config
-                    elif file_extension == '.jsonc' or force_format == 'jsonc':
+                    elif file_extension == '.json' or force_format == 'json':
                         dirty_content = f.read()
                         # Remove comments denoted by '//' to ensure valid JSON
                         clean_content = re.sub(
