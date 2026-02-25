@@ -12,6 +12,7 @@
 
 # Local imports
 from .fetch import fetch
+from .liveterm import LiveTerm
 from .prompt import prompt
 from .shell import clear, enable_sudo, shell
 from .softkill import softkill
