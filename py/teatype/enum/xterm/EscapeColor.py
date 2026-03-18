@@ -33,6 +33,9 @@ class EscapeColor(Enum):
                      'light_white',
                      'light_yellow']
     
+    BOLD = '\033[1m'
+    NC   = '\033[0m'
+        
     BLACK = '\033[30m'
     BLUE = '\033[34m'
     CYAN = '\033[36m'

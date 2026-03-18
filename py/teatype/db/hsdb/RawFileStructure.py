@@ -20,7 +20,7 @@ from teatype.logging import *
 _DEFAULT_ROOT_PATH = '/var/lib'
 _FS = {
     'backups': {
-        'index': {},
+        'indexdb': {},
         'migration': {},
         'rawfiles': {}
     },
@@ -28,19 +28,20 @@ _FS = {
         'migrations': {}
     },
     'exports': {},
-    'index': {},
+    'indexdb': {},
     'logs': {
         'migrations': {},
         'reads': {},
         'writes': {}
     },
+    'lut': {},
     'models': {
         'adapters': {},
     },
     'rawfiles': {},
     'redundancy': {},
     'rejectpile': {
-        'index': {},
+        'indexdb': {},
         'rawfiles': {}
     }
 }

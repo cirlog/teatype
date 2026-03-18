@@ -13,7 +13,45 @@
 # Standard-library imports
 from __future__ import annotations
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union
+
+def _autonest() -> defaultdict:
+    return defaultdict(_autonest)
+
+def build_hierarchy(kv:Iterable[Tuple[str,Any]],
+                    *,
+                    sep:str=':',
+                    coerce_leaf:bool=True) -> Dict[str,Any]:
+    """
+    Build a nested dict from iterable of (compound_key, value) where compound_key uses `sep`.
+    Example: "foo:bar:baz" -> {"foo": {"bar": {"baz": value}}}
+    """
+    root = _autonest()
+    for key, val in kv:
+        parts = [p for p in str(key).split(sep) if p]
+        if not parts:
+            # edge-case: empty key, skip
+            continue
+        node = root
+        for p in parts[:-1]:
+            node = node[p]
+        node[parts[-1]] = val if coerce_leaf else {"__value__": val}
+    return to_plain_dict(root)
+
+def dict_to_object(d:Dict[str,Any]) -> object:
+    """
+    Convert a nested dict to an object with attribute-style access (recursively).
+    """
+    class _DictObject:
+        def __init__(self, data: Dict[str, Any]):
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    setattr(self, key, dict_to_object(value))
+                else:
+                    setattr(self, key, value)
+        def __repr__(self):
+            return f'DictObject({self.__dict__})'
+    return _DictObject(d)
 
 def fullcopy(obj, _memo=None):
     """
@@ -66,7 +104,57 @@ def fullcopy(obj, _memo=None):
     # (e.g., functions, modules) and return them as-is
     return obj
 
-def merge(dict1, dict2):
+def merge_lists(list1, list2):
+    """
+    Updates list1 to match list2 by merging items with the same unique identifiers.
+    
+    Args:
+        list1 (list): The original list to be updated.
+        list2 (list): The list containing updates.
+    
+    Returns:
+        list: The updated list combining elements from list1 and list2.
+    """
+    def get_identifier(item):
+        """
+        Retrieves a unique identifier from an item.
+        
+        Args:
+            item (dict): The dictionary item from which to extract the identifier.
+        
+        Returns:
+            Any: The unique identifier based on 'long'/'short' or 'name'/'shorthand' keys.
+        """
+        return item.get('long') or item.get('short') or item.get('name') or item.get('shorthand')
+    
+    # Create a mapping from identifier to item for list1, excluding items without an identifier
+    list1_map = {get_identifier(item): item for item in list1 if get_identifier(item) is not None}
+    # Create a mapping from identifier to item for list2, excluding items without an identifier
+    list2_map = {get_identifier(item): item for item in list2 if get_identifier(item) is not None}
+    
+    # Initialize an empty list to store the updated items
+    updated_list = []
+    # Iterate over each identifier and corresponding item in list2_map
+    for identifier, item2 in list2_map.items():
+        if identifier in list1_map:
+            # If the identifier exists in list1_map, perform a recursive update
+            updated_item = merge_lists(list1_map[identifier], item2)
+            # Append the updated item to the updated_list
+            updated_list.append(updated_item)
+        else:
+            # If the item is only present in list2, append it as is
+            updated_list.append(item2)
+    
+    # Iterate over list1_map to find items not present in list2_map
+    for identifier, item1 in list1_map.items():
+        if identifier not in list2_map:
+            # Append items from list1 that were not updated by list2
+            updated_list.append(item1)
+    
+    # Return the fully updated list
+    return updated_list
+
+def merge_dicts(dict1, dict2):
     """
     Recursively merges dict2 into dict1.
     
@@ -77,13 +165,12 @@ def merge(dict1, dict2):
     Returns:
         dict: The merged dictionary.
     """
-    from teatype.io import merge_lists # Avoid circular import issues
     # Iterate over each key-value pair in dict2
     for key, value in dict2.items():
         # If the value is a dictionary, perform a recursive update
         if isinstance(value, dict):
             # Retrieve the current value from dict1 or initialize as empty dict
-            dict1[key] = merge(dict1.get(key, {}), value)
+            dict1[key] = merge_dicts(dict1.get(key, {}), value)
         # If the value is a list of dictionaries, perform a list update
         elif isinstance(value, list) and all(isinstance(i, dict) for i in value):
             # Retrieve the current list from dict1 or initialize as empty list
@@ -94,25 +181,36 @@ def merge(dict1, dict2):
     # Return the updated dict1
     return dict1
 
-def to_object(d:Dict[str,Any]) -> object:
+def render_dict_tree(data:Dict[str,Any],
+                     *,
+                     indent_size:int=4) -> List[str]:
     """
-    Convert a nested dict to an object with attribute-style access (recursively).
+    Render a nested dict as an ASCII tree. Returns list of lines (no trailing newline).
+    Non-dict leaves are printed as `- key: value`.
     """
-    class _DictObject:
-        def __init__(self, data: Dict[str, Any]):
-            for key, value in data.items():
-                if isinstance(value, dict):
-                    setattr(self, key, to_object(value))
-                else:
-                    setattr(self, key, value)
-        def __repr__(self):
-            return f'DictObject({self.__dict__})'
-    return _DictObject(d)
+    lines = []
+    def _walk(obj:Any, prefix:str='') -> None:
+        if not isinstance(obj, dict) or not obj:
+            return
 
-def _autonest() -> defaultdict:
-    return defaultdict(_autonest)
+        items = list(obj.items())
+        last_idx = len(items) - 1
+        for idx, (k, v) in enumerate(items):
+            is_last = idx == last_idx
+            branch = '└── ' if is_last else '├── '
+            if isinstance(v, dict):
+                lines.append(f'{prefix}{branch}{k}')
+                child_prefix = f"{prefix}{'    ' if is_last else '│   '}"
+                _walk(v, child_prefix)
+            else:
+                leaf_prefix = f"{prefix}{'    ' if is_last else '│   '}"
+                lines.append(f'{leaf_prefix}{k}: {v}')
 
-def to_plain_dict(d: Union[defaultdict, dict]) -> Dict[str, Any]:
+    # Left pad every line by indent_size spaces at the very left for visual alignment
+    _walk(data, '')
+    return [(' ' * indent_size) + line for line in lines]
+
+def to_plain_dict(d:Union[defaultdict,dict]) -> Dict[str,Any]:
     """
     Convert nested defaultdicts to plain dicts (recursively).
     """
@@ -121,57 +219,3 @@ def to_plain_dict(d: Union[defaultdict, dict]) -> Dict[str, Any]:
     if isinstance(d, dict):
         return {k: to_plain_dict(v) for k, v in d.items()}
     return d
-
-def build_hierarchy(
-    kv: Iterable[Tuple[str, Any]],
-    *,
-    sep: str = ":",
-    coerce_leaf: bool = True,
-) -> Dict[str, Any]:
-    """
-    Build a nested dict from iterable of (compound_key, value) where compound_key uses `sep`.
-    Example: "foo:bar:baz" -> {"foo": {"bar": {"baz": value}}}
-    """
-    root = _autonest()
-    for key, val in kv:
-        parts = [p for p in str(key).split(sep) if p]
-        if not parts:
-            # edge-case: empty key, skip
-            continue
-        node = root
-        for p in parts[:-1]:
-            node = node[p]
-        node[parts[-1]] = val if coerce_leaf else {"__value__": val}
-    return to_plain_dict(root)
-
-def render_tree(
-    data: Dict[str, Any],
-    *,
-    indent_size: int = 4,
-) -> List[str]:
-    """
-    Render a nested dict as an ASCII tree. Returns list of lines (no trailing newline).
-    Non-dict leaves are printed as `- key: value`.
-    """
-    lines: List[str] = []
-
-    def _walk(obj: Any, prefix: str = "") -> None:
-        if not isinstance(obj, dict) or not obj:
-            return
-
-        items = list(obj.items())
-        last_idx = len(items) - 1
-        for idx, (k, v) in enumerate(items):
-            is_last = idx == last_idx
-            branch = "└── " if is_last else "├── "
-            if isinstance(v, dict):
-                lines.append(f"{prefix}{branch}{k}")
-                child_prefix = f"{prefix}{'    ' if is_last else '│   '}"
-                _walk(v, child_prefix)
-            else:
-                leaf_prefix = f"{prefix}{'    ' if is_last else '│   '}"
-                lines.append(f"{leaf_prefix}{k}: {v}")
-
-    # Left pad every line by indent_size spaces at the very left for visual alignment
-    _walk(data, "")
-    return [(" " * indent_size) + line for line in lines]

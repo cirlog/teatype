@@ -15,7 +15,7 @@ import os
 import shutil
 import uuid
 
-class TemporaryDirectory:
+class tempdir:
     """
     A context manager for creating and automatically cleaning up a temporary folder.
 
@@ -27,7 +27,7 @@ class TemporaryDirectory:
 
     def __init__(self, directory_path:str='.', directory_name:str=None, ignore_errors:bool=True, keep_folder:bool=False):
         """
-        Initializes the TemporaryDirectory context manager.
+        Initializes the tempdir context manager.
 
         Args:
             directory_path (str): The base path where the temporary folder will be created. Defaults to current directory.
