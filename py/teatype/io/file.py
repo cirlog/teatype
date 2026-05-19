@@ -19,6 +19,7 @@ import math
 import os
 import re
 import shutil
+import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import PosixPath
 from typing import List
@@ -690,11 +691,22 @@ def write(path:str,
         bool: True if the operation was successful, False otherwise.
     """
     # TODO: Make dynamic with plug'n'play function array and allow passing of custom functions
+    raw_backup = None
+    temp_path = None
+    original_permissions = None
     try:
         if create_parents:
             # Create parent directories if they do not exist
             parent_path = ''.join(subpath + '/' for subpath in path.split('/')[:-1])
             path_functions.create(parent_path)
+
+        # Keep a raw backup so the original bytes can be restored on any failure.
+        if os.path.exists(path) and os.path.isfile(path):
+            with open(path, 'rb') as backup_file:
+                raw_backup = backup_file.read()
+            original_permissions = os.stat(path).st_mode & 0o777
+
+        target_directory = os.path.dirname(path) if os.path.dirname(path) else '.'
             
         # JSON_DUMP_ENCODERS = {
         #     np.ndarray: lambda x: x.tolist(),
@@ -718,83 +730,109 @@ def write(path:str,
                     return value.tolist()
                 return super().default(value)
         
-        # Open the file in write mode
-        with open(path, 'w') as f:
-            if force_format == 'lines':
-                # Write multiple lines to the file
-                f.writelines(data)
-            elif path.endswith('.json') or force_format == 'json':
-                indent = None
-                if prettify:
-                    indent = 4
-                # Write JSON data to the file
-                json.dump(data, f, indent=indent, default=_JSON_DUMP_ENCODERS().default)
-            elif path.endswith('.ini') or force_format == 'ini':
-                # Initialize ConfigParser and update with new data
-                config = configparser.ConfigParser()
-                config.update(data)
-                # Write the updated configuration to the file
-                config.write(f)
-            elif path.endswith('.csv') or force_format == 'csv':
-                # Create a CSV writer object
-                writer = csv.writer(f)
-                # Write multiple rows to the CSV file
-                writer.writerows(data)
-            elif force_format == 'bytes':
-                f.write(data.decode('utf-8'))
-            elif path.endswith('.env') or '.env' in path or force_format == 'env':
-                # Non-destructively write environment variables to the file
-                # Read existing file to preserve comments, order, and inline comments
-                existing_lines = []
-                
-                if os.path.exists(path):
-                    with open(path, 'r') as existing_file:
-                        existing_lines = existing_file.readlines()
-                
-                # Process lines and update values for existing keys
-                updated_lines = []
-                processed_keys = set()
-                
-                for line in existing_lines:
-                    stripped = line.strip()
-                    
-                    # Preserve comments and empty lines as-is
-                    if not stripped or stripped.startswith('#'):
-                        updated_lines.append(line)
-                    else:
-                        # Try to find key=value pattern
-                        if '=' in stripped:
-                            key_part, _, value_and_comment = stripped.partition('=')
-                            key = key_part.strip()
-                            
-                            if key in data:
-                                # Check for inline comment (space followed by #)
-                                if ' #' in value_and_comment:
-                                    value_part, _, comment_part = value_and_comment.partition(' #')
-                                    new_line = f'{key}={data[key]} #{comment_part}\n'
-                                else:
-                                    new_line = f'{key}={data[key]}\n'
-                                
-                                updated_lines.append(new_line)
-                                processed_keys.add(key)
+        if path.endswith('.env') or '.env' in path or force_format == 'env':
+            # Non-destructively write environment variables while preserving comments and order.
+            existing_lines = []
+            if raw_backup is not None:
+                try:
+                    existing_text = raw_backup.decode('utf-8')
+                except UnicodeDecodeError:
+                    existing_text = raw_backup.decode('latin-1')
+                existing_lines = existing_text.splitlines(keepends=True)
+
+            updated_lines = []
+            processed_keys = set()
+
+            for line in existing_lines:
+                stripped = line.strip()
+
+                # Preserve comments and empty lines as-is
+                if not stripped or stripped.startswith('#'):
+                    updated_lines.append(line)
+                else:
+                    # Try to find key=value pattern
+                    if '=' in stripped:
+                        key_part, _, value_and_comment = stripped.partition('=')
+                        key = key_part.strip()
+
+                        if key in data:
+                            # Keep inline comments while replacing value
+                            if ' #' in value_and_comment:
+                                _, _, comment_part = value_and_comment.partition(' #')
+                                new_line = f'{key}={data[key]} #{comment_part}\n'
                             else:
-                                # Keep the line as-is
-                                updated_lines.append(line)
+                                new_line = f'{key}={data[key]}\n'
+
+                            updated_lines.append(new_line)
+                            processed_keys.add(key)
                         else:
-                            # Line without '=' - keep as-is
+                            # Keep unknown keys as-is
                             updated_lines.append(line)
-                
-                # Append new keys that don't exist in the file
-                for key, value in data.items():
-                    if key not in processed_keys:
-                        updated_lines.append(f'{key}={value}\n')
-                
-                # Write the updated content
+                    else:
+                        # Non key-value lines stay untouched
+                        updated_lines.append(line)
+
+            # Append keys that don't exist yet
+            for key, value in data.items():
+                if key not in processed_keys:
+                    updated_lines.append(f'{key}={value}\n')
+
+            with tempfile.NamedTemporaryFile('w', delete=False, dir=target_directory) as temp_file:
+                temp_path = temp_file.name
+                f = temp_file
                 f.writelines(updated_lines)
+        else:
+            if force_format == 'bytes':
+                with tempfile.NamedTemporaryFile('wb', delete=False, dir=target_directory) as temp_file:
+                    temp_path = temp_file.name
+                    temp_file.write(data)
+                    temp_file.flush()
+                    os.fsync(temp_file.fileno())
             else:
-                # Write plain text data to the file
-                f.write(data)
+                # Open a temporary file in write mode for non-env text formats
+                with tempfile.NamedTemporaryFile('w', delete=False, dir=target_directory) as temp_file:
+                    temp_path = temp_file.name
+                    f = temp_file
+                    if force_format == 'lines':
+                        # Write multiple lines to the file
+                        f.writelines(data)
+                    elif path.endswith('.json') or force_format == 'json':
+                        indent = None
+                        if prettify:
+                            indent = 4
+                        # Write JSON data to the file
+                        json.dump(data, f, indent=indent, default=_JSON_DUMP_ENCODERS().default)
+                    elif path.endswith('.ini') or force_format == 'ini':
+                        # Initialize ConfigParser and update with new data
+                        config = configparser.ConfigParser()
+                        config.update(data)
+                        # Write the updated configuration to the file
+                        config.write(f)
+                    elif path.endswith('.csv') or force_format == 'csv':
+                        # Create a CSV writer object
+                        writer = csv.writer(f)
+                        # Write multiple rows to the CSV file
+                        writer.writerows(data)
+                    else:
+                        # Write plain text data to the file
+                        f.write(data)
+
+        if temp_path is not None and os.path.exists(temp_path):
+            if original_permissions is not None:
+                os.chmod(temp_path, original_permissions)
+            os.replace(temp_path, path)
         return True
-    except Exception:
+    except Exception as exc:
+        if temp_path is not None and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+        if raw_backup is not None:
+            try:
+                with open(path, 'wb') as restore_file:
+                    restore_file.write(raw_backup)
+            except Exception as restore_exc:
+                err(f'Error restoring original content for file {path}: {restore_exc}')
         # Log an error message if an exception occurs
-        err(f'Error writing to file {path}.', raise_exception=True, traceback=True)
+        err(f'Error writing to file {path}: {exc}', raise_exception=True, traceback=True)
