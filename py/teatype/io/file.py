@@ -742,7 +742,7 @@ def write(path:str,
                 writer.writerows(data)
             elif force_format == 'bytes':
                 f.write(data.decode('utf-8'))
-            elif path.endswithÄ('.env') or force_format == 'env':
+            elif path.endswith('.env') or force_format == 'env':
                 # Write environment variables to the file
                 for key, value in data.items():
                     f.write(f'{key}={value}\n')
