@@ -742,10 +742,55 @@ def write(path:str,
                 writer.writerows(data)
             elif force_format == 'bytes':
                 f.write(data.decode('utf-8'))
-            elif path.endswith('.env') or force_format == 'env':
-                # Write environment variables to the file
+            elif path.endswith('.env') or '.env' in path or force_format == 'env':
+                # Non-destructively write environment variables to the file
+                # Read existing file to preserve comments, order, and inline comments
+                existing_lines = []
+                
+                if os.path.exists(path):
+                    with open(path, 'r') as existing_file:
+                        existing_lines = existing_file.readlines()
+                
+                # Process lines and update values for existing keys
+                updated_lines = []
+                processed_keys = set()
+                
+                for line in existing_lines:
+                    stripped = line.strip()
+                    
+                    # Preserve comments and empty lines as-is
+                    if not stripped or stripped.startswith('#'):
+                        updated_lines.append(line)
+                    else:
+                        # Try to find key=value pattern
+                        if '=' in stripped:
+                            key_part, _, value_and_comment = stripped.partition('=')
+                            key = key_part.strip()
+                            
+                            if key in data:
+                                # Check for inline comment (space followed by #)
+                                if ' #' in value_and_comment:
+                                    value_part, _, comment_part = value_and_comment.partition(' #')
+                                    new_line = f'{key}={data[key]} #{comment_part}\n'
+                                else:
+                                    new_line = f'{key}={data[key]}\n'
+                                
+                                updated_lines.append(new_line)
+                                processed_keys.add(key)
+                            else:
+                                # Keep the line as-is
+                                updated_lines.append(line)
+                        else:
+                            # Line without '=' - keep as-is
+                            updated_lines.append(line)
+                
+                # Append new keys that don't exist in the file
                 for key, value in data.items():
-                    f.write(f'{key}={value}\n')
+                    if key not in processed_keys:
+                        updated_lines.append(f'{key}={value}\n')
+                
+                # Write the updated content
+                f.writelines(updated_lines)
             else:
                 # Write plain text data to the file
                 f.write(data)
