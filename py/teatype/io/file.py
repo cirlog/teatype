@@ -813,9 +813,14 @@ def write(path:str,
                         writer = csv.writer(f)
                         # Write multiple rows to the CSV file
                         writer.writerows(data)
-                    else:
+                    elif path.endswith('.txt') or force_format == 'txt':
                         # Write plain text data to the file
                         f.write(data)
+                    else:
+                        # Write data to the file without any specific format
+                        f.write(str(data))
+                    # f.flush()
+                    # os.fsync(f.fileno())
 
         if temp_path is not None and os.path.exists(temp_path):
             if original_permissions is not None:
