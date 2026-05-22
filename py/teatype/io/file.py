@@ -796,6 +796,9 @@ def write(path:str,
                     if force_format == 'lines':
                         # Write multiple lines to the file
                         f.writelines(data)
+                    elif path.endswith('.txt') or force_format == 'txt':
+                        # Write plain text data to the file
+                        f.write(data)
                     elif path.endswith('.json') or force_format == 'json':
                         indent = None
                         if prettify:
@@ -813,9 +816,6 @@ def write(path:str,
                         writer = csv.writer(f)
                         # Write multiple rows to the CSV file
                         writer.writerows(data)
-                    elif path.endswith('.txt') or force_format == 'txt':
-                        # Write plain text data to the file
-                        f.write(data)
                     else:
                         # Write data to the file without any specific format
                         f.write(str(data))
