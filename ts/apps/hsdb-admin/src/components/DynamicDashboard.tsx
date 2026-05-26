@@ -57,13 +57,6 @@ export function DynamicDashboard() {
         return (
             <TeaConfirmProvider>
                 <div className='hsdb-dashboard'>
-                    <Toaster position='top-right' />
-
-                    <div className='hsdb-dashboard__header'>
-                        <h1>HSDB Admin</h1>
-                        <p>Select a resource to manage</p>
-                    </div>
-
                     <div className='hsdb-dashboard__stats'>
                         {apiInfos.map((info) => (
                             <div
@@ -87,40 +80,6 @@ export function DynamicDashboard() {
                                 </div>
                             </div>
                         ))}
-                    </div>
-
-                    <div className='hsdb-dashboard__info'>
-                        <h3>Registered APIs</h3>
-                        <table className='api-table'>
-                            <thead>
-                                <tr>
-                                    <th>Model</th>
-                                    <th>Resource</th>
-                                    <th>Endpoint</th>
-                                    <th>Count</th>
-                                    <th>Fields</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {apiInfos.map((info) => (
-                                    <tr
-                                        key={info.resource}
-                                        className='clickable'
-                                        onClick={() => setSelectedResource(info.resource)}
-                                    >
-                                        <td>{info.name}</td>
-                                        <td>
-                                            <code>{info.resource}</code>
-                                        </td>
-                                        <td>
-                                            <code>{info.endpoint}</code>
-                                        </td>
-                                        <td>{info.count}</td>
-                                        <td>{Object.keys(info.fields).length} fields</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </TeaConfirmProvider>

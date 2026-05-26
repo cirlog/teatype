@@ -35,7 +35,6 @@ from teatype.modulo.units.socket import SocketUnit
 from teatype.comms.ipc.redis import RedisDispatch
 from teatype.toolkit import dt
 
-
 # Package paths for default vanilla React dashboard
 PACKAGE_ROOT = Path(__file__).resolve().parents[4]
 # Default React dashboard is located in ts/apps/modulo-dashboard

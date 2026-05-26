@@ -97,6 +97,7 @@ if __name__ == '__main__':
         cors_allow_all=True,
         debug=True,
         models=MODELS,
+        root_urlconf='hsdb_server_urls',
     )
     
     # Seed the database

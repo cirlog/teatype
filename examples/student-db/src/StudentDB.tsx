@@ -34,15 +34,15 @@ const PAGES: iPageInfo[] = [
         icon: <DatabaseIcon />,
         tags: ['Admin', 'HSDB'],
     },
-    {
-        title: 'Data Query Builder',
-        path: '/data-query-builder',
-        content: QueryBuilder,
-        longDescription: 'Build and execute custom queries against the HSDB server to fetch student and related data.',
-        shortDescription: 'Build Custom Data Queries',
-        icon: <ModelsIcon />,
-        tags: ['Admin', 'Config', 'HSDB', 'Test'],
-    },
+    // {
+    //     title: 'Data Query Builder',
+    //     path: '/data-query-builder',
+    //     content: QueryBuilder,
+    //     longDescription: 'Build and execute custom queries against the HSDB server to fetch student and related data.',
+    //     shortDescription: 'Build Custom Data Queries',
+    //     icon: <ModelsIcon />,
+    //     tags: ['Admin', 'Config', 'HSDB', 'Test'],
+    // },
 ];
 
 const StudentDB = () => {

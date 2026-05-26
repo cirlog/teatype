@@ -424,15 +424,15 @@ class HSDBServer():
         urlpatterns = []
         
         # Add HSDB schema/models endpoint
-        schema_route = f'{base_endpoint}/hsdb/schema/' if base_endpoint else 'hsdb/schema/'
+        schema_route = f'{base_endpoint}/hsdb/schema' if base_endpoint else 'hsdb/schema'
         urlpatterns.append(path(schema_route, self._schema_view, name='hsdb-schema'))
         
         # Add HSDB models list endpoint
-        models_route = f'{base_endpoint}/hsdb/models/' if base_endpoint else 'hsdb/models/'
+        models_route = f'{base_endpoint}/hsdb/models' if base_endpoint else 'hsdb/models'
         urlpatterns.append(path(models_route, self._models_list_view, name='hsdb-models'))
         
         # Add HSDB API registry endpoint (comprehensive model + API info for frontend clients)
-        registry_route = f'{base_endpoint}/hsdb/registry/' if base_endpoint else 'hsdb/registry/'
+        registry_route = f'{base_endpoint}/hsdb/registry' if base_endpoint else 'hsdb/registry'
         urlpatterns.append(path(registry_route, self._api_registry_view, name='hsdb-registry'))
         
         # Add admin if requested
