@@ -55,7 +55,7 @@ def kebabify(raw_name:str,
         parsed_name = parsed_name + 's' if not parsed_name.endswith('s') else parsed_name + 'es'
     return parsed_name # Return the final kebabified (and possibly modified) string
 
-def unkebabify(kebab_name: str) -> str:
+def unkebabify(kebab_name:str, insert_spaces:bool=False) -> str:
     """
     Convert a kebab-case string back into PascalCase.
 
@@ -65,5 +65,8 @@ def unkebabify(kebab_name: str) -> str:
     """
     # Split the kebab-case input into parts on hyphens
     parts = kebab_name.split('-')
+    if insert_spaces:
+        # Capitalize each part and join with spaces
+        return ' '.join(part.capitalize() for part in parts if part)
     # Capitalize each non-empty segment and join them without separators
     return ''.join(part.capitalize() for part in parts if part)

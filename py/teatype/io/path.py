@@ -244,6 +244,28 @@ def join(*args, stringify:bool=True) -> str:
     joined_path = Path(*args) # Join the path components
     return str(joined_path) if stringify else joined_path # Return the joined path as string or Path object
 
+def move(source:str, destination:str, sudo:bool=False) -> bool:
+    """
+    Move directory to a new location.
+
+    Args:
+        path (str): The path to the directory to move.
+        sudo (bool): If True, uses 'sudo' directory.
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
+    """
+    try:
+        if sudo:
+            # If sudo is required, use the 'sudo' command
+            os.system(f'sudo mv "{source}" "{destination}"')
+        else:
+            shutil.move(source, destination) # Move the directory
+        return True
+    except Exception as exc:
+        err(f'Error moving folder "{source}": {exc}')
+        return False
+
 def parent(path:str, reverse_depth:int=1, stringify:bool=True) -> str:
     """
     Retrieve the parent directory of the given path.
