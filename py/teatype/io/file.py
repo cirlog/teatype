@@ -520,9 +520,8 @@ def read(file:File|PosixPath|str,
                 content = None
                 with open(path_string, 'r') as f:
                     if force_format == 'lines':
-                        # Read and return the lines of the file
+                        # Read and return the lines of the file, preserving newlines
                         content = f.readlines()
-                        content = [line.strip() for line in content]
                     elif file_extension == '.xml' or force_format == 'xml':
                         # Parse and return XML data from the file
                         raw_xml_tree = ET.parse(path_string)

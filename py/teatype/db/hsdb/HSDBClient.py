@@ -14,17 +14,8 @@
 from teatype.db.hsdb import HybridStorage
 from teatype.modulo.units.application import ApplicationUnit
 
-class HSDB(ApplicationUnit):
-    """
-    The main Hybdrid Storage Database application unit. Only one instance should be created per deployment.
-    All other HSDB components (like IndexDatabase, RawFileHandler, etc.) should be accessed via this unit.
-    All HSDB operations are channeled through this application unit.
-    """
-    def __init__(self, 
-                 host:str='127.0.0.1', 
-                 port=9876) -> None:
-        super().__init__('HybridStorageDatabase', backend_host=host, backend_port=port)
-        
-        self.hybrid_storage = HybridStorage()
-        
-hsdb = HSDB()
+class HSDBClient(ApplicationUnit):
+    def __init__(self) -> None:
+        pass
+    
+hsdb_client = HSDBClient()
