@@ -64,6 +64,7 @@ class BaseStopCLI(BaseCLI):
                          auto_parse=auto_parse,
                          auto_validate=auto_validate,
                          auto_execute=False) # We will call execute manually after setting up the kill parameters
+        self._is_running = False # default; load_script sets True if live processes are found
         # Load and import all relevant scripts
         self.load_script()
         
@@ -74,8 +75,10 @@ class BaseStopCLI(BaseCLI):
                 else:
                     log('No running processes found to stop.')
                 println()
-            exit(0)
-        
+            if auto_execute:
+                exit(0)
+            return
+            
         if auto_execute:
             if hasattr(self, 'pre_execute') and callable(getattr(self, 'pre_execute')):
                 self.pre_execute()
@@ -149,6 +152,7 @@ class BaseStopCLI(BaseCLI):
                                 # Execute the script and retrieve the list of process PIDs
                                 self.process_pids = self.is_running.execute()
                                 self.process_names = self.is_running.process_names
+                                
                                 if self.process_pids is None or len(self.process_pids) == 0:
                                     self._is_running = False
                                 else:

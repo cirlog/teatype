@@ -170,10 +170,11 @@ class BaseStartCLI(BaseCLI):
                                 self.stop = script_class(auto_validate=False,
                                                          auto_execute=False)
                                 self.stop.scripts_directory = scripts_directory
-                                # Perform any necessary pre-execution setup
-                                self.stop.pre_execute()
-                                # Execute the script
-                                self.stop.execute()
+                                if self.stop._is_running:
+                                    # Perform any necessary pre-execution setup
+                                    self.stop.pre_execute()
+                                    # Execute the script
+                                    self.stop.execute()
                                 stop_script_found = True
                             if stop_script_found:
                                 break
@@ -229,6 +230,7 @@ class BaseStartCLI(BaseCLI):
         class DefaultStop(StopCLIBase):
             def __init__(self, process_names_list, **kwargs):
                 self._process_names_list = process_names_list
+                
                 super().__init__(**kwargs)
             
             def load_script(self):
@@ -245,6 +247,11 @@ class BaseStartCLI(BaseCLI):
                 self.is_running.pre_execute()
                 self.process_pids = self.is_running.execute()
                 self.process_names = self.is_running.process_names
+                
+                if self.process_pids is None or len(self.process_pids) == 0:
+                    self._is_running = False
+                else:
+                    self._is_running = True
         
         # Instantiate the default stop script
         self.stop = DefaultStop(
