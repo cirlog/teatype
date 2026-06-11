@@ -59,11 +59,15 @@ class BaseStopCLI(BaseCLI):
                  auto_init:bool=True,
                  auto_parse:bool=True,
                  auto_validate:bool=True,
-                 auto_execute:bool=True):
+                 auto_execute:bool=True,
+                 scripts_directory:str=None):
         super().__init__(auto_init=auto_init,
                          auto_parse=auto_parse,
                          auto_validate=auto_validate,
                          auto_execute=False) # We will call execute manually after setting up the kill parameters
+        if scripts_directory is not None:
+            self.scripts_directory = scripts_directory
+        
         self._is_running = False # default; load_script sets True if live processes are found
         # Load and import all relevant scripts
         self.load_script()

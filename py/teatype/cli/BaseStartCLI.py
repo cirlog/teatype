@@ -168,8 +168,8 @@ class BaseStartCLI(BaseCLI):
                                 
                                 # Instantiate the class without automatic validation or execution
                                 self.stop = script_class(auto_validate=False,
-                                                         auto_execute=False)
-                                self.stop.scripts_directory = scripts_directory
+                                                         auto_execute=False,
+                                                         scripts_directory=scripts_directory)
                                 if self.stop._is_running:
                                     # Perform any necessary pre-execution setup
                                     self.stop.pre_execute()
