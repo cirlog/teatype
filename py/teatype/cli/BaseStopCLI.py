@@ -173,31 +173,25 @@ class BaseStopCLI(BaseCLI):
         Execute the stop command by loading scripts, checking for processes, and initiating the kill sequence.
         """
         silent = self.get_flag('silent', False)
-        if len(self.process_pids) == 0:
-            if not silent:
+        if not silent:
+            println()
+            if hasattr(self, 'process_names'):
+                log(f'Initiating stop sequence for {self.process_names} ...')
+        force_signal = self.get_flag('force-signal')
+        if not silent:
+            if force_signal:
+                hint(f'Forcing signal: {force_signal}')
+        sleep = self.get_flag('sleep', 1)
+        if not silent:
+            hint(f'Only sleeping {sleep}s seconds between attempts')
+            if force_signal or sleep:
                 println()
-                # Inform the user if there are no processes to stop
-                log('No processes to stop.')
-                println()
-            return True
-        else:
-            if not silent:
-                println()
-            force_signal = self.get_flag('force-signal')
-            if not silent:
-                if force_signal:
-                    hint(f'Forcing signal: {force_signal}')
-            sleep = self.get_flag('sleep', 1)
-            if not silent:
-                hint(f'Only sleeping {sleep}s seconds between attempts')
-                if force_signal or sleep:
-                    println()
-                println()
-            # Begin the recursive kill process
-            return softkill(self.process_names,
-                            force_signal=force_signal,
-                            delay=sleep,
-                            silent=silent)
+            println()
+        # Begin the recursive kill process
+        return softkill(self.process_names,
+                        force_signal=force_signal,
+                        delay=sleep,
+                        silent=silent)
 
 if __name__ == '__main__':
     BaseStopCLI()
