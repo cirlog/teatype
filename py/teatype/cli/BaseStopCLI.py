@@ -55,6 +55,33 @@ class BaseStopCLI(BaseCLI):
             ]
         }
         
+    def __init__(self, 
+                 auto_init:bool=True,
+                 auto_parse:bool=True,
+                 auto_validate:bool=True,
+                 auto_execute:bool=True):
+        super().__init__(auto_init=auto_init,
+                         auto_parse=auto_parse,
+                         auto_validate=auto_validate,
+                         auto_execute=False) # We will call execute manually after setting up the kill parameters
+        # Load and import all relevant scripts
+        self.load_script()
+        
+        if not self._is_running:
+            if not self.get_flag('silent', False):
+                if hasattr(self, 'process_names'):
+                    log(f'No running {self.process_names} processes found to stop.')
+                else:
+                    log('No running processes found to stop.')
+                println()
+            exit(0)
+        
+        if auto_execute:
+            if hasattr(self, 'pre_execute') and callable(getattr(self, 'pre_execute')):
+                self.pre_execute()
+            
+            self.execute()
+        
     # TODO: Decouple this class from CheckIfRunning into BaseCLI to prevent DRY
     def load_script(self, scripts_directory:str=None) -> dict:
         """
@@ -122,6 +149,10 @@ class BaseStopCLI(BaseCLI):
                                 # Execute the script and retrieve the list of process PIDs
                                 self.process_pids = self.is_running.execute()
                                 self.process_names = self.is_running.process_names
+                                if self.process_pids is None or len(self.process_pids) == 0:
+                                    self._is_running = False
+                                else:
+                                    self._is_running = True
                         except Exception as exc:
                             if formatted_module_name == 'is_running':
                                 # Log an error if loading the script fails
@@ -141,9 +172,6 @@ class BaseStopCLI(BaseCLI):
         """
         Execute the stop command by loading scripts, checking for processes, and initiating the kill sequence.
         """
-        # Load and import all relevant scripts
-        self.load_script()
-        
         silent = self.get_flag('silent', False)
         if len(self.process_pids) == 0:
             if not silent:
