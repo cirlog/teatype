@@ -1,0 +1,51 @@
+#!/usr/bin/env python3.13
+
+# Copyright (C) 2024-2026 Burak Günaydin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# Third-party imports
+from teatype.cli import BaseCLI
+from teatype.io import env, path, shell
+from teatype.logging import *
+
+def check_snoopy():
+    env_path = path.join(path.caller_parent(reverse_depth=2), '.env')
+    env.load(env_path)
+    snoopy_path = env.get('SNOOPY_PATH', None)
+    if snoopy_path is None or snoopy_path == '':
+        return False, f'SNOOPY_PATH environment variable is not set under "{env_path}"'
+    elif not path.exists(snoopy_path):
+        return False, f'SNOOPY_PATH is set to "{snoopy_path}", but the path does not exist'
+    return True, None
+
+class Snoopy(BaseCLI):
+    NOT_AVAILABLE=not check_snoopy()[0]
+    NOT_AVAILABLE_REASON=check_snoopy()[1]
+    
+    def meta(self):
+        return {
+            'name': 'snoopy',
+            'shorthand': 'sy',
+            'help': 'A proxy-cli for the snooPy test-web-client project'
+        }
+
+    def execute(self):
+        try:
+            snoopy_path = env.get('SNOOPY_PATH')
+            shell(f'. "{snoopy_path}/snoopy-venv/bin/activate" && python3.11 "{snoopy_path}/main.py"')
+        except:
+            err('An error occurred while trying to print the license text.', 
+                exit=True,
+                traceback=True)
+            
+if __name__ == '__main__':
+    Snoopy()
