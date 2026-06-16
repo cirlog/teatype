@@ -10,4 +10,9 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-from .XTerm import *
+try:
+    from .XTerm import *
+except ImportError:
+    # Backwards compatibility for older versions of teatype that don't have XTerm enum
+    import EscapeColor as XTerm
+    from .XTerm import *
