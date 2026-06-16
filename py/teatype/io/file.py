@@ -514,7 +514,7 @@ def read(file:File|PosixPath|str,
         # handlers = {
         #     'json': read_json,
         # }
-        file_class =File(path_string, trimmed=trim_file)
+        file_class = File(path_string, trimmed=trim_file)
         if file_class.exists:
             if file_class.is_file:
                 content = None
@@ -596,7 +596,7 @@ def read(file:File|PosixPath|str,
                     elif file_extension == '.csv' or force_format == 'csv':
                         # Read and return CSV data as a list of rows
                         content = list(csv.reader(f))
-                    elif file_extension == '.env' or force_format == 'env':
+                    elif '.env' in file_class.path or file_extension == '.env' or force_format == 'env':
                         # Parse and return environment variables from the file
                         env_vars = {}
                         for line in f:
