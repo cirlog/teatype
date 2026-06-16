@@ -596,7 +596,7 @@ def read(file:File|PosixPath|str,
                     elif file_extension == '.csv' or force_format == 'csv':
                         # Read and return CSV data as a list of rows
                         content = list(csv.reader(f))
-                    elif file_class.name == '.env' or file_extension == '.env' or force_format == 'env':
+                    elif '.env' in file_class.path or file_extension == '.env' or force_format == 'env':
                         # Parse and return environment variables from the file
                         env_vars = {}
                         for line in f:
