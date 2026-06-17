@@ -13,7 +13,6 @@
 try:
     from .XTerm import *
 except ImportError:
-    # ponytail: backwards compatibility for older versions of teatype that don't have XTerm enum
     try:
         from .EscapeColor import EscapeColor as XTerm
     except ImportError:
