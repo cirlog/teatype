@@ -102,7 +102,7 @@ class MainCLI(BaseCLI):
                                 # Initialize script instance without auto-execution or init hooks —
                                 # auto_init=False prevents pre_init() from running at discovery time,
                                 # which stops scripts from doing expensive/destructive work on every `cl` call.
-                                # ponytail: manually extract meta instead of full init
+                                # manually extract meta instead of full init
                                 script_instance = script_class.__new__(script_class)
                                 script_instance.proxy_mode = True
                                 script_instance._parsing_errors = []
