@@ -30,6 +30,12 @@ from watchfiles import watch
 
 class BaseStartCLI(BaseCLI):
     LOGS_PATH:str='/var/log'
+    WATCHDOG_IGNORE=['venv/',
+                     '~temp',
+                     '.venv/',
+                     '/logs/',
+                     'pycache',
+                     '/dist/']
     
     def __init__(self, 
                  auto_init:bool=True,
@@ -315,12 +321,7 @@ class BaseStartCLI(BaseCLI):
                 changes_detected = [
                     (change, path_str)
                     for (change, path_str) in changes
-                    if 'venv/' not in path_str
-                    # and path_str.endswith('.py')
-                    and '~temp' not in path_str
-                    and '.venv/' not in path_str
-                    and '/logs/' not in path_str
-                    and 'pycache' not in path_str
+                    if not any(ignore in path_str for ignore in self.WATCHDOG_IGNORE)
                 ]
                 if not changes_detected:
                     continue
