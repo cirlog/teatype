@@ -99,11 +99,21 @@ class MainCLI(BaseCLI):
                             script_class = getattr(module, class_name, None)
                             # Verify class is valid CLI script
                             if script_class and inspect.isclass(script_class) and issubclass(script_class, BaseCLI):
-                                # Initialize script instance without auto-execution
-                                script_instance = script_class(proxy_mode=True,
-                                                               auto_parse=False,
-                                                               auto_validate=False,
-                                                               auto_execute=False)
+                                # Initialize script instance without auto-execution or init hooks —
+                                # auto_init=False prevents pre_init() from running at discovery time,
+                                # which stops scripts from doing expensive/destructive work on every `cl` call.
+                                # ponytail: manually extract meta instead of full init
+                                script_instance = script_class.__new__(script_class)
+                                script_instance.proxy_mode = True
+                                script_instance._parsing_errors = []
+                                script_instance.arguments = []
+                                script_instance.commands = []
+                                script_instance.flags = []
+                                script_instance.secret_flags = []
+                                meta = script_instance.meta()
+                                script_instance.name = meta.get('name')
+                                script_instance.shorthand = meta.get('shorthand')
+                                script_instance.help = meta.get('help')
                                 module_registry[script_instance.name] = script_instance
                         except Exception as exc:
                             # print(script_class.AVAILABLE)
