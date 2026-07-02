@@ -14,4 +14,3 @@ starlette==0.50.0
 uvicorn==0.38.0
 uvicorn[standard]==0.38.0
 uvloop==0.22.1
-websockets==15.0.1

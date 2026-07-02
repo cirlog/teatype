@@ -11,6 +11,9 @@
 # all copies or substantial portions of the Software.
 
 # From local imports
+from .http import trequest
+from .http.trequest import get, post, put, patch, delete
 from .url import encode as encode_url
 from .url import decode as decode_url
 from .url import join as join_uris
+from .ws.Websocket import Websocket
