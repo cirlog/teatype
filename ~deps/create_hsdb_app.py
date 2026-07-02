@@ -73,7 +73,7 @@ def create_app_structure(app_name: str, base_path: str = 'api'):
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Third-party imports
 from teatype.db.hsdb import HSDBModel, HSDBAttribute
 
 class ExampleModel(HSDBModel):
@@ -106,7 +106,7 @@ class ExampleModel(HSDBModel):
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Third-party imports
 from teatype.db.hsdb.django_support.views import HSDBDjangoResource
 
 # From local imports
@@ -145,7 +145,7 @@ class ExampleResource(HSDBDjangoResource):
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Third-party imports
 from teatype.db.hsdb.django_support.views import HSDBDjangoCollection
 
 # From local imports
@@ -182,7 +182,7 @@ class ExampleCollection(HSDBDjangoCollection):
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# From package imports
+# Third-party imports
 from teatype.db.hsdb.django_support.urlpatterns import parse_dynamic_routes
 from teatype.io import path
 

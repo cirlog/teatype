@@ -10,16 +10,16 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System imports
+# Standard-library imports
 import asyncio
 import inspect
 import json
 import threading
 
-# Package imports
+# Third-party imports
 import websockets
 
-# From package imports
+# Local imports
 from teatype.logging import *
 
 class Websocket:

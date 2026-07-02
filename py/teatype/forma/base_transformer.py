@@ -10,7 +10,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
-# System-library imports
+# Standard-library imports
 import json
 from abc import abstractmethod
 from dataclasses import dataclass
