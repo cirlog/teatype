@@ -31,6 +31,7 @@ import numpy as np
 # Local imports
 from teatype.logging import *
 from teatype.io import path as path_functions
+from teatype.toolkit import fastjson
 
 # TODO: Implement with context handling
 class File:
