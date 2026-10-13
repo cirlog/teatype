@@ -84,6 +84,13 @@ class BaseTUI(BaseCLI):
         def _meta_closure():
             additional_flags = [
                 {
+                    'name': 'command',
+                    'shorthand': 'c',
+                    'help': 'Run a single action non-interactively and exit (e.g. -c list, -c "edit 1").',
+                    'required': False,
+                    'options': str
+                },
+                {
                     'name': 'debug',
                     'shorthand': 'd',
                     'help': 'Enable debug mode for the TUI.',
@@ -94,12 +101,6 @@ class BaseTUI(BaseCLI):
                     'shorthand': 'mr',
                     'help': 'Enable manual refresh mode for the TUI.',
                     'required': False,
-                },
-                {
-                    'name': 'one-shot',
-                    'shorthand': 'os',
-                    'help': 'Execute a single command and exit the TUI.',
-                    'required': False
                 }
             ]
             meta_info['flags'] = meta_info['flags'] + additional_flags if 'flags' in meta_info else additional_flags
@@ -123,7 +124,7 @@ class BaseTUI(BaseCLI):
     def post_validate(self):
         self.debug = self.get_flag('debug')
         self.manual_refresh = self.get_flag('manual-refresh')
-        self.one_shot = self.get_flag('one-shot')
+        self.command = self.get_flag('command')
         if self.manual_refresh:
             manual_refresh_action = Action(name='clear',
                                            help='Refreshes the shell in manual mode.')
@@ -153,7 +154,39 @@ class BaseTUI(BaseCLI):
             self._parsing_errors.remove('No command provided.')
         
     def execute(self):
-        self.run()
+        if getattr(self, 'command', None):
+            self.run_command()
+        else:
+            self.run()
+            
+    def run_command(self):
+        """
+        Runs a single action given via the -c flag like a regular CLI command and exits,
+        without the interactive screen. The action's option is passed after a space,
+        e.g. -c "edit 1".
+        """
+        user_input, _, option = self.command.strip().partition(' ')
+        option = option.strip() or None
+        
+        available_actions = [action.name for action in self.actions if action.name not in ('clear', 'exit')]
+        matching_action = next((action for action in self.actions if action.name == user_input and action.name in available_actions), None)
+        if not matching_action:
+            err(f'Unknown action "{user_input}". Available actions: {", ".join(available_actions)}.',
+                exit=True,
+                pad_before=1,
+                pad_after=1,
+                verbose=False)
+        if matching_action.option and not option:
+            err(f'Action "{user_input}" requires <{matching_action.option_name}> (e.g., -c "{user_input} <{matching_action.option_name}>").',
+                exit=True,
+                pad_before=1,
+                pad_after=1,
+                verbose=False)
+            
+        output = self.on_prompt(user_input, option)
+        if output:
+            println()
+            print(output)
         
     def run(self):
         clear_shell()
@@ -163,13 +196,8 @@ class BaseTUI(BaseCLI):
         self.no_option = False
         self.output = None
         self.unknown_command = None
-        iter = 0
         while True:
             try:
-                iter += 1
-                if iter > 1 and self.one_shot:
-                    break
-                
                 println()
                 if self.exit:
                     break
@@ -201,6 +229,7 @@ class BaseTUI(BaseCLI):
                 if self.output:
                     log(f'{XTerm.GREEN}Output:')
                     log(f'{XTerm.GREEN}-------')
+                    println()
                     for line in self.output.split('\n'):
                         # if line.strip() == '':
                         #     continue
@@ -233,10 +262,7 @@ class BaseTUI(BaseCLI):
                 self.unknown_command = user_input
             except (KeyboardInterrupt, EOFError):
                 self.exit = True
-        if self.one_shot:
-            warn(f'One-shot command executed. Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
-        else:
-            warn(f'Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
+        warn(f'Exiting {self.name} TUI.', pad_before=1, use_prefix=False)
         println()
         
     #########
