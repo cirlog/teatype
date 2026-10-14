@@ -136,6 +136,7 @@ def prompt(text:str,
            freesolo:bool=False,
            print_padding:bool=True,
            return_input:bool=False,
+           show_choices:bool=True,
            use_index:bool=False) -> any:
     """
     Displays a prompt to the user with the given text and a list of available choices.
@@ -151,6 +152,7 @@ def prompt(text:str,
                          choices will still be shown as suggestions with autocomplete. Default is False.
         print_padding (bool): Whether to add padding around the prompt. Default is True.
         return_input (bool): Whether to return a boolean value based on the user's selection.
+        show_choices (bool): Whether to display the choices alongside the prompt. Default is True.
         use_index (bool): If True, displays choices as a numbered list and allows the user to type
                           the number (1-indexed) of the choice. Returns the 0-indexed value.
                           Default is False.
@@ -179,7 +181,7 @@ def prompt(text:str,
                 display_text += default_text
 
             # Build choices string for display (only when not using use_index)
-            if choices and not use_index:
+            if choices and not use_index and show_choices:
                 choices_string = '(' + '/'.join(choices) + '): '
                 if colorize:
                     choices_string = f'{XTerm.GRAY}{choices_string}{XTerm.RESET}'
@@ -188,7 +190,7 @@ def prompt(text:str,
             # Log the prompt
             log(display_text, pad_before=1 if print_padding else 0)
             # Display numbered list when use_index is enabled
-            if choices and use_index:
+            if choices and use_index and show_choices:
                 for i, choice in enumerate(choices):
                     whisper(f'  [{i + 1}] {choice}')
 
