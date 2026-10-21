@@ -24,3 +24,5 @@ try:
 except ImportError as ie:
     __MODULO_IMPORT_ERROR__ = ie
     __MODULO_SUPPORT__ = False
+    
+from .tracer import Tracer
