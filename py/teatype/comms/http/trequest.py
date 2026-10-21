@@ -17,6 +17,7 @@ from typing import List
 
 # Third-party imports
 import aiohttp
+import requests
 import urllib3
 from teatype.comms.http.tresponse import TResponse
 from teatype.logging import *
