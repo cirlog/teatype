@@ -14,9 +14,9 @@
 import json as json_util
 from enum import Enum
 from typing import List
+
 # Third-party imports
 import aiohttp
-import requests
 import urllib3
 from teatype.comms.http.tresponse import TResponse
 from teatype.logging import *
@@ -162,7 +162,7 @@ def sync_request(crud_method:str,
                  parse_json:bool=True,
                  timeout:float=10.0,
                  verbose:bool=False,
-                 verify_ssl:bool=True) -> TResponse:
+                 verify_ssl:bool=False) -> TResponse:
     """
     Perform a synchronous HTTP request based on the specified CRUD method.
     This exists as a wrapper function to call the internal _request function and it allows
@@ -202,7 +202,7 @@ def get(url:str,
         parse_json:bool=True,
         timeout:float=10.0,
         verbose:bool=False,
-        verify_ssl:bool=True) -> TResponse:
+        verify_ssl:bool=False) -> TResponse:
     """
     Perform a synchronous GET request.
     
@@ -238,7 +238,7 @@ def post(url:str,
          parse_json:bool=True,
          timeout:float=10.0,
          verbose:bool=False,
-         verify_ssl:bool=True) -> TResponse:
+         verify_ssl:bool=False) -> TResponse:
     """
     Perform a synchronous POST request.
     
@@ -275,7 +275,7 @@ def put(url:str,
         parse_json:bool=True,
         timeout:float=10.0,
         verbose:bool=False,
-        verify_ssl:bool=True) -> TResponse:
+        verify_ssl:bool=False) -> TResponse:
     """
     Perform a synchronous PUT request.
     
@@ -312,7 +312,7 @@ def patch(url:str,
           parse_json:bool=True,
           timeout:float=10.0,
           verbose:bool=False,
-          verify_ssl:bool=True) -> TResponse:
+          verify_ssl:bool=False) -> TResponse:
     """
     Perform a synchronous PATCH request.
     
@@ -349,7 +349,7 @@ def delete(url:str,
            parse_json:bool=True,
            timeout:float=10.0,
            verbose:bool=False,
-           verify_ssl:bool=True) -> TResponse:
+           verify_ssl:bool=False) -> TResponse:
     """
     Perform a synchronous DELETE request.
     
@@ -386,7 +386,7 @@ async def async_request(url:str,
                         params:dict=None,
                         timeout:float=10.0,
                         verbose:bool=False,
-                        verify_ssl:bool=True) -> aiohttp.ClientResponse:
+                        verify_ssl:bool=False) -> aiohttp.ClientResponse:
     """
     Perform an asynchronous HTTP request based on the specified CRUD method.
     """
@@ -415,7 +415,7 @@ def async_get(url:str,
               measure_time:bool=False,
               timeout:float=10.0,
               verbose:bool=False,
-              verify_ssl:bool=True) -> aiohttp.ClientResponse:
+              verify_ssl:bool=False) -> aiohttp.ClientResponse:
     """
     Perform an asynchronous GET request.
     """
