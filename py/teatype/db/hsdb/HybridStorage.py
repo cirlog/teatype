@@ -42,7 +42,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
     rf_handler:RawFileHandler
 
     # TODO: Put this outside of class context so the first import HybridStorage initializes it
-    def __init__(self, models:List[type]=[], root_path:str=None, cold_mode:bool=False) -> None:
+    def __init__(self, models:List[type]=[], root_path:str=None, cold_mode:bool=False, name:str=None) -> None:
         """
         Initialize the HybridStorage thread, ensuring singleton behavior 
         and setting up internal structures for model and file handling.
@@ -66,9 +66,11 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
             self.migrations = dict # Placeholder for storing migration info
             self.operations_queue = Queue() # Queue for operations processing
 
+            # Imported here because the package-level name is still the module while core/ and indices/ import each other
+            from teatype.db.hsdb.IndexDatabase import IndexDatabase
             self.index_db = IndexDatabase(models) # Create or link an IndexDatabase with given models
             
-            self.rf_handler = RawFileHandler(root_path, cold_mode=cold_mode) # Initialize file handler for raw data operations
+            self.rf_handler = RawFileHandler(root_path, cold_mode=cold_mode, name=name) # Initialize file handler for raw data operations
 
             self._initialized = True # Mark as initialized
             HybridStorage._instance = self # Set the instance for Singleton
@@ -175,7 +177,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                     model_instance.delete()
                     # self.rf_handler.delete_entry(model_instance, overwrite_path)
                     return None, 410 # Indicate internal server error
-            return model_instance.serialize(), return_code # Return the serialized model instance
+            return model_instance.model.serialize(model_instance), return_code # Return the serialized model instance
         except:
             # TODO: Implement global RUNTIME_CONFIG that is accessible everywhere for all modules and is modified by service modulos
             # if RUNTIME_CONFIG.DEBUG_MODE:

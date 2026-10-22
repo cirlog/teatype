@@ -178,10 +178,17 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                 instance_attribute.key = attribute.name
                 instance_attribute.value = value
             elif isinstance(attribute, HSDBRelation._RelationFactory):
+                # Ids from JSON payloads are plain strings, so wrap them into a field like model-attribute ids
+                def to_field(value):
+                    if hasattr(value, 'instance'):
+                        return value.instance
+                    id_field = HSDBAttribute(str)
+                    id_field.value = value
+                    return id_field
                 if attribute.type == List[str]:
-                    instance_value = [v.instance if isinstance(v.instance, object) else v.instance for v in value]
+                    instance_value = [to_field(v) for v in value]
                 else:
-                    instance_value = [value.instance] if isinstance(value.instance, object) else value.instance
+                    instance_value = [to_field(value)]
                 instance_attribute = attribute.lazy_init(
                     [self.id.instance] if isinstance(self.id.instance, object) else self.id.instance,
                     self.model,
@@ -292,8 +299,6 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
         
         # Handle relations
         if include_relations or expand_relations:
-            from teatype.db.hsdb import HSDBRelation, HybridStorage
-            
             if instance.__class__ in instance._attribute_cache:
                 for attr_name, attr in instance._attribute_cache[instance.__class__].items():
                     if isinstance(attr, HSDBRelation._RelationFactory):

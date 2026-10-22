@@ -18,7 +18,6 @@ from typing import Dict, List, Union
 from urllib.parse import parse_qs, urlencode
 
 # Third-party imports
-from teatype.db.hsdb import HybridStorage
 from teatype.logging import *
 from teatype.toolkit import stopwatch
 
@@ -65,6 +64,8 @@ class HSDBQuery:
         self._current_attribute = None
         self._executed_hook = None
         self._filter_key = None
+        # Imported here because during package init the name teatype.db.hsdb.HybridStorage is still the module
+        from teatype.db.hsdb.HybridStorage import HybridStorage
         self._hsdb_reference = HybridStorage()
         self._measure_time = False
         self._pagination = None

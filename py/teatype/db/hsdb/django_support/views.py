@@ -17,7 +17,8 @@ from typing import List, Type
 # Third-party imports
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.views import APIView
-from teatype.db.hsdb import HybridStorage, HSDBQuery
+from teatype.db.hsdb import HybridStorage
+from teatype.db.hsdb.core import HSDBQuery
 from teatype.logging import *
 from teatype.toolkit import kebabify
 from teatype.comms.http.responses import Conflict, Gone, NotAllowed, ServerError, Success

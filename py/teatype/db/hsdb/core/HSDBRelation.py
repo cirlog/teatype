@@ -16,7 +16,6 @@ from typing import Generic, List, TypeVar
 
 # Third-party imports
 from teatype.db.hsdb.core import HSDBField, HSDBQuery
-from teatype.db.hsdb import HybridStorage
 from teatype.toolkit import generate_id, kebabify
 
 _AVAILABLE_FUNCTIONS = [
@@ -107,6 +106,8 @@ class HSDBRelation(HSDBField, Generic[T]):
             self.reverse_lookup = reverse_lookup_key
         
         self.relation_id = generate_id()
+        # Imported here because during package init the name teatype.db.hsdb.HybridStorage is still the module
+        from teatype.db.hsdb.HybridStorage import HybridStorage
         self._hsdb_reference = HybridStorage()
         
         self.addKeyPairs(primary_keys, secondary_keys)

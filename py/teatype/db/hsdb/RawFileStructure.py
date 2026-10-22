@@ -12,12 +12,20 @@
 
 # Standard-library imports
 import copy
+import os
 
 # Third-party imports
 from teatype.io import path
 from teatype.logging import *
 
 _DEFAULT_ROOT_PATH = '/var/lib'
+
+def database_path(name:str=None, root_path:str=None) -> str:
+    """
+    Folder of one database: <root>/hsdb/<name>. Root falls back to env HSDB_ROOT_PATH, then /var/lib.
+    """
+    root_path = root_path or os.environ.get('HSDB_ROOT_PATH') or _DEFAULT_ROOT_PATH
+    return os.path.join(root_path, 'hsdb', name) if name else os.path.join(root_path, 'hsdb')
 _FS = {
     'audits': {},
     'backups': {
@@ -83,8 +91,9 @@ class RawFileStructure:
                  root_path:str=None,
                  *,
                  auto_create_folders:bool=True,
-                 cold_mode:bool=False):
-        self._root_path = path.join(root_path if root_path else _DEFAULT_ROOT_PATH, 'hsdb')
+                 cold_mode:bool=False,
+                 name:str=None):
+        self._root_path = database_path(name, root_path)
         
         self._fs = _FSProxy(_FS, self._root_path)
         

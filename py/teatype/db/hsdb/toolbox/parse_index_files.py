@@ -40,7 +40,7 @@ def parse_index_files(hybrid_storage_instance:object=None, migrator:object=None)
     # Parsing variables from the two different sources
     if hybrid_storage_instance:
         models = hybrid_storage_instance.index_db.models
-        index_path = hybrid_storage_instance.rf_handler.fs.index.path
+        index_path = hybrid_storage_instance.rf_handler.fs.indexdb.path
     else:
         models = migrator.models
         index_path = migrator._index_path

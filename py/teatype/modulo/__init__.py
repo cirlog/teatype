@@ -31,7 +31,7 @@ def __getattr__(name):
     # Lazily create the hsdb object on first import from this module
     if name == 'hsdb':
         global hsdb
-        from teatype.db.hsdb import HSDB
-        hsdb = HSDB()
+        from teatype.modulo.hsdb import HSDB
+        hsdb = HSDB.attach()
         return hsdb
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

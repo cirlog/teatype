@@ -22,11 +22,13 @@ class RawFileHandler:
     def __init__(self,
                  root_path:str=None,
                  *,
-                 cold_mode:bool=False):
+                 cold_mode:bool=False,
+                 name:str=None):
         self.cold_mode = cold_mode
         
         self._rf_structure = RawFileStructure(root_path,
-                                              cold_mode=cold_mode)
+                                              cold_mode=cold_mode,
+                                              name=name)
         
     ##############
     # Properties #
@@ -45,7 +47,7 @@ class RawFileHandler:
                      model_instance:object,
                      compress:bool=False) -> str|None:
         try:
-            absolute_path = path.join(self.fs.index.path, model_instance.path)
+            absolute_path = path.join(self.fs.indexdb.path, model_instance.path)
 
             if self.cold_mode:
                 return absolute_path
@@ -72,7 +74,7 @@ class RawFileHandler:
             if self.cold_mode:
                 return True
             
-            absolute_path = path.join(self.fs.index.path, model_instance.path)
+            absolute_path = path.join(self.fs.indexdb.path, model_instance.path)
             if not path.exists(absolute_path):
                 return False
             
@@ -86,7 +88,7 @@ class RawFileHandler:
                      model_instance:object,
                      compress:bool=False) -> str:
         try:
-            absolute_path = path.join(self.fs.index.path, model_instance.path)
+            absolute_path = path.join(self.fs.indexdb.path, model_instance.path)
             if self.cold_mode:
                 return absolute_path
             
