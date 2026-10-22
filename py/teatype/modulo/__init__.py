@@ -26,3 +26,12 @@ except ImportError as ie:
     __MODULO_SUPPORT__ = False
     
 from .tracer import Tracer
+
+def __getattr__(name):
+    # Lazily create the hsdb object on first import from this module
+    if name == 'hsdb':
+        global hsdb
+        from teatype.db.hsdb import HSDB
+        hsdb = HSDB()
+        return hsdb
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

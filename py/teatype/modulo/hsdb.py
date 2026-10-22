@@ -26,5 +26,3 @@ class HSDB(ApplicationUnit):
         super().__init__('HybridStorageDatabase', backend_host=host, backend_port=port)
         
         self.hybrid_storage = HybridStorage()
-        
-hsdb = HSDB()
