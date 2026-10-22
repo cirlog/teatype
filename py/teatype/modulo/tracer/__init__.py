@@ -10,4 +10,10 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 
+from .history import History
+from .registry import Registry, WorkhorseRegistry
+from .routine import Routine
+from .schedule import Schedule, ScheduleInterval
+from .task import Task, TaskState
 from .tracer import Tracer
+from .workhorse import Workhorse, WorkhorseState
