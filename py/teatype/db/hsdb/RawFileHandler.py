@@ -42,6 +42,20 @@ class RawFileHandler:
     # Public API #
     ##############
         
+    def write_model(self, model:type) -> str|None:
+        """
+        Write the schema descriptor models/<ModelName>.json so clients can discover models without the class.
+        """
+        if self.cold_mode:
+            return None
+        absolute_path = path.join(self.fs.models.path, f'{model.__name__}.json')
+        file.write(absolute_path,
+                   model.schema(),
+                   force_format='json',
+                   prettify=True,
+                   create_parents=True)
+        return absolute_path
+        
     # TODO: If new attributes surface (migrations), apply them to old files (backup before)
     def create_entry(self,
                      model_instance:object,

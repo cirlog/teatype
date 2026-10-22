@@ -28,10 +28,9 @@ except ImportError as ie:
 from .tracer import Tracer
 
 def __getattr__(name):
-    # Lazily create the hsdb object on first import from this module
+    # Lazily import the hsdb registry so fastapi/uvicorn only load when it is used
     if name == 'hsdb':
         global hsdb
-        from teatype.modulo.hsdb import HSDB
-        hsdb = HSDB.attach()
+        from teatype.modulo.hsdb import hsdb
         return hsdb
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

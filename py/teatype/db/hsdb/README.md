@@ -33,7 +33,7 @@ flowchart LR
 | Disk | `RawFileHandler.py`, `RawFileStructure.py` | JSON file per entry under a fixed folder tree |
 | Glue | `HybridStorage.py` | Singleton that applies every write to memory first, then disk |
 | Serving (A) | `HSDBServer.py`, `django_support/*` | Django + DRF server with auto REST routes per model (standalone script style) |
-| Serving (B) | `modulo/hsdb.py` (`HSDB` unit) + `HSDBClient.py` | Embedded FastAPI server in a background thread + launch-or-connect client (see section 6) |
+| Serving (B) | `modulo/hsdb.py` (`HSDB` unit) + `HSDBClient.py` | Embedded FastAPI server in a background thread + name-based init-or-connect client (see section 6) |
 
 Two serving paths exist and are independent: **(A)** `HSDBServer` is a blocking Django `runserver`
 (`examples/student-db/student_db_server.py`), **(B)** the `HSDB` modulo unit is what you import from application code.
@@ -71,15 +71,15 @@ Multiple indexed equality conditions are intersected. Remaining conditions are f
 
 ### Cold mode
 
-`cold_mode=True` skips creating the folder tree and all disk writes: a pure in-memory database
-(this is what the example uses). Otherwise the root is `root_path` -> env `HSDB_ROOT_PATH` -> `/var/lib`, and
-`<root>/hsdb/` is created. If the folder cannot be created the process **exits** (`err(exit=True)`).
+`cold_mode=True` skips creating the folder tree and all data/model-file writes: a pure in-memory database. Otherwise the folder is
+`<root>/hsdb/<name>/` with root = `root_path` -> env `HSDB_ROOT_PATH` -> `/var/lib`. If it cannot be created the process **exits** (`err(exit=True)`).
+The `hsdb` registry still writes its `server.lock`/`server.json` under that root in cold mode, so pass a writable `root_path`.
 
-### Folder layout (`RawFileStructure._FS`)
+### Folder layout (`RawFileStructure._FS`, per database `<root>/hsdb/<name>/`)
 
 `audits`, `backups/{indexdb,migration,rawfiles}`, `dumps/migrations`, `exports`, `indexdb`, `logs/{migrations,reads,writes}`,
-`lut`, `models/adapters`, `rawfiles`, `redundancy`, `rejectpile/{indexdb,rawfiles}`, `reports`.
-Only `indexdb/<plural>/` is actually used today; the rest is scaffolding.
+`lut`, `models`, `rawfiles`, `redundancy`, `rejectpile/{indexdb,rawfiles}`, `reports`, plus `server.json` and `server.lock` (section 6).
+Used today: `indexdb/<plural>/<id>.json` (entries) and `models/<Model>.json` (schema descriptors, written at host start). The rest is scaffolding.
 
 ### Restart behaviour: disk is write-only today
 
@@ -166,46 +166,64 @@ A query object is single-use (`already_executed`). `page=-1` means last page.
 
 ---
 
-## 6. The launch-or-connect pattern (`HSDB` unit + `HSDBClient`)
+## 6. Named databases: init-or-connect (`hsdb` registry + `HSDBClient`)
 
 ### Usage
 
-```python
-from teatype.modulo.hsdb import HSDB
-from server.models import Class, Professor, Student, University
+Host script (the only one that needs the classes):
 
-hsdb = HSDB.attach(models=[Class, Professor, Student, University], port=9876, cold_mode=True)
+```python
+from teatype.modulo.hsdb import hsdb
+
+db = hsdb.init('school', models=[School, Student])      # non-cold, data in <HSDB_ROOT_PATH>/hsdb/school/
+if db.server:                                            # True only in the hosting process
+    db.create(School, {...})
 ```
 
-`attach()` always returns an `HSDBClient`:
+Any other process, no classes needed:
 
-1. Probe `GET http://host:port/hsdb` (250 ms). If a service answers with `{"service": "hsdb"}` -> **connect as client**.
-   If models were passed and the running server lacks some, a warning is logged.
-2. Otherwise **launch** the server in this process: `HybridStorage(models, root_path, cold_mode)` + FastAPI/uvicorn in a daemon thread,
-   wait until it answers, return a client. `client.server` is then the `HSDB` unit (`None` for pure clients),
-   so `if hsdb.server:` is the "am I the host" check and `hsdb.server.hybrid_storage` gives direct local access (e.g. for bulk seeding).
-3. Bind race (two processes start simultaneously): the loser's uvicorn thread dies on `address in use`, `attach()` notices its thread is
-   not running and falls back to client **(verified: 4 simultaneous processes -> 1 host, 3 clients)**.
-4. Calling `attach()` again in the same process returns the same client (first call wins, arguments ignored).
+```python
+from teatype.modulo.hsdb import hsdb
 
-Identity of "the one HSDB" is the `host:port`. One server per port; use another port for another database.
-The server lives and dies with the **launching process**; for a long-lived server run a small host script that calls `attach()` and
-`hsdb.server.join()`.
+db = hsdb['school']                                      # == hsdb.connect('school'), ConnectionError if nobody hosts it
+db.Student.find(age=18)                                  # model proxy built from models/Student.json
+```
+
+A database is identified by its **name**, like a Postgres database; the port is chosen randomly and published, not configured.
+
+1. `init()` takes an `flock` on `<db folder>/server.lock`. The lock holder is the host: it starts `HybridStorage` + FastAPI/uvicorn (daemon thread),
+   writes `models/<Model>.json` for every model, waits until the server answers, then publishes `server.json` (`name, host, port, pid`).
+2. If the lock is already held, `init()` connects instead (waiting up to `startup_timeout` for `server.json`), so simultaneous starts are race-free.
+   The OS releases the lock when the host dies; the host also removes `server.json` on exit and a stale one is deleted by the next host.
+3. `connect()`/`hsdb[name]` reads `server.json`, verifies via `GET /hsdb` that the answering service is HSDB **and** has that name,
+   then loads `models/*.json` into `client.models`. Clients are cached per name in the process.
+4. One process hosts at most one database (`HybridStorage` is a per-process singleton, `init()` of a second name raises) but can connect to many.
+   Different names use different folders, ports and servers.
+
+Root resolution is `root_path` -> env `HSDB_ROOT_PATH` -> `/var/lib`, identically for host and clients, so processes must agree on it
+(the manual scripts set the env var). The lock is `fcntl`, i.e. POSIX only. The server dies with the **hosting process**.
+
+### Schema-driven models (no classes in clients)
+
+`models/<Model>.json` is `Model.schema()`: attributes (type, required, computed, indexed, unique, ...) and relations (kind, target model).
+`client.Student` / `client.model('Student')` returns an `HSDBRemoteModel` with `fields`, `create`, `update`, `get`, `find`, `all`, `count`,
+`delete`, `query()`. `create`/`update` validate client-side against the schema (unknown fields, missing required fields, int/str/float/bool types)
+before any request is sent. Cold-mode databases publish no schema files, so only the string-name API works there.
 
 ### Client API (`HSDBClient`)
 
 Models are given as class or name string. Results are **dicts**, not model instances (model constructors refuse computed fields like `id`).
 
 ```python
-hsdb.count(Student)
-hsdb.get(Student, id)                                  # dict or None
-hsdb.all(Student, expand_relations=True)
-hsdb.find(Student, gender='male', age__gte=18, sort='-name')
-hsdb.query(Student).where('age').greater_than_or_equals(18).sort_by('age', 'desc').first()   # HSDBRemoteQuery, same verbs as HSDBQuery (no gt/gte aliases)
-hsdb.create(Student, {...})                            # relations by id string
-hsdb.update(Student, id, {'age': 21})                  # PATCH, partial
-hsdb.delete(Student, id)                               # bool
-hsdb.info()                                            # {'service','pid','models':{name:count}}
+db.count('Student')
+db.get('Student', id)                                  # dict or None
+db.all('Student', expand_relations=True)
+db.find('Student', gender='male', age__gte=18, sort='-name')
+db.query('Student').where('age').greater_than_or_equals(18).sort_by('age', 'desc').first()   # same verbs as HSDBQuery (no gt/gte aliases)
+db.create('Student', {...})                            # relations by id string
+db.update('Student', id, {'age': 21})                  # PATCH, partial
+db.delete('Student', id)                               # bool
+db.info()                                              # {'service','name','pid','models':{name:count}}
 ```
 
 `HSDBRemoteQuery` supports `where, equals, greater_than(_or_equals), less_than(_or_equals), contains, sort_by, paginate, all, first, last, count`
@@ -239,15 +257,19 @@ without adding auth. Model names from URLs are looked up in the registered-model
 
 ---
 
-## 7. Example
+## 7. Examples and manual test scripts
 
-`examples/student-db/student_db_hsdb.py`: run it in two terminals from `examples/student-db/`.
+`py/tests/integration/hsdb/manual/` (data lands in the gitignored `teatype/dist/hsdb/school/`), run in this order from that folder:
 
 ```bash
-../../teatype-venv/bin/python student_db_hsdb.py     # terminal 1: launches HSDB, seeds, queries, waits on Enter
-../../teatype-venv/bin/python student_db_hsdb.py     # terminal 2: connects as client, queries
+python 01_host.py          # defines models, hsdb.init('school', ...), seeds, keeps running until Enter
+python 02_client_read.py   # hsdb['school'], reads via schema-built models, no model classes
+python 03_client_write.py  # create/update/delete + client-side validation, checks the files on disk
 ```
 
+Re-running `01_host.py` seeds again and adds new files next to the old ones (ids are new each run; nothing is reloaded, see section 2).
+
+`examples/student-db/student_db_hsdb.py` is the same pattern with cold mode (run it twice: host, then client).
 `examples/student-db/student_db_server.py` is the standalone Django (`HSDBServer`) variant with auto REST routes per model.
 
 ---

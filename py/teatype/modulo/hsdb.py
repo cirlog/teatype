@@ -11,6 +11,10 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import atexit
+import contextlib
+import fcntl
+import json
 import os
 import time
 from typing import List
@@ -19,27 +23,25 @@ from typing import List
 from fastapi import HTTPException, Request
 from teatype.db.hsdb import HybridStorage
 from teatype.db.hsdb.HSDBClient import HSDBClient
+from teatype.db.hsdb.RawFileStructure import database_path
 from teatype.db.hsdb.core import HSDBQuery
-from teatype.logging import success, warn
+from teatype.logging import success
 from teatype.modulo.units.application import ApplicationUnit
 
 class HSDB(ApplicationUnit):
     """
-    The main Hybdrid Storage Database application unit. Only one instance should be created per deployment.
-    All other HSDB components (like IndexDatabase, RawFileHandler, etc.) should be accessed via this unit.
-    All HSDB operations are channeled through this application unit.
+    Server unit of one named database. Use the `hsdb` registry below instead of creating it directly.
     """
-    _client:HSDBClient=None # Process-wide handle returned by attach()
-
     def __init__(self,
+                 name:str,
                  models:List[type],
                  host:str='127.0.0.1',
-                 port:int=9876,
+                 port:int=None,
                  *,
                  cold_mode:bool=False,
                  root_path:str=None) -> None:
         # Embedded in someone else's process: no dashboard, no Redis, no background units
-        super().__init__('HybridStorageDatabase',
+        super().__init__(name,
                          backend_host=host,
                          backend_port=port,
                          include_dashboard=False,
@@ -49,8 +51,10 @@ class HSDB(ApplicationUnit):
                          log_level='warning',
                          verbose_logging=False)
         self.backend.daemon = True # A non-daemon backend thread would keep the host process alive on exit
-        self.hybrid_storage = HybridStorage(models=models, root_path=root_path, cold_mode=cold_mode)
+        self.hybrid_storage = HybridStorage(models=models, root_path=root_path, cold_mode=cold_mode, name=name)
         self._models = {model.__name__: model for model in models}
+        for model in models:
+            self.hybrid_storage.rf_handler.write_model(model)
         self._register_hsdb_routes()
 
     #############
@@ -87,6 +91,7 @@ class HSDB(ApplicationUnit):
     def _register_hsdb_routes(self) -> None:
         def info() -> dict:
             return {'service': 'hsdb',
+                    'name': self.name,
                     'pid': os.getpid(),
                     'models': {name: model.count() for name, model in self._models.items()}}
 
@@ -131,44 +136,78 @@ class HSDB(ApplicationUnit):
     # Public API #
     ##############
 
-    @classmethod
-    def attach(cls,
-               models:List[type]=None,
-               host:str='127.0.0.1',
-               port:int=9876,
-               *,
-               cold_mode:bool=False,
-               root_path:str=None,
-               startup_timeout:float=10.0) -> HSDBClient:
-        """
-        Return a client for the HSDB at host:port, launching the server in this process first
-        if nothing answers there. The server owns the data and dies with the process that launched
-        it (client.server is that unit, None if the server lives elsewhere). Models only matter
-        for the launching process; clients address models by class or name.
-        """
-        if cls._client:
-            return cls._client
+class _HSDBRegistry:
+    """
+    Entry point exposed as `hsdb`. A database is identified by its name; the host process of a name
+    holds an flock on <db folder>/server.lock and publishes host/port in <db folder>/server.json.
+    One process can host one database (HybridStorage is a per-process singleton) but connect to many.
+    """
+    def __init__(self) -> None:
+        self._clients = {}
+        self._hosted = None
 
-        client = HSDBClient(host, port)
-        info = client.info(timeout=0.25)
-        if info is None:
-            if not models:
-                warn('No HSDB running and no models given: launching a server without models')
-            server = cls.create(models=models or [], host=host, port=port, cold_mode=cold_mode, root_path=root_path)
-            server.start()
-            deadline = time.monotonic() + startup_timeout
-            while not client.ping() and time.monotonic() < deadline:
-                time.sleep(0.05)
-            # Lost the bind race to another process: the port answers, but not through our thread
-            if server.backend.adapter.is_running():
-                client.server = server
-            info = client.info()
-            if info is None:
-                raise RuntimeError(f'HSDB did not come up on {host}:{port}')
-        elif models:
-            missing = {model.__name__ for model in models} - set(info['models'])
-            if missing:
-                warn(f'Running HSDB (pid {info["pid"]}) does not serve {sorted(missing)}, restart it with these models')
+    def __getitem__(self, name:str) -> HSDBClient:
+        return self.connect(name)
 
-        cls._client = client
+    def connect(self, name:str, *, root_path:str=None, wait:float=0.0) -> HSDBClient:
+        """
+        Client for a running database; waits up to `wait` seconds for it to appear.
+        """
+        if name not in self._clients:
+            self._clients[name] = HSDBClient.discover(name, root_path, wait)
+        return self._clients[name]
+
+    def init(self,
+             name:str,
+             models:List[type],
+             *,
+             cold_mode:bool=False,
+             host:str='127.0.0.1',
+             port:int=None,
+             root_path:str=None,
+             startup_timeout:float=10.0) -> HSDBClient:
+        """
+        Host the database `name` in this process, or connect if another process already does.
+        Returns a client either way; `client.server` is set only for the host.
+        """
+        if name in self._clients:
+            return self._clients[name]
+        if self._hosted:
+            raise RuntimeError(f'This process already hosts "{self._hosted}", one hosted database per process')
+
+        directory = database_path(name, root_path)
+        os.makedirs(directory, exist_ok=True)
+        lock = open(os.path.join(directory, 'server.lock'), 'w')
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB) # Released by the OS when this process dies
+        except BlockingIOError:
+            lock.close()
+            return self.connect(name, root_path=root_path, wait=startup_timeout)
+
+        info_file = os.path.join(directory, 'server.json')
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(info_file) # Left over from a crashed host
+        server = HSDB.create(name=name, models=models, host=host, port=port, cold_mode=cold_mode, root_path=root_path)
+        server.start()
+        probe = HSDBClient(host, server.backend_port)
+        deadline = time.monotonic() + startup_timeout
+        while not probe.ping() and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if not server.backend.adapter.is_running():
+            raise RuntimeError(f'HSDB "{name}" did not come up on {host}:{server.backend_port}')
+
+        server.lock = lock # Keep the flock for the lifetime of the process
+        with open(info_file, 'w') as file:
+            json.dump({'name': name, 'host': host, 'port': server.backend_port, 'pid': os.getpid()}, file)
+        def unpublish() -> None:
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(info_file)
+        atexit.register(unpublish)
+
+        client = HSDBClient.discover(name, root_path)
+        client.server = server
+        self._hosted = name
+        self._clients[name] = client
         return client
+
+hsdb = _HSDBRegistry()
