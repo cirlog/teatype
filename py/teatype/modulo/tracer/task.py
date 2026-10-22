@@ -94,6 +94,7 @@ class Task:
     # Properties #
     ##############
 
+    @property
     def is_active(self) -> bool:
         return self._state in (TaskState.ACTIVE, TaskState.RUNNING)
     
@@ -158,7 +159,7 @@ class Task:
     #########
     
     def _error_message(self, exc:Exception) -> str:
-        return f'[{self._name}] Error: {exc}'
+        return f'[{self.name}] Error: {exc}'
     
     def _on_start(self) -> None:
         pass

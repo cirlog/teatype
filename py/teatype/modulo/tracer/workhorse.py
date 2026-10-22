@@ -39,9 +39,9 @@ class Workhorse:
                  allow_multiple:bool=False) -> None:
         self.script:Optional[str] = None # Set by Tracer.discover()
         
-        self._name = name
+        self.name = name
         self._description = description
-        self._steps = steps or []
+        self.steps = steps or []
         self._allow_multiple = allow_multiple
         self._state = WorkhorseState.IDLE
         self._lock = threading.Lock()
@@ -61,30 +61,30 @@ class Workhorse:
     
     def launch(self,
                payload:dict=None,
-               base_dir:str=None,
-               log_dir:str=None,
+               base_path:str=None,
+               log_path:str=None,
                python_executable:str=None) -> dict:
         with self._lock:
             if not self._allow_multiple and self._state == WorkhorseState.RUNNING:
-                return {'success': False, 'error': f'Workhorse "{self._name}" is already running'}
+                return {'success': False, 'error': f'Workhorse "{self.name}" is already running'}
             self._state = WorkhorseState.RUNNING
         
-        log_path = path.join(log_dir, f'{self._name}-{generate_id()}.txt')
-        path.create(log_dir)
+        log_file_path = path.join(log_path, f'{self.name}-{generate_id()}.txt')
+        path.create(log_path)
         
         try:
-            log_file = open(log_path, 'a')
+            log_file = open(log_file_path, 'a')
             
             env = os.environ.copy()
             existing = env.get('PYTHONPATH', '')
-            env['PYTHONPATH'] = base_dir + (':' + existing if existing else '')
+            env['PYTHONPATH'] = base_path + (':' + existing if existing else '')
             
             self._process = subprocess.Popen(
                 [python_executable or sys.executable, '-m', 'teatype.modulo.tracer.runner', self.script],
                 stdin=subprocess.PIPE,
                 stdout=log_file,
                 stderr=log_file,
-                cwd=base_dir,
+                cwd=base_path,
                 env=env,
             )
             
@@ -95,10 +95,10 @@ class Workhorse:
             self._pid = self._process.pid
             threading.Thread(target=self._monitor,
                              args=(log_file,),
-                             name=f'workhorse-monitor-{self._name}',
+                             name=f'workhorse-monitor-{self.name}',
                              daemon=True).start()
             
-            return {'success': True, 'name': self._name, 'pid': self._pid, 'log': log_path}
+            return {'success': True, 'name': self.name, 'pid': self._pid, 'log': log_file_path}
         except Exception as exc:
             with self._lock:
                 self._state = WorkhorseState.ERROR
@@ -110,7 +110,7 @@ class Workhorse:
     
     def to_dict(self) -> dict:
         return {
-            'name': self._name,
+            'name': self.name,
             'description': self._description,
             'state': self._state.value,
             'pid': self._pid,

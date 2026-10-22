@@ -37,7 +37,7 @@ def run(script_path:str, payload:dict=None) -> None:
         print(f'No Workhorse instance found in {script_path}', file=sys.stderr)
         sys.exit(1)
     
-    for step in workhorse.getSteps():
+    for step in workhorse.steps:
         step(payload)
 
 if __name__ == '__main__':

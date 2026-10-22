@@ -159,7 +159,7 @@ class Tracer:
             if item_name is None or active is None:
                 return {'success': False, 'error': f'Missing {kind}_name or active field'}
             registry = self.routines if kind == 'routine' else self.schedules
-            return registry.setActive(item_name, bool(active))
+            return registry.set_active(item_name, bool(active))
         if name == 'launch-workhorse':
             key = data.get('key')
             if key is None:

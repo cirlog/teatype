@@ -74,18 +74,18 @@ class Schedule(Task):
                 self._next_run = min(candidates)
     
     def _error_message(self, exc:Exception) -> str:
-        return f'Schedule "{self._name}" error: {exc}'
+        return f'Schedule "{self.name}" error: {exc}'
     
     def _on_start(self) -> None:
         self._compute_next_run()
     
     def _step(self, tracer:object) -> float:
         if self._next_run is not None and datetime.now() >= self._next_run:
-            if tracer.shouldDeferSchedules():
-                tracer.history.push(f'Schedule "{self._name}" deferred due to active session lock', level='SCHEDULE')
+            if tracer.on_defer_schedules():
+                tracer.history.push(f'Schedule "{self.name}" deferred due to active session lock', level='SCHEDULE')
                 return 5.0
             
-            tracer.history.push(f'Schedule "{self._name}" triggered', level='SCHEDULE')
+            tracer.history.push(f'Schedule "{self.name}" triggered', level='SCHEDULE')
             self._execute(tracer, self._handler)
             self._compute_next_run()
         

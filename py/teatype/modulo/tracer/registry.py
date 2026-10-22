@@ -43,7 +43,7 @@ class Registry:
     
     def _save_states(self) -> None:
         with self._lock:
-            states = {item: item.is_active_on_start for item in self._items.values()}
+            states = {item.name: item.is_active_on_start for item in self._items.values()}
         if self._state_path is None:
             return
         try:
@@ -57,8 +57,8 @@ class Registry:
     
     def add(self, item:Task) -> Task:
         # The saved state wins over the declared one
-        if item in self._saved_states:
-            item.set_active_on_start(self._saved_states[item])
+        if item.name in self._saved_states:
+            item.is_active_on_start = self._saved_states[item.name]
         
         with self._lock:
             self._items[item.id] = item
@@ -99,7 +99,7 @@ class Registry:
         if item is None:
             return {'success': False, 'error': f'{self._kind.capitalize()[:-1]} "{name}" not found'}
         
-        item.set_active_on_start(active)
+        item.is_active_on_start = active
         if active and not item.is_active:
             item.start(self._tracer)
         elif not active and item.is_active:
@@ -129,7 +129,7 @@ class Registry:
     
     def get_by_name(self, name:str) -> Optional[Task]:
         with self._lock:
-            return next((item for item in self._items.values() if item  == name), None)
+            return next((item for item in self._items.values() if item.name == name), None)
     
     def get_active(self) -> List[Task]:
         return [item for item in self.get_all() if item.is_active]
@@ -163,7 +163,7 @@ class WorkhorseRegistry:
     
     def add(self, workhorse:Workhorse) -> Workhorse:
         with self._lock:
-            self._workhorses[workhorse] = workhorse
+            self._workhorses[workhorse.name] = workhorse
         return workhorse
     
     def launch(self, name:str, payload:dict=None) -> dict:
