@@ -16,13 +16,14 @@ import contextlib
 import fcntl
 import json
 import os
+import socket
 import time
 from typing import List
 
 # Third-party imports
 from fastapi import HTTPException, Request
 from teatype.db.hsdb import HybridStorage
-from teatype.db.hsdb.HSDBClient import HSDBClient
+from teatype.db.hsdb.HSDBClient import HSDBClient, default_port
 from teatype.db.hsdb.RawFileStructure import database_path
 from teatype.db.hsdb.core import HSDBQuery
 from teatype.logging import success
@@ -95,6 +96,9 @@ class HSDB(ApplicationUnit):
                     'pid': os.getpid(),
                     'models': {name: model.count() for name, model in self._models.items()}}
 
+        def schema() -> dict:
+            return {name: model.schema() for name, model in self._models.items()}
+
         def query(model:str, request:Request) -> list:
             try:
                 entries = HSDBQuery.from_params(self._model(model), dict(request.query_params)).collect()
@@ -126,6 +130,7 @@ class HSDB(ApplicationUnit):
 
         # Plain functions on purpose: FastAPI runs them in its threadpool, so big queries don't block the event loop
         self.add_route('/hsdb', info)
+        self.add_route('/hsdb/schema', schema) # Before /hsdb/{model}, which would otherwise swallow it
         self.add_route('/hsdb/{model}', query)
         self.add_route('/hsdb/{model}', create, methods=['POST'])
         self.add_route('/hsdb/{model}/{id}', get_one)
@@ -140,6 +145,7 @@ class _HSDBRegistry:
     """
     Entry point exposed as `hsdb`. A database is identified by its name; the host process of a name
     holds an flock on <db folder>/server.lock and publishes host/port in <db folder>/server.json.
+    Cold databases use no files: an abstract unix socket as lock and default_port(name) as port.
     One process can host one database (HybridStorage is a per-process singleton) but connect to many.
     """
     def __init__(self) -> None:
@@ -175,18 +181,31 @@ class _HSDBRegistry:
         if self._hosted:
             raise RuntimeError(f'This process already hosts "{self._hosted}", one hosted database per process')
 
-        directory = database_path(name, root_path)
-        os.makedirs(directory, exist_ok=True)
-        lock = open(os.path.join(directory, 'server.lock'), 'w')
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB) # Released by the OS when this process dies
-        except BlockingIOError:
-            lock.close()
-            return self.connect(name, root_path=root_path, wait=startup_timeout)
+        if cold_mode:
+            # Memory only: no files at all, so the lock is an abstract unix socket and the port derives from the name
+            if port is not None:
+                raise ValueError('Cold-mode databases are found via their name-derived port, do not pass a port')
+            port = default_port(name)
+            lock = socket.socket(socket.AF_UNIX)
+            try:
+                lock.bind(f'\0hsdb:{name}') # Released by the OS when this process dies
+            except OSError:
+                lock.close()
+                return self.connect(name, root_path=root_path, wait=startup_timeout)
+            info_file = None
+        else:
+            directory = database_path(name, root_path)
+            os.makedirs(directory, exist_ok=True)
+            lock = open(os.path.join(directory, 'server.lock'), 'w')
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB) # Released by the OS when this process dies
+            except BlockingIOError:
+                lock.close()
+                return self.connect(name, root_path=root_path, wait=startup_timeout)
+            info_file = os.path.join(directory, 'server.json')
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(info_file) # Left over from a crashed host
 
-        info_file = os.path.join(directory, 'server.json')
-        with contextlib.suppress(FileNotFoundError):
-            os.remove(info_file) # Left over from a crashed host
         server = HSDB.create(name=name, models=models, host=host, port=port, cold_mode=cold_mode, root_path=root_path)
         server.start()
         probe = HSDBClient(host, server.backend_port)
@@ -196,13 +215,14 @@ class _HSDBRegistry:
         if not server.backend.adapter.is_running():
             raise RuntimeError(f'HSDB "{name}" did not come up on {host}:{server.backend_port}')
 
-        server.lock = lock # Keep the flock for the lifetime of the process
-        with open(info_file, 'w') as file:
-            json.dump({'name': name, 'host': host, 'port': server.backend_port, 'pid': os.getpid()}, file)
-        def unpublish() -> None:
-            with contextlib.suppress(FileNotFoundError):
-                os.remove(info_file)
-        atexit.register(unpublish)
+        server.lock = lock # Keep the lock for the lifetime of the process
+        if info_file:
+            with open(info_file, 'w') as file:
+                json.dump({'name': name, 'host': host, 'port': server.backend_port, 'pid': os.getpid()}, file)
+            def unpublish() -> None:
+                with contextlib.suppress(FileNotFoundError):
+                    os.remove(info_file)
+            atexit.register(unpublish)
 
         client = HSDBClient.discover(name, root_path)
         client.server = server

@@ -11,10 +11,13 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import contextlib
 import glob
 import json
 import os
 import time
+import zlib
+from pathlib import Path
 from typing import List, Union
 
 # Third-party imports
@@ -23,6 +26,12 @@ from teatype.db.hsdb.RawFileStructure import database_path
 
 _OPERATORS = {'equals': None, 'gt': 'gt', 'gte': 'gte', 'lt': 'lt', 'lte': 'lte', 'contains': 'contains'}
 _PYTHON_TYPES = {'bool': bool, 'float': float, 'int': int, 'str': str}
+
+def default_port(name:str) -> int:
+    """
+    Stable port in 10000-29999 derived from the database name, used by cold (file-less) databases.
+    """
+    return 10000 + zlib.crc32(name.encode()) % 20000
 
 def _model_name(model:Union[type, str]) -> str:
     return model if isinstance(model, str) else model.__name__
@@ -156,26 +165,28 @@ class HSDBClient:
     @classmethod
     def discover(cls, name:str, root_path:str=None, wait:float=0.0) -> 'HSDBClient':
         """
-        Find the database `name` via <db folder>/server.json, retrying for up to `wait` seconds.
+        Find the database `name`, retrying for up to `wait` seconds. Non-cold hosts publish
+        <db folder>/server.json; cold hosts (memory only) listen on default_port(name).
         """
         directory = database_path(name, root_path)
         deadline = time.monotonic() + wait
         while True:
-            try:
+            addresses = [('127.0.0.1', default_port(name))]
+            with contextlib.suppress(FileNotFoundError, json.JSONDecodeError):
                 with open(os.path.join(directory, 'server.json')) as file:
-                    address = json.load(file)
-                client = cls(address['host'], address['port'], name=name)
+                    published = json.load(file)
+                addresses.insert(0, (published['host'], published['port']))
+            for host, port in addresses:
+                client = cls(host, port, name=name)
                 info = client.info(timeout=1.0)
-                if info and info.get('name') == name: # A stale file may point at a port reused by something else
-                    for schema_file in glob.glob(os.path.join(directory, 'models', '*.json')):
-                        with open(schema_file) as file:
-                            schema = json.load(file)
-                        client.models[schema['model_name']] = schema
+                if info and info.get('name') == name: # A stale file or a default port may belong to something else
+                    schemas = [json.loads(Path(schema_file).read_text()) for schema_file in glob.glob(os.path.join(directory, 'models', '*.json'))]
+                    if not schemas: # Cold mode writes no schema files, ask the server instead
+                        schemas = client.request('GET', '/hsdb/schema').values()
+                    client.models = {schema['model_name']: schema for schema in schemas}
                     return client
-            except (FileNotFoundError, json.JSONDecodeError):
-                pass
             if time.monotonic() >= deadline:
-                raise ConnectionError(f'No running HSDB named "{name}" in {directory}')
+                raise ConnectionError(f'No running HSDB named "{name}" (looked in {directory} and on port {default_port(name)})')
             time.sleep(0.05)
 
     def model(self, name:str) -> HSDBRemoteModel:

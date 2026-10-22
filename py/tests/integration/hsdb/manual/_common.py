@@ -12,11 +12,14 @@
 
 # Shared by the manual HSDB scripts: data goes to teatype/dist/hsdb/<DB_NAME>/ (dist is gitignored)
 
+# Standard-library imports
+from pathlib import Path
+
 # Third-party imports
 from teatype.io import env, path
 
 DB_NAME = 'school'
-DIST = path.join(path.caller_parent(reverse_depth=5), 'dist')
+DIST = Path(path.caller_parent(reverse_depth=6)) / 'dist'
 
 # Host and clients resolve the database folder from this, so none of them needs a path argument
 env.set('HSDB_ROOT_PATH', str(DIST))

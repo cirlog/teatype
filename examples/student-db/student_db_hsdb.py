@@ -3,7 +3,6 @@
 
 # Standard-library imports
 import random
-from pathlib import Path
 
 # Third-party imports
 from teatype.modulo.hsdb import hsdb as registry
@@ -11,9 +10,7 @@ from teatype.modulo.hsdb import hsdb as registry
 # Local imports
 from server.models import Class, Professor, Student, University
 
-# Cold mode writes no data, but the lock/registry files still need a writable root (default /var/lib)
-root_path = str(Path(__file__).resolve().parents[2] / 'dist')
-hsdb = registry.init('student-db', models=[Class, Professor, Student, University], cold_mode=True, root_path=root_path)
+hsdb = registry.init('student-db', models=[Class, Professor, Student, University], cold_mode=True)
 
 if hsdb.server: # Only the launching process gets here
     print('No HSDB was running, launched one in this process. Seeding ...')

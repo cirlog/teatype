@@ -71,9 +71,12 @@ Multiple indexed equality conditions are intersected. Remaining conditions are f
 
 ### Cold mode
 
-`cold_mode=True` skips creating the folder tree and all data/model-file writes: a pure in-memory database. Otherwise the folder is
-`<root>/hsdb/<name>/` with root = `root_path` -> env `HSDB_ROOT_PATH` -> `/var/lib`. If it cannot be created the process **exits** (`err(exit=True)`).
-The `hsdb` registry still writes its `server.lock`/`server.json` under that root in cold mode, so pass a writable `root_path`.
+`cold_mode=True` is memory only, **nothing touches disk**: no folder tree, no entry or model files, and no lock/registry files either.
+Discovery then works without files: the host holds an abstract unix socket `\0hsdb:<name>` as its singleton lock (Linux only, released
+by the OS on exit) and listens on a port derived from the name (`default_port(name)`, 10000-29999, so passing `port` is rejected).
+Clients fall back to that port when no `server.json` exists and read the schemas from `GET /hsdb/schema` instead of `models/*.json`.
+Different names can in theory hash to the same port; the second host then fails to start. Otherwise the folder is
+`<root>/hsdb/<name>/` with root = `root_path` -> env `HSDB_ROOT_PATH` -> `/var/lib`; if it cannot be created the process **exits** (`err(exit=True)`).
 
 ### Folder layout (`RawFileStructure._FS`, per database `<root>/hsdb/<name>/`)
 
@@ -201,14 +204,14 @@ A database is identified by its **name**, like a Postgres database; the port is 
    Different names use different folders, ports and servers.
 
 Root resolution is `root_path` -> env `HSDB_ROOT_PATH` -> `/var/lib`, identically for host and clients, so processes must agree on it
-(the manual scripts set the env var). The lock is `fcntl`, i.e. POSIX only. The server dies with the **hosting process**.
+(the manual scripts set the env var). The lock is `fcntl` (non-cold) or an abstract unix socket (cold), i.e. Linux/POSIX only. The server dies with the **hosting process**.
 
 ### Schema-driven models (no classes in clients)
 
 `models/<Model>.json` is `Model.schema()`: attributes (type, required, computed, indexed, unique, ...) and relations (kind, target model).
 `client.Student` / `client.model('Student')` returns an `HSDBRemoteModel` with `fields`, `create`, `update`, `get`, `find`, `all`, `count`,
 `delete`, `query()`. `create`/`update` validate client-side against the schema (unknown fields, missing required fields, int/str/float/bool types)
-before any request is sent. Cold-mode databases publish no schema files, so only the string-name API works there.
+before any request is sent. Cold-mode databases write no schema files; their clients get the same schemas from `GET /hsdb/schema`.
 
 ### Client API (`HSDBClient`)
 
