@@ -29,13 +29,22 @@ WHEEL_DIR = PARENT_PATH / 'build' / 'wheel'
 
 PACKAGE_NAME = 'teatype'
 
+venv_python_version = subprocess.run(
+    ['python3', '--version'],
+    capture_output=True,
+    text=True,
+    check=True
+).stdout.strip()
+# only get first two versions, like 3.11
+venv_python_version = 'python' + '.'.join(venv_python_version.split()[1].split('.')[:2])
+
 def get_pypi_versions():
     """
     Fetch available versions from PyPI.
     """
     try:
         result = subprocess.run(
-            ['python3.13', '-m', 'pip', 'index', 'versions', PACKAGE_NAME],
+            [venv_python_version, '-m', 'pip', 'index', 'versions', PACKAGE_NAME],
             capture_output=True,
             text=True,
             check=True,
@@ -146,7 +155,7 @@ if __name__ == '__main__':
 
         update_toml_version(desired)
 
-        subprocess.run(['python3.13', '-m', 'build', '--wheel', '--outdir', WHEEL_DIR], check=True, capture_output=False, text=True)        
+        subprocess.run([venv_python_version, '-m', 'build', '--wheel', '--outdir', WHEEL_DIR], check=True, capture_output=False, text=True)        
         
         if Path('build').exists():
             shutil.rmtree('build')
