@@ -85,7 +85,8 @@ class Schedule(Task):
                 tracer.history.push(f'Schedule "{self.name}" deferred due to active session lock', level='SCHEDULE')
                 return 5.0
             
-            tracer.history.push(f'Schedule "{self.name}" triggered', level='SCHEDULE')
+            # TODO: Log on success (true or false)
+            # tracer.history.push(f'Schedule "{self.name}" triggered', level='SCHEDULE')
             self._execute(tracer, self._handler)
             self._compute_next_run()
         
