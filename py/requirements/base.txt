@@ -39,7 +39,7 @@ prompt_toolkit==3.0.52
 propcache==0.3.2
 psutil==7.0.0
 pycparser==2.22
-pydantic==2.12.5
+pydantic>=2.12.5
 pydantic-core==2.41.5
 Pygments==2.19.2
 Pympler==1.1
