@@ -160,7 +160,6 @@ const TeaToastItem: React.FC<iTeaToastProps> = ({ toast, onClose }) => {
             }
             role='alert'
         >
-            <div className='tea-toast__border-timer' />
             <div className='tea-toast__content'>
                 <span className='tea-toast__icon'>{getIcon()}</span>
                 <span className='tea-toast__message'>{message}</span>

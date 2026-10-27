@@ -123,10 +123,6 @@
     &:hover {
         background: var(--surface-card, rgba(30, 30, 34, 0.9));
         transform: translateX(-4px);
-
-        .tea-toast__border-timer {
-            animation-play-state: paused;
-        }
     }
 
     // Closing animation
@@ -153,19 +149,6 @@
     &--info {
         --tea-toast-color: #0a84ff;
         --tea-toast-bg: rgba(10, 132, 255, 0.15);
-    }
-
-    // Progress bar (alternative visual)
-    &__border-timer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 3px;
-
-        background: var(--tea-toast-color);
-        border-radius: 2px;
-
-        animation: tea-toast-progress-bar var(--tea-toast-duration, 5000ms) linear forwards;
     }
 
     &__content {
@@ -243,15 +226,6 @@
     to {
         opacity: 0;
         transform: translateX(100%);
-    }
-}
-
-@keyframes tea-toast-progress-bar {
-    from {
-        width: 100%;
-    }
-    to {
-        width: 0%;
     }
 }
 
