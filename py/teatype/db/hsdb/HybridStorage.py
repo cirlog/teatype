@@ -99,7 +99,8 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
     def restore(self) -> int:
         """
         Load entries written by RawFileHandler (indexdb/<plural>/<id>.json) back into memory,
-        keeping ids and timestamps. Only attributes were persisted, so relations are not restored.
+        keeping ids, timestamps and relation ids (relations of files written before relations were
+        persisted are missing).
         Returns the number of restored entries.
         """
         if self.rf_handler.cold_mode:
@@ -112,9 +113,8 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                     with open(file_path) as stored_file:
                         data = json.load(stored_file)
                     computed = {name: data.pop(name) for name in ('id', 'created_at', 'updated_at')}
-                    entry = model(data)
-                    entry.id, entry.created_at, entry.updated_at = computed['id'], computed['created_at'], computed['updated_at']
-                    entry.path = f'{model.resource_name_plural}/{computed["id"]}.json'
+                    data = {name: value for name, value in data.items() if value is not None} # None marks an unset relation
+                    entry = model(data, _restore=computed)
                     self.index_db.update_directly({computed['id']: entry})
                     restored += 1
                 except Exception:
@@ -180,7 +180,8 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
                      data:dict,
                      parse:bool=False,
                      write:bool=True,
-                     overwrite_path:str=None) -> Tuple[dict|None, int]:
+                     overwrite_path:str=None,
+                     entry_id:str=None) -> Tuple[dict|None, int]:
         """
         Create a new entry for a given model, optionally parsing the 
         entry data and writing it to the file system.
@@ -188,7 +189,7 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
         try:
             # TODO: Implement implemented trap cleanup handlers in models
             # The index database is asked to create an entry from data
-            model_instance, return_code = self.index_db.create_entry(model, data, parse)
+            model_instance, return_code = self.index_db.create_entry(model, data, parse, entry_id)
             if model_instance is None: # If for some reason creation fails
                 return None, return_code
             

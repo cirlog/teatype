@@ -49,8 +49,10 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                  data:dict=None,
                  include_base_attributes:bool=True,
                  overwrite_path:str=None,
+                 _restore:dict=None,
                  **kwargs):
         data = {**(data or {}), **kwargs} # Fields may be passed as a dict, kwargs, or both
+        restored = _restore or {} # Preset id/created_at/updated_at, used when loading from disk or when the client picks the id
         
         # For every class variable that is an HSDBAttribute,
         # create an instance deepcopy, assign its key to the variable name,
@@ -88,7 +90,7 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                     raise ValueError(f'{attribute_name} is computed and cannot be set')
                 setattr(self, attribute_name, data.get(attribute_name))
         
-        self.id = generate_id()
+        self.id = restored.get('id') or generate_id()
                 
         # Having to initalize lazily, because needing id to properly intialize relations
         for attribute_name, attribute in self._attribute_cache[self.__class__].items():
@@ -124,8 +126,8 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
                 setattr(self, attribute_name, attribute_value)
         
         current_time = dt.now()
-        self.created_at = current_time
-        self.updated_at = current_time
+        self.created_at = restored.get('created_at', current_time)
+        self.updated_at = restored.get('updated_at', current_time)
             
         if overwrite_path:
             self.path = overwrite_path

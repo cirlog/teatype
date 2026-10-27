@@ -126,9 +126,9 @@ class IndexDatabase:
     # ORM Operations #
     ##################
                 
-    def create_entry(self, model:type, data:dict, parse:bool=False) -> object|None:
+    def create_entry(self, model:type, data:dict, parse:bool=False, entry_id:str=None) -> object|None:
         """
-        Create a new entry in the database.
+        Create a new entry in the database, with a generated id unless `entry_id` is given.
         
         Return codes:
             - 200: Success
@@ -143,7 +143,7 @@ class IndexDatabase:
                 }
             
             # Create model instance
-            model_instance = model(data)
+            model_instance = model(data, _restore={'id': entry_id} if entry_id else None)
             model_name = model_instance.model_name
             model_id = str(model_instance.id)
             

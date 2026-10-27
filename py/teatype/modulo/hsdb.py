@@ -16,6 +16,7 @@ import contextlib
 import fcntl
 import json
 import os
+import re
 import socket
 import time
 from typing import List
@@ -29,6 +30,10 @@ from teatype.db.hsdb.RawFileStructure import database_path
 from teatype.db.hsdb.core import HSDBQuery
 from teatype.logging import success
 from teatype.modulo.units.application import ApplicationUnit
+
+# Ids chosen by clients end up in file names, so only allow a safe alphabet
+_ENTRY_ID = re.compile(r'[A-Za-z0-9_-]{1,128}')
+_COMPUTED = ('id', 'created_at', 'updated_at')
 
 class HSDB(ApplicationUnit):
     """
@@ -90,11 +95,29 @@ class HSDB(ApplicationUnit):
             raise HTTPException(404, f'No {model_name} with id "{id}"')
         return entry
 
-    def _serialize(self, entry:object, request:Request) -> dict:
+    def _serialize(self, entry:object, request:Request, relations:bool=False) -> dict:
         flag = lambda key: request.query_params.get(key, '').lower() in ('1', 'true', 'yes')
         return entry.model.serialize(entry,
-                                     include_relations=flag('include_relations'),
+                                     include_relations=flag('include_relations') or relations,
                                      expand_relations=flag('expand_relations'))
+
+    def _relations(self, model:type) -> dict:
+        return model.schema()['relations']
+
+    def _check_relations(self, model:type, data:dict) -> None:
+        """
+        Relation values are ids of existing entries of the target model. They cannot be cleared again yet.
+        """
+        for name, relation in self._relations(model).items():
+            if name not in data:
+                continue
+            target = self._models.get(relation['target_model'])
+            try:
+                found = self.hybrid_storage.fetch_entry(data[name])
+            except (KeyError, TypeError):
+                found = None
+            if found is None or (target and found.model is not target):
+                raise HTTPException(400, f'{name} must be the id of an existing {relation["target_model"]}')
 
     def _register_hsdb_routes(self) -> None:
         def info() -> dict:
@@ -107,21 +130,38 @@ class HSDB(ApplicationUnit):
             return {name: model.schema() for name, model in self._models.items()}
 
         def query(model:str, request:Request) -> list:
+            model_class = self._model(model)
+            relations = self._relations(model_class)
             params = dict(request.query_params)
             fields = params.pop('fields', None) # HSDBQuery's own 'fields' only supports one field and yields non-models
+            # ?<relation>=<id> filters by the related entry, HSDBQuery cannot compare relations
+            relation_filters = {name: params.pop(name) for name in list(params) if name in relations}
+            wanted = ['id', *fields.split(',')] if fields else None
+            with_relations = bool(relation_filters) or bool(wanted and set(wanted) & set(relations))
             try:
-                entries = HSDBQuery.from_params(self._model(model), params).collect()
+                entries = HSDBQuery.from_params(model_class, params).collect()
             except KeyError: # HSDBQuery raises on a completely empty database
                 entries = []
-            rows = [self._serialize(entry, request) for entry in entries]
-            if fields:
-                wanted = ['id', *fields.split(',')]
+            rows = [self._serialize(entry, request, relations=with_relations) for entry in entries]
+            rows = [row for row in rows if all(row.get(name) == value for name, value in relation_filters.items())]
+            if wanted:
                 rows = [{key: row[key] for key in wanted if key in row} for row in rows]
             return rows
 
         def create(model:str, data:dict) -> dict:
+            model_class = self._model(model)
+            entry_id = data.pop('id', None) # Optional: lets the client use its own id as the entry id
+            if entry_id is not None:
+                if not isinstance(entry_id, str) or not _ENTRY_ID.fullmatch(entry_id):
+                    raise HTTPException(400, 'id may only contain letters, digits, "_" and "-" (max 128)')
+                try:
+                    self.hybrid_storage.fetch_entry(entry_id)
+                    raise HTTPException(409, f'An entry with id "{entry_id}" already exists')
+                except KeyError:
+                    pass
+            self._check_relations(model_class, data)
             # Cold mode never yields a file, which create_entry would report as a failed write (410)
-            entry, return_code = self.hybrid_storage.create_entry(self._model(model), data, write=not self.hybrid_storage.rf_handler.cold_mode)
+            entry, return_code = self.hybrid_storage.create_entry(model_class, data, write=not self.hybrid_storage.rf_handler.cold_mode, entry_id=entry_id)
             if return_code != 200:
                 raise HTTPException(return_code, 'Entry could not be created, see server log')
             return entry
@@ -131,6 +171,9 @@ class HSDB(ApplicationUnit):
 
         def update(model:str, id:str, data:dict, request:Request) -> dict:
             self._entry(model, id)
+            for name in _COMPUTED:
+                data.pop(name, None) # Computed fields are not client-writable
+            self._check_relations(self._model(model), data)
             entry, return_code = self.hybrid_storage.update_entry(id, data)
             if return_code != 200:
                 raise HTTPException(return_code, 'Entry could not be updated, see server log')
