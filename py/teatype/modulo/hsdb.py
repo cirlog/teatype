@@ -106,10 +106,12 @@ class HSDB(ApplicationUnit):
 
     def _check_relations(self, model:type, data:dict) -> None:
         """
-        Relation values are ids of existing entries of the target model. They cannot be cleared again yet.
+        Relation values are ids of existing entries of the target model, null unsets an optional relation.
         """
         for name, relation in self._relations(model).items():
             if name not in data:
+                continue
+            if data[name] is None and not relation['required']:
                 continue
             target = self._models.get(relation['target_model'])
             try:

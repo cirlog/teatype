@@ -246,7 +246,7 @@ db.info()                                              # {'service','name','pid'
 | GET / PATCH / DELETE | `/hsdb/{Model}/{id}` | read / partial update / delete (404 if id missing or belongs to another model)                   |
 
 Relation values are ids of existing entries of the target model (400 otherwise, so create parents before children). `GET /hsdb/{Model}?<relation>=<id>`
-filters by a many-to-one relation. `id`, `created_at` and `updated_at` in a PATCH body are ignored. Relations can be set and changed but not cleared yet.
+filters by a many-to-one relation. `id`, `created_at` and `updated_at` in a PATCH body are ignored. Relations can be set and changed, `null` unsets an optional one.
 
 `include_relations` / `expand_relations` are accepted on the GET and PATCH routes. `GET /hsdb/{Model}?fields=a,b` returns only those fields
 (plus `id`), `GET /hsdb/schema` returns all model schemas. Browsers can call the server only if `hsdb.init(..., cors_origins=<regex>)` allows their
@@ -302,7 +302,7 @@ These were pre-existing breakages that blocked creating/serving entries:
 
 ## 9. Open items (not changed)
 
-- Clearing a relation (optional many-to-one back to none), one-to-many/many-to-many access, cascading deletes.
+- One-to-many/many-to-many access, cascading deletes. (An optional many-to-one is cleared by PATCHing `null`.)
 - Enforce `unique=True`; `ne`/`in` operators; `ids_only`/`fields` serialization.
 - Relation resolution only fully implemented for many-to-one in `HSDBRelation._RelationWrapper` (see TODOs in `HSDBModel.py`).
 - Detached host process (models passed by import path) instead of "dies with the launching process".

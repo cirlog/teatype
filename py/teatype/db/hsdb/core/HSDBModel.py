@@ -405,7 +405,14 @@ class HSDBModel(ABC, metaclass=HSDBMeta):
         
         # Update fields
         for key, value in data.items():
-            if key in self._attribute_cache.get(self.__class__, {}):
+            attribute = self._attribute_cache.get(self.__class__, {}).get(key)
+            if attribute is None:
+                continue
+            if value is None and isinstance(attribute, HSDBRelation._RelationFactory) and not attribute.required:
+                relation = self.__dict__['_fields'].pop(key, None) # None unsets an optional relation
+                if relation is not None:
+                    storage.index_db._relational_index.discard(relation.relation_name, relation.reverse_relation_name, self.id.instance)
+            else:
                 setattr(self, key, value)
         
         self.updated_at = dt.now()

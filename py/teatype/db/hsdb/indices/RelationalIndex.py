@@ -112,6 +112,20 @@ class RelationalIndex(Index):
             else:
                 target_index[relation_name].clear()
         
+    def discard(self, relation_name:str, reverse_relation_name:str, primary_key:HSDBField) -> None:
+        """
+        Drop the link of one primary key in a one-to-one or many-to-one relation, if there is one.
+        """
+        primary_key = transmute_id(primary_key)
+        with self.transaction_lock:
+            secondary_key = self.primary_index.get(relation_name, {}).pop(primary_key, None)
+            reverse = self.reverse_index.get(reverse_relation_name, {})
+            linked = reverse.get(secondary_key)
+            if isinstance(linked, list) and primary_key in linked:
+                linked.remove(primary_key)
+            elif linked == primary_key:
+                del reverse[secondary_key]
+
     def fetch(self, relation_name:str, target_id:HSDBField, reverse_lookup:bool=False) -> dict|None:
         """
         Fetch an entry from the index by its ID.
