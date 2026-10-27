@@ -84,11 +84,12 @@ Different names can in theory hash to the same port; the second host then fails 
 `lut`, `models`, `rawfiles`, `redundancy`, `rejectpile/{indexdb,rawfiles}`, `reports`, plus `server.json` and `server.lock` (section 6).
 Used today: `indexdb/<plural>/<id>.json` (entries) and `models/<Model>.json` (schema descriptors, written at host start). The rest is scaffolding.
 
-### Restart behaviour: restored from disk, attributes only
+### Restart behaviour: restored from disk
 
 The `HSDB` unit calls `HybridStorage.restore()` on start (non-cold): it reads `indexdb/<plural>/*.json` back into memory and keeps ids,
-`created_at` and `updated_at` **(verified: restart, query, patch, delete after restore)**. Only attributes are persisted by `RawFileHandler`
-(`Model.serialize()` without relations), so relations are lost on restart; models meant to survive restarts should use plain attributes.
+`created_at`, `updated_at` and relation ids **(verified: restart, query, patch, delete, relations after restore)**. `RawFileHandler` writes
+relations as ids (`null` for an unset optional relation); files written before that have no relations. Models are rebuilt with
+`Model(data, _restore={'id', 'created_at', 'updated_at'})`, which is also how a client-chosen id is applied on create.
 The older `HybridStorage.install_index_files()` is still broken: it expects `{base_data, model_data, ...}` but the files are flat dicts.
 
 ---
@@ -237,12 +238,15 @@ db.info()                                              # {'service','name','pid'
 
 ### HTTP routes (all JSON, served by the unit)
 
-| Method               | Path                 | Purpose                                                                        |
-| -------------------- | -------------------- | ------------------------------------------------------------------------------ |
-| GET                  | `/hsdb`              | identity + per-model counts                                                    |
-| GET                  | `/hsdb/{Model}`      | query via `from_params` syntax                                                 |
-| POST                 | `/hsdb/{Model}`      | create                                                                         |
-| GET / PATCH / DELETE | `/hsdb/{Model}/{id}` | read / partial update / delete (404 if id missing or belongs to another model) |
+| Method               | Path                 | Purpose                                                                                          |
+| -------------------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| GET                  | `/hsdb`              | identity + per-model counts                                                                      |
+| GET                  | `/hsdb/{Model}`      | query via `from_params` syntax                                                                   |
+| POST                 | `/hsdb/{Model}`      | create, optional `id` in the body is used as the entry id (`[A-Za-z0-9_-]{1,128}`, 409 if taken) |
+| GET / PATCH / DELETE | `/hsdb/{Model}/{id}` | read / partial update / delete (404 if id missing or belongs to another model)                   |
+
+Relation values are ids of existing entries of the target model (400 otherwise, so create parents before children). `GET /hsdb/{Model}?<relation>=<id>`
+filters by a many-to-one relation. `id`, `created_at` and `updated_at` in a PATCH body are ignored. Relations can be set and changed but not cleared yet.
 
 `include_relations` / `expand_relations` are accepted on the GET and PATCH routes. `GET /hsdb/{Model}?fields=a,b` returns only those fields
 (plus `id`), `GET /hsdb/schema` returns all model schemas. Browsers can call the server only if `hsdb.init(..., cors_origins=<regex>)` allows their
@@ -298,7 +302,7 @@ These were pre-existing breakages that blocked creating/serving entries:
 
 ## 9. Open items (not changed)
 
-- Restore relations from disk (only attributes are persisted and restored, see section 2).
+- Clearing a relation (optional many-to-one back to none), one-to-many/many-to-many access, cascading deletes.
 - Enforce `unique=True`; `ne`/`in` operators; `ids_only`/`fields` serialization.
 - Relation resolution only fully implemented for many-to-one in `HSDBRelation._RelationWrapper` (see TODOs in `HSDBModel.py`).
 - Detached host process (models passed by import path) instead of "dies with the launching process".
