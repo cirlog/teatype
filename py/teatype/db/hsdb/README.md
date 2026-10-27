@@ -25,15 +25,15 @@ flowchart LR
     C0[HSDBClient in the host itself] -- HTTP /hsdb/... --> U
 ```
 
-| Layer | File | Role |
-|---|---|---|
-| Models | `core/HSDBModel.py`, `HSDBAttribute.py`, `HSDBRelation.py`, `HSDBField.py`, `HSDBMeta.py` | Declarative schema, validation, serialization, ORM-ish classmethods |
-| Query | `core/HSDBQuery.py` | Chainable query builder, also parses URL query strings |
-| Memory | `IndexDatabase.py`, `indices/*` | Primary index + model index + field index + relational index |
-| Disk | `RawFileHandler.py`, `RawFileStructure.py` | JSON file per entry under a fixed folder tree |
-| Glue | `HybridStorage.py` | Singleton that applies every write to memory first, then disk |
-| Serving (A) | `HSDBServer.py`, `django_support/*` | Django + DRF server with auto REST routes per model (standalone script style) |
-| Serving (B) | `modulo/hsdb.py` (`HSDB` unit) + `HSDBClient.py` | Embedded FastAPI server in a background thread + name-based init-or-connect client (see section 6) |
+| Layer       | File                                                                                      | Role                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Models      | `core/HSDBModel.py`, `HSDBAttribute.py`, `HSDBRelation.py`, `HSDBField.py`, `HSDBMeta.py` | Declarative schema, validation, serialization, ORM-ish classmethods                                |
+| Query       | `core/HSDBQuery.py`                                                                       | Chainable query builder, also parses URL query strings                                             |
+| Memory      | `IndexDatabase.py`, `indices/*`                                                           | Primary index + model index + field index + relational index                                       |
+| Disk        | `RawFileHandler.py`, `RawFileStructure.py`                                                | JSON file per entry under a fixed folder tree                                                      |
+| Glue        | `HybridStorage.py`                                                                        | Singleton that applies every write to memory first, then disk                                      |
+| Serving (A) | `HSDBServer.py`, `django_support/*`                                                       | Django + DRF server with auto REST routes per model (standalone script style)                      |
+| Serving (B) | `modulo/hsdb.py` (`HSDB` unit) + `HSDBClient.py`                                          | Embedded FastAPI server in a background thread + name-based init-or-connect client (see section 6) |
 
 Two serving paths exist and are independent: **(A)** `HSDBServer` is a blocking Django `runserver`
 (`examples/student-db/student_db_server.py`), **(B)** the `HSDB` modulo unit is what you import from application code.
@@ -59,13 +59,13 @@ Return codes used throughout: `200` ok, `404` not found, `409` already exists, `
 
 Reads never touch disk. Everything is served from memory:
 
-| Lookup | Cost | Mechanism |
-|---|---|---|
-| by id | O(1) | primary index (`Index`, dict keyed by id string) |
-| all of a model | O(1) to get ids | `ModelIndex`: `{ModelName: {ids}}` |
-| equality on an `indexed=True` attribute | O(1) | `FieldsIndex`: `{"Model.field": {value: {ids}}}` |
-| anything else (`>`, `<`, `contains`, non-indexed `==`) | O(n) over the model's entries | linear filter |
-| relation lookup | O(1) | `RelationalIndex` (forward + reverse dicts) |
+| Lookup                                                 | Cost                          | Mechanism                                        |
+| ------------------------------------------------------ | ----------------------------- | ------------------------------------------------ |
+| by id                                                  | O(1)                          | primary index (`Index`, dict keyed by id string) |
+| all of a model                                         | O(1) to get ids               | `ModelIndex`: `{ModelName: {ids}}`               |
+| equality on an `indexed=True` attribute                | O(1)                          | `FieldsIndex`: `{"Model.field": {value: {ids}}}` |
+| anything else (`>`, `<`, `contains`, non-indexed `==`) | O(n) over the model's entries | linear filter                                    |
+| relation lookup                                        | O(1)                          | `RelationalIndex` (forward + reverse dicts)      |
 
 Multiple indexed equality conditions are intersected. Remaining conditions are filtered linearly on the narrowed set.
 
@@ -84,12 +84,12 @@ Different names can in theory hash to the same port; the second host then fails 
 `lut`, `models`, `rawfiles`, `redundancy`, `rejectpile/{indexdb,rawfiles}`, `reports`, plus `server.json` and `server.lock` (section 6).
 Used today: `indexdb/<plural>/<id>.json` (entries) and `models/<Model>.json` (schema descriptors, written at host start). The rest is scaffolding.
 
-### Restart behaviour: disk is write-only today
+### Restart behaviour: restored from disk, attributes only
 
-Nothing loads the files back at startup, and the manual path is broken **(verified)**:
-`HybridStorage.install_index_files()` expects files shaped `{base_data, model_data, ...}` but
-`RawFileHandler` writes the flat `Model.serialize()` dict, so it fails with `'NoneType' object has no attribute 'get'`.
-A restarted host therefore starts empty even in non-cold mode.
+The `HSDB` unit calls `HybridStorage.restore()` on start (non-cold): it reads `indexdb/<plural>/*.json` back into memory and keeps ids,
+`created_at` and `updated_at` **(verified: restart, query, patch, delete after restore)**. Only attributes are persisted by `RawFileHandler`
+(`Model.serialize()` without relations), so relations are lost on restart; models meant to survive restarts should use plain attributes.
+The older `HybridStorage.install_index_files()` is still broken: it expects `{base_data, model_data, ...}` but the files are flat dicts.
 
 ---
 
@@ -111,7 +111,7 @@ class Student(HSDBModel):
 - Serialization: `Model.serialize(instance, include_relations=False, expand_relations=False)`.
   **Relations are omitted by default**; `include_relations` adds ids, `expand_relations` nests full objects (one level).
 - Classmethods: `create, get, all, find_by, count, schema`; instance: `save, update, delete, validate`.
-  They act on `HybridStorage.instance()` of *the current process*, so they only work in the host process.
+  They act on `HybridStorage.instance()` of _the current process_, so they only work in the host process.
 - `unique=True` is **not enforced** on create (no check in `IndexDatabase.create_entry`) (code).
 
 ---
@@ -132,7 +132,7 @@ A query object is single-use (`already_executed`). `page=-1` means last page.
 
 - Operators: `eq` (default), `gt`, `gte`, `lt`, `lte`, `contains`. `ne` and `in` are parsed but **silently ignored**.
 - Values are coerced: `"18"` -> int, `"1.5"` -> float, `"true"/"false"` -> bool, `"null"/"none"` -> None.
-  A *string* field whose value looks numeric (e.g. `"123"`) can therefore not be matched.
+  A _string_ field whose value looks numeric (e.g. `"123"`) can therefore not be matched.
 - `limit` only works together with `page`. `fields` and `ids_only` make the result non-model objects, which the
   serialization step cannot handle (the REST views and the HSDB unit do not support them).
 - `HSDBQuery.to_query_string()` is the inverse and exists for building these URLs.
@@ -142,6 +142,7 @@ A query object is single-use (`already_executed`). `page=-1` means last page.
 ## 5. Quirks and gotchas
 
 **Singleton / initialization**
+
 - `HybridStorage` is a `SingletonMeta` singleton: the first construction wins, later `models`/`root_path`/`cold_mode` arguments are ignored.
 - Anything that calls `HybridStorage()` bare (`HSDBQuery(...)`/`Model.query`, and instantiating any model that has relations) creates the
   default **non-cold** storage if none exists yet -> tries `/var/lib/hsdb` and may exit. In a client process never instantiate relation-bearing
@@ -152,6 +153,7 @@ A query object is single-use (`already_executed`). `page=-1` means last page.
 - `HybridStorage` subclasses `Thread` but is never started; `coroutines/*.py` are empty; the queues are unused.
 
 **Behaviour**
+
 - Entry ids are global: `HybridStorage.fetch_entry(id)` does not check the model. The HSDB unit adds that check per route.
 - Querying a completely empty database raises `KeyError('No db entries found')` (also `first()`/`last()`).
 - Cold mode + `create_entry(write=True)` always yields `410` because no file is ever produced. Pass `write=False` in cold mode (the HSDB unit does).
@@ -160,6 +162,7 @@ A query object is single-use (`already_executed`). `page=-1` means last page.
 - `BaseIndex.__iter__` yields **values**, while `IndexDatabase.fetch_all()` and `print()` iterate it as if it yielded ids (code, not run).
 
 **Modulo unit (`ApplicationUnit`) traps that the HSDB unit works around**
+
 - `CoreUnit` forbids `Unit(...)`; use `Unit.create(**kwargs)` (keyword args only).
 - `ApplicationUnit.__init__` installs SIGINT/SIGTERM handlers that call `shutdown()` and then **do not exit**, i.e. they swallow Ctrl+C for the whole host process; it also only works on the main thread. `HSDB` overrides `_setup_signal_handlers` to a no-op.
 - The backend thread is non-daemon, so the host process would never exit. `HSDB` sets `backend.daemon = True`.
@@ -234,14 +237,16 @@ db.info()                                              # {'service','name','pid'
 
 ### HTTP routes (all JSON, served by the unit)
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/hsdb` | identity + per-model counts |
-| GET | `/hsdb/{Model}` | query via `from_params` syntax |
-| POST | `/hsdb/{Model}` | create |
+| Method               | Path                 | Purpose                                                                        |
+| -------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| GET                  | `/hsdb`              | identity + per-model counts                                                    |
+| GET                  | `/hsdb/{Model}`      | query via `from_params` syntax                                                 |
+| POST                 | `/hsdb/{Model}`      | create                                                                         |
 | GET / PATCH / DELETE | `/hsdb/{Model}/{id}` | read / partial update / delete (404 if id missing or belongs to another model) |
 
-`include_relations` / `expand_relations` are accepted on the GET and PATCH routes. The unit also keeps the generic `ApplicationUnit` routes
+`include_relations` / `expand_relations` are accepted on the GET and PATCH routes. `GET /hsdb/{Model}?fields=a,b` returns only those fields
+(plus `id`), `GET /hsdb/schema` returns all model schemas. Browsers can call the server only if `hsdb.init(..., cors_origins=<regex>)` allows their
+origin (default: no CORS headers). The unit also keeps the generic `ApplicationUnit` routes
 (`/status`, `/api/app/status`, `/api/logs`, ...). Handlers are plain `def`, so FastAPI runs them in its thread pool.
 
 ### Why HTTP and not Redis
@@ -293,7 +298,7 @@ These were pre-existing breakages that blocked creating/serving entries:
 
 ## 9. Open items (not changed)
 
-- Restore from disk on startup (format mismatch, see section 2).
+- Restore relations from disk (only attributes are persisted and restored, see section 2).
 - Enforce `unique=True`; `ne`/`in` operators; `ids_only`/`fields` serialization.
 - Relation resolution only fully implemented for many-to-one in `HSDBRelation._RelationWrapper` (see TODOs in `HSDBModel.py`).
 - Detached host process (models passed by import path) instead of "dies with the launching process".

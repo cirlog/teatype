@@ -11,6 +11,9 @@
 # all copies or substantial portions of the Software.
 
 # Standard-library imports
+import glob
+import json
+import os
 import threading
 import traceback
 from multiprocessing import Queue
@@ -22,7 +25,7 @@ from teatype.db.hsdb import IndexDatabase, RawFileHandler
 from teatype.db.hsdb.toolbox import parse_fixtures, parse_index_files
 from teatype.io import env, file
 from teatype.logging import *
-from teatype.toolkit import SingletonMeta
+from teatype.toolkit import SingletonMeta, kebabify
 
 # TODO: Implement Coroutine and Operation (Atomic)
 # TODO: Implement threaded Coroutine scheduler
@@ -93,6 +96,31 @@ class HybridStorage(threading.Thread, metaclass=SingletonMeta):
     # def register_model(self, model:object):
     #     self.index_db.models.append(model)
             
+    def restore(self) -> int:
+        """
+        Load entries written by RawFileHandler (indexdb/<plural>/<id>.json) back into memory,
+        keeping ids and timestamps. Only attributes were persisted, so relations are not restored.
+        Returns the number of restored entries.
+        """
+        if self.rf_handler.cold_mode:
+            return 0
+        restored = 0
+        for model in self.index_db.models:
+            folder = os.path.join(self.rf_handler.fs.indexdb.path, kebabify(model.__name__, remove='-model', plural=True))
+            for file_path in glob.glob(os.path.join(folder, '*.json')):
+                try:
+                    with open(file_path) as stored_file:
+                        data = json.load(stored_file)
+                    computed = {name: data.pop(name) for name in ('id', 'created_at', 'updated_at')}
+                    entry = model(data)
+                    entry.id, entry.created_at, entry.updated_at = computed['id'], computed['created_at'], computed['updated_at']
+                    entry.path = f'{model.resource_name_plural}/{computed["id"]}.json'
+                    self.index_db.update_directly({computed['id']: entry})
+                    restored += 1
+                except Exception:
+                    err(f'Could not restore {file_path}, skipping it.', traceback=True)
+        return restored
+
     def install_fixtures(self, fixtures_path:str=None) -> None:
         """
         Load and install fixtures from a specified path into the index database.

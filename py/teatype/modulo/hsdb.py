@@ -22,6 +22,7 @@ from typing import List
 
 # Third-party imports
 from fastapi import HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from teatype.db.hsdb import HybridStorage
 from teatype.db.hsdb.HSDBClient import HSDBClient, default_port
 from teatype.db.hsdb.RawFileStructure import database_path
@@ -40,6 +41,7 @@ class HSDB(ApplicationUnit):
                  port:int=None,
                  *,
                  cold_mode:bool=False,
+                 cors_origins:str=None,
                  root_path:str=None) -> None:
         # Embedded in someone else's process: no dashboard, no Redis, no background units
         super().__init__(name,
@@ -52,10 +54,15 @@ class HSDB(ApplicationUnit):
                          log_level='warning',
                          verbose_logging=False)
         self.backend.daemon = True # A non-daemon backend thread would keep the host process alive on exit
+        if cors_origins:
+            self.app.add_middleware(CORSMiddleware, allow_origin_regex=cors_origins, allow_methods=['*'], allow_headers=['*'])
         self.hybrid_storage = HybridStorage(models=models, root_path=root_path, cold_mode=cold_mode, name=name)
         self._models = {model.__name__: model for model in models}
         for model in models:
             self.hybrid_storage.rf_handler.write_model(model)
+        restored = self.hybrid_storage.restore()
+        if restored:
+            success(f'HSDB "{name}" restored {restored} entries from disk')
         self._register_hsdb_routes()
 
     #############
@@ -100,11 +107,17 @@ class HSDB(ApplicationUnit):
             return {name: model.schema() for name, model in self._models.items()}
 
         def query(model:str, request:Request) -> list:
+            params = dict(request.query_params)
+            fields = params.pop('fields', None) # HSDBQuery's own 'fields' only supports one field and yields non-models
             try:
-                entries = HSDBQuery.from_params(self._model(model), dict(request.query_params)).collect()
+                entries = HSDBQuery.from_params(self._model(model), params).collect()
             except KeyError: # HSDBQuery raises on a completely empty database
                 entries = []
-            return [self._serialize(entry, request) for entry in entries]
+            rows = [self._serialize(entry, request) for entry in entries]
+            if fields:
+                wanted = ['id', *fields.split(',')]
+                rows = [{key: row[key] for key in wanted if key in row} for row in rows]
+            return rows
 
         def create(model:str, data:dict) -> dict:
             # Cold mode never yields a file, which create_entry would report as a failed write (410)
@@ -168,13 +181,15 @@ class _HSDBRegistry:
              models:List[type],
              *,
              cold_mode:bool=False,
+             cors_origins:str=None,
              host:str='127.0.0.1',
              port:int=None,
              root_path:str=None,
              startup_timeout:float=10.0) -> HSDBClient:
         """
         Host the database `name` in this process, or connect if another process already does.
-        Returns a client either way; `client.server` is set only for the host.
+        Returns a client either way; `client.server` is set only for the host. `cors_origins` is a regex of
+        browser origins allowed to call the server (none by default, i.e. no CORS headers).
         """
         if name in self._clients:
             return self._clients[name]
@@ -206,7 +221,7 @@ class _HSDBRegistry:
             with contextlib.suppress(FileNotFoundError):
                 os.remove(info_file) # Left over from a crashed host
 
-        server = HSDB.create(name=name, models=models, host=host, port=port, cold_mode=cold_mode, root_path=root_path)
+        server = HSDB.create(name=name, models=models, host=host, port=port, cold_mode=cold_mode, cors_origins=cors_origins, root_path=root_path)
         server.start()
         probe = HSDBClient(host, server.backend_port)
         deadline = time.monotonic() + startup_timeout
