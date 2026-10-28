@@ -26,6 +26,7 @@ export { TeaNav } from './TeaApp/TeaNav';
 export { TeaPage } from './TeaApp/TeaPage';
 export { TeaPanel } from './TeaPanel';
 export { TeaSettingsPanel, TeaSettingsProvider, useTeaSettings, SUPPORTED_LANGUAGES } from './TeaApp/TeaSettings';
+export { TeaSettingsPage } from './TeaSettingsPage';
 export {
     TeaSidebar,
     TeaSidebarSettings,
@@ -51,6 +52,13 @@ export { TeaTooltip } from './TeaTooltip';
 // Types
 export type { tPage, iTeaAppProps } from './TeaApp/TeaApp';
 export type { tTheme, tLanguage, LanguageInfo } from './TeaApp/TeaSettings';
+export type {
+    iTeaSettingsCategory,
+    iTeaSettingsGroup,
+    iTeaSettingsItem,
+    iTeaSettingsPageProps,
+    tTeaSettingControl,
+} from './TeaSettingsPage';
 export type { iTeaSliderProps, tSliderSize, tSliderTheme } from './TeaInput/TeaSlider';
 export type { iTeaSubNavItem, iTeaSubNavProps } from './TeaApp/TeaSubNav';
 export type {
