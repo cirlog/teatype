@@ -220,6 +220,17 @@
         }
     }
 
+    &__item--stacked {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+
+        .tea-settings-page__item-control {
+            justify-content: flex-start;
+            max-width: none;
+        }
+    }
+
     &__item-text {
         display: flex;
         flex-direction: column;

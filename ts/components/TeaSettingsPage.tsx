@@ -47,6 +47,8 @@ export interface iTeaSettingsItem {
     description?: string;
     /** Marks this one setting as meant for developers, also if the group is not */
     developer?: boolean;
+    /** 'stacked' puts the control below the text at full width, for controls that are too wide for the row */
+    layout?: 'inline' | 'stacked';
     control: tTeaSettingControl;
 }
 
@@ -270,7 +272,12 @@ export const TeaSettingsPage: React.FC<iTeaSettingsPageProps> = ({
                                     )}
                                     <div className='tea-settings-page__items'>
                                         {group.items.map((item) => (
-                                            <div key={item.id} className='tea-settings-page__item'>
+                                            <div
+                                                key={item.id}
+                                                className={`tea-settings-page__item ${
+                                                    item.layout === 'stacked' ? 'tea-settings-page__item--stacked' : ''
+                                                }`}
+                                            >
                                                 <div className='tea-settings-page__item-text'>
                                                     <span className='tea-settings-page__item-label'>
                                                         {item.label}
