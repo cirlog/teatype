@@ -13,9 +13,10 @@
 # From local imports
 from .http import trequest
 from .http.trequest import get, post, put, patch, delete
-from .url import encode as encode_url
-from .url import decode as decode_url
-from .url import join as join_uris
+from .http.hyperlink import encode as encode_url
+from .http.hyperlink import decode as decode_url
+from .http.hyperlink import join as join_uris
+from .http.hyperlink import url
 
 try:
     from .ws.Websocket import Websocket
