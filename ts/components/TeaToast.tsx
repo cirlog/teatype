@@ -67,7 +67,7 @@ const TeaToastItem: React.FC<iTeaToastProps> = ({ toast, onClose }) => {
     const { message, type = 'info', duration = 5000, dismissible = true, icon, action } = toast;
 
     const [isClosing, setIsClosing] = useState(false);
-    const [progress, setProgress] = useState(360); // degrees for conic gradient
+    const [progress, setProgress] = useState(360); // 360 = full time left
     const animationRef = useRef<number | null>(null);
     const startTimeRef = useRef<number | null>(null);
     const isPausedRef = useRef(false);
@@ -155,11 +155,17 @@ const TeaToastItem: React.FC<iTeaToastProps> = ({ toast, onClose }) => {
             style={
                 {
                     '--tea-toast-duration': `${duration}ms`,
-                    '--tea-toast-progress': `${progress}deg`,
+                    '--tea-toast-remaining': (progress / 360) * 100,
                 } as React.CSSProperties
             }
             role='alert'
         >
+            {/* The timer runs along the outline, so it is the same speed on straight edges and in the corners */}
+            {duration > 0 && (
+                <svg className='tea-toast__timer' aria-hidden='true'>
+                    <rect pathLength={100} />
+                </svg>
+            )}
             <div className='tea-toast__content'>
                 <span className='tea-toast__icon'>{getIcon()}</span>
                 <span className='tea-toast__message'>{message}</span>
