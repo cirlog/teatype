@@ -28,3 +28,5 @@ try:
     from .responses import *
 except ImportError:
     django_support = False
+    
+from .hyperlink import url

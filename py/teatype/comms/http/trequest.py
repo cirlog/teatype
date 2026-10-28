@@ -85,7 +85,7 @@ def _request(async_client:aiohttp.ClientSession,
         # Set the request data to an empty dictionary if not provided
         stopwatch(request_label)
         
-    if data is not None and isinstance(data, dict):
+    if isinstance(data, (dict, list)): # requests would form-encode a list and crash
         force_json = True
     if force_json:
         # If force_json is True, set the headers to accept JSON

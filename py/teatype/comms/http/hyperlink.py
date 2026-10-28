@@ -52,7 +52,7 @@ def join(*uris:str) -> str:
     """
     return '/'.join(uri.strip('/') for uri in uris if uri)
 
-def url(*uris:str, encode:bool=True) -> str:
+def url(*uris:str, encode_url:bool=True) -> str:
     """
     Join uris of a URL into a single URL string and optionally encode it.
 
@@ -64,6 +64,6 @@ def url(*uris:str, encode:bool=True) -> str:
         str: The joined (and optionally encoded) URL.
     """
     joined_url = join(*uris)
-    if encode:
+    if encode_url:
         joined_url = encode(joined_url)
     return joined_url
